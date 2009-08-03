@@ -132,7 +132,12 @@ module FireWatir
       get_window_number()
       set_browser_document()
     end
-    
+
+    def inspect
+      '#<%s:0x%x url=%s title=%s>' % [self.class, hash*2, url.inspect, title.inspect]
+    end
+
+
     # Launches firebox browser
     # options as .new
     
@@ -369,11 +374,16 @@ module FireWatir
     # return the window index for the browser window with the given title or url.
     #   how - :url or :title
     #   what - string or regexp
+    # Start searching windows in reverse order so that we attach/find the latest opened window.
     def find_window(how, what)
       jssh_command =  "var windows = getWindows(); var window_number = false; var found = false;
-                             for(var i = 0; i < windows.length; i++)
+                             for(var i = windows.length - 1; i >= 0; i--)
                              {
                                 var attribute = '';
+                                if(typeof(windows[i].getBrowser) != 'function')
+                                {
+                                    continue;
+                                }
                                 var browser = windows[i].getBrowser();
                                 if(!browser)
                                 {
@@ -432,7 +442,7 @@ module FireWatir
     
     # Returns the url of the page currently loaded in the browser.
     def url
-      @window_url = js_eval "#{document_var}.URL"
+      @window_url = js_eval "#{document_var}.location"
     end 
     
     # Returns the title of the page currently loaded in the browser.
@@ -440,6 +450,17 @@ module FireWatir
       @window_title = js_eval "#{document_var}.title"
     end
     
+    #   Returns the Status of the page currently loaded in the browser from statusbar.
+    #
+    # Output:
+    #   Status of the page.
+    #
+    def status
+      js_status = js_eval("#{window_var}.status")
+      js_status.empty? ? js_eval("#{WINDOW_VAR}.XULBrowserWindow.statusText;") : js_status
+    end
+
+
     # Returns the html of the page currently loaded in the browser.
     def html
       result = js_eval("var htmlelem = #{document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML")

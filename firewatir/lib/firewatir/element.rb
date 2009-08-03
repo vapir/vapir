@@ -684,14 +684,10 @@ module FireWatir
         raise ArgumentError, "Argument #{target} should be a string or regexp."
       end
     end
-    #
-    # Description:
-    #   Method for inspecting the object. Defined here because IRB was not able to locate the object.
-    #   TODO: Need to find out why IRB is unable to find object though both (this and IRB) are executing same statements
-    #
+    
+
     def inspect
-      assert_exists
-      puts self.to_s
+      '#<%s:0x%x located=%s how=%s what=%s>' % [self.class, hash*2, !!@o, @how.inspect, @what.inspect]
     end
   
     #
@@ -961,13 +957,13 @@ module FireWatir
     #   True if element exists, false otherwise.
     #
     def exists?
-      #puts "element is : #{element_object}"
-      #puts caller(0)
+      # puts "element is : #{element_object}"
+      # puts caller(0)
       # If elements array has changed locate the element again. So that the element name points to correct element.
       if(element_object == nil || element_object == "")
         @@current_level = 0
         #puts "locating element"
-        locate if defined?(locate)
+        locate if respond_to?(:locate)
         if(@element_name == nil || @element_name == "")
           return false
         else

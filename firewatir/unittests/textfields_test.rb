@@ -77,11 +77,12 @@ class TC_Fields < Test::Unit::TestCase
             "max length:   500",
             "length:       0"
         ]
-        assert_equal(expected, browser.text_field(:index, 1).to_s)
+
+        assert_equal(expected.sort, browser.text_field(:index, 1).to_s.split("\n").sort)
         expected[0] = "name:         "
         expected[2] = "id:           text2"
         expected[3] = "value:        goodbye all"
-        assert_equal(expected, browser.text_field(:index, 2).to_s)
+        assert_equal(expected.sort, browser.text_field(:index, 2).to_s.split("\n").sort)
         assert_raises(UnknownObjectException) { browser.text_field(:index, 999).to_s }  
         #puts browser.text_field(:name, "text1").to_s
         #puts browser.text_field(:name, "readOnly").to_s
@@ -207,14 +208,14 @@ end
 
 class TC_Labels_Display < Test::Unit::TestCase
   
-  include MockStdoutTestCase
+  include CaptureIOHelper
 
   tag_method :test_showLabels, :fails_on_ie
   def test_showLabels
     goto_page("textfields1.html")
-    $stdout = @mockout
-    browser.showLabels
-    assert_equal(<<END_OF_MESSAGE, @mockout)
+
+    actual = capture_stdout { browser.showLabels }
+    assert_equal(<<END_OF_MESSAGE, actual)
 There are 3 labels
 label: name: 
          id: 

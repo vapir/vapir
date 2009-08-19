@@ -3,7 +3,6 @@
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
-require 'ftools'
 require 'webrick'
 
 class TC_Images < Test::Unit::TestCase
@@ -146,11 +145,6 @@ class TC_Images < Test::Unit::TestCase
         assert_equal( index-1 , browser.images.length )
     end
     
-    #def test_save_local_image
-    #   browser.images[1].save(build_windows_path("sample.img.dat"))
-    #    assert(File.compare(@saved_img_path, browser.images[1].src.gsub(/^file:\/\/\//, '')))
-    #end
-    
     def clean_saved_image
         File.delete(@saved_img_path) if (File.exists?(@saved_img_path))
     end
@@ -166,14 +160,13 @@ end
 
 class TC_Images_Display < Test::Unit::TestCase
   
-  include MockStdoutTestCase
+  include CaptureIOHelper
 
   tag_method :test_showImages, :fails_on_ie
   def test_showImages
     goto_page("images1.html")
-    $stdout = @mockout
-    browser.showImages
-    assert_equal(<<END_OF_MESSAGE, @mockout)
+    actual = capture_stdout { browser.showImages }
+    assert_equal(<<END_OF_MESSAGE, actual)
 There are 6 images
 image: name: 
          id: 

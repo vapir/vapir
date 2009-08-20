@@ -37,9 +37,9 @@ spec = Gem::Specification.new do |s|
   s.require_path = 'lib'
 
   s.add_dependency 'win32-process', '>= 0.5.5'
-  s.add_dependency 'windows-pr', '>= 0.6.6'
-  s.add_dependency 'commonwatir', '= 1.6.2'
-  s.add_dependency 'firewatir'
+  s.add_dependency 'windows-pr',    '>= 0.6.6'
+  s.add_dependency 'commonwatir',   '= 1.7.0.1'
+  s.add_dependency 'firewatir',     '= 1.7.0.1'
   s.add_dependency 'nokogiri'
 
   s.has_rdoc = true

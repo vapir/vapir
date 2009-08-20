@@ -484,7 +484,7 @@ module Watir
   #
   class RadioCheckCommon < InputElement
     def locate
-      @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES, @value)
+      @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES, @value, self.class)
     end
     def initialize(container, how, what, value=nil)
       super container, how, what

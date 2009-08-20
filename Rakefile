@@ -24,7 +24,7 @@ task :clean_subprojects do
 end
 
 task :clean => [:clean_subprojects]
-CLEAN << 'gems/*' << 'test/reports'
+CLEAN << 'gems' << 'test/reports'
 
 desc 'Run core_tests tests for IE'
 Rake::TestTask.new :core_tests do |t|

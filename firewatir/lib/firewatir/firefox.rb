@@ -90,9 +90,17 @@ module Watir
     # XPath Result type. Return only first node that matches the xpath expression.
     # More details: "http://developer.mozilla.org/en/docs/DOM:document.evaluate"
     FIRST_ORDERED_NODE_TYPE = 9
-
-    # Description:
-    #   Starts the firefox browser.
+                    
+    @@jssh_socket=nil
+    def self.jssh_socket
+      @@jssh_socket
+    end
+    def jssh_socket
+      @@jssh_socket
+    end
+    
+    # Description: 
+    #   Starts the firefox browser. 
     #   On windows this starts the first version listed in the registry.
     #
     # Input:
@@ -114,15 +122,13 @@ module Watir
       # check for jssh not running, firefox may be open but not with -jssh
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
-      jssh_down = false
       begin
-        set_defaults()
-      rescue Watir::Exception::UnableToStartJSShException
-        jssh_down = true
+        @@jssh_socket||=JsshSocket.new
+#      rescue JsshSocket::UnableToStartJSShException
       end
 
       if current_os == :macosx && !%x{ps x | grep firefox-bin | grep -v grep}.empty?
-        raise "Firefox is running without -jssh" if jssh_down
+#        raise "Firefox is running without -jssh" if jssh_down
         open_window unless options[:suppress_launch_process]
       elsif not options[:suppress_launch_process]
         launch_browser(options)
@@ -172,8 +178,8 @@ module Watir
       # If at any time a non-browser window like the "Downloads" window
       #   pops up, it will become the topmost window, so make sure we
       #   ignore it.
-      window_count = js_eval("getWindows().length").to_i - 1
-      while js_eval("getWindows()[#{window_count}].getBrowser") == ''
+      window_count = jssh_socket.js_eval("getWindows().length").to_i - 1
+      while jssh_socket.js_eval("getWindows()[#{window_count}].getBrowser") == ''
         window_count -= 1;
       end
 
@@ -192,31 +198,31 @@ module Watir
     def goto(url)
       get_window_number()
       set_browser_document()
-      js_eval "#{browser_var}.loadURI(\"#{url}\")"
+      jssh_socket.js_eval "#{browser_var}.loadURI(\"#{url}\")"
       wait()
     end
 
     # Loads the previous page (if there is any) in the browser. Waits for the page to get loaded.
     def back()
-      js_eval "if(#{browser_var}.canGoBack) #{browser_var}.goBack()"
+      jssh_socket.js_eval "if(#{browser_var}.canGoBack) #{browser_var}.goBack()"
       wait()
     end
 
     # Loads the next page (if there is any) in the browser. Waits for the page to get loaded.
     def forward()
-      js_eval "if(#{browser_var}.canGoForward) #{browser_var}.goForward()"
+      jssh_socket.js_eval "if(#{browser_var}.canGoForward) #{browser_var}.goForward()"
       wait()
     end
 
     # Reloads the current page in the browser. Waits for the page to get loaded.
     def refresh()
-      js_eval "#{browser_var}.reload()"
+      jssh_socket.js_eval "#{browser_var}.reload()"
       wait()
     end
 
     # Executes the given JavaScript string
     def execute_script(source)
-      result = js_eval source.to_s
+      result = jssh_socket.js_eval source.to_s
       wait()
 
       result
@@ -226,16 +232,6 @@ module Watir
     # This function creates a new socket at port 9997 and sets the default values for instance and class variables.
     # Generatesi UnableToStartJSShException if cannot connect to jssh even after 3 tries.
     def set_defaults(no_of_tries = 0)
-      # JSSH listens on port 9997. Create a new socket to connect to port 9997.
-      begin
-        $jssh_socket = TCPSocket::new(MACHINE_IP, "9997")
-        $jssh_socket.sync = true
-        read_socket()
-      rescue
-        no_of_tries += 1
-        retry if no_of_tries < 3
-        raise Watir::Exception::UnableToStartJSShException, "Unable to connect to machine : #{MACHINE_IP} on port 9997. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
-      end
       @error_checkers = []
     end
 
@@ -264,7 +260,7 @@ module Watir
                                              };" # add function to be called when window state is change. When state is STATE_STOP &
                                                  # STATE_IS_NETWORK then only everything is loaded. Now we can reset our variables.
       jssh_command.gsub!(/\n/, "")
-      js_eval jssh_command
+      jssh_socket.js_eval jssh_command
 
       jssh_command =  "var #{window_var} = getWindows()[#{@window_index}];"
       jssh_command << "var #{browser_var} = #{window_var}.getBrowser();"
@@ -272,10 +268,10 @@ module Watir
       jssh_command << "#{browser_var}.addProgressListener( listObj,Components.interfaces.nsIWebProgress.NOTIFY_STATE_WINDOW );"
       jssh_command << "var #{document_var} = #{browser_var}.contentDocument;"
       jssh_command << "var #{body_var} = #{document_var}.body;"
-      js_eval jssh_command
+      jssh_socket.js_eval jssh_command
 
-      @window_title = js_eval "#{document_var}.title"
-      @window_url = js_eval "#{document_var}.URL"
+      @window_title = jssh_socket.js_eval "#{document_var}.title"
+      @window_url = jssh_socket.js_eval "#{document_var}.URL"
     end
 
     public
@@ -297,8 +293,8 @@ module Watir
     #   Closes the window.
     def close
 
-      if js_eval("getWindows().length").to_i == 1
-        js_eval("getWindows()[0].close()")
+      if jssh_socket.js_eval("getWindows().length").to_i == 1
+        jssh_socket.js_eval("getWindows()[0].close()")
 
         if current_os == :macosx
           %x{ osascript -e 'tell application "Firefox" to quit' }
@@ -313,7 +309,7 @@ module Watir
 
         # If matching window found. Close the window.
         if window_number > 0
-          js_eval "getWindows()[#{window_number}].close()"
+          jssh_socket.js_eval "getWindows()[#{window_number}].close()"
         end
 
       end
@@ -365,7 +361,7 @@ module Watir
                       var windows = getWindows(); var window_number = windows.length - 1;
                       window_number;"
 
-      window_number = js_eval(jssh_command).to_i
+      window_number = jssh_socket.js_eval(jssh_command).to_i
       @opened_new_window = window_number
       return window_number if window_number >= 0
     end
@@ -411,7 +407,7 @@ module Watir
                                 }
                             }
                             window_number;"
-      window_number = js_eval(jssh_command).to_s
+      window_number = jssh_socket.js_eval(jssh_command).to_s
       return window_number == 'false' ? nil : window_number.to_i
     end
     private :find_window
@@ -442,12 +438,12 @@ module Watir
 
     # Returns the url of the page currently loaded in the browser.
     def url
-      @window_url = js_eval "#{document_var}.location"
+      @window_url = jssh_socket.js_eval "#{document_var}.location"
     end
 
     # Returns the title of the page currently loaded in the browser.
     def title
-      @window_title = js_eval "#{document_var}.title"
+      @window_title = jssh_socket.js_eval "#{document_var}.title"
     end
 
     #   Returns the Status of the page currently loaded in the browser from statusbar.
@@ -456,30 +452,30 @@ module Watir
     #   Status of the page.
     #
     def status
-      js_status = js_eval("#{window_var}.status")
-      js_status.empty? ? js_eval("#{WINDOW_VAR}.XULBrowserWindow.statusText;") : js_status
+      js_status = jssh_socket.js_eval("#{window_var}.status")
+      js_status.empty? ? jssh_socket.js_eval("#{WINDOW_VAR}.XULBrowserWindow.statusText;") : js_status
     end
 
 
     # Returns the html of the page currently loaded in the browser.
     def html
-      result = js_eval("var htmlelem = #{document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML")
+      result = jssh_socket.js_eval("var htmlelem = #{document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML")
       return "<html>" + result + "</html>"
     end
 
     # Returns the text of the page currently loaded in the browser.
     def text
-      js_eval("#{body_var}.textContent").strip
+      jssh_socket.js_eval("#{body_var}.textContent").strip
     end
 
     # Maximize the current browser window.
     def maximize()
-      js_eval "#{window_var}.maximize()"
+      jssh_socket.js_eval "#{window_var}.maximize()"
     end
 
     # Minimize the current browser window.
     def minimize()
-      js_eval "#{window_var}.minimize()"
+      jssh_socket.js_eval "#{window_var}.minimize()"
     end
 
     # Waits for the page to get loaded.
@@ -489,7 +485,7 @@ module Watir
       start = Time.now
 
       while isLoadingDocument != "false"
-        isLoadingDocument = js_eval("#{browser_var}=#{window_var}.getBrowser(); #{browser_var}.webProgress.isLoadingDocument;")
+        isLoadingDocument = jssh_socket.js_eval("#{browser_var}=#{window_var}.getBrowser(); #{browser_var}.webProgress.isLoadingDocument;")
         #puts "Is browser still loading page: #{isLoadingDocument}"
 
         # Raise an exception if the page fails to load
@@ -500,7 +496,7 @@ module Watir
       # If the redirect is to a download attachment that does not reload this page, this
       # method will loop forever. Therefore, we need to ensure that if this method is called
       # twice with the same URL, we simply accept that we're done.
-      url = js_eval("#{browser_var}.contentDocument.URL")
+      url = jssh_socket.js_eval("#{browser_var}.contentDocument.URL")
 
       if(url != last_url)
         # Check for Javascript redirect. As we are connected to Firefox via JSSh. JSSh
@@ -540,12 +536,12 @@ module Watir
 								    }
                                 }
                                 wait;"
-        wait_time = js_eval(jssh_command).to_i
+        wait_time = jssh_socket.js_eval(jssh_command).to_i
         begin
           if(wait_time != -1)
             sleep(wait_time)
             # Call wait again. In case there are multiple redirects.
-            js_eval "#{browser_var} = #{window_var}.getBrowser()"
+            jssh_socket.js_eval "#{browser_var} = #{window_var}.getBrowser()"
             wait(url)
           end
         rescue
@@ -662,7 +658,7 @@ module Watir
         end
         jssh_command << "};"
       end
-      js_eval jssh_command
+      jssh_socket.js_eval jssh_command
     end
 
     #
@@ -673,9 +669,9 @@ module Watir
     #   Text shown in javascript pop up.
     #
     def get_popup_text()
-      return_value = js_eval "popuptext"
+      return_value = jssh_socket.js_eval "popuptext"
       # reset the variable
-      js_eval "popuptext = ''"
+      jssh_socket.js_eval "popuptext = ''"
       return return_value
     end
 
@@ -698,7 +694,7 @@ module Watir
       candidate_class = jssh_type =~ /HTML(.*)Element/ ? $1 : ''
       #puts candidate_class # DEBUG
       if candidate_class == 'Input'
-        input_type = js_eval("#{element_name}.type").downcase.strip
+        input_type = jssh_socket.js_eval("#{element_name}.type").downcase.strip
         firewatir_class = input_class(input_type)
       else
         firewatir_class = jssh2firewatir(candidate_class)
@@ -969,7 +965,7 @@ module Watir
                             }
                             elements_frames.length;"
 
-      length = js_eval(jssh_command).to_i
+      length = jssh_socket.js_eval(jssh_command).to_i
 
       puts "There are #{length} frames"
 

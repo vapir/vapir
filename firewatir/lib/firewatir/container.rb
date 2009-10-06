@@ -44,11 +44,10 @@ module Watir
     include Container
     #include FireWatir
     #include Watir::Exception
-    include JsshSocket
+    def jssh_socket
+      Firefox.jssh_socket
+    end
     
-    # IP Address of the machine where the script is to be executed. Default to localhost.
-    MACHINE_IP = "127.0.0.1"
-        
     # The default color for highlighting objects as they are accessed.
     DEFAULT_HIGHLIGHT_COLOR = "yellow"
     

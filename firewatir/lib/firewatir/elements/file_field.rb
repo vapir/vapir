@@ -20,7 +20,7 @@ module Watir
       path.gsub!("\\", "\\\\\\")
 
       jssh_socket.send("#{element_object}.value = \"#{path}\";\n", 0)
-      read_socket()
+      jssh_socket.read_socket
       @o.fireEvent("onChange")
       
       @@current_level = 0

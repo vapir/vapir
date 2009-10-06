@@ -47,81 +47,40 @@ module Watir
       #puts "@element_type is #{@element_type}"
     end
 
+    def dom_object
+      @dom_object||= begin
+        locate if !@element_name || @element_name.blank?
+        STDERR.puts "@element_name is #{@element_name}"
+        JsshElement.new(@element_name, Firefox.jssh_socket)
+      end
+    end
+    
+    def read_socket
+#      STDERR.puts "WARNING: read_socket on an Element is deprecated. From: "
+#      caller.each{|c| STDERR.puts "\t"+c}
+      jssh_socket.read_socket
+    end
+
     private
     def self.def_wrap(ruby_method_name, ole_method_name = nil)
       ole_method_name = ruby_method_name unless ole_method_name
-=begin
       define_method ruby_method_name do
-        assert_exists
-        # Every element has its name starting from element. If yes then
-        # use element_name to send the command to jssh. Else its a number
-        # and we are still searching for element, in this case use doc.all
-        # array with element_name as index to send command to jssh
-        #puts element_object.to_s
-        #if(@element_type == 'HTMLDivElement')
-        #    ole_method_name = 'innerHTML'
-        #end
-        jssh_socket.send('typeof(' + element_object.to_s + '.'+ole_method_name.to_s+')\n', 0)
-        return_type = read_socket()
-
-        return_value = get_attribute_value(ole_method_name)
-
-        #if(return_value == '' || return_value == "null")
-        #    return_value = ""
-        #end
-
-        if(return_type == "boolean")
-            return_value = false if return_value == "false"
-            return_value = true if return_value == "true"
-        end
-        #puts return_value
-        @@current_level = 0
-        return_value
+        dom_object.invoke_json(ole_method_name)
       end
-=end
-#=begin
-      class_eval "def #{ruby_method_name}
-                          assert_exists
-                          # Every element has its name starting from element. If yes then
-                          # use element_name to send the command to jssh. Else its a number
-                          # and we are still searching for element, in this case use doc.all
-                          # array with element_name as index to send command to jssh
-                          #puts element_object.to_s
-                          #if(@element_type == 'HTMLDivElement')
-                          #    ole_method_name = 'innerHTML'
-                          #end
-                          jssh_socket.send('typeof(' + element_object + '.#{ole_method_name});\n', 0)
-                          return_type = read_socket()
-
-                          return_value = get_attribute_value(\"#{ole_method_name}\")
-
-                          #if(return_value == '' || return_value == \"null\")
-                          #    return_value = \"\"
-                          #end
-
-                          if(return_type == \"boolean\")
-                              return_value = false if return_value == \"false\"
-                              return_value = true if return_value == \"true\"
-                          end
-                          #puts return_value
-                          @@current_level = 0
-                          return return_value
-                      end"
-#=end
     end
 
     def get_attribute_value(attribute_name)
       #if the attribut name is columnLength get number of cells in first row if rows exist.
       case attribute_name
       when "columnLength"
-        rowsLength = js_eval_method "columns"
+        rowsLength = dom_object.columns
         if (rowsLength != 0 || rowsLength != "")
-          return js_eval_method("rows[0].cells.length")
+          return dom_object.invoke_json("rows[0].cells.length")
         end
       when "text"
         return text
       when "url", "href", "src", "action", "name"
-        return_value = js_eval_method("getAttribute(\"#{attribute_name}\")")
+        return_value = dom_object.invoke_json(:getAttribute, attribute_name)
       else
         jssh_command = "var attribute = '';
           if(#{element_object}.#{attribute_name} != undefined)
@@ -129,15 +88,15 @@ module Watir
           else
               attribute = #{element_object}.getAttribute(\"#{attribute_name}\");
           attribute;"
-        return_value = js_eval(jssh_command)
+        return_value = jssh_socket.js_eval(jssh_command)
       end
       if attribute_name == "value"
-        tagName = js_eval_method("tagName").downcase
-        type = js_eval_method("type").downcase
+        tagName = dom_object.tagName.downcase
+        type = dom_object.invoke(:type).downcase
 
         if tagName == "button" || ["image", "submit", "reset", "button"].include?(type)
           if return_value == "" || return_value == "null"
-            return_value = js_eval_method "innerHTML"
+            return_value = dom_object.innerHTML
           end
         end
       end
@@ -197,12 +156,12 @@ module Watir
         # TODO: Need to change this so that it would work if user sets any other color.
         #puts "color is : #{DEFAULT_HIGHLIGHT_COLOR}"
         jssh_socket.send("#{jssh_command}\n", 0)
-        @original_color = read_socket()
+        @original_color = jssh_socket.read_socket
 
       else # BUG: assumes is :clear, but could actually be anything
         begin
           jssh_socket.send("#{element_object}.style.background = \"#{@original_color}\";\n", 0)
-          read_socket()
+          jssh_socket.read_socket
         rescue
           # we could be here for a number of reasons...
           # e.g. page may have reloaded and the reference is no longer valid
@@ -224,7 +183,7 @@ module Watir
       #puts "#{element_object} and #{element_type}"
       if(element_type == "HTMLTableElement")
         jssh_socket.send("#{element_object}.rows.length;\n", 0)
-        length = read_socket().to_i
+        length = jssh_socket.read_socket.to_i
         #puts "The number of rows in the table are : #{no_of_rows}"
         return_array = Array.new(length)
         for i in 0..length - 1 do
@@ -531,7 +490,7 @@ module Watir
       #out << jssh_command
       #out.close
       jssh_socket.send("#{jssh_command};\n", 0)
-      element_name = read_socket();
+      element_name = jssh_socket.read_socket
       #puts "element name in find control is : #{element_name}"
       @@current_level = @@current_level + 1
       #puts @container
@@ -669,7 +628,7 @@ module Watir
       #puts "jssh_command for finding frame is : #{jssh_command}"
 
       jssh_socket.send("#{jssh_command};\n", 0)
-      element_name = read_socket()
+      element_name = jssh_socket.read_socket
       @@current_level = @@current_level + 1
       #puts "element_name for frame is : #{element_name}"
 
@@ -683,14 +642,14 @@ module Watir
     def get_frame_html
       jssh_socket.send("var htmlelem = #{@container.document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML;\n", 0)
       #jssh_socket.send("body.innerHTML;\n", 0)
-      result = read_socket()
+      result = jssh_socket.read_socket
       return "<html>" + result + "</html>"
     end
 
     def submit_form
       #puts "form name is : #{element_object}"
       jssh_socket.send("#{element_object}.submit();\n" , 0)
-      read_socket()
+      jssh_socket.read_socket
     end
 
     public
@@ -741,7 +700,7 @@ module Watir
       rand_no = rand(1000)
       #jssh_command = "var xpathResult = document.evaluate(\"count(#{xpath})\", document, null, #{NUMBER_TYPE}, null); xpathResult.numberValue;"
       #jssh_socket.send("#{jssh_command}\n", 0);
-      #node_count = read_socket()
+      #node_count = jssh_socket.read_socket
       xpath.gsub!("\"", "\\\"")
       jssh_command = "var element_xpath_#{rand_no} = new Array();"
 
@@ -759,7 +718,7 @@ module Watir
       jssh_command.gsub!(/\n/, "")
       #puts jssh_command
       jssh_socket.send("#{jssh_command};\n", 0)
-      node_count = read_socket()
+      node_count = jssh_socket.read_socket
       #puts "value of count is : #{node_count}"
 
       elements = Array.new(node_count.to_i)
@@ -791,7 +750,7 @@ module Watir
       jssh_command = "var element_xpath_#{rand_no} = null; element_xpath_#{rand_no} = #{@container.document_var}.evaluate(\"#{xpath}\", #{container.document_var}, null, #{FIRST_ORDERED_NODE_TYPE}, null).singleNodeValue; element_xpath_#{rand_no};"
 
       jssh_socket.send("#{jssh_command}\n", 0)
-      result = read_socket()
+      result = jssh_socket.read_socket
       #puts "command send to jssh is : #{jssh_command}"
       #puts "result is : #{result}"
       if(result == "null" || result == "" || result.include?("exception"))
@@ -835,7 +794,7 @@ module Watir
       #puts "in element_type object is : #{element_object}"
       # Get the type of the element.
       jssh_socket.send("#{element_object};\n", 0)
-      temp = read_socket()
+      temp = jssh_socket.read_socket
 
       if temp == ""
         return nil
@@ -875,7 +834,7 @@ module Watir
 
       # check if we've got an old-school on-event
       #jssh_socket.send("typeof(#{element_object}.#{event});\n", 0)
-      #is_defined = read_socket()
+      #is_defined = jssh_socket.read_socket
 
       # info about event types harvested from:
       #   http://www.howtocreate.co.uk/tutorials/javascript/domevents
@@ -914,7 +873,7 @@ module Watir
       #puts "JSSH COMMAND:\n#{jssh_command}\n"
 
       jssh_socket.send("#{jssh_command}\n", 0)
-      read_socket() if wait
+      jssh_socket.read_socket if wait
       wait() if wait
 
       @@current_level = 0
@@ -963,24 +922,19 @@ module Watir
     #
     def enabled?
       assert_exists
-      value = js_eval_method "disabled"
-      @@current_level = 0
-      return true if(value == "false")
-      return false if(value == "true")
-      return value
+      !dom_object.disabled
     end
 
     #
     # Description:
     #   Checks element for display: none or visibility: hidden, these are
     #   the most common methods to hide an html element
-
-    def visible?
-      assert_exists
-      val = js_eval "var val = 'true'; var str = ''; var obj = #{element_object}; while (obj != null) { try { str = #{@container.document_var}.defaultView.getComputedStyle(obj,null).visibility; if (str=='hidden') { val = 'false'; break; } str = #{@container.document_var}.defaultView.getComputedStyle(obj,null).display; if (str=='none') { val = 'false'; break; } } catch(err) {} obj = obj.parentNode; } val;"
-      return (val == 'false')? false: true
-    end
-
+  
+    def visible? 
+      assert_exists 
+      val = jssh_socket.js_eval "var val = 'true'; var str = ''; var obj = #{element_object}; while (obj != null) { try { str = #{@container.document_var}.defaultView.getComputedStyle(obj,null).visibility; if (str=='hidden') { val = 'false'; break; } str = #{@container.document_var}.defaultView.getComputedStyle(obj,null).display; if (str=='none') { val = 'false'; break; } } catch(err) {} obj = obj.parentNode; } val;" 
+      return (val == 'false')? false: true 
+    end 
 
     #
     # Description:
@@ -1029,7 +983,7 @@ module Watir
     def text()
       assert_exists
       element = (element_type == "HTMLFrameElement") ? "body" : element_object
-      return_value = js_eval("#{element}.textContent.replace(/\\xA0/g, ' ').replace(/\\s+/g, ' ')").strip
+      return_value = jssh_socket.js_eval("#{element}.textContent.replace(/\\xA0/g, ' ').replace(/\\s+/g, ' ')").strip
       @@current_level = 0
       return return_value
     end
@@ -1118,15 +1072,15 @@ module Watir
 
         #puts "jssh_command is: #{jssh_command}"
         jssh_socket.send("#{jssh_command}", 0)
-        read_socket()
+        jssh_socket.read_socket
       else
         jssh_socket.send("typeof(#{element_object}.click);\n", 0)
-        isDefined = read_socket()
+        isDefined = jssh_socket.read_socket
         if(isDefined == "undefined")
           fire_event("onclick")
         else
           jssh_socket.send("#{element_object}.click();\n" , 0)
-          read_socket()
+          jssh_socket.read_socket
         end
       end
       highlight(:clear)
@@ -1189,12 +1143,12 @@ module Watir
     #    end
     #    jssh_command.gsub!(/\n/, "")
     #    jssh_socket.send("#{jssh_command}\n", 0)
-    #    read_socket()
+    #    jssh_socket.read_socket
     #    click_js_popup_creator_button()
     #    #jssh_socket.send("popuptext_alert;\n", 0)
-    #    #read_socket()
+    #    #jssh_socket.read_socket
     #    jssh_socket.send("\n", 0)
-    #    read_socket()
+    #    jssh_socket.read_socket
     #end
 
     #
@@ -1205,7 +1159,7 @@ module Watir
     #def click_js_popup_creator_button
     #    #puts @@current_js_object.element_name
     #    jssh_socket.send("#{@@current_js_object.element_name}\n;", 0)
-    #    temp = read_socket()
+    #    temp = jssh_socket.read_socket
     #    temp =~ /\[object\s(.*)\]/
     #    if $1
     #        type = $1
@@ -1224,10 +1178,10 @@ module Watir
     #            jssh_command << "#{@@current_js_object.element_name}.dispatchEvent(event);\n"
     #
     #            jssh_socket.send("#{jssh_command}", 0)
-    #            read_socket()
+    #            jssh_socket.read_socket
     #        when "HTMLDivElement", "HTMLSpanElement"
     #             jssh_socket.send("typeof(#{element_object}.#{event.downcase});\n", 0)
-    #             isDefined = read_socket()
+    #             isDefined = jssh_socket.read_socket
     #             #puts "is method there : #{isDefined}"
     #             if(isDefined != "undefined")
     #                 if(element_type == "HTMLSelectElement")
@@ -1236,16 +1190,16 @@ module Watir
     #                                     #{element_object}.dispatchEvent(event);"
     #                     jssh_command.gsub!(/\n/, "")
     #                     jssh_socket.send("#{jssh_command}\n", 0)
-    #                     read_socket()
+    #                     jssh_socket.read_socket
     #                 else
     #                     jssh_socket.send("#{element_object}.#{event.downcase}();\n", 0)
-    #                     read_socket()
+    #                     jssh_socket.read_socket
     #                 end
     #             end
     #        else
     #            jssh_command = "#{@@current_js_object.element_name}.click();\n";
     #            jssh_socket.send("#{jssh_command}", 0)
-    #            read_socket()
+    #            jssh_socket.read_socket
     #    end
     #    @@current_level = 0
     #    @@current_js_object = nil
@@ -1322,7 +1276,7 @@ module Watir
         end
         #puts "#{jssh_command}"
         jssh_socket.send("#{jssh_command};\n", 0)
-        return_value = read_socket()
+        return_value = jssh_socket.read_socket
         #puts "return value is : #{return_value}"
         return return_value
       else
@@ -1342,7 +1296,7 @@ module Watir
         #puts "temp is : #{temp}"
 
         jssh_socket.send("typeof(#{temp});\n", 0)
-        method_type = read_socket()
+        method_type = jssh_socket.read_socket
         #puts "method_type is : #{method_type}"
 
         if(assigning_value)
@@ -1356,7 +1310,7 @@ module Watir
           end
           #puts "jssh_command is : #{jssh_command}"
           jssh_socket.send("#{jssh_command};\n", 0)
-          read_socket()
+          jssh_socket.read_socket
           return
         end
 
@@ -1394,7 +1348,7 @@ module Watir
         end
         #puts "jssh_command is #{jssh_command}"
         jssh_socket.send("#{jssh_command}", 0)
-        returnValue = read_socket()
+        returnValue = jssh_socket.read_socket
         #puts "return value is : #{returnValue}"
 
         @@current_level = 0

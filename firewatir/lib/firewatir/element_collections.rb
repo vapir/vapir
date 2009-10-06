@@ -6,7 +6,9 @@ module Watir
   #
   class FFElementCollections
     include Enumerable
-    include JsshSocket
+    def jssh_socket
+      Firefox.jssh_socket
+    end
 
     def self.inherited subclass
       class_name = subclass.to_s.demodulize
@@ -111,7 +113,7 @@ module Watir
       jssh_command.gsub!(/\n/, "")
       #puts jssh_command
       jssh_socket.send("#{jssh_command};\n", 0)
-      length = read_socket().to_i;
+      length = jssh_socket.read_socket.to_i;
       #puts "elements length is in locate_tagged_elements is : #{length}"
 
       elements = (0...length).collect {|i| "#{result_name}[#{i}]"}

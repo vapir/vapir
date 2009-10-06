@@ -176,7 +176,7 @@ module Watir
     #
     def js_options
       jssh_socket.send("#{element_object}.options.length;\n", 0)
-      length = read_socket().to_i
+      length = jssh_socket.read_socket.to_i
       # puts "options length is : #{length}"
       arr_options = Array.new(length)
       for i in 0..length - 1

@@ -5,6 +5,7 @@ require 'active_support'
 
 require 'json'
 
+require 'watir'
 require 'watir/common_elements'
 require 'firewatir/exceptions'
 require 'firewatir/jssh_socket'

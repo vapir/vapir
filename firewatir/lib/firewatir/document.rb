@@ -33,8 +33,8 @@ module Watir
                       elements_frames.length;"
       
       jssh_command.gsub!("\n", "")
-      $jssh_socket.send("#{jssh_command};\n", 0)
-      length = read_socket().to_i 
+      jssh_socket.send("#{jssh_command};\n", 0)
+      length = jssh_socket.read_socket.to_i 
       
       frame_array = Array.new(length)
       for i in 0..length - 1 do
@@ -83,7 +83,7 @@ module Watir
       jssh_command.gsub!(/\n/, "")
       #puts  jssh_command
       jssh_socket.send("#{jssh_command};\n", 0)
-      @length = read_socket().to_i;
+      @length = jssh_socket.read_socket.to_i;
       #puts "elements length is in locate_tagged_elements is : #{@length}"
 
       elements = nil
@@ -143,7 +143,7 @@ module Watir
     #
     def get_forms()
       jssh_socket.send("var element_forms = #{@container.document_var}.forms; element_forms.length;\n", 0)
-      length = read_socket().to_i
+      length = jssh_socket.read_socket.to_i
       forms = Array.new(length)
 
       for i in 0..length - 1 do

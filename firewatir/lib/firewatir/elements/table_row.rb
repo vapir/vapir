@@ -34,12 +34,12 @@ module Watir
     #   - how - Attribute to identify the table row element.
     #   - what - Value of that attribute.
     #
-    def initialize(container, how, what)
-      @how = how
-      @what = what
-      @container = container
-      #super nil
-    end
+#    def initialize(container, how, what)
+#      @how = how
+#      @what = what
+#      @container = container
+#      #super nil
+#    end
 
     #
     # Description:
@@ -92,7 +92,7 @@ module Watir
     def cells
       assert_exists
       dom_object.cells.to_array.map do |cell|
-        FFTableCell.new(@container, :jssh_name, cell.ref)
+        FFTableCell.new(cell, extra)
       end
     end
 

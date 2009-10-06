@@ -4,7 +4,7 @@ module Watir
     when String, Symbol
       case attr
       when String, Symbol
-        attr.to_s.downcase==what.to_s.downcase
+        attr.to_s.downcase.strip==what.to_s.downcase.strip
       else
         attr==what
       end

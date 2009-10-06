@@ -6,6 +6,8 @@ module Watir
   class FFLink < FFElement
     include Link
     TAG = 'A'
+    ContainerMethods=:link
+    ContainerCollectionMethods=:links
     #
     # Description:
     #   Initializes the instance of link element.
@@ -14,11 +16,11 @@ module Watir
     #   - how - Attribute to identify the link element.
     #   - what - Value of that attribute.
     #
-    def initialize(container, how, what)
-      @how = how
-      @what = what
-      @container = container
-    end
+#    def initialize(container, how, what)
+#      @how = how
+#      @what = what
+#      @container = container
+#    end
 
     def self.tagName
       'a'

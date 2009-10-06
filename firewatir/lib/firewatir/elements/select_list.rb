@@ -5,33 +5,35 @@ module Watir
   #
   class FFSelectList < FFInputElement
     include SelectList
-    INPUT_TYPES = ["select-one", "select-multiple"]
+    TAG='select'
 
-    #
-    # Description:
     #   Clears the selected items in the select box.
-    #
     def clear
       assert_exists
-      #highlight( :set)
+      #highlight(:set)
       wait = false
-      each do |selectBoxItem|
-        if selectBoxItem.selected
-          selectBoxItem.assign('selected', false)
-          wait = true
-        end
+      options.each do |option|
+        option.selected=false
+        wait=true
       end
+#      each do |selectBoxItem|
+#        if selectBoxItem.selected
+#          selectBoxItem.assign('selected', false)
+#          wait = true
+#        end
+#      end
       self.wait if wait
-      #highlight( :clear)
+      #highlight(:clear)
     end
     alias clearSelection clear
 
-    def each
-      assert_exists
-      js_options.each do |option|
-        yield FFOption.new(self, :jssh_name, option.ref)
-      end
-    end
+#    def each
+#      raise NotImplementedError
+#      assert_exists
+#      js_options.each do |option|
+#        yield FFOption.new(self, :jssh_name, option.ref)
+#      end
+#    end
 
     #
     # Description:
@@ -43,11 +45,12 @@ module Watir
     # Output:
     #   Option element at specified index
     #
-    def [] (key)
-      assert_exists
-      arr_options = js_options
-      return FFOption.new(self, :jssh_name, arr_options[key - 1].ref)
-    end
+#    def [] (key)
+#      raise NotImplementedError
+#      assert_exists
+#      arr_options = js_options
+#      return FFOption.new(self, :jssh_name, arr_options[key - 1].ref)
+#    end
 
     #
     # Description:
@@ -56,7 +59,8 @@ module Watir
     # Input:
     #   - item - Text of item to be selected.
     #
-    def select( item )
+    def select(option)
+      raise NotImplementedError
       select_items_in_select_list(:text, item)
     end
     alias :set :select
@@ -69,6 +73,7 @@ module Watir
     # - item - Value of the item to be selected.
     #
     def select_value( item )
+      raise NotImplementedError
       select_items_in_select_list(:value, item)
     end
 
@@ -81,14 +86,18 @@ module Watir
     #   Array containing the items of the select list.
     #
     def options
-      assert_exists
+      dom_object.options.to_array.map do |option_object|
+        FFOption.new(option_object, extra)
+      end
+#      raise NotImplementedError
+#      assert_exists
       #element.log "There are #{@o.length} items"
-      returnArray = []
-      each { |thisItem| returnArray << thisItem.text }
-      return returnArray
+#      returnArray = []
+#      each { |thisItem| returnArray << thisItem.text }
+#      return returnArray
     end
 
-    alias getAllContents options
+#    alias getAllContents options
 
     #
     # Description:
@@ -99,6 +108,7 @@ module Watir
     #   Array containing the selected items of the select list.
     #
     def selected_options
+      raise NotImplementedError
       assert_exists
       returnArray = []
       #element.log "There are #{@o.length} items"
@@ -122,10 +132,11 @@ module Watir
     #   - attribute - Attribute used to find the option.
     #   - value - value of that attribute.
     #
-    def option (attribute, value)
-      assert_exists
-      FFOption.new(self, attribute, value)
-    end
+#    def option (attribute, value)
+#      raise NotImplementedError
+#      assert_exists
+#      FFOption.new(self, attribute, value)
+#    end
     
     private
     
@@ -137,6 +148,7 @@ module Watir
     #   - item  - value of either item text or item value.
     #
     def select_items_in_select_list(attribute, value)
+      raise NotImplementedError
       assert_exists
       
       attribute = attribute.to_s
@@ -170,9 +182,10 @@ module Watir
     # Output:
     #   Array of option elements.
     #
-    def js_options
-      dom_object.options.to_array
-    end
+#    def js_options
+#      raise NotImplementedError
+#      dom_object.options.to_array
+#    end
   
   end # Selects
 end # FireWatir

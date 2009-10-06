@@ -1,26 +1,38 @@
 module Watir
   class FFPre < FFNonControlElement
     TAG = 'PRE'
+    ContainerMethods=:pre
+    ContainerCollectionMethods=:pres
   end
 
   class FFP < FFNonControlElement
     TAG = 'P'
+    ContainerMethods=:p
+    ContainerCollectionMethods=:ps
   end
 
   class FFDiv < FFNonControlElement
     TAG = 'DIV'
+    ContainerMethods=:div
+    ContainerCollectionMethods=:divs
   end
 
   class FFSpan < FFNonControlElement
     TAG = 'SPAN'
+    ContainerMethods=:span
+    ContainerCollectionMethods=:spans
   end
 
   class FFStrong < FFNonControlElement
     TAG = 'STRONG'
+    ContainerMethods=:strong
+    ContainerCollectionMethods=:strongs
   end
 
   class FFLabel < FFNonControlElement
     TAG = 'LABEL'
+    ContainerMethods=:label
+    ContainerCollectionMethods=:labels
 
     #
     # Description:
@@ -42,6 +54,14 @@ module Watir
       assert_exists
       super({"for" => "htmlFor","text" => "innerHTML"})
       #   r=r + label_string_creator
+    end
+    
+    def for
+      if for_object=document_object.getElementById(dom_object.htmlFor)
+        FFElement.factory(for_object.store_rand_prefix('firewatir_elements'), extra)
+      else
+        raise "no element found that this is for!"
+      end
     end
   end
 

@@ -4,14 +4,19 @@ module Watir
   class FFNonControlElement < FFElement
     include NonControlElement
     def self.inherited subclass
-      class_name = subclass.to_s.demodulize
-      method_name = class_name.sub(/\AFF/i,'').underscore
-#      puts "IN #{self}.inherited: subclass=#{subclass.inspect}; class_name=#{class_name.inspect}; method_name=#{method_name.inspect}"
-      Watir::FFContainer.module_eval "def #{method_name}(how, what=nil)
-      locate if respond_to?(:locate)
-      return #{class_name}.new(self, how, what); end"
+      method_names=subclass.respond_to?(:method_names) ? subclass.method_names : []
+      #TODO/FIX: icky, move all of these into #method_names's 
+      method_names << subclass.name.split('::').last.sub(/\AFF/,'').split(/(?=[A-Z])/).join('_').downcase
+      method_names.uniq.each do |method_name|
+        Watir::FFContainer.module_eval do
+          define_method method_name do |*args| # can't take how, what as args because blocks don't do default values 
+            raise ArgumentError, "Pass one or two arguments!" if args.size>2
+            how, what=*args
+            element_by_howwhat(subclass, how, what)
+          end
+        end
+      end
     end
-
 
     #
     # Description:
@@ -31,13 +36,13 @@ module Watir
 
     #   - how - Attribute to identify the element.
     #   - what - Value of that attribute.
-    def initialize(container, how, what)
-      #@element = Element.new(nil)
-      @how = how
-      @what = what
-      @container = container
-      @o = nil
-    end
+#    def initialize(container, how, what)
+#      #@element = Element.new(nil)
+#      @how = how
+#      @what = what
+#      @container = container
+#      @o = nil
+#    end
 
     # Returns a string of properties of the object.
     def to_s(attributes = nil)
@@ -47,7 +52,7 @@ module Watir
       r = super(hash_properties)
       #r = string_creator
       #r += span_div_string_creator
-      return r.join("\n")
+      return r#.join("\n")
     end
 
   end # NonControlElement

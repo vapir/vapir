@@ -5,6 +5,9 @@ module Watir
   #
   class FFImage < FFElement
     TAG = 'IMG'
+    DefaultHow=:name
+    ContainerMethods=:image
+    ContainerCollectionMethods=:images
     #
     # Description:
     #   Initializes the instance of image object.
@@ -13,11 +16,11 @@ module Watir
     #   - how - Attribute to identify the image element.
     #   - what - Value of that attribute.
     #
-    def initialize(container, how, what)
-      @how = how
-      @what = what
-      @container = container
-    end
+#    def initialize(container, how, what)
+#      @how = how
+#      @what = what
+#      @container = container
+#    end
 
     def self.tagName
       'img'

@@ -44,13 +44,83 @@ module Watir
     include Container
     #include FireWatir
     #include Watir::Exception
-    def jssh_socket
-      Firefox.jssh_socket
-    end
     
     # The default color for highlighting objects as they are accessed.
     DEFAULT_HIGHLIGHT_COLOR = "yellow"
     
+    LocateAliases=Hash.new{|hash,key| [key]}.merge!(:text => [:text, :textContent])
+    
+    private
+    # locates the element specified. 
+    # specifiers_list is a list of specifiers, where a specifier is a hash of the javascript object to match. 
+    # For example, the specifier_list
+    #   [ {:tagName => 'textarea'},
+    #     {:tagName => 'input', :types => ['text', 'textarea','password']},
+    #   ]
+    # (used by FFTextField) will match all text input fields. 
+    # if ANY of the specifiers in the list match (not ALL), a given element is considered a match. 
+    # but ALL of the attributes specified must match. 
+    # regexps can be used to match attributes to regexp; if both are strings, then the match is 
+    # case-insensitive. 
+    # The only specifier attribute that doesn't match directly to an element attribute is 
+    # :types, which will match any of a list of types. 
+    def locate_first_specified(specifiers_list, index=nil)
+      #STDERR.puts specifiers_list.inspect#+caller.map{|c|"\n\t#{c}"}.join('')
+#debugger
+#      ids=specifiers_list.map{|s| s[:id] }.compact.uniq
+      tags=specifiers_list.map{|s| s[:tagName] }.compact.uniq
+
+# TODO/FIX: getElementById uses document_object, not dom_object, and doesn't check that candidates are below self in the dom heirarchy. 
+#      if ids.size==1 && ids.first.is_a?(String) && (!index || index==1) # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
+#        candidates= if by_id=document_object.getElementById(ids.first)
+#          [by_id]
+#        else
+#          []
+#        end
+#      els
+      if tags.size==1 && tags.first.is_a?(String)
+        candidates=dom_object.getElementsByTagName(tags.first).to_array
+      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
+        candidates=dom_object.getElementsByTagName('*').to_array
+      end
+      
+      matched=0
+      match_candidates(candidates, specifiers_list) do |match|
+        matched+=1
+        if !index || index==matched
+          return match.store_rand_prefix("firewatir_elements")
+        end
+      end
+      return nil
+    end
+    def match_candidates(candidates, specifiers_list)
+      candidates.each do |candidate|
+        match=true
+        match&&= specifiers_list.any? do |specifier|
+          specifier.all? do |(how, what)|
+            if how==:types
+              what.any? do |type|
+                Watir.fuzzy_match(candidate[:type], type)
+              end
+            else
+              LocateAliases[how].any? do |how_alias|
+                Watir.fuzzy_match(candidate[how_alias], what)
+              end
+            end
+          end
+        end
+        if match
+          yield candidate
+        end
+      end
+      nil
+    end
+    module_function :match_candidates
+    
+    def extra
+      {:container => self, :browser => self.browser, :jssh_socket => self.jssh_socket}
+    end
+
     public
     #
     # Description:
@@ -69,15 +139,71 @@ module Watir
     #   ff.frame('main_frame')        # in this case, just a name is supplied.
     #
     # Output:
-    #   Frame object.
+    #   Frame object or nil if the specified frame does not exist. 
     #
     def frame(how, what = nil)
-      locate if respond_to?(:locate)
-      if(what == nil)
-        what = how
-        how = :name
+      if self.is_a?(Firefox) || self.is_a?(FFFrame)
+        candidates=content_window_object.frames.to_array.map{|c|c.frameElement}
+      else
+        raise NotImplementedError, "frame called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
       end
-      FFFrame.new(self, how, what)
+
+      specifiers, index=*howwhat_to_specifiers_index(how, what, :default_how => :name)
+      match_candidates(candidates, specifiers, index) do |match|
+        match=match.store_rand_prefix('firewatir_frames')
+        return FFFrame.new(match, extra.merge(:how => how, :what => what))
+      end
+      return nil
+    end
+    def frames
+      unless self.is_a?(Firefox) || self.is_a?(FFFrame)
+        raise NotImplementedError, "frames called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
+      end
+      
+      content_window_object.frames.to_array.map do |c|
+        FFFrame.new(c.frameElement.store_rand_prefix('firewatir_frames'), extra)
+      end
+    end
+    
+    def howwhat_to_specifier(how, what, default_how=nil)
+      spec=if what.nil?
+        case how
+        when String, Symbol
+          default_how ? {default_how => how} : {how.to_sym => what}
+        when Hash
+          how.dup
+        when nil
+          {}
+        else
+          default_how ? {default_how => how} : (raise "Invalid how: #{how.inspect}; what: #{what.inspect}")
+        end
+      else # what is not nil
+        if how.is_a?(String)||how.is_a?(Symbol)
+          {how.to_sym => what}
+        else
+          raise "Invalid how: #{how.inspect}; what: #{what.inspect}"
+        end
+      end
+#      spec.inject({}) do |hash,(how,what)|
+#        hash[LocateAliases[how.to_sym]]=what
+#        hash
+#      end
+    end
+    def howwhat_to_specifiers_index(how, what, options={})
+      default_how=options[:default_how] || options[:klass] && options[:klass].respond_to?(:default_how) && options[:klass].default_how
+      hwspecifier=howwhat_to_specifier(how, what, default_how=nil)
+      index=hwspecifier.delete :index
+      if options[:klass]
+        [options[:klass].specifiers.map{|s|s.merge(hwspecifier)}, index]
+      else
+        [[hwspecifier], index]
+      end
+    end
+    module_function :howwhat_to_specifier, :howwhat_to_specifiers_index
+    def element_by_howwhat(klass, how, what)
+      if dom_object=locate_first_specified(*howwhat_to_specifiers_index(how, what, :klass => klass))
+        klass.new(dom_object, extra.merge(:how => how, :what => what))
+      end
     end
     
     #
@@ -99,13 +225,8 @@ module Watir
     # Output:
     #   Form object.
     #
-    def form(how, what=nil)   
-      locate if respond_to?(:locate)
-      if(what == nil)
-        what = how
-        how = :name
-      end    
-      FFForm.new(self, how, what)
+    def form(how, what=nil)
+      element_by_howwhat(FFForm, how, what)
     end
     
     #
@@ -125,8 +246,7 @@ module Watir
     #   Table object.
     #
     def table(how, what=nil)
-      locate if respond_to?(:locate)
-      FFTable.new(self, how, what)
+      element_by_howwhat(FFTable, how, what)
     end
     
     #
@@ -145,8 +265,7 @@ module Watir
     #    TableCell Object
     #
     def cell(how, what=nil)
-      locate if respond_to?(:locate)
-      FFTableCell.new(self, how, what)
+      element_by_howwhat(FFTableCell, how, what)
     end
     
     # 
@@ -165,8 +284,7 @@ module Watir
     #   TableRow object
     #
     def row(how, what=nil)
-      locate if respond_to?(:locate)
-      FFTableRow.new(self, how, what)
+      element_by_howwhat(FFTableRow, how, what)
     end
     
     # 
@@ -189,12 +307,7 @@ module Watir
     #   Button element.
     #
     def button(how, what=nil)
-      locate if respond_to?(:locate)
-      if what.nil? && String === how
-        what = how
-        how = :value
-      end    
-      FFButton.new(self, how, what)
+      element_by_howwhat(FFButton, how, what)
     end    
     
     # 
@@ -213,8 +326,7 @@ module Watir
     #   FileField object
     #
     def file_field(how, what = nil)
-      locate if respond_to?(:locate)
-      FFFileField.new(self, how, what)
+      element_by_howwhat(FFFileField, how, what)
     end    
     
     #
@@ -234,8 +346,7 @@ module Watir
     #   TextField object.
     #
     def text_field(how, what = nil)
-      locate if respond_to?(:locate)
-      FFTextField.new(self, how, what)
+      element_by_howwhat(FFTextField, how, what)
     end    
     
     # 
@@ -255,8 +366,7 @@ module Watir
     #   Hidden object.
     #
     def hidden(how, what=nil)
-      locate if respond_to?(:locate)
-      FFHidden.new(self, how, what)
+      element_by_howwhat(FFHidden, how, what)
     end
     
     #
@@ -276,8 +386,10 @@ module Watir
     #   Select List object.
     #
     def select_list(how, what=nil) 
-      locate if respond_to?(:locate)
-      FFSelectList.new(self, how, what)
+      element_by_howwhat(FFSelectList, how, what)
+    end
+    def option(how, what=nil) 
+      element_by_howwhat(FFOption, how, what)
     end
     
     #
@@ -306,9 +418,10 @@ module Watir
     # Output:
     #   Checkbox object.
     #
-    def checkbox(how, what=nil, value = nil) 
-      locate if respond_to?(:locate)
-      FFCheckBox.new(self, how, what, value) 
+    def checkbox(how, what=nil, value=nil) 
+      howwhat=howwhat_to_specifier(how, what, FFCheckBox.default_how)
+      howwhat[:value]=value unless value.nil?
+      element_by_howwhat(FFCheckBox, howwhat, nil)
     end
     
     #
@@ -337,9 +450,10 @@ module Watir
     # Output:
     #   Radio button object.
     #
-    def radio(how, what=nil, value = nil) 
-      locate if respond_to?(:locate)
-      FFRadio.new(self, how, what, value) 
+    def radio(how, what=nil, value=nil)
+      howwhat=howwhat_to_specifier(how, what, FFRadio.default_how)
+      howwhat[:value]=value unless value.nil?
+      element_by_howwhat(FFRadio, howwhat, nil)
     end
     
     #
@@ -359,8 +473,7 @@ module Watir
     #   Link object.
     #
     def link(how, what=nil) 
-      locate if respond_to?(:locate)
-      FFLink.new(self, how, what)
+      element_by_howwhat(FFLink, how, what)
     end
     
     #
@@ -380,8 +493,7 @@ module Watir
     #   Image object.
     #
     def image(how, what = nil)
-      locate if respond_to?(:locate)
-      FFImage.new(self, how, what)
+      element_by_howwhat(FFImage, how, what)
     end    
     
     
@@ -402,8 +514,7 @@ module Watir
     #   Dl object.
     #
     def dl(how, what = nil)
-      locate if respond_to?(:locate)
-      FFDl.new(self, how, what)
+      element_by_howwhat(FFDl, how, what)
     end
 
     #
@@ -423,8 +534,7 @@ module Watir
     #   Dt object.
     #
     def dt(how, what = nil)
-      locate if respond_to?(:locate)
-      FFDt.new(self, how, what)
+      element_by_howwhat(FFDt, how, what)
     end
 
     #
@@ -444,8 +554,7 @@ module Watir
     #   Dd object.
     #
     def dd(how, what = nil)
-      locate if respond_to?(:locate)
-      FFDd.new(self, how, what)
+      element_by_howwhat(FFDd, how, what)
     end
 
     # Description:

@@ -2,6 +2,7 @@ module Watir
   class FFFrame < FFElement
     include Frame
     include FFContainer
+    TAG='frame'
     #
     # Description:
     #   Initializes the instance of frame or iframe object.
@@ -10,34 +11,13 @@ module Watir
     #   - how - Attribute to identify the frame element.
     #   - what - Value of that attribute.
     #
-    def initialize(container, how, what)
-      @how = how
-      @what = what
-      @container = container
+    def initialize(*args)
+      super
       @document=FFDocument.new self
     end
-
-    def locate
-      @dom_object||= if(@how == :jssh_name)
-        JsshObject.new @what, jssh_socket
-      else
-        locate_frame(@how, @what)
-      end
-    end
-    def locate_frame(how, what)
-      if @container.is_a?(Firefox) || @container.is_a?(FFFrame)
-        candidates=@container.content_window_object.frames
-      else
-        raise "locate_frame is not implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
-      end
-
-      specifier=howwhat_to_specifier(how, what)
-      index=specifier.delete(:index)
-      if match=match_candidates(candidates.to_array.map{|c|c.frameElement}, specifier, index)
-        return match.store_rand_prefix('firewatir_frames')
-      end
-      return nil
-    end
+    DefaultHow=:name
+    ContainerMethods=:frame
+    ContainerCollectionMethods=:frames
 
     def html
       assert_exists

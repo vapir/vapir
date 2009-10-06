@@ -5,7 +5,7 @@ module Watir
   #
   class FFDocument
     include Document
-    include Watir::FFContainer
+#    include Watir::FFContainer
     @@current_level = 0
 
     #
@@ -29,17 +29,6 @@ module Watir
       @container.browser_window_object
     end
     
-    def frames
-      # TODO: FIX, copied from locate_frame, should be DRY 
-      if @container.is_a?(Firefox) || @container.is_a?(FFFrame)
-        candidates=@container.content_window_object.frames
-      else
-        raise "frames is not implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
-      end
-      
-      return candidates.to_array.map{|c| FFFrame.new(@container, :jssh_name, c.frameElement.store_rand_prefix('firewatir_frames').ref)}
-    end
-
     #
     # Description:
     #   Find all the elements in the document by querying DOM.
@@ -49,6 +38,7 @@ module Watir
     #   Array of elements.
     #
     def all
+      raise NotImplementedError
       @arr_elements = "arr_coll_#{@@current_level}"
       jssh_command = "var arr_coll_#{@@current_level}=new Array(); "
 
@@ -106,6 +96,7 @@ module Watir
     #   Count of elements found in the document.
     #
     def length
+      raise NotImplementedError
       return @length
     end
     alias_method :size, :length
@@ -115,6 +106,7 @@ module Watir
     #   Iterates over elements in the document.
     #
     def each
+      raise NotImplementedError
       for i in 0..@length - 1
         yield FFElement.new("#{@arr_elements}[#{i}]", @container)
       end
@@ -131,6 +123,7 @@ module Watir
     #   Element at the nth index.
     #
     def [](n)
+      raise NotImplementedError
       return FFElement.new("#{@arr_elements}[#{n-1}]", @container)
     end
 
@@ -143,6 +136,7 @@ module Watir
     #   Array containing Form elements
     #
     def get_forms()
+      raise NotImplementedError
       document_object.forms.to_array.map
     end
 
@@ -155,6 +149,7 @@ module Watir
     #   Array containing Image elements
     #
     def get_images
+      raise NotImplementedError
       return FFImages.new(@container)
     end
 
@@ -167,6 +162,7 @@ module Watir
     #   Array containing Link elements
     #
     def get_links
+      raise NotImplementedError
       return FFLinks.new(@container)
     end
 
@@ -179,6 +175,7 @@ module Watir
     #   Array containing Div elements
     #
     def get_divs
+      raise NotImplementedError
       return FFDivs.new(@container)
     end
 
@@ -191,6 +188,7 @@ module Watir
     #   Array containing Table elements
     #
     def get_tables
+      raise NotImplementedError
       return FFTables.new(@container)
     end
 
@@ -203,6 +201,7 @@ module Watir
     #   Array containing Pre elements
     #
     def get_pres
+      raise NotImplementedError
       return FFPres.new(@container)
     end
 
@@ -215,6 +214,7 @@ module Watir
     #   Array containing Span elements
     #
     def get_spans
+      raise NotImplementedError
       return FFSpans.new(@container)
     end
 
@@ -227,6 +227,7 @@ module Watir
     #   Array containing Label elements
     #
     def get_labels
+      raise NotImplementedError
       return FFLabels.new(@container)
     end
     

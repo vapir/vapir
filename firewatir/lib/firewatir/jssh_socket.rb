@@ -12,10 +12,10 @@ class JsshUndefinedValueError < JsshError; end
 class JsshSocket
   def self.logger
     @@logger||=begin
-      logger=Logger.new nil#(File.join('c:/tmp/jssh_log.txt'))
-      logger.level = Logger::DEBUG
-      logger.datetime_format = "%Y-%m-%d %H:%M:%S"
+      logger=Logger.new nil#(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::CREAT))
+      logger.level = Logger::INFO
       logger.formatter=Logger::Formatter.new
+#      logger.datetime_format = "%Y-%m-%d %H:%M:%S"
       logger
     end
   end
@@ -30,10 +30,8 @@ class JsshSocket
   JSSH_PORT = 9997
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
 
-  DEFAULT_SOCKET_TIMEOUT=16
+  DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
-  SHORT_SOCKET_TIMEOUT=(2**-16).to_f
-  
 
   attr_reader :ip, :port, :prototype
   
@@ -46,12 +44,19 @@ class JsshSocket
     @ip=options[:jssh_ip] || JSSH_IP
     @port=options[:jssh_port] || JSSH_PORT
     @prototype=options.key?(:send_prototype) ? options[:send_prototype] : true
-    @socket = TCPSocket::new(@ip, @port)
-    @socket.sync = true
+    begin
+      @socket = TCPSocket::new(@ip, @port)
+      @socket.sync = true
+    rescue Errno::ECONNREFUSED
+      err=JsshUnableToStart.new("Could not connect to JSSH sever #{@ip}:#{@port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
+      err.set_backtrace($!.backtrace)
+      raise err
+    end
     eat="Welcome to the Mozilla JavaScript Shell!"
     eaten=""
+    initial_timeout=LONG_SOCKET_TIMEOUT
     while eat!=eaten
-      ret=read_socket(LONG_SOCKET_TIMEOUT).chomp
+      ret=read_socket(initial_timeout).chomp
       expect=eat[eaten.length...ret.length]
       if !ret
         raise JsshError, "Something went wrong initializing - no response (already received #{eaten.inspect})" 
@@ -67,19 +72,17 @@ class JsshSocket
     temp_object.assign({})
   end
 
-  # sends the given message to the jssh socket. one usually wants to use less low-level stuff than this; this may 
-  # become private. 
   def send(mesg, flags=0)
     raise NotImplementedError, "send is gone. use send_and_read, or, preferably, something better"
-#    STDERR.puts "calling send on a JsshSocket directly is deprecated. From:\n"
-#    caller.each{|c| STDERR.puts "\t"+c}
-#    @socket.send mesg, flags
   end
   
   # reads data from the socket until it is done being ready. ("done being ready" is defined as Kernel.select saying
   # it isn't ready immediately (zero timeout)).
   # times out (waiting for an initial recv from the socket) after the given number 
   # of seconds, default is DEFAULT_SOCKET_TIMEOUT. 
+  #
+  # this does not remove the prompt (the "\n> ") in all cases, so you will want to gsub that out of results (or
+  # more likely you will want to use #read_value)
   #
   # usually you will want read_value though. or value, which takes an expression. or value_json, which actually
   # deals with data types. 
@@ -95,7 +98,7 @@ class JsshSocket
       received_data << data
       logger.debug "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}"
     end
-    logger.debug "RECV_SOCKET is done. received_data=#{received_data.inspect}"
+    logger.info "RECV_SOCKET is done. received_data=#{received_data.inspect}"
     received_data.pop if received_data.last==PROMPT
     received_data.shift if received_data.first==PROMPT
     received_data.empty? ? nil : received_data.join('')
@@ -114,9 +117,9 @@ class JsshSocket
   # => "3\n> 4\n> 5"
   def read_value(timeout=DEFAULT_SOCKET_TIMEOUT)
     if(value=recv_socket(timeout))
-      #Remove the command prompt. Every result returned by JSSH has "\n> " at the end.
-      value.sub!(/\A\n?> /, '')
-      value.sub!(/\n?\n> \z/, '')
+      # Remove the command prompt. results returned from recv_socket may have a prompt at the beginning or the end.
+      value.sub!(/\A#{Regexp.escape(PROMPT)}/, '')
+      value.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
       return value
     else
       return nil
@@ -127,8 +130,6 @@ class JsshSocket
   # Evaluate javascript and return result. Raise an exception if an error occurred.
   # Takes one expression and strips out newlines so that only one value will be returned, so you're going to have to
   # use semicolons, and no // style comments. 
-  # If you're sure that you only have one line-ending expression, you can dump it into send (for now. maybe that will
-  # go away, maybe there will be something to replace it.) 
   def js_eval(str, timeout=DEFAULT_SOCKET_TIMEOUT)
     value= send_and_read(str.gsub("\n",""), timeout)
     if md = /\A(\w+Error):(.*)/m.match(value)
@@ -142,13 +143,13 @@ class JsshSocket
   def send_and_read(js_expr, timeout=DEFAULT_SOCKET_TIMEOUT)
     logger.debug "SEND_AND_READ is starting. timeout=#{timeout}"
     logger.debug "SEND_AND_READ is checking for leftovers"
-    if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != PROMPT
+    if (leftover=recv_socket(0)) && leftover != PROMPT
       STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
       logger.warn("SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}")
     end
     @last_expression=js_expr
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
-    logger.debug "SEND_AND_READ sending #{js_expr.inspect}"
+    logger.info "SEND_AND_READ sending #{js_expr.inspect}"
     @socket.send(js_expr, 0)
     return read_socket(timeout)
   end
@@ -226,16 +227,12 @@ class JsshSocket
   def value_json(js, options={})
     options={:error_on_undefined => true}.merge(options)
     ensure_prototype
+    ref_error=options[:error_on_undefined] ? "typeof(result)=='undefined' ? [true, {'name': 'ReferenceError', 'message': 'undefined expression in: '+result_f.toString()}] : " : ""
     wrapped_js=
       "try
        { var result_f=(function(){return #{js}});
          var result=result_f();
-         if((typeof result) == 'undefined' && #{options[:error_on_undefined].to_json})
-         { throw({'name': 'ReferenceError',
-                  'message': 'undefined expression in: '+result_f.toString()
-                 });
-         }
-         Object.toJSON([false, result]);
+         Object.toJSON(#{ref_error} [false, result]);
        }catch(e)
        { Object.toJSON([true, e]);
        }"
@@ -327,14 +324,6 @@ class JsshSocket
   # returns the type of the given expression using javascript typeof operator, with the exception that
   # if the expression is null, returns 'null' - whereas typeof(null) in javascript returns 'object'
   def typeof(expression)
-    # this approach evaluates the expression twice if it === null. that is no good. 
-    #value_json("(function(){type=typeof(#{expression});return (#{expression}===null) ? 'null' : type;})()")
-    
-    # this approach errors (in javascript) if expression is undefined. no good. 
-    #type,isnull = *value_json("(function(expr){return [typeof(expr), expr===null];})(#{expression})")
-    #isnull ? 'null' : type
-    
-    # this approach, combining the above and handling errors, seems to work. 
     js="(function()
         { try
           { return (function(expr)

@@ -150,6 +150,14 @@ module Watir
       set_defaults
     end
 
+    def dom_object
+      document_object
+    end
+    
+    def browser
+      self
+    end
+    
     def inspect
       '#<%s:0x%x url=%s title=%s>' % [self.class, hash*2, url.inspect, title.inspect]
     end
@@ -590,7 +598,7 @@ module Watir
 
     # Returns the first element that matches the given xpath expression or query.
     def element_by_xpath(xpath)
-      raise "borken xpath"
+      raise NotImplementedError, "borken xpath"
       temp = FFElement.new(nil, self)
       element_name = temp.element_by_xpath(self, xpath)
       return element_factory(element_name)
@@ -598,6 +606,7 @@ module Watir
 
     # Return object of correct Element class while using XPath to get the element.
     def element_factory(element_name)
+      raise NotImplementedError
       jssh_type = FFElement.new(element_name,self).element_type
       #puts "jssh type is : #{jssh_type}" # DEBUG
       candidate_class = jssh_type =~ /HTML(.*)Element/ ? $1 : ''
@@ -683,6 +692,7 @@ module Watir
     #   Array of elements matching xpath query.
     #
     def elements_by_xpath(xpath)
+      raise NotImplementedError
       element = FFElement.new(nil, self)
       elem_names = element.elements_by_xpath(self, xpath)
       elem_names.inject([]) {|elements,name| elements << element_factory(name)}
@@ -862,6 +872,7 @@ module Watir
     #   Name, and index of all the frames available on the page.
     #
     def show_frames
+      raise NotImplementedError
       jssh_command = "var frameset = #{window_var}.frames;
                             var elements_frames = new Array();
                             for(var i = 0; i < frameset.length; i++)

@@ -31,32 +31,63 @@ module Watir
     #   element - Name of the variable with which the element is referenced in JSSh.
     #
 
-    def initialize(element, container=nil)
-      @container = container
-      #@element_name = element
-      #puts "in initialize "
-      #puts caller(0)
-      #if(element != nil && element.class == String)
-      #@element_name = element
-      #elsif(element != nil && element.class == Element)
-      #    @o = element
-      #end
-
-      #puts "@element_name is #{@element_name}"
-      #puts "@element_type is #{@element_type}"
+    def initialize(dom_object, extra={})
+      @dom_object=dom_object
+      raise ArgumentError, "first argument should be a JsshObject, not: #{dom_object.inspect}" unless dom_object.is_a?(JsshObject)
+      @extra=extra
+      @how=extra[:how]
+      @what=extra[:what]
+      @container=extra[:container]
+      @browser=extra[:browser]
+      @jssh_socket=extra[:jssh_socket] || (@dom_object ? @dom_object.jssh_socket : @browser ? @browser.jssh_socket : nil)
     end
 
+    def self.factory(dom_object, extra={})
+      curr_klass=self
+      ObjectSpace.each_object(Class) do |klass|
+        if klass < curr_klass
+          Watir::FFContainer.match_candidates([dom_object], klass.specifiers) do |match|
+            curr_klass=klass
+          end
+        end
+      end
+      curr_klass.new(dom_object, extra)
+    end
+    
+    attr_reader :browser
+    attr_reader :jssh_socket
+  
     class << self
       #default specifier is just the tagName, which should be specified on the class 
       def specifiers
-        tagName=self.tagName || (raise StandardError, "No tag name defined on class #{self}.")
-        [:tagName => tagName]
+        if self.const_defined?('Specifiers')
+          #self.const_get('Specifiers')
+          self::Specifiers
+        elsif self.const_defined?('TAG')
+          [{:tagName => self::TAG}]
+        else
+          raise StandardError, "No way found to specify #{self}."
+        end
+#        tagName=self.tagName || (raise StandardError, "No tag name defined on class #{self}.")
+#        tagName ? [{:tagName => tagName}] : []
       end
       
       # tagName used to be defined in the TAG const, so check for that. tagName should be overridden. 
       def tagName
         self.const_defined?('TAG') ? self.const_get('TAG') : nil
       end
+      
+      def default_how
+        self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
+      end
+      
+      def container_methods
+        self.const_defined?('ContainerMethods') ? self.const_get('ContainerMethods') : []
+      end
+      
+#      def js_object_types
+#        self.const_defined?('JSObjectTypes') ? self.const_get('JSObjectTypes') : []
+#      end
     end
 
     attr_reader :dom_object
@@ -134,33 +165,34 @@ module Watir
     end
     protected :highlight
 
-    LocateAliases=Hash.new{|hash,key| key}.merge!(:text => :textContent)
-    def howwhat_to_specifier(how, what)
-      if how.is_a?(Hash) && what.nil?
-        how
-      else
-        {LocateAliases[how.to_sym] => what}
-      end
-    end
+#    LocateAliases=Hash.new{|hash,key| key}.merge!(:text => :textContent)
+#    def howwhat_to_specifier(how, what)
+#      if how.is_a?(Hash) && what.nil?
+#        how.dup
+#      else
+#        {LocateAliases[how.to_sym] => what}
+#      end
+#    end
 
     # locates a javascript reference for this element
     def locate
-      if !@already_located
-        @dom_object= case @how
-        when :jssh_name
-          JsshObject.new(@what, jssh_socket)
-        when :xpath
-          element_by_xpath(@container, @what)
-        else
-          current_specifier=howwhat_to_specifier(@how, @what)
-          index=current_specifier.delete(:index)
-          
-          specifiers=self.class.specifiers.map{|spec| spec.merge(current_specifier)}
-          locate_specified_element(specifiers, index)
-        end
-        @already_located=true
-        return @dom_object
+      @dom_object
+=begin
+      ||= case @how
+      when :jssh_object, :dom_object
+        what
+      when :jssh_name
+        JsshObject.new(@what, jssh_socket)
+      when :xpath
+        element_by_xpath(@container, @what)
+      else
+        current_specifier=howwhat_to_specifier(@how, @what)
+        index=current_specifier.delete(:index)
+        
+        specifiers=self.class.specifiers.map{|spec| spec.merge(current_specifier)}
+        locate_specified_element(specifiers, index)
       end
+=end
     end
 
     # locates the element specified. 
@@ -176,59 +208,60 @@ module Watir
     # case-insensitive. 
     # The only specifier attribute that doesn't match directly to an element attribute is 
     # :types, which will match any of a list of types. 
-    def locate_specified_element(specifiers_list, index=nil)
-      #STDERR.puts specifiers_list.inspect#+caller.map{|c|"\n\t#{c}"}.join('')
-      ids=specifiers_list.map{|s|s[:id]}.compact.uniq
-      tags=specifiers_list.map{|s|s[:tagName]}.compact.uniq
-
-      #FIX: @countainer should always have a dom_object, can return document_object if that's the container. 
-      container_object = if @container.is_a?(Firefox) || @container.is_a?(FFFrame)
-        document_object
-      else
-        @container.dom_object
-      end
-
-      if ids.size==1 && ids.first.is_a?(String) && (!index || index==1) # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
-        candidates= if by_id=document_object.getElementById(ids.first)
-          [by_id]
-        else
-          []
-        end
-      elsif tags.size==1 && tags.first.is_a?(String)
-        candidates=container_object.getElementsByTagName(tags.first).to_array
-      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=container_object.getElementsByTagName('*').to_array
-      end
-      
-      if match=match_candidates(candidates, specifiers_list,index)
-        return match.store_rand_prefix("firewatir_elements")
-      end
-      return nil
-    end
-    def match_candidates(candidates, specifiers_list, index)
-      matched=0
-      candidates.each_with_index do |candidate,i|
-        match=true
-        match&&= specifiers_list.any? do |specifier|
-          specifier.all? do |(how, what)|
-            if how==:types
-              what.any? do |type|
-                Watir.fuzzy_match(candidate[:type], type)
-              end
-            else
-              Watir.fuzzy_match(candidate[how], what)
-            end
-          end
-        end
-        if match
-          matched+=1
-          if !index || index==matched
-            return candidate
-          end
-        end
-      end
-      return nil
-    end
+#    def locate_specified_element(specifiers_list, index=nil)
+#      STDERR.puts specifiers_list.inspect#+caller.map{|c|"\n\t#{c}"}.join('')
+##debugger
+#      ids=specifiers_list.map{|s| s[:id] }.compact.uniq
+#      tags=specifiers_list.map{|s| s[:tagName] }.compact.uniq
+#
+#      #FIX: @container should always have a dom_object, can return document_object if that's the container. 
+#      container_object = if @container.is_a?(Firefox) || @container.is_a?(FFFrame)
+#        document_object
+#      else
+#        @container.dom_object
+#      end
+#
+#      if ids.size==1 && ids.first.is_a?(String) && (!index || index==1) # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
+#        candidates= if by_id=document_object.getElementById(ids.first)
+#          [by_id]
+#        else
+#          []
+#        end
+#      elsif tags.size==1 && tags.first.is_a?(String)
+#        candidates=container_object.getElementsByTagName(tags.first).to_array
+#      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
+#        candidates=container_object.getElementsByTagName('*').to_array
+#      end
+#      
+#      if match=match_candidates(candidates, specifiers_list,index)
+#        return match.store_rand_prefix("firewatir_elements")
+#      end
+#      return nil
+#    end
+#    def match_candidates(candidates, specifiers_list, index)
+#      matched=0
+#      candidates.each_with_index do |candidate,i|
+#        match=true
+#        match&&= specifiers_list.any? do |specifier|
+#          specifier.all? do |(how, what)|
+#            if how==:types
+#              what.any? do |type|
+#                Watir.fuzzy_match(candidate[:type], type)
+#              end
+#            else
+#              Watir.fuzzy_match(candidate[how], what)
+#            end
+#          end
+#        end
+#        if match
+#          matched+=1
+#          if !index || index==matched
+#            return candidate
+#          end
+#        end
+#      end
+#      return nil
+#    end
 
     public
 

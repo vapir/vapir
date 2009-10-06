@@ -5,20 +5,14 @@ module Watir
   #
   class FFTextField < FFInputElement
     include TextField
-    def self.specifiers
-      [ {:tagName => 'textarea'},
-        {:tagName => 'input', :types => ['text', 'textarea','password']},
-      ]
-    end
-                 
-    INPUT_TYPES = ["text", "password", "textarea"]
+    Specifiers= [ {:tagName => 'textarea'},
+                  {:tagName => 'input', :types => ['text', 'textarea','password']},
+                ]
 
     # Gets the size of the text field element.
     def_wrap :size
-    # Gets max length of the text field element.
-    def_wrap :maxlength_string, :maxlength
     def maxlength
-      maxlength_string.to_i
+      dom_object.maxlength
     end
     # Returns true if the text field is read only, false otherwise.
     def_wrap :readonly?, :readOnly

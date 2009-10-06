@@ -32,12 +32,12 @@ module Watir
     #   - how - Attribute to identify the table cell element.
     #   - what - Value of that attribute.
     #
-    def initialize(container, how, what)
-      @how = how
-      @what = what
-      @container = container
-      #super nil
-    end
+#    def initialize(container, how, what)
+#      @how = how
+#      @what = what
+#      @container = container
+#      #super nil
+#    end
 
     alias to_s text
 

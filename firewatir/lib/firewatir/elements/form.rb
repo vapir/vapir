@@ -1,37 +1,10 @@
 module Watir
   class FFForm < FFElement
     include Form
-
-    #
-    # Description:
-    #   Initializes the instance of form object.
-    #
-    # Input:
-    #   - how - Attribute to identify the form element.
-    #   - what - Value of that attribute.
-    #
-    def initialize(container, how, what)
-      @how = how
-      @what = what
-      @container = container
-    end
-
-    def self.tagName
-      'form'
-    end
-
-#    def locate
-#      # Get form using xpath.
-#      case @how
-#      when :jssh_name
-#        @element_name = @what
-#      when :xpath
-#        @element_name = element_by_xpath(@container, @what)
-#      else
-#        @element_name = locate_tagged_element("form", @how, @what)
-#      end
-#      @o = self
-#    end
+    TAG='form'
+    DefaultHow=:name
+    ContainerMethods=:form
+    ContainerCollectionMethods=:forms
 
     # Submit the form. Equivalent to pressing Enter or Return to submit a form.
     def submit

@@ -5,13 +5,13 @@ module Watir
 
     #   - how - Attribute to identify the table element.
     #   - what - Value of that attribute.
-    def initialize(container, how, what)
-      @how = how
-      @what = what
-      @container = container
-      @o = nil
-      #super nil
-    end
+#    def initialize(container, how, what)
+#      @how = how
+#      @what = what
+#      @container = container
+#      @o = nil
+#      #super nil
+#    end
 
     def self.tagName
       'table'
@@ -129,7 +129,7 @@ module Watir
     def rows
       assert_exists
       dom_object.rows.to_array.map do |row|
-        FFTableRow.new(@container, :jssh_name, row.ref)
+        FFTableRow.new(row, extra)
       end
     end
 
@@ -185,6 +185,7 @@ module Watir
     #   Values of column (specified as input) in each row
     #
     def column_values(column)
+      raise NotImplementedError
       assert_exists
       arr_rows = rows
       values = Array.new(arr_rows.length)
@@ -205,6 +206,7 @@ module Watir
     #   Value of all columns present in the row.
     #
     def row_values(row)
+      raise NotImplementedError
       assert_exists
       arr_rows = rows
       cells = arr_rows[row - 1].cells

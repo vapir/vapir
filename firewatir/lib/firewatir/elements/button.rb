@@ -5,15 +5,12 @@ module Watir
   #
   class FFButton < FFInputElement
     include Button
-    def self.specifiers
-      [{:tagName => 'input', :types => ['button', 'submit', 'image', 'reset']}]
-    end
-    INPUT_TYPES = ["button", "submit", "image", "reset"]
-
-#    def locate
-#      super
-#      @o = @element.locate_tagged_element("button", @how, @what, self.class::INPUT_TYPES) unless @o
-#    end
+    Specifiers=[ {:tagName => 'input', :types => ['button', 'submit', 'image', 'reset']}, 
+                 {:tagName => 'button'}
+               ]
+    DefaultHow=:value
+    ContainerMethods=:button
+    ContainerCollectionMethods=:buttons
 
   end # Button
 end # FireWatir

@@ -113,19 +113,19 @@ module Watir
           original_color = element.style.backgroundColor
           original_color = "" if original_color==nil
           element.style.backgroundColor = activeObjectHighLightColor
-        rescue => e
-          puts e
-          puts e.backtrace.join("\n")
-          original_color = ""
+#        rescue => e
+#          puts e
+#          puts e.backtrace.join("\n")
+#          original_color = ""
         end
         @original_styles[count] = original_color
       else
         begin
           element.style.backgroundColor = @original_styles[ count]
-        rescue => e
-          puts e
+#        rescue => e
+#          puts e
           # we could be here for a number of reasons...
-        ensure
+#        ensure
         end
       end
     end

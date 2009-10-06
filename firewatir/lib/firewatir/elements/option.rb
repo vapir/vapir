@@ -5,6 +5,7 @@ module Watir
   #
   class FFOption < FFInputElement
     include Option
+    TAG='option'
     #
     # Description:
     #   Initializes the instance of option object.
@@ -14,49 +15,52 @@ module Watir
     #   - attribute - Attribute to identify the option.
     #   - value - Value of that attribute.
     #
-    def initialize (select_list, attribute, value)
-      @select_list = @container = select_list
-      @how = attribute
-      @what = value
-      @option = nil
-      
-      unless [:text, :value, :jssh_name].include? attribute 
-        raise Exception::MissingWayOfFindingObjectException, "Option does not support attribute #{@how}"
-      end
-      #puts @select_list.o.length
-      #puts "what is : #{@what}, how is #{@how}, list name is : #{@select_list.element_name}"
-      if(attribute == :jssh_name)
-        @dom_object = JsshObject.new(@what, jssh_socket)
-        @option = self
-      else    
-        @select_list.each do |option| # items in the list
-          #puts "option is : #{option}"
-          if(attribute == :value)
-            match_value = option.value
-          else    
-            match_value = option.text
-          end    
-          #puts "value is #{match_value}"
-          if value.matches( match_value) #option.invoke(attribute))
-            @option = option
-            @dom_object = option.dom_object
-            break
-          end
-        end
-      end    
-    end
+#    def initialize (select_list, attribute, value)
+#      @select_list = @container = select_list
+#      @how = attribute
+#      @what = value
+#      @option = nil
+#      
+#      unless [:text, :value, :jssh_name].include? attribute 
+#        raise Exception::MissingWayOfFindingObjectException, "Option does not support attribute #{@how}"
+#      end
+#      #puts @select_list.o.length
+#      #puts "what is : #{@what}, how is #{@how}, list name is : #{@select_list.element_name}"
+#      if(attribute == :jssh_name)
+#        @dom_object = JsshObject.new(@what, jssh_socket)
+#        @option = self
+#      else    
+#        @select_list.each do |option| # items in the list
+#          #puts "option is : #{option}"
+#          if(attribute == :value)
+#            match_value = option.value
+#          else    
+#            match_value = option.text
+#          end    
+#          #puts "value is #{match_value}"
+#          if value.matches( match_value) #option.invoke(attribute))
+#            @option = option
+#            @dom_object = option.dom_object
+#            break
+#          end
+#        end
+#      end    
+#    end
     
     #
     # Description:
     #   Checks if option exists or not.
     #
-    def assert_exists
-      unless @option
-        raise Exception::UnknownObjectException,  
-                "Unable to locate an option using #{@how} and #{@what}"
-      end
-    end
-    private :assert_exists
+#    def assert_exists
+#      unless @option
+#        raise Exception::UnknownObjectException,  
+#                "Unable to locate an option using #{@how} and #{@what}"
+#      end
+#    end
+#    private :assert_exists
+#    def initialize *args
+#      raise NotImplementedError
+#    end
     
     #
     # Description:
@@ -64,11 +68,7 @@ module Watir
     #
     def select
       assert_exists
-      if(@how == :text)
-        @select_list.select(@what)
-      elsif(@how == :value)
-        @select_list.select_value(@what)
-      end    
+      dom_object.selected=true
     end
     
     #
@@ -117,6 +117,10 @@ module Watir
     def selected
       assert_exists
       dom_object.selected
+    end
+    def selected=(val)
+      assert_exists
+      dom_object.selected=val
     end
     
     

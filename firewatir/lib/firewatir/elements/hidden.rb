@@ -5,7 +5,10 @@ module Watir
   #
   class FFHidden < FFTextField
     include Hidden
-    INPUT_TYPES =  ["hidden"]
+    Specifiers=[{:tagName => 'input', :type => 'hidden'}]
+    DefaultHow=:name
+    ContainerMethods=:hidden
+    ContainerCollectionMethods=:hiddens
 
     #
     # Description:

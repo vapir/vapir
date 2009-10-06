@@ -3,7 +3,7 @@ module Watir
   # Description:
   #   Base class for checkbox and radio button elements.
   #
-  class FFRadioCheckCommon < FFElement
+  module FFRadioCheckCommon
     include RadioCheckCommon
     #
     # Description:
@@ -14,12 +14,12 @@ module Watir
     #   - what - Value of that attribute.
     #   - value - value of the element.
     #
-    def initialize(container, how, what, value = nil)
-      @how = how
-      @what = what
-      @value = value
-      @container = container
-    end
+#    def initialize(container, how, what, value = nil)
+#      @how = how
+#      @what = what
+#      @value = value
+#      @container = container
+#    end
 
     #
     # Description:
@@ -94,16 +94,15 @@ module Watir
   # Description:
   #   Class for RadioButton element.
   #
-  class FFRadio < FFRadioCheckCommon
+  class FFRadio < FFElement
+    include FFRadioCheckCommon
     include Radio
-    def initialize *args
-      super
-      @type = ["radio"]
-    end
+#    def initialize *args
+#      super
+#      @type = ["radio"]
+#    end
 
-    def self.specifiers
-      [{:tagName => 'input', :type => 'radio'}]
-    end
+    Specifiers=[{:tagName => 'input', :type => 'radio'}]
     
     def clear
       assert_exists
@@ -119,16 +118,15 @@ module Watir
   # Description:
   # Class for Checkbox element.
   #
-  class FFCheckBox < FFRadioCheckCommon
+  class FFCheckBox < FFElement
+    include FFRadioCheckCommon
     include CheckBox
-    def initialize *args
-      super
-      @type = ["checkbox"]
-    end
+#    def initialize *args
+#      super
+#      @type = ["checkbox"]
+#    end
 
-    def self.specifiers
-      [{:tagName => 'input', :type => 'checkbox'}]
-    end
+    Specifiers=[{:tagName => 'input', :type => 'checkbox'}]
     #
     # Description:
     #   Checks or unchecks the checkbox. If no value is supplied it will check the checkbox.

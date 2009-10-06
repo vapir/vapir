@@ -7,7 +7,7 @@ module Watir
   class FFElementCollections
     include Enumerable
     def jssh_socket
-      Firefox.jssh_socket
+      browser.jssh_socket
     end
 
     def self.inherited subclass
@@ -17,6 +17,7 @@ module Watir
 #      puts "IN #{self}.inherited: subclass=#{subclass.inspect}; class_name=#{class_name.inspect}; method_name=#{method_name.inspect}; element_class_name=#{element_class_name.inspect}"
 
       Watir::FFContainer.module_eval "def #{method_name}
+      raise NotImplementedError
       locate if respond_to?(:locate)
       return #{class_name}.new(self); end"
 
@@ -26,6 +27,7 @@ module Watir
     @@current_level = 0
 
     def initialize(container)
+      raise NotImplementedError
       @container = container
       elements = locate_elements
       length = elements.length

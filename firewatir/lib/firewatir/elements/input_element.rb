@@ -4,33 +4,15 @@ module Watir
   #   Base class containing items that are common between select list, text field, button, hidden, file field classes.
   #
   class FFInputElement < FFElement
-    def self.specifiers
-      [ {:tagName => 'input'},
-        {:tagName => 'textarea'},
-        {:tagName => 'button'},
-        {:tagName => 'select'},
-      ]
-    end
+    Specifiers= [ {:tagName => 'input'},
+                  {:tagName => 'textarea'},
+                  {:tagName => 'button'},
+                  {:tagName => 'select'},
+                ]
+    ContainerMethods=:input
+    ContainerCollectionMethods=:inputs
     include InputElement
-    #
-    # Description:
-    #   Locate the element on the page. Element can be a select list, text field, button, hidden, file field.
-    #
-#    def locate
-#      case @how
-#      when :jssh_name
-#        @element_name = @what
-#      when :xpath
-#        @element_name = element_by_xpath(@container, @what)
-#      else
-#        if(self.class::INPUT_TYPES.include?("select-one"))
-#          @element_name = locate_tagged_element("select", @how, @what, self.class::INPUT_TYPES)
-#        else
-#          @element_name = locate_tagged_element("input", @how, @what, self.class::INPUT_TYPES)
-#        end
-#      end
-#      @o = self
-#    end
+
     #
     # Description:
     #   Initializes the instance of element.
@@ -39,13 +21,13 @@ module Watir
     #   - how - Attribute to identify the element.
     #   - what - Value of that attribute.
     #
-    def initialize(container, how, what)
-      @how = how
-      @what = what
-      @container = container
-      #@element_name = ""
-      #super(nil)
-    end
+#    def initialize(container, how, what)
+#      @how = how
+#      @what = what
+#      @container = container
+#      #@element_name = ""
+#      #super(nil)
+#    end
 
   end # FireWatir
 end # InputElement

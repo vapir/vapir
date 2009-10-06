@@ -15,7 +15,7 @@ module Watir
   # there are many methods available to the Button object
   #
   # Is includable for classes that have @container, document and ole_inner_elements
-  module Container
+  module IEContainer
     include Watir::Exception
     
     # Note: @container is the container of this object, i.e. the container
@@ -99,7 +99,7 @@ module Watir
     public
     def frame(how, what=nil)
       how, what = process_default :name, how, what
-      Frame.new(self, how, what)
+      IEFrame.new(self, how, what)
     end
         
     # this method is used to access a form.
@@ -113,7 +113,7 @@ module Watir
     # returns a Form object
     def form(how, what=nil)
       how, what = process_default :name, how, what
-      Form.new(self, how, what)
+      IEForm.new(self, how, what)
     end
     
     # This method is used to get a table from the page.
@@ -129,7 +129,7 @@ module Watir
     #
     # returns a Table object
     def table(how, what=nil)
-      Table.new(self, how, what)
+      IETable.new(self, how, what)
     end 
     
     # this is the main method for accessing the tables iterator. It returns a Tables object
@@ -150,10 +150,10 @@ module Watir
     #
     # returns a TableCell Object
     def cell(how, what=nil)
-      TableCell.new(self, how, what)
+      IETableCell.new(self, how, what)
     end
     def cells
-      TableCells.new(self)
+      IETableCells.new(self)
     end
     
     # this method accesses a table row.
@@ -163,10 +163,10 @@ module Watir
     #
     # returns a TableRow object
     def row(how, what=nil)
-      TableRow.new(self, how, what)
+      IETableRow.new(self, how, what)
     end
     def rows
-      TableRows.new(self)
+      IETableRows.new(self)
     end
     
     # Access a modal web dialog, which is a PageContainer, like IE or Frame. 
@@ -183,7 +183,7 @@ module Watir
     # loaded.
     
     def modal_dialog(how=nil, what=nil)
-      ModalDialog.new(self, how, what)
+      IEModalDialog.new(self, how, what)
     end
 
     # This is the main method for accessing a button. Often declared as an <input type = submit> tag.
@@ -212,7 +212,7 @@ module Watir
     #    ie.button('Click Me')                                # access the button with a value of Click Me
     def button(how, what=nil)
       how, what = process_default :value, how, what
-      Button.new(self, how, what)
+      IEButton.new(self, how, what)
     end
     
     # this is the main method for accessing the buttons iterator. It returns a Buttons object
@@ -223,7 +223,7 @@ module Watir
     #   ie.buttons[1].to_s                                    # goto the first button on the page
     #   ie.buttons.length                                     # show how many buttons are on the page.
     def buttons
-      Buttons.new(self)
+      IEButtons.new(self)
     end
     
     # This is the main method for accessing a file field. Usually an <input type = file> HTML tag.
@@ -243,7 +243,7 @@ module Watir
     #    ie.file_field(:index, 2)                         # access the second file upload on the page (1 based, so the first field is accessed with :index,1)
     #
     def file_field(how, what=nil)
-      FileField.new(self, how, what)
+      IEFileField.new(self, how, what)
     end
     
     # this is the main method for accessing the file_fields iterator. It returns a FileFields object
@@ -254,7 +254,7 @@ module Watir
     #   ie.file_fields[1].to_s                             # goto the first file field on the page
     #   ie.file_fields.length                              # show how many file fields are on the page.
     def file_fields
-      FileFields.new(self)
+      IEFileFields.new(self)
     end
     
     # This is the main method for accessing a text field. Usually an <input type = text> HTML tag. or a text area - a  <textarea> tag
@@ -272,7 +272,7 @@ module Watir
     #    ie.text_field(:index, 2)                          # access the second text field on the page (1 based, so the first field is accessed with :index,1)
     #    ie.text_field(:xpath, "//textarea[@id='user_name']/")    # access the text field with an ID of user_name
     def text_field(how, what=nil)
-      TextField.new(self, how, what)
+      IETextField.new(self, how, what)
     end
     
     # this is the method for accessing the text_fields iterator. It returns a Text_Fields object
@@ -283,7 +283,7 @@ module Watir
     #   ie.text_fields[1].to_s                             # goto the first text field on the page
     #   ie.text_fields.length                              # show how many text field are on the page.
     def text_fields
-      TextFields.new(self)
+      IETextFields.new(self)
     end
     
     # This is the main method for accessing a hidden field. Usually an <input type = hidden> HTML tag
@@ -302,7 +302,7 @@ module Watir
     #    ie.hidden(:index, 2)                         # access the second hidden field on the page (1 based, so the first field is accessed with :index,1)
     #    ie.hidden(:xpath, "//input[@type='hidden' and @id='session_value']/")    # access the hidden field with an ID of session_id
     def hidden(how, what=nil)
-      Hidden.new(self, how, what)
+      IEHidden.new(self, how, what)
     end
     
     # this is the method for accessing the hiddens iterator. It returns a Hiddens object
@@ -313,7 +313,7 @@ module Watir
     #   ie.hiddens[1].to_s                             # goto the first hidden field on the page
     #   ie.hiddens.length                              # show how many hidden fields are on the page.
     def hiddens
-      Hiddens.new(self)
+      IEHiddens.new(self)
     end
     
     # This is the main method for accessing a selection list. Usually a <select> HTML tag.
@@ -332,7 +332,7 @@ module Watir
     #    ie.select_list(:index, 2)                         # access the second select box on the page (1 based, so the first field is accessed with :index,1)
     #    ie.select(:xpath, "//select[@id='currency']/")    # access the select box with an id of currency
     def select_list(how, what=nil)
-      SelectList.new(self, how, what)
+      IESelectList.new(self, how, what)
     end
     
     # this is the method for accessing the select lists iterator. Returns a SelectLists object
@@ -343,7 +343,7 @@ module Watir
     #   ie.select_lists[1].to_s                             # goto the first select boxes on the page
     #   ie.select_lists.length                              # show how many select boxes are on the page.
     def select_lists
-      SelectLists.new(self)
+      IESelectLists.new(self)
     end
     
     # This is the main method for accessing a check box. Usually an <input type = checkbox> HTML tag.
@@ -375,7 +375,7 @@ module Watir
     #    ie.checkbox(:name,'email_frequency', 'weekly')    # access the check box with a name of email_frequency and a value of 'weekly'
     #    ie.checkbox(:xpath, "//input[@name='email_frequency' and @value='daily']/")     # access the checkbox with a name of email_frequency and a value of 'daily'
     def checkbox(how, what=nil, value=nil) # should be "check_box" ?
-      CheckBox.new(self, how, what, value)
+      IECheckBox.new(self, how, what, value)
     end
     
     # this is the method for accessing the check boxes iterator. Returns a CheckBoxes object
@@ -386,7 +386,7 @@ module Watir
     #   ie.checkboxes[1].to_s                              # goto the first check box on the page
     #   ie.checkboxes.length                               # show how many check boxes are on the page.
     def checkboxes
-      CheckBoxes.new(self)
+      IECheckBoxes.new(self)
     end
     
     # This is the main method for accessing a radio button. Usually an <input type = radio> HTML tag.
@@ -417,7 +417,7 @@ module Watir
     #    ie.radio(:name,'email_frequency', 'weekly')     # access the radio button with a name of email_frequency and a value of 'weekly'
     #    ie.radio(:xpath, "//input[@name='email_frequency' and @value='daily']/")     # access the radio button with a name of email_frequency and a value of 'daily'
     def radio(how, what=nil, value=nil)
-      Radio.new(self, how, what, value)
+      IERadio.new(self, how, what, value)
     end
     
     # This is the method for accessing the radio buttons iterator. Returns a Radios object
@@ -429,7 +429,7 @@ module Watir
     #   ie.radios.length                              # show how many radio buttons are on the page.
     #
     def radios
-      Radios.new(self)
+      IERadios.new(self)
     end
     
     # This is the main method for accessing a link.
@@ -449,7 +449,7 @@ module Watir
     #   ie.link(:text, 'Click Me')          # access the link that has Click Me as its text
     #   ie.link(:xpath, "//a[contains(.,'Click Me')]/")      # access the link with Click Me as its text
     def link(how, what=nil)
-      Link.new(self, how, what)
+      IELink.new(self, how, what)
     end
     
     # This is the main method for accessing the links collection. Returns a Links object
@@ -461,7 +461,7 @@ module Watir
     #   ie.links.length                              # show how many links are on the page.
     #
     def links
-      Links.new(self)
+      IELinks.new(self)
     end
     
     # This is the main method for accessing li tags - http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/map.asp?frame=true
@@ -493,7 +493,7 @@ module Watir
     #   ie.lis.length                              # show how many lis are on the page.
     #
     def lis
-      return Lis.new(self)
+      IELis.new(self)
     end
     
 
@@ -512,7 +512,7 @@ module Watir
     #   ie.map(:title, "A Picture")         # access a map using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
     #    
     def map(how, what=nil)
-      return Map.new(self, how, what)
+      IEMap.new(self, how, what)
     end
     
     # this is the main method for accessing the maps iterator.
@@ -526,7 +526,7 @@ module Watir
     #   ie.maps.length                              # show how many maps are on the page.
     #
     def maps
-      return Maps.new(self)
+      IEMaps.new(self)
     end
 
     # This is the main method for accessing area tags - http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/area.asp?frame=true
@@ -544,7 +544,7 @@ module Watir
     #   ie.area(:title, "A Picture")         # access a area using the tooltip text. See http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/title_1.asp?frame=true
     #    
     def area(how, what=nil)
-      return Area.new(self, how, what)
+      IEArea.new(self, how, what)
     end
     
     # this is the main method for accessing the areas iterator.
@@ -558,7 +558,7 @@ module Watir
     #   ie.areas.length                              # show how many areas are on the page.
     #
     def areas
-      return Areas.new(self)
+      IEAreas.new(self)
     end
     
     # This is the main method for accessing images - normally an <img src="image.gif"> HTML tag.
@@ -578,7 +578,7 @@ module Watir
     #   ie.image(:xpath, "//img[@alt='A Picture']/")    # access an image using the alt text
     #
     def image(how, what=nil)
-      Image.new(self, how, what)
+      IEImage.new(self, how, what)
     end
     
     # This is the main method for accessing the images collection. Returns an Images object
@@ -590,13 +590,13 @@ module Watir
     #   ie.images.length                              # show how many images are on the page.
     #
     def images
-      Images.new(self)
+      IEImages.new(self)
     end
     
     # This is the main method for accessing JavaScript popups.
     # returns a PopUp object
     def popup         # BUG this should not be on the container object!
-      PopUp.new(self)
+      IEPopUp.new(self)
     end
     
     
@@ -609,7 +609,7 @@ module Watir
     #   ie.divs.length                              # show how many divs are on the page.
     #
     def divs
-      Divs.new(self)
+      IEDivs.new(self)
     end
     
     # this is the main method for accessing the dls iterator. Returns a Dls collection
@@ -621,7 +621,7 @@ module Watir
     #   ie.dls.length                              # show how many dls are on the page.
     #
     def dls
-      Dls.new(self)
+      IEDls.new(self)
     end
     
     # this is the main method for accessing the dds iterator. Returns a Dds collection
@@ -633,7 +633,7 @@ module Watir
     #   ie.dds.length                              # show how many dds are on the page.
     #
     def dds
-      Dds.new(self)
+      IEDds.new(self)
     end
     
     # this is the main method for accessing the dts iterator. Returns a Dts collection
@@ -645,7 +645,7 @@ module Watir
     #   ie.dts.length                              # show how many dts are on the page.
     #
     def dts
-      Dts.new(self)
+      IEDts.new(self)
     end
         
     # this is the main method for accessing the ems iterator. Returns a Ems collection
@@ -657,7 +657,7 @@ module Watir
     #   ie.ems.length                              # show how many ems are on the page.
     #
     def ems
-      Ems.new(self)
+      IEEms.new(self)
     end
         
     # this is the main method for accessing the spans iterator.
@@ -671,7 +671,7 @@ module Watir
     #   ie.spans.length                              # show how many spans are on the page.
     #
     def spans
-      Spans.new(self)
+      IESpans.new(self)
     end
     
     # this is the main method for accessing the Strongs iterator.
@@ -685,7 +685,7 @@ module Watir
     #   ie.strongs.length                              # show how many strongs are on the page.
     #
     def strongs
-      return Strongs.new(self)
+      IEStrongs.new(self)
     end
 
     
@@ -700,7 +700,7 @@ module Watir
     #   ie.ps.length                              # show how many p tags are on the page.
     #
     def ps
-      Ps.new(self)
+      IEPs.new(self)
     end
         
     # this is the main method for accessing the ps iterator.
@@ -714,7 +714,7 @@ module Watir
     #   ie.pres.length                              # show how many pre tags are on the page.
     #
     def pres
-      Pres.new(self)
+      IEPres.new(self)
     end
         
     # this is the main method for accessing the labels iterator. It returns a Labels object
@@ -728,7 +728,7 @@ module Watir
     #   ie.labels.length                              # show how many labels are on the page.
     #
     def labels
-      Labels.new(self)
+      IELabels.new(self)
     end
     
     #--

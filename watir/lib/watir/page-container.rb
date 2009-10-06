@@ -1,7 +1,7 @@
 module Watir    
   # A PageContainer contains an HTML Document. In other words, it is a 
   # what JavaScript calls a Window.
-  module PageContainer
+  module IEPageContainer
     include Watir::Exception
 
     # This method checks the currently displayed page for http errors, 404, 500 etc
@@ -76,7 +76,9 @@ module Watir
             puts "frame  index: #{i + 1} name: #{fname}"
           rescue => e
             if e.to_s.match(/Access is denied/)
-              puts "frame  index: #{i + 1} Access Denied, see http://wiki.openqa.org/display/WTR/FAQ#access-denied" 
+              puts "frame  index: #{i + 1} Access Denied, see http://wiki.openqa.org/display/WTR/FAQ#access-denied"
+            else
+              raise
             end
           end
         end

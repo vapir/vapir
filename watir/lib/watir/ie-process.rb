@@ -1,4 +1,5 @@
 require 'win32/process'
+require 'watir/ie-class'
 
 module Watir
   class IE

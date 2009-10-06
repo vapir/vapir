@@ -1,3 +1,5 @@
+require 'watir/ie-class'
+
 module Watir
   module Process
     

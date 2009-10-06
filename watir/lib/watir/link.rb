@@ -4,7 +4,7 @@ module Watir
   # Normally a user would not need to create this object as it is returned by the Watir::Container#link method
   # many of the methods available to this object are inherited from the Element class
   #
-  class Link < Element
+  class IELink < IEElement
     # Returns an initialized instance of a link object
     #   * container  - an instance of a container
     #   * how         - symbol - how we access the link

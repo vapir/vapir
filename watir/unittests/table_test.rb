@@ -299,7 +299,7 @@ class TC_Tables_Buttons < Test::Unit::TestCase
   tag_method :test_table_from_element, :fails_on_firefox
   def test_table_from_element
     button = browser.button(:id, "b1")
-    table = Watir::Table.create_from_element(browser, button)
+    table = Watir::IETable.create_from_element(browser, button)
     
     table[2][1].button(:index, 1).click
     assert(browser.text_field(:name, "confirmtext").verify_contains(/CLICK2/i))

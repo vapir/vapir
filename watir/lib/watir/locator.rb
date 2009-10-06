@@ -42,7 +42,7 @@ module Watir
 
     def each_element tag
       @container.document.getElementsByTagName(tag).each do |ole_element|
-        yield Element.new(ole_element)
+        yield IEElement.new(ole_element)
       end
     end
 
@@ -117,7 +117,7 @@ module Watir
     def locate
       count = 0
       @elements.each do |object|
-        element = Element.new(object)
+        element = IEElement.new(object)
 
         catch :next_element do
           throw :next_element unless @types.include?(element.type)

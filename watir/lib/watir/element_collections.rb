@@ -1,7 +1,7 @@
 module Watir
   # this class is the super class for the iterator classes (buttons, links, spans etc
   # it would normally only be accessed by the iterator methods (spans, links etc) of IE
-  class ElementCollections
+  class IEElementCollections
     include Enumerable
     
     # Super class for all the iteractor classes

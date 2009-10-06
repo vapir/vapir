@@ -3,8 +3,8 @@ module Watir
   #   These classes are not for public consumption, so we switch off rdoc
     
   # presumes element_class or element_tag is defined
-  # for subclasses of ElementCollections
-  module CommonCollection
+  # for subclasses of IEElementCollections
+  module IECommonCollection
     def element_tag
       element_class::TAG
     end
@@ -66,8 +66,8 @@ module Watir
   
   # this class accesses the buttons in the document as a collection
   # it would normally only be accessed by the Watir::Container#buttons method
-  class Buttons < ElementCollections
-    def element_class; Button; end
+  class IEButtons < IEElementCollections
+    def element_class; IEButton; end
     def length
       get_length_of_input_objects(["button", "submit", "image"])
     end
@@ -82,8 +82,8 @@ module Watir
   
   # this class accesses the file fields in the document as a collection
   # normal access is via the Container#file_fields method
-  class FileFields < ElementCollections
-    def element_class; FileField; end
+  class IEFileFields < IEElementCollections
+    def element_class; IEFileField; end
     def length
       get_length_of_input_objects(["file"])
     end
@@ -98,8 +98,8 @@ module Watir
   
   # this class accesses the check boxes in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#checkboxes method
-  class CheckBoxes < ElementCollections
-    def element_class; CheckBox; end
+  class IECheckBoxes < IEElementCollections
+    def element_class; IECheckBox; end
     def length
       get_length_of_input_objects("checkbox")
     end
@@ -112,8 +112,8 @@ module Watir
   
   # this class accesses the radio buttons in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#radios method
-  class Radios < ElementCollections
-    def element_class; Radio; end
+  class IERadios < IEElementCollections
+    def element_class; IERadio; end
     def length
       get_length_of_input_objects("radio")
     end
@@ -126,17 +126,17 @@ module Watir
     
   # this class accesses the select boxes in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#select_lists method
-  class SelectLists < ElementCollections
-    include CommonCollection
-    def element_class; SelectList; end
+  class IESelectLists < IEElementCollections
+    include IECommonCollection
+    def element_class; IESelectList; end
     def element_tag; 'SELECT'; end
   end
   
   # this class accesses the links in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#links method
-  class Links < ElementCollections
-    include CommonCollection
-    def element_class; Link; end
+  class IELinks < IEElementCollections
+    include IECommonCollection
+    def element_class; IELink; end
     def element_tag; 'A'; end
     
     private
@@ -147,9 +147,9 @@ module Watir
     end
   end
   
-  class Lis  < ElementCollections
-    include CommonCollection
-    def element_class; Li; end
+  class IELis  < IEElementCollections
+    include IECommonCollection
+    def element_class; IELi; end
     
     def set_show_items
       super
@@ -160,25 +160,25 @@ module Watir
   
   # this class accesses the maps in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#maps method
-  class Maps < ElementCollections
-    include CommonCollection
-    def element_class; Map; end
+  class IEMaps < IEElementCollections
+    include IECommonCollection
+    def element_class; IEMap; end
     def element_tag; 'MAP'; end
   end
 
 
   # this class accesses the areas in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#areas method
-  class Areas < ElementCollections
-    include CommonCollection
-    def element_class; Area; end
+  class IEAreas < IEElementCollections
+    include IECommonCollection
+    def element_class; IEArea; end
     def element_tag; 'AREA'; end
   end
   
   # this class collects the images in the container
   # An instance is returned by Watir::Container#images
-  class Images < ElementCollections
-    def element_class; Image; end
+  class IEImages < IEElementCollections
+    def element_class; IEImage; end
     def length
       all = @container.document.all
       imgs = []
@@ -196,8 +196,8 @@ module Watir
   
   # this class accesses the text fields in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#text_fields method
-  class TextFields < ElementCollections
-    def element_class; TextField; end
+  class IETextFields < IEElementCollections
+    def element_class; IETextField; end
     def length
       # text areas are also included in the TextFields, but we need to get them seperately
       get_length_of_input_objects(["text", "password"]) +
@@ -207,8 +207,8 @@ module Watir
   
   # this class accesses the hidden fields in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#hiddens method
-  class Hiddens < ElementCollections
-    def element_class; Hidden; end
+  class IEHiddens < IEElementCollections
+    def element_class; IEHidden; end
     def length
       get_length_of_input_objects("hidden")
     end
@@ -216,9 +216,9 @@ module Watir
   
   # this class accesses the text fields in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#tables method
-  class Tables < ElementCollections
-    include CommonCollection
-    def element_class; Table; end
+  class IETables < IEElementCollections
+    include IECommonCollection
+    def element_class; IETable; end
     def element_tag; 'TABLE'; end
     
     private
@@ -229,23 +229,23 @@ module Watir
   end
   # this class accesses the table rows in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#rows method
-  class TableRows < ElementCollections
-    include CommonCollection
-    def element_class; TableRow; end
+  class IETableRows < IEElementCollections
+    include IECommonCollection
+    def element_class; IETableRow; end
     def element_tag; 'TR'; end
   end
   # this class accesses the table cells in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#cells method
-  class TableCells < ElementCollections
-    include CommonCollection
-    def element_class; TableCell; end
+  class IETableCells < IEElementCollections
+    include IECommonCollection
+    def element_class; IETableCell; end
     def element_tag; 'TD'; end
   end
   # this class accesses the labels in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#labels method
-  class Labels < ElementCollections
-    include CommonCollection
-    def element_class; Label; end
+  class IELabels < IEElementCollections
+    include IECommonCollection
+    def element_class; IELabel; end
     def element_tag; 'LABEL'; end
     
     private
@@ -257,9 +257,9 @@ module Watir
   
   # this class accesses the pre tags in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#pres method
-  class Pres < ElementCollections
-    include CommonCollection
-    def element_class; Pre; end
+  class IEPres < IEElementCollections
+    include IECommonCollection
+    def element_class; IEPre; end
     
     private
     def set_show_items
@@ -271,9 +271,9 @@ module Watir
   
   # this class accesses the p tags in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#ps method
-  class Ps < ElementCollections
-    include CommonCollection
-    def element_class; P; end
+  class IEPs < IEElementCollections
+    include IECommonCollection
+    def element_class; IEP; end
     
     private
     def set_show_items
@@ -285,9 +285,9 @@ module Watir
   end
   # this class accesses the spans in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#spans method
-  class Spans < ElementCollections
-    include CommonCollection
-    def element_class; Span; end
+  class IESpans < IEElementCollections
+    include IECommonCollection
+    def element_class; IESpan; end
     
     private
     def set_show_items
@@ -299,9 +299,9 @@ module Watir
   
   # this class accesses the divs in the document as a collection
   # Normally a user would not need to create this object as it is returned by the Watir::Container#divs method
-  class Divs < ElementCollections
-    include CommonCollection
-    def element_class; Div; end
+  class IEDivs < IEElementCollections
+    include IECommonCollection
+    def element_class; IEDiv; end
     
     private
     def set_show_items
@@ -311,34 +311,34 @@ module Watir
     end
   end
   
-  class Dls < ElementCollections
-    include CommonCollection
-    def element_class; Dl; end
-    def element_tag; Dl::TAG; end
+  class IEDls < IEElementCollections
+    include IECommonCollection
+    def element_class; IEDl; end
+    def element_tag; IEDl::TAG; end
   end
 
-  class Dts < ElementCollections
-    include CommonCollection
-    def element_class; Dt; end
-    def element_tag; Dt::TAG; end
+  class IEDts < IEElementCollections
+    include IECommonCollection
+    def element_class; IEDt; end
+    def element_tag; IEDt::TAG; end
   end
 
-  class Dds < ElementCollections
-    include CommonCollection
-    def element_class; Dd; end
-    def element_tag; Dd::TAG; end
+  class IEDds < IEElementCollections
+    include IECommonCollection
+    def element_class; IEDd; end
+    def element_tag; IEDd::TAG; end
   end
   
-  class Strongs < ElementCollections
-    include CommonCollection
-    def element_class; Strong; end
-    def element_tag; Strong::TAG; end
+  class IEStrongs < IEElementCollections
+    include IECommonCollection
+    def element_class; IEStrong; end
+    def element_tag; IEStrong::TAG; end
   end
   
-  class Ems < ElementCollections
-    include CommonCollection
-    def element_class; Em; end
-    def element_tag; Em::TAG; end
+  class IEEms < IEElementCollections
+    include IECommonCollection
+    def element_class; IEEm; end
+    def element_tag; IEEm::TAG; end
   end
   
 end

@@ -1,7 +1,7 @@
 module Watir
   class ModalDialog
-    include Container
-    include PageContainer
+    include IEContainer
+    include IEPageContainer
     include Win32
 
     # Return the current window handle

@@ -1,7 +1,8 @@
-# These are provided for backwards compatability with Watir 1.1
+require 'watir/ie-class'
 
+# These are provided for backwards compatability with Watir 1.1
 module Watir
-    module Container
+    module IEContainer
         alias waitForIE wait
         alias fileField file_field
         alias textField text_field
@@ -24,41 +25,41 @@ module Watir
         def   getIE; @ie; end
         
     end
-    class Element
+    class IEElement
         alias getOLEObject ole_object 
         alias fireEvent fire_event        
         alias innerText text
         alias afterText after_text
         alias beforeText before_text
     end    
-    class Frame        
+    class IEFrame        
         alias getDocument document
         alias waitForIE wait
     end
-    class Form        
+    class IEForm        
         alias waitForIE wait 
     end
 
 
-    class Image
+    class IEImage
       alias fileCreatedDate file_created_date
       alias fileSize file_size
       alias hasLoaded? loaded?
     end
     
-    class RadioCheckCommon
+    class IERadioCheckCommon
       alias getState set?
       alias isSet?   set?
     end
     
-    class TextField
+    class IETextField
         alias readOnly? :readonly?
         alias getContents value
         alias maxLength maxlength
         alias dragContentsTo drag_contents_to
     end 
     
-    class SelectList
+    class IESelectList
         alias getAllContents options
         alias getSelectedItems selected_options
         alias clearSelection clear

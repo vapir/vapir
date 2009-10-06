@@ -1,6 +1,6 @@
 module Watir
   
-  class InputElement < Element
+  class IEInputElement < IEElement
     def locate
       @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES)
     end
@@ -18,7 +18,7 @@ module Watir
   
   # This class is the way in which select boxes are manipulated.
   # Normally a user would not need to create this object as it is returned by the Watir::Container#select_list method
-  class SelectList < InputElement
+  class IESelectList < IEInputElement
     INPUT_TYPES = ["select-one", "select-multiple"]
     
     attr_accessor :o
@@ -129,11 +129,11 @@ module Watir
 
     def option(attribute, value)
       assert_exists
-      Option.new(self, attribute, value)
+      IEOption.new(self, attribute, value)
     end
   end
   
-  module OptionAccess
+  module IEOptionAccess
     def text
       @option.text
     end
@@ -145,16 +145,16 @@ module Watir
     end
   end
   
-  class OptionWrapper
-    include OptionAccess
+  class IEOptionWrapper
+    include IEOptionAccess
     def initialize(option)
       @option = option
     end
   end
   
   # An item in a select list
-  class Option
-    include OptionAccess
+  class IEOption
+    include IEOptionAccess
     include Watir::Exception
     def initialize(select_list, attribute, value)
       @select_list = select_list
@@ -192,7 +192,7 @@ module Watir
   #
   
   # Returned by the Watir::Container#button method
-  class Button < InputElement
+  class IEButton < IEInputElement
     INPUT_TYPES = ["button", "submit", "image", "reset"]
   end
 
@@ -202,7 +202,7 @@ module Watir
   
   # This class is the main class for Text Fields
   # Normally a user would not need to create this object as it is returned by the Watir::Container#text_field method
-  class TextField < InputElement
+  class IETextField < IEInputElement
     INPUT_TYPES = ["text", "password", "textarea"]
     
     def_wrap_guard :size
@@ -405,7 +405,7 @@ module Watir
   
   # this class can be used to access hidden field objects
   # Normally a user would not need to create this object as it is returned by the Watir::Container#hidden method
-  class Hidden < TextField
+  class IEHidden < IETextField
     INPUT_TYPES = ["hidden"]
     
     # set is overriden in this class, as there is no way to set focus to a hidden field
@@ -438,7 +438,7 @@ module Watir
   # For fields that accept file uploads
   # Windows dialog is opened and handled in this case by autoit 
   # launching into a new process. 
-  class FileField < InputElement
+  class IEFileField < IEInputElement
     INPUT_TYPES = ["file"]
     POPUP_TITLES = ['Choose file', 'Choose File to Upload']
     
@@ -482,7 +482,7 @@ module Watir
   #
   # most of the methods available to this element are inherited from the Element class
   #
-  class RadioCheckCommon < InputElement
+  class IERadioCheckCommon < IEInputElement
     def locate
       @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES, @value)
     end
@@ -518,7 +518,7 @@ module Watir
   #  this class makes the docs better
   #++
   # This class is the watir representation of a radio button.
-  class Radio < RadioCheckCommon
+  class IERadio < IERadioCheckCommon
     INPUT_TYPES = ["radio"]
     # This method clears a radio button. One of them will almost always be set.
     # Returns true if set or false if not set.
@@ -545,7 +545,7 @@ module Watir
   end
   
   # This class is the watir representation of a check box.
-  class CheckBox < RadioCheckCommon
+  class IECheckBox < IERadioCheckCommon
     INPUT_TYPES = ["checkbox"]
     # With no arguments supplied, sets the check box.
     # If the optional value is supplied, the checkbox is set, when its true and 

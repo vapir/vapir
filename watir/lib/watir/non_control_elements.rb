@@ -5,13 +5,13 @@ module Watir
   #
   # many of the methods available to this object are inherited from the Element class
   #
-  class NonControlElement < Element
+  class IENonControlElement < IEElement
 
     def self.inherited subclass
       class_name = subclass.to_s.demodulize
-      method_name = class_name.sub(/\AFF/i,'').underscore
+      method_name = class_name.sub(/\AIE/i,'').underscore
 #      puts "IN #{self}.inherited: subclass=#{subclass.inspect}; class_name=#{class_name.inspect}; method_name=#{method_name.inspect}"
-      Watir::FFContainer.module_eval "def #{method_name}(how, what=nil)
+      Watir::IEContainer.module_eval "def #{method_name}(how, what=nil)
       return #{class_name}.new(self, how, what); end"
     end
     include Watir::Exception
@@ -51,35 +51,35 @@ module Watir
   end
 
 
-  class Pre < NonControlElement
+  class IEPre < IENonControlElement
     TAG = 'PRE'
   end
 
-  class P < NonControlElement
+  class IEP < IENonControlElement
     TAG = 'P'
   end
 
   # this class is used to deal with Div tags in the html page. http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/div.asp?frame=true
   # It would not normally be created by users
-  class Div < NonControlElement
+  class IEDiv < IENonControlElement
     TAG = 'DIV'
   end
 
   # this class is used to deal with Span tags in the html page. It would not normally be created by users
-  class Span < NonControlElement
+  class IESpan < IENonControlElement
     TAG = 'SPAN'
   end
 
-  class Map < NonControlElement
+  class IEMap < IENonControlElement
     TAG = 'MAP'
   end
 
-  class Area < NonControlElement
+  class IEArea < IENonControlElement
     TAG = 'AREA'
   end
 
   # Accesses Label element on the html page - http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/label.asp?frame=true
-  class Label < NonControlElement
+  class IELabel < IENonControlElement
     TAG = 'LABEL'
 
     # this method is used to populate the properties in the to_s method
@@ -101,43 +101,43 @@ module Watir
     end
   end
 
-  class Li < NonControlElement
+  class IELi < IENonControlElement
     TAG = 'LI'
   end
-  class Ul < NonControlElement
+  class IEUl < IENonControlElement
     TAG = 'UL'
   end
-  class H1 < NonControlElement
+  class IEH1 < IENonControlElement
     TAG = 'H1'
   end
-  class H2 < NonControlElement
+  class IEH2 < IENonControlElement
     TAG = 'H2'
   end
-  class H3 < NonControlElement
+  class IEH3 < IENonControlElement
     TAG = 'H3'
   end
-  class H4 < NonControlElement
+  class IEH4 < IENonControlElement
     TAG = 'H4'
   end
-  class H5 < NonControlElement
+  class IEH5 < IENonControlElement
     TAG = 'H5'
   end
-  class H6 < NonControlElement
+  class IEH6 < IENonControlElement
     TAG = 'H6'
   end
-  class Dl < NonControlElement
+  class IEDl < IENonControlElement
     TAG = 'DL'
   end
-  class Dt < NonControlElement
+  class IEDt < IENonControlElement
     TAG = 'DT'
   end
-  class Dd < NonControlElement
+  class IEDd < IENonControlElement
     TAG = 'DD'
   end
-  class Strong < NonControlElement
+  class IEStrong < IENonControlElement
     TAG = 'STRONG'
   end
-  class Em < NonControlElement
+  class IEEm < IENonControlElement
     TAG = 'EM'
   end
 

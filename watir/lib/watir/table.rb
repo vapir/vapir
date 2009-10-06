@@ -5,13 +5,13 @@ module Watir
   #
   # many of the methods available to this object are inherited from the Element class
   #
-  class Table < Element
-    include Container
+  class IETable < IEElement
+    include IEContainer
     
     # Returns the table object containing the element
     #   * container  - an instance of an IE object
     #   * anElement  - a Watir object (TextField, Button, etc.)
-    def Table.create_from_element(container, element)
+    def self.create_from_element(container, element)
       element.locate if element.respond_to?(:locate)
       o = element.ole_object.parentElement
       o = o.parentElement until o.tagName == 'TABLE'
@@ -88,7 +88,7 @@ module Watir
     def each
       assert_exists
       1.upto(@o.getElementsByTagName("TR").length) do |i| 
-        yield TableRow.new(@container, :ole_object, _row(i))
+        yield IETableRow.new(@container, :ole_object, _row(i))
       end
     end
     
@@ -96,7 +96,7 @@ module Watir
     #   * index         - the index of the row
     def [](index)
       assert_exists
-      return TableRow.new(@container, :ole_object, _row(index))
+      return IETableRow.new(@container, :ole_object, _row(index))
     end
     
     # Returns the number of rows inside the table, including rows in nested tables.
@@ -145,13 +145,13 @@ module Watir
     
     # returns a watir object
     def body(how, what)
-      return TableBody.new(@container, how, what, self)
+      return IETableBody.new(@container, how, what, self)
     end
     
     # returns a watir object
     def bodies
       assert_exists
-      return TableBodies.new(@container, @o)
+      return IETableBodies.new(@container, @o)
     end
     
     # returns an ole object
@@ -182,7 +182,7 @@ module Watir
   # it wouldnt normally be created by a user, but gets returned by the bodies method of the Table object
   # many of the methods available to this object are inherited from the Element class
   #
-  class TableBodies < Element
+  class IETableBodies < IEElement
     def initialize(container, parent_table)
       set_container container
       @o = parent_table     # in this case, @o is the parent table
@@ -208,14 +208,14 @@ module Watir
     # iterates through each of the TableBodies in the Table. Yields a TableBody object
     def each
       1.upto(@o.tBodies.length) do |i| 
-        yield TableBody.new(@container, :ole_object, ole_table_body_at_index(i))
+        yield IETableBody.new(@container, :ole_object, ole_table_body_at_index(i))
       end
     end
     
   end
   
   # this class is a table body
-  class TableBody < Element
+  class IETableBody < IEElement
     def locate
       @o = nil
       if @how == :ole_object
@@ -226,7 +226,7 @@ module Watir
       @rows = []
       if @o
         @o.rows.each do |oo|
-          @rows << TableRow.new(@container, :ole_object, oo)
+          @rows << IETableRow.new(@container, :ole_object, oo)
         end
       end
     end
@@ -257,7 +257,7 @@ module Watir
     end
   end
     
-  class TableRow < Element
+  class IETableRow < IEElement
     
     def locate
       @o = nil
@@ -271,7 +271,7 @@ module Watir
       if @o # cant call the assert_exists here, as an exists? method call will fail
         @cells = []
         @o.cells.each do |oo|
-          @cells << TableCell.new(@container, :ole_object, oo)
+          @cells << IETableCell.new(@container, :ole_object, oo)
         end
       end
     end
@@ -315,9 +315,9 @@ module Watir
   end
   
   # this class is a table cell - when called via the Table object
-  class TableCell < Element
+  class IETableCell < IEElement
     include Watir::Exception
-    include Container
+    include IEContainer
     
     def locate
       if @how == :xpath

@@ -1,9 +1,9 @@
 module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
-  class Element # Wrapper
+  class IEElement # Wrapper
     include Watir::Exception
-    include Container # presumes @container is defined
+    include IEContainer # presumes @container is defined
     attr_accessor :container
     
     # number of spaces that separate the property from the value in the to_s method
@@ -134,7 +134,7 @@ module Watir
     # Return the element immediately containing self. 
     def parent
       assert_exists
-      result = Element.new(ole_object.parentelement)
+      result = IEElement.new(ole_object.parentelement)
       result.set_container self
       result
     end
@@ -326,7 +326,7 @@ module Watir
   end
   
   class ElementMapper # Still to be used
-    include Container
+    include IEContainer
     
     def initialize wrapper_class, container, how, what
       @wrapper_class = wrapper_class

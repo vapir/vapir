@@ -1,7 +1,7 @@
 # http://www.vbcity.com/forums/topic.asp?tid=108859
 require 'watir/ie'
 module Watir
-  module PageContainer
+  module IEPageContainer
     include Win32
     def enabled_popup(timeout=4)
       # Use handle of our parent window to see if we have any currently

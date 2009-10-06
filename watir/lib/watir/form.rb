@@ -2,7 +2,7 @@ module Watir
 
   # Forms
   
-  module FormAccess
+  module IEFormAccess
     def name
       @ole_object.getAttributeNode('name').value
     end
@@ -18,17 +18,17 @@ module Watir
   end
   
   # wraps around a form OLE object
-  class FormWrapper
-    include FormAccess
+  class IEFormWrapper
+    include IEFormAccess
     def initialize ole_object
       @ole_object = ole_object
     end
   end
   
   #   Form Factory object
-  class Form < Element
-    include FormAccess
-    include Container
+  class IEForm < IEElement
+    include IEFormAccess
+    include IEContainer
     
     attr_accessor :form, :ole_object
     
@@ -51,7 +51,7 @@ module Watir
         doc.forms.each do |thisForm|
           next unless @ole_object == nil
           
-          wrapped = FormWrapper.new(thisForm)
+          wrapped = IEFormWrapper.new(thisForm)
           @ole_object =
           case @how
           when :name, :id, :method, :action
@@ -150,12 +150,12 @@ module Watir
       end
     end
     
-  end # class Form
+  end # class IEForm
   
 end
 
 module Watir
-  class Forms < ElementCollections
+  class IEForms < IEElementCollections
     def element_class; Form; end
     def element_tag; 'FORM'; end
     def length
@@ -163,7 +163,7 @@ module Watir
     end
   end
 
-  module Container
+  module IEContainer
     def forms
       Forms.new(self)
     end

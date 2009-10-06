@@ -5,7 +5,7 @@ module Watir
   #
   # many of the methods available to this object are inherited from the Element class
   #
-  class Image < Element
+  class IEImage < IEElement
     def initialize(container, how, what)
       set_container container
       @how = how

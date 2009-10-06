@@ -67,12 +67,12 @@ $FAST_SPEED = ARGV.delete('-f')
 ARGV.delete('-s')
 
 require 'watir/core_ext'
+require 'watir/ie-class'
 require 'watir/logger'
 require 'watir/win32'
 require 'watir/container'
 require 'watir/locator'
 require 'watir/page-container'
-require 'watir/ie-class'
 require 'watir/version'
 require 'watir/popup'
 require 'watir/element'

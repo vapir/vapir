@@ -1,8 +1,14 @@
+require 'watir/ie'
+require 'watir/browser'
+require 'watir/container'
+require 'watir/page-container'
+require 'watir/win32'
+
 module Watir
-  class IE
+  class IE < Browser
     include Watir::Exception
-    include Container
-    include PageContainer
+    include IEContainer
+    include IEPageContainer
     
     # Maximum number of seconds to wait when attaching to a window
     @@attach_timeout = 2.0 # default value
@@ -21,7 +27,7 @@ module Watir
     # set values for options used when creating new instances of IE.
 		def self.set_options options
 			options.each do |name, value|
-				send "#{name}=", value
+        send "#{name}=", value
 			end
 		end
 		# The globals $FAST_SPEED and $HIDE_IE are checked both at initialization 
@@ -552,7 +558,7 @@ module Watir
         count = allForms.length
         puts "There are #{count} forms"
         for i in 0..count-1 do
-          wrapped = FormWrapper.new(allForms.item(i))
+          wrapped = IEFormWrapper.new(allForms.item(i))
           puts "Form name: #{wrapped.name}"
           puts "       id: #{wrapped.id}"
           puts "   method: #{wrapped.method}"

@@ -1,7 +1,7 @@
 module Watir
-  class Frame
-    include Container
-    include PageContainer
+  class IEFrame
+    include IEContainer
+    include IEPageContainer
     
     # Find the frame denoted by how and what in the container and return its ole_object
     def locate

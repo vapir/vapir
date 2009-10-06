@@ -44,17 +44,17 @@ module Watir
       if set_or_clear == :set
         begin
           @original_border = @o.border.to_i
-          if @o.border.to_i==1
-            @o.border = 2
+          if self.border.to_i==1
+            self.border = 2
           else
-            @o.border=1
+            self.border=1
           end
         rescue
           @original_border = nil
         end
       else
         begin
-          @o.border= @original_border unless @original_border == nil
+          self.border= @original_border unless @original_border == nil
           @original_border = nil
         rescue
           # we could be here for a number of reasons...

@@ -21,7 +21,7 @@ module Watir
 
       jssh_socket.send("#{element_object}.value = \"#{path}\";\n", 0)
       jssh_socket.read_socket
-      @o.fireEvent("onChange")
+      fireEvent("onChange")
       
       @@current_level = 0
     end

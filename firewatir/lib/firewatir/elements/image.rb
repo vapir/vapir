@@ -83,7 +83,7 @@ module Watir
     #
     def width
       assert_exists
-      return @o.invoke("width")
+      return invoke("width")
     end
 
     #
@@ -95,7 +95,7 @@ module Watir
     #
     def height
       assert_exists
-      return @o.invoke("height")
+      return invoke("height")
     end
 
     # This method attempts to find out if the image was actually loaded by the web browser.
@@ -121,13 +121,13 @@ module Watir
       if set_or_clear == :set
         begin
           @original_border = @o.border
-          @o.border = 1
+          self.border = 1
         rescue
           @original_border = nil
         end
       else
         begin
-          @o.border = @original_border
+          self.border = @original_border
           @original_border = nil
         rescue
           # we could be here for a number of reasons...

@@ -38,7 +38,7 @@ module Watir
     def submit
       assert_exists
       dom_object.submit
-      @o.wait
+      wait
     end
 
   end # Form

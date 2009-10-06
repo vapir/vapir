@@ -81,18 +81,18 @@ module Watir
     #    destination = element.text_field(destination_how, destination_what)
     #    raise UnknownObjectException ,  "Unable to locate destination using #{destination_how } and #{destination_what } "   if destination.exists? == false
 
-    #    @o.focus
-    #    @o.select()
+    #    focus
+    #    select()
     #    value = self.value
 
-    #   @o.fireEvent("onSelect")
-    #    @o.fireEvent("ondragstart")
-    #    @o.fireEvent("ondrag")
+    #    fireEvent("onSelect")
+    #    fireEvent("ondragstart")
+    #    fireEvent("ondrag")
     #    destination.fireEvent("onDragEnter")
     #    destination.fireEvent("onDragOver")
     #    destination.fireEvent("ondrop")
 
-    #    @o.fireEvent("ondragend")
+    #    fireEvent("ondragend")
     #    destination.value= ( destination.value + value.to_s  )
     #    self.value = ""
     #end
@@ -114,10 +114,10 @@ module Watir
       dom_object.scrollIntoView
       dom_object.focus
       dom_object.select
-      @o.fireEvent("onSelect")
+      fireEvent("onSelect")
       dom_object.value=""
-      @o.fireEvent("onKeyPress")
-      @o.fireEvent("onChange")
+      fireEvent("onKeyPress")
+      fireEvent("onChange")
       @container.wait()
       highlight(:clear)
     end
@@ -161,13 +161,13 @@ module Watir
       dom_object.scrollIntoView
       dom_object.focus
       dom_object.select
-      @o.fireEvent("onSelect")
-      @o.assign('value', "")
-      @o.fireEvent("onKeyPress")
+      fireEvent("onSelect")
+      assign('value', "")
+      fireEvent("onKeyPress")
       doKeyPress( setThis )
       highlight(:clear)
-      @o.fireEvent("onChange")
-      @o.fireEvent("onBlur")
+      fireEvent("onChange")
+      fireEvent("onBlur")
     end
 
     def value=(value)
@@ -186,7 +186,7 @@ module Watir
     #
     #def value=(v)
     #    assert_exists
-    #    @o.value = v.to_s
+    #    value = v.to_s
     #end
 
     #
@@ -212,10 +212,10 @@ module Watir
         #sleep element.typingspeed   # typing speed
         c = value[i,1]
         #element.log  " adding c.chr " + c  #.chr.to_s
-        @o.assign('value', @o.value.to_s + c)   #c.chr
-        @o.fireEvent("onKeyDown")
-        @o.fireEvent("onKeyPress")
-        @o.fireEvent("onKeyUp")
+        assign('value', self.value.to_s + c)   #c.chr
+        fireEvent("onKeyDown")
+        fireEvent("onKeyPress")
+        fireEvent("onKeyUp")
       end
 
     end

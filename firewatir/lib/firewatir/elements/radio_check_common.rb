@@ -47,7 +47,7 @@ module Watir
     #
     def set?
       assert_exists
-      return @o.checked
+      return checked
     end
     alias getState set?
     alias checked? set?
@@ -84,7 +84,7 @@ module Watir
     #   Used by clear and set method to uncheck and check radio button and checkbox element respectively.
     #
     def set_clear_item(set)
-      @o.fire_event("onclick")
+      fire_event("onclick")
       @container.wait
     end
     private :set_clear_item
@@ -110,7 +110,7 @@ module Watir
       assert_exists
       assert_enabled
       #higlight(:set)
-      @o.assign('checked', false)
+      assign('checked', false)
       #highlight(:clear)
     end
 
@@ -145,7 +145,7 @@ module Watir
       highlight(:set)
 
       if set_or_clear == true
-        if @o.checked == false
+        if checked == false
           set_clear_item( true )
         end
       else
@@ -163,7 +163,7 @@ module Watir
       assert_exists
       assert_enabled
       highlight( :set)
-      if @o.checked == true
+      if checked == true
         set_clear_item( false )
       end
       highlight( :clear)

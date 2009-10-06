@@ -62,23 +62,25 @@ module Watir
 
     # locates a javascript reference for this element
     def locate
-      case @how
-      when :jssh_name
-        @element_name = @what
-      when :xpath
-        @element_name = element_by_xpath(@container, @what)
-      else
-        current_specifier= if @how.is_a?(Hash) && @what.nil?
-          @how
+      if !@already_located
+        @element_name = case @how
+        when :jssh_name
+          @what
+        when :xpath
+          element_by_xpath(@container, @what)
         else
-          {@how.to_sym => @what}
+          current_specifier= if @how.is_a?(Hash) && @what.nil?
+            @how
+          else
+            {@how.to_sym => @what}
+          end
+          index=current_specifier.delete(:index)
+          
+          specifiers=self.class.specifiers.map{|spec| spec.merge(current_specifier)}
+          locate_specified_element(specifiers, index)
         end
-        index=current_specifier.delete(:index)
-        
-        specifiers=self.class.specifiers.map{|spec| spec.merge(current_specifier)}
-        @element_name = locate_specified_element(specifiers, index)
+        @already_located=true
       end
-      @o = self
     end
 
     def dom_object
@@ -250,7 +252,7 @@ module Watir
     # The only specifier attribute that doesn't match directly to an element attribute is 
     # :types, which will match any of a list of types. 
     def locate_specified_element(specifiers_list, index=nil)
-      STDERR.puts specifiers_list.inspect
+      #STDERR.puts specifiers_list.inspect
       ids=specifiers_list.map{|s|s[:id]}.compact.uniq
       tags=specifiers_list.map{|s|s[:tagName]}.compact.uniq
 

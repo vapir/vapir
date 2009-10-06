@@ -30,7 +30,7 @@ module Watir
         @element_name = @what
         @option = self
       else    
-        @select_list.o.each do |option| # items in the list
+        @select_list.each do |option| # items in the list
           #puts "option is : #{option}"
           if(attribute == :value)
             match_value = option.value

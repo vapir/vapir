@@ -1208,4 +1208,4 @@ var Prototype = {
     _each:      _each,
     include:    include
   };
-})());"done!"
+})());$_H=function(object){var ret=({}); for(var k in object){try{ret[k]=object[k];}catch(e){ret[k]=null;}} return $H(ret);};"done!"

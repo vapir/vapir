@@ -1,7 +1,9 @@
 require 'json/pure'
 require 'socket'
 
-class JsshError < StandardError; end
+class JsshError < StandardError
+  attr_accessor :source, :lineNumber, :stack, :fileName
+end
 # This exception is thrown if we are unable to connect to JSSh.
 class JsshUnableToStart < JsshError; end
 class JsshUndefinedValueError < JsshError; end
@@ -12,7 +14,7 @@ class JsshSocket
   JSSH_PORT = 9997
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
 
-  DEFAULT_SOCKET_TIMEOUT=1
+  DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
   SHORT_SOCKET_TIMEOUT=(2**-16).to_f
   
@@ -28,14 +30,7 @@ class JsshSocket
     @ip=options[:jssh_ip] || JSSH_IP
     @port=options[:jssh_port] || JSSH_PORT
     @prototype=options.key?(:send_prototype) ? options[:send_prototype] : true
-    no_of_tries = 0
-#    begin
-      @socket = TCPSocket::new(@ip, @port)
-#    rescue
-#      no_of_tries += 1
-#      retry if no_of_tries < 3
-#      raise JsshUnableToStart, "Unable to connect to IP : #{@ip} on port #{@port}. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
-#    end
+    @socket = TCPSocket::new(@ip, @port)
     @socket.sync = true
     eat="Welcome to the Mozilla JavaScript Shell!"
     eaten=""
@@ -49,10 +44,10 @@ class JsshSocket
       eaten+=ret
     end
     if @prototype
-      send(File.read(PrototypeFile))
-      ret=read_socket(LONG_SOCKET_TIMEOUT)
+      ret=send_and_read(File.read(PrototypeFile), LONG_SOCKET_TIMEOUT)
       raise JsshError, "Something went wrong loading Prototype - message #{ret.inspect}" if ret != "done!"
     end
+    temp_object.assign({})
   end
 
   # sends the given message to the jssh socket. one usually wants to use less low-level stuff than this; this may 
@@ -112,50 +107,68 @@ class JsshSocket
   # If you're sure that you only have one line-ending expression, you can dump it into send (for now. maybe that will
   # go away, maybe there will be something to replace it.) 
   def js_eval(str, timeout=DEFAULT_SOCKET_TIMEOUT)
-    if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != "\n> "
-      STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}")
-    end
-    str=str.to_s.gsub("\n","")
-    str=str+"\n" unless str =~ /\n\z/
-    @socket.send(str, 0)
-    value = read_socket(timeout)
-    if md = /\A(\w+)Error:(.*)/m.match(value)
-      errclassname="JsshJavascript#{md[1]}Error"
-      unless JsshSocket.const_defined?(errclassname)
-        JsshSocket.const_set(errclassname, Class.new(JsshError))
-      end
-      raise JsshSocket.const_get(errclassname), "#{md[2]} - evaluating #{str.inspect}"
+    value= send_and_read(str.gsub("\n",""), timeout)
+    if md = /\A(\w+Error):(.*)/m.match(value)
+      js_error(md[1], md[2], str)
     elsif md = /\Auncaught exception: (.*)/m.match(value)
-      raise JsshError, "#{md[1]} - evaluating #{str.inspect}"
+      js_error(nil, md[1], str)
     end
     value
   end
 
+  def send_and_read(js_expr, timeout=DEFAULT_SOCKET_TIMEOUT)
+    if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != "\n> "
+      STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}")
+    end
+    js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
+    @socket.send(js_expr, 0)
+    return read_socket(timeout)
+  end
+  
+  def js_error(errclassname, message, source, stuff={})
+    errclass=if errclassname
+      unless JsshSocket.const_defined?(errclassname)
+        JsshSocket.const_set(errclassname, Class.new(JsshError))
+      end
+      JsshSocket.const_get(errclassname)
+    else
+      JsshError
+    end
+    err=errclass.new(message)
+    err.source=source
+    ["lineNumber", "stack", "fileName"].each do |attr|
+      if stuff.key?(attr)
+        err.send(:"#{attr}=", stuff[attr])
+      end
+    end
+    raise err
+  end
+
   # returns the value of the given javascript expression, as reported by JSSH. 
-  # This will be a string, the given expression's toString. Uses #js_eval; see its documentation.
+  # This will be a string, the given expression's toString. 
   def value(js)
-    js_eval(js)
+    send_and_read("(function(){return #{js}})()")
   end
   
   # assigns to the javascript reference on the left the javascript expression on the right. 
   # returns the value of the expression as reported by JSSH, which
   # will be a string, the expression's toString. Uses #js_eval; see its documentation.
   def assign(js_left, js_right)
-    js_eval("#{js_left}= #{js_right}")
+    value("#{js_left}= #{js_right}")
   end
   
   # calls to the given function (javascript reference to a function) passing it the
   # given arguments (javascript expressions). returns the return value of the function,
   # a string, the toString of the javascript value. Uses #js_eval; see its documentation.
   def call(js_function, *js_args)
-    js_eval("#{js_function}(#{js_args.join(', ')})")
+    value("#{js_function}(#{js_args.join(', ')})")
   end
   
   # if the given javascript expression ends with an = symbol, #handle calls to #assign 
   # assuming it is given one argument; if the expression refers to a function, calls 
   # that function with the given arguments using #call; if the expression is some other 
   # value, returns that value (its javascript toString), calling #value, assuming 
-  # given no arguments. Uses #js_eval; see its documentation.
+  # given no arguments. Uses #value; see its documentation.
   def handle(js_expr, *args)
     if js_expr=~/=\z/ # doing assignment
       js_left=$`
@@ -181,10 +194,32 @@ class JsshSocket
 
   # returns the value of the given javascript expression. Assuming that it can
   # be converted to JSON, will return the equivalent ruby data type to the javascript
-  # value. Uses #js_eval; see its documentation.
+  # value. Will raise an error if the javascript errors. 
   def value_json(js)
     ensure_prototype
-    parse_json(value("Object.toJSON(#{js})"))
+    wrapped_js=
+      "try
+       { result=(function(){return #{js}})();
+         Object.toJSON([false, result]);
+       }
+       catch(e)
+       { Object.toJSON([true, e]);
+       }"
+    val=send_and_read(wrapped_js)
+    errord_and_val=*parse_json(val)
+    case errord_and_val.length
+    when 1
+      raise JsshUndefinedValueError, "undefined expression #{js}"
+    when 2
+      errord,val= *errord_and_val
+    else
+      raise RuntimeError, "unexpected result: \n\t#{errord_and_val.inspect} \nencountered parsing value: \n\t#{val.inspect} \nreturned from expression: \n\t#{js.inspect}"
+    end
+    if errord
+      js_error(val['name'],val['message'],js,val)
+    else
+      val
+    end
   end
   
   # assigns to the javascript reference on the left the object on the right. 
@@ -196,22 +231,22 @@ class JsshSocket
   # >> jssh_socket.assign_json('bar', {:foo => [:baz, 'qux']})
   # => {"foo"=>["baz", "qux"]}
   #
-  # Uses #js_eval; see its documentation.
+  # Uses #value_json; see its documentation.
   def assign_json(js_left, rb_right)
     ensure_prototype
     js_right=rb_right.to_json
-    parse_json(value("Object.toJSON(#{js_left}=#{js_right})"))
+    value_json("#{js_left}=#{js_right}")
   end
   
   # calls to the given function (javascript reference to a function) passing it the
   # given arguments, each argument being converted from a ruby object to a javascript object
   # via JSON. returns the return value of the function, of equivalent type to the javascript 
   # return value, converted from javascript to ruby via JSON. 
-  # Uses #js_eval; see its documentation.
+  # Uses #value_json; see its documentation.
   def call_json(js_function, *rb_args)
     ensure_prototype
     js_args=rb_args.map{|arg| arg.to_json}
-    parse_json(value("Object.toJSON(#{js_function}(#{js_args.join(', ')}))"))
+    value_json("#{js_function}(#{js_args.join(', ')})")
   end
 
   # does the same thing as #handle, but with json, calling #assign_json, #value_json, 
@@ -220,7 +255,7 @@ class JsshSocket
   # #assign_json assuming it is given one argument; if the expression refers to a function, 
   # calls that function with the given arguments using #call_json; if the expression is 
   # some other value, returns that value, converted to ruby via JSON, assuming given no 
-  # arguments. Uses #js_eval; see its documentation.
+  # arguments. Uses #value_json; see its documentation.
   def handle_json(js_expr, *args)
     ensure_prototype
     if js_expr=~/=\z/ # doing assignment
@@ -255,8 +290,31 @@ class JsshSocket
   # returns the type of the given expression using javascript typeof operator, with the exception that
   # if the expression is null, returns 'null' - whereas typeof(null) in javascript returns 'object'
   def typeof(expression)
-    type,isnull = *value_json("(function(expr){return [typeof(expr), expr==null];})(#{expression})")
-    (isnull && type!='undefined') ? 'null' : type
+    # this approach evaluates the expression twice if it === null. that is no good. 
+    #value_json("(function(){type=typeof(#{expression});return (#{expression}===null) ? 'null' : type;})()")
+    
+    # this approach errors (in javascript) if expression is undefined. no good. 
+    #type,isnull = *value_json("(function(expr){return [typeof(expr), expr===null];})(#{expression})")
+    #isnull ? 'null' : type
+    
+    # this approach, combining the above and handling errors, seems to work. 
+    js="(function()
+        { try
+          { return (function(expr)
+            { type=typeof(expr);
+              return (expr===null) ? 'null' : type;
+            })(#{expression});
+          }
+          catch(e)
+          { if(e.name=='ReferenceError')
+            { return 'undefined';
+            }
+            else
+            { throw(e);
+            }
+          }
+        })()"
+    type=value_json js
   end
 
   # sticks a json string inside array brackets because on windows (at least?) 
@@ -271,12 +329,17 @@ class JsshSocket
   # >> JSON.parse('[]')
   # => []
   def parse_json(json)
+    raise JSON::ParserError, "Not a string! got: #{json.inspect}" unless json.is_a?(String)
     raise JSON::ParserError, "Blank string!" if json==''
     return *JSON.parse("["+json+"]")
   end
 
   def object(ref)
     JsshObject.new(ref, self)
+  end
+  
+  def temp_object
+    @temp_object ||= object('JsshTemp')
   end
 end
 
@@ -326,7 +389,7 @@ class JsshObject
     @object_type ||= begin
       case type
       when 'object'
-        self.toString.val =~ /\A\[object\s+(.*)\]\Z/
+        self.toString! =~ /\A\[object\s+(.*)\]\Z/
         $1
       else
         raise JsshError, "Type is #{type}, not object"
@@ -336,20 +399,24 @@ class JsshObject
   
   def val_or_object(options={})
     options={:error_on_undefined=>true}.merge(options)
-    case self.type
-    when 'undefined'
-      if function_result || !options[:error_on_undefined]
-        nil
-      else
-        raise JsshUndefinedValueError, "undefined expression #{ref}"
-      end
-    when 'boolean','number','string','null'
-      val
-    when 'function','object'
-      self
+    if function_result # calling functions multiple times is bad, so store in temp before figuring out what to do with it
+      store_rand_object_key(jssh_socket.temp_object).val_or_object(:error_on_undefined => false)
     else
-      # here we perhaps could (but won't for now) raise JsshError, "Unknown type: #{type}"
-      self
+      case self.type
+      when 'undefined'
+        if function_result || !options[:error_on_undefined]
+          nil
+        else
+          raise JsshUndefinedValueError, "undefined expression #{ref}"
+        end
+      when 'boolean','number','string','null'
+        val
+      when 'function','object'
+        self
+      else
+        # here we perhaps could (but won't for now) raise JsshError, "Unknown type: #{type}"
+        self
+      end
     end
   end
   
@@ -431,6 +498,27 @@ class JsshObject
     stored.assign_expr(self.ref)
     stored.function_result=false
     stored
+  end
+  
+  def store_rand_named(&name_proc)
+    begin
+      name=name_proc.call("%.16x"%rand(2**64))
+    end while JsshObject.new(name,jssh_socket).type!='undefined'
+    # okay, more than one iteration is ridiculously unlikely, sure, but just to be safe. 
+    store(name)
+  end
+  
+  def store_rand_prefix(prefix)
+    store_rand_named do |r|
+      prefix+"_"+r
+    end
+  end
+
+  def store_rand_object_key(object)
+    raise ArgumentError("Object is not a JsshObject: got #{object.inspect}") unless object.is_a?(JsshObject)
+    store_rand_named do |r|
+      object.sub(r.to_json).ref
+    end
   end
 
   # method_missing handles unknown method calls in a way that makes it possible to write 
@@ -522,5 +610,15 @@ class JsshObject
   # instead of '#<JsshObject:0x2de5524>'
   def to_json
     ref
+  end
+  
+  def to_js_array
+    jssh_socket.object('$A').pass(self)
+  end
+  def to_js_hash
+    jssh_socket.object('$H').pass(self)
+  end
+  def to_js_hash_safe
+    jssh_socket.object('$_H').pass(self)
   end
 end

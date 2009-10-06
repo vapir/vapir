@@ -7,8 +7,6 @@ module Watir
     include SelectList
     INPUT_TYPES = ["select-one", "select-multiple"]
 
-    attr_accessor :o
-
     #
     # Description:
     #   Clears the selected items in the select box.

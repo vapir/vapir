@@ -72,7 +72,9 @@ module Watir
           current_specifier= if @how.is_a?(Hash) && @what.nil?
             @how
           else
-            {@how.to_sym => @what}
+            aliases=Hash.new{|hash,key| key}
+            aliases.merge!(:text => :textContent)
+            {aliases[@how.to_sym] => @what}
           end
           index=current_specifier.delete(:index)
           
@@ -80,6 +82,7 @@ module Watir
           locate_specified_element(specifiers, index)
         end
         @already_located=true
+        return @element_name
       end
     end
 
@@ -252,7 +255,7 @@ module Watir
     # The only specifier attribute that doesn't match directly to an element attribute is 
     # :types, which will match any of a list of types. 
     def locate_specified_element(specifiers_list, index=nil)
-      #STDERR.puts specifiers_list.inspect
+      #STDERR.puts specifiers_list.inspect+caller.map{|c|"\n\t#{c}"}.join('')
       ids=specifiers_list.map{|s|s[:id]}.compact.uniq
       tags=specifiers_list.map{|s|s[:tagName]}.compact.uniq
 
@@ -263,15 +266,15 @@ module Watir
         @container.dom_object
       end
 
-      if ids.size==1
-        candidates=if by_id=document_object.getElementById(ids.first)
+      if ids.size==1 && ids.first.is_a?(String)
+        candidates= if by_id=document_object.getElementById(ids.first)
           [by_id]
         else
           []
         end
-      elsif tags.size==1
+      elsif tags.size==1 && tags.first.is_a?(String)
         candidates=container_object.getElementsByTagName(tags.first)
-      else
+      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
         candidates=container_object.getElementsByTagName('*')
       end
       
@@ -279,9 +282,19 @@ module Watir
       fuzzy_match=proc do |_attr, _what|
         case _what
         when String, Symbol
-          _attr.downcase==_what.to_s.downcase
+          case _attr
+          when String
+            _attr.downcase==_what.to_s.downcase
+          else
+            _attr==_what
+          end
         when Regexp
-          _attr =~ _what
+          case _attr
+          when Regexp
+            _attr==_what
+          else
+            _attr =~ _what
+          end
         else
           _attr==_what
         end
@@ -308,10 +321,12 @@ module Watir
         if match
           matched+=1
           if !index || index==matched
-            return candidate.store("firewatir_elements_#{rand(2**32)}").ref
+            #STDERR.puts "FOUND"
+            return candidate.store_rand_prefix("firewatir_elements").ref
           end
         end
       end
+      #STDERR.puts "NOT FOUND"
       return nil
     end
 
@@ -1199,47 +1214,48 @@ module Watir
       end
     end
 
+    def internal_click(options={})
+      options={:wait => true}.merge(options)
+      assert_exists
+      assert_enabled
+      highlight(:set)
+      case element_type
+      when "HTMLAnchorElement", "HTMLImageElement"
+        # Special check for link or anchor tag. Because click() doesn't work on links.
+        # More info: http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-48250443
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=148585
+
+        event=document_object.createEvent('MouseEvents').store_rand_prefix('events')
+        event.initMouseEvent('click',true,true,nil,1,0,0,0,0,false,false,false,false,0,nil)
+        dom_object.dispatchEvent(event)
+      else
+        if dom_object.attr(:click).type=='undefined'
+          fire_event('onclick')
+        else
+          if options[:wait]
+            dom_object.click
+          else
+            click_func=jssh_socket.object("(function(dom_object){return function(){dom_object.click()};})").pass(dom_object)
+            window_object.setTimeout(click_func, 0)
+          end
+        end
+      end
+      highlight(:clear)
+      self.wait if options[:wait]
+    end
+
     #
     # Description:
     #   Function to fire click event on elements.
     #
     def click
-      assert_exists
-      assert_enabled
-
-      highlight(:set)
-      #puts "#{element_object} and #{element_type}"
-      case element_type
-
-        when "HTMLAnchorElement", "HTMLImageElement"
-        # Special check for link or anchor tag. Because click() doesn't work on links.
-        # More info: http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-48250443
-        # https://bugzilla.mozilla.org/show_bug.cgi?id=148585
-
-        jssh_command = "var event = #{@container.document_var}.createEvent(\"MouseEvents\");"
-
-        # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html
-        jssh_command << "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
-        jssh_command << "#{element_object}.dispatchEvent(event);\n"
-
-        #puts "jssh_command is: #{jssh_command}"
-        jssh_socket.send("#{jssh_command}", 0)
-        jssh_socket.read_socket
-      else
-        jssh_socket.send("typeof(#{element_object}.click);\n", 0)
-        isDefined = jssh_socket.read_socket
-        if(isDefined == "undefined")
-          fire_event("onclick")
-        else
-          jssh_socket.send("#{element_object}.click();\n" , 0)
-          jssh_socket.read_socket
-        end
-      end
-      highlight(:clear)
-      # Wait for firefox to reload.
-      wait()
+      internal_click :wait => true
     end
-
+    
+    def click_no_wait
+      internal_click :wait => false
+    end
+  
     #
     # Description:
     #   Wait for the browser to get loaded, after the event is being fired.

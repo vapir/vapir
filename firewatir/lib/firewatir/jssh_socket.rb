@@ -6,8 +6,9 @@ class JsshSocket
   JSSH_PORT = 9997
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
 
-  JS_EVAL_SOCKET_TIMEOUT=4 # seconds
   DEFAULT_SOCKET_TIMEOUT=1
+  LONG_SOCKET_TIMEOUT=32
+  SHORT_SOCKET_TIMEOUT=(2**-16).to_f
   
   class JsshError < StandardError; end
   # This exception is thrown if we are unable to connect to JSSh.
@@ -30,10 +31,21 @@ class JsshSocket
       raise UnableToStartJSShException, "Unable to connect to IP : #{@ip} on port #{@port}. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
     end
     @socket.sync = true
-    read_socket # eat the "Welcome to the Mozilla JavaScript Shell!" message
+    eat="Welcome to the Mozilla JavaScript Shell!"
+    eaten=""
+    while eat!=eaten
+      ret=read_socket(LONG_SOCKET_TIMEOUT)
+      if !ret
+        raise JsshError, "Something went wrong initializing - no response (already ate #{eaten.inspect})" 
+      elsif ret != eat[0...ret.length]
+        raise JsshError, "Something went wrong initializing - message #{ret.inspect} != #{eat[0...ret.length].inspect}" 
+      end
+      eaten+=ret
+    end
     if @prototype
-      ret=js_eval(File.read(PrototypeFile), 32) # it's big, can take longer than the default timeout, perhaps 
-      raise JsshError, "Something went wrong loading Prototype - message #{ret}" if ret != "done!"
+      send(File.read(PrototypeFile))
+      ret=read_socket(LONG_SOCKET_TIMEOUT)
+      raise JsshError, "Something went wrong loading Prototype - message #{ret.inspect}" if ret != "done!"
     end
   end
 
@@ -42,13 +54,12 @@ class JsshSocket
 #    caller.each{|c| STDERR.puts "\t"+c}
     @socket.send mesg, flags
   end
-
   # Evaluate javascript and return result. Raise an exception if an error occurred.
-  def js_eval(str, timeout=JS_EVAL_SOCKET_TIMEOUT)
-    if leftover=recv_socket(0.1)
+  def js_eval(str, timeout=DEFAULT_SOCKET_TIMEOUT)
+    if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != "\n> "
       STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}")
     end
-    str=str.to_s
+    str=str.to_s.gsub("\n","")
     str=str+"\n" unless str =~ /\n\z/
     @socket.send(str, 0)
     value = read_socket(timeout)
@@ -196,30 +207,22 @@ class JsshSocket
   # >> JSON.parse('[]')
   # => []
   def parse_json(json)
+    raise JSON::ParserError, "Blank string!" if json.blank?
     return *JSON.parse("["+json+"]")
   end
 
-  # evaluate the provides javascript method on the current object and return
-  # the result
-#  def js_eval_method method_name
-#    js_eval("#{element_object}.#{method_name}")
-#  end
-
-  # 
   def recv_socket(timeout=DEFAULT_SOCKET_TIMEOUT)
     received_any=false
-    received_data=''
-    while(s = Kernel.select([@socket] , nil , nil, timeout))
+    received_data = ""
+    data = ""
+    while(s= Kernel.select([@socket] , nil , nil, timeout))
+      timeout=SHORT_SOCKET_TIMEOUT
       received_any=true
-      timeout=0.1
-      for stream in s[0]
-        data = stream.recv(1024)
-        received_data += data
-      end
+      data = @socket.recv(1024)
+      received_data += data
     end
     received_any ? received_data : nil
   end
-
 
   #
   # Description:
@@ -242,11 +245,14 @@ class JsshSocket
     end
   end
   alias read_socket read_value # really this shouldn't be called read_socket, but it is for backward compatibility 
+
 end
 
 class JsshElement
   attr_reader :element_ref, :jssh_socket
   def initialize(element_ref, jssh_socket)
+    raise JsshError, "Empty element reference!" if !element_ref || element_ref.blank?
+    raise ArgumentError, "Not given a JsshSocket, instead given #{jssh_socket.inspect}" unless jssh_socket.is_a?(JsshSocket)
     @element_ref=element_ref
     @jssh_socket=jssh_socket
   end

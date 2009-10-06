@@ -178,7 +178,7 @@ module Watir
       # If at any time a non-browser window like the "Downloads" window
       #   pops up, it will become the topmost window, so make sure we
       #   ignore it.
-      window_count = jssh_socket.js_eval("getWindows().length").to_i - 1
+      window_count = jssh_socket.value_json("getWindows().length") - 1
       while jssh_socket.js_eval("getWindows()[#{window_count}].getBrowser") == ''
         window_count -= 1;
       end

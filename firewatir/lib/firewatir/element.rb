@@ -48,11 +48,7 @@ module Watir
     end
 
     def dom_object
-      @dom_object||= begin
-        locate if !@element_name || @element_name.blank?
-        STDERR.puts "@element_name is #{@element_name}"
-        JsshElement.new(@element_name, Firefox.jssh_socket)
-      end
+      JsshElement.new(@element_name, Firefox.jssh_socket)
     end
     
     def read_socket
@@ -107,8 +103,11 @@ module Watir
       return return_value
     end
     private :get_attribute_value
-
-
+  
+#    def js_eval_method
+#      jssh_socket.js_eval("#{element_object}.#{method_name}")
+#    end
+  
     #
     # Description:
     #   Returns an array of the properties of an element, in a format to be used by the to_s method.

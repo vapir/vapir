@@ -1289,6 +1289,14 @@ module Watir
       return read_socket
     end
     
+    def document_var
+      @container.document_var
+    end
+    
+    def window_var
+      @container.window_var
+    end
+    
     #
     # Description:
     #   Traps all the function calls for an element that is not defined and fires them again

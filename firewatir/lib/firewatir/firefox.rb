@@ -859,7 +859,7 @@ module Watir
       divs.each do |l|
         puts "div:   name: #{l.name}"
         puts "         id: #{l.id}"
-        puts "      class: #{l.className}"
+        puts "      class: #{l.invoke('className')}"
         puts "      index: #{index}"
         index += 1
       end

@@ -163,6 +163,11 @@ module Watir
       @o.fireEvent("onBlur")
     end
 
+    def value=(value)
+      assert_exists
+      assign('value', value)
+    end
+    
     #
     # Description:
     #   Sets the text of the text field withoud firing the events like onKeyPress, onKeyDown etc. This should not be used generally, but it

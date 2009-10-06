@@ -66,6 +66,14 @@ before you invoke Browser.new.
 #          alias new __orig_new__
 #        end
 #      end
+
+      # makes sure that the class methods of Browser that call to the class methods of klass 
+      # are overridden so that Browser class methods aren't inherited causing infinite loop. 
+      def ensure_overridden
+        if self==klass
+          raise NotImplementedError, "This method must be overridden by #{self}!"
+        end
+      end
       def new *args, &block
         set_sub_options
         #klass.new *args, &block
@@ -76,21 +84,25 @@ before you invoke Browser.new.
       # Create a new instance as with #new and start the browser on the
       # specified url.
       def start url
+        ensure_overridden
         set_sub_options
         klass.start url
       end
       # Attach to an existing browser.
       def attach(how, what)
+        ensure_overridden
         set_sub_options
         klass.attach(how, what)
       end
       def set_options options
-        raise if !defined?(klass.set_options) || self==klass # latter means this method is inherited
-        klass.set_options options
+        #ensure_overridden
+        unless self==klass
+          klass.set_options options
+        end
       end
       def options
-        raise if !defined?(klass.options) || self==klass # latter means this options method is inherited
-        klass.options
+        #ensure_overridden
+        self==klass ? {} : klass.options
       end
 
       def klass

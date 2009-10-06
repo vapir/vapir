@@ -67,7 +67,7 @@ module Watir
     # this method returns the filesize of the image
     #def file_size
     #    assert_exists
-    #    return @o.invoke("fileSize").to_s
+    #    return @o.invoke("fileSize")
     #end
     # alias fileSize file_size
 
@@ -80,7 +80,7 @@ module Watir
     #
     def width
       assert_exists
-      return @o.invoke("width").to_s
+      return @o.invoke("width")
     end
 
     #
@@ -92,7 +92,7 @@ module Watir
     #
     def height
       assert_exists
-      return @o.invoke("height").to_s
+      return @o.invoke("height")
     end
 
     # This method attempts to find out if the image was actually loaded by the web browser.

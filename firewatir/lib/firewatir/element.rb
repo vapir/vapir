@@ -48,7 +48,7 @@ module Watir
     end
 
     def dom_object
-      JsshElement.new(@element_name, Firefox.jssh_socket)
+      JsshObject.new(@element_name, Firefox.jssh_socket)
     end
     
     def read_socket
@@ -61,7 +61,7 @@ module Watir
     def self.def_wrap(ruby_method_name, ole_method_name = nil)
       ole_method_name = ruby_method_name unless ole_method_name
       define_method ruby_method_name do
-        dom_object.invoke_json(ole_method_name)
+        dom_object.get(ole_method_name).val
       end
     end
 
@@ -69,14 +69,14 @@ module Watir
       #if the attribut name is columnLength get number of cells in first row if rows exist.
       case attribute_name
       when "columnLength"
-        rowsLength = dom_object.columns
+        rowsLength = dom_object.columns!
         if (rowsLength != 0 || rowsLength != "")
-          return dom_object.invoke_json("rows[0].cells.length")
+          return dom_object.rows[0].cells.length!
         end
       when "text"
         return text
       when "url", "href", "src", "action", "name"
-        return_value = dom_object.invoke_json(:getAttribute, attribute_name)
+        return_value = dom_object.getAttribute!(attribute_name)
       else
         jssh_command = "var attribute = '';
           if(#{element_object}.#{attribute_name} != undefined)
@@ -87,12 +87,12 @@ module Watir
         return_value = jssh_socket.js_eval(jssh_command)
       end
       if attribute_name == "value"
-        tagName = dom_object.tagName.downcase
-        type = dom_object.invoke(:type).downcase
+        tagName = dom_object.tagName!.downcase
+        type = dom_object.type?
 
         if tagName == "button" || ["image", "submit", "reset", "button"].include?(type)
           if return_value == "" || return_value == "null"
-            return_value = dom_object.innerHTML
+            return_value = dom_object.innerHTML!
           end
         end
       end
@@ -121,17 +121,17 @@ module Watir
     #
     def string_creator(attributes = nil)
       n = []
-      n << "name:".ljust(TO_S_SIZE) + get_attribute_value("name")
-      n << "type:".ljust(TO_S_SIZE) + get_attribute_value("type")
-      n << "id:".ljust(TO_S_SIZE) + get_attribute_value("id")
-      n << "value:".ljust(TO_S_SIZE) + get_attribute_value("value")
-      n << "disabled:".ljust(TO_S_SIZE) + get_attribute_value("disabled")
+      n << "name:".ljust(TO_S_SIZE) + get_attribute_value("name").inspect
+      n << "type:".ljust(TO_S_SIZE) + get_attribute_value("type").inspect
+      n << "id:".ljust(TO_S_SIZE) + get_attribute_value("id").inspect
+      n << "value:".ljust(TO_S_SIZE) + get_attribute_value("value").inspect
+      n << "disabled:".ljust(TO_S_SIZE) + get_attribute_value("disabled").inspect
       #n << "style:".ljust(TO_S_SIZE) + get_attribute_value("style")
       #n << "class:".ljust(TO_S_SIZE) + get_attribute_value("className")
 
       if(attributes != nil)
         attributes.each do |key,value|
-          n << "#{key}:".ljust(TO_S_SIZE) + get_attribute_value(value)
+          n << "#{key}:".ljust(TO_S_SIZE) + get_attribute_value(value).inspect
         end
       end
       return n
@@ -921,7 +921,7 @@ module Watir
     #
     def enabled?
       assert_exists
-      !dom_object.disabled
+      !dom_object.disabled!
     end
 
     #
@@ -1231,10 +1231,7 @@ module Watir
     private :get_cells
     
     def invoke(js_method)
-      locate
-      raise "no element_object is set" if !element_object || element_object.blank?
-      jssh_socket.send("#{element_object}.#{js_method}\n", 0)
-      return read_socket
+      dom_object.attr(js_method).val_str
     end
   
     def assign(property, value)
@@ -1251,117 +1248,5 @@ module Watir
       @container.window_var
     end
     
-    #
-    # Description:
-    #   Traps all the function calls for an element that is not defined and fires them again
-    #   as it is to the jssh. This can be used in case the element supports properties or methods
-    #   that are not defined in the corresponding element class or in the base class(Element).
-    #
-    # Input:
-    #   methodId - Id of the method that is called.
-    #   *args - arguments sent to the methods.
-    #
-=begin um, yeah, let's not do this nonsense. 
-    def method_missing(methId, *args)
-      methodName = methId.id2name
-      #puts "method name is : #{methodName}"
-      assert_exists
-      #assert_enabled
-      methodName = "colSpan" if methodName == "colspan"
-      if(methodName =~ /invoke/)
-        jssh_command = "#{element_object}."
-        for i in args do
-          jssh_command << i;
-        end
-        #puts "#{jssh_command}"
-        jssh_socket.send("#{jssh_command};\n", 0)
-        return_value = jssh_socket.read_socket
-        #puts "return value is : #{return_value}"
-        return return_value
-      else
-        #assert_exists
-        #puts "element name is #{element_object}"
-
-        # We get method name with trailing '=' when we try to assign a value to a
-        # property. So just remove the '=' to get the type
-        temp = ""
-        assigning_value = false
-        if(methodName =~ /(.*)=$/)
-          temp  = "#{element_object}.#{$1}"
-          assigning_value = true
-        else
-          temp = "#{element_object}.#{methodName}"
-        end
-        #puts "temp is : #{temp}"
-
-        jssh_socket.send("typeof(#{temp});\n", 0)
-        method_type = jssh_socket.read_socket
-        #puts "method_type is : #{method_type}"
-
-        if(assigning_value)
-          if(method_type != "boolean" && args[0].class != Fixnum)
-            args[0].gsub!("\\", "\\"*4)
-            args[0].gsub!("\"", "\\\"")
-            args[0].gsub!("\n","\\n")
-            jssh_command = "#{element_object}.#{methodName}\"#{args[0]}\""
-          else
-            jssh_command = "#{element_object}.#{methodName}#{args[0]}"
-          end
-          #puts "jssh_command is : #{jssh_command}"
-          jssh_socket.send("#{jssh_command};\n", 0)
-          jssh_socket.read_socket
-          return
-        end
-
-        methodName = "#{element_object}.#{methodName}"
-        if(args.length == 0)
-          #puts "In if loop #{methodName}"
-          if(method_type == "function")
-            jssh_command =  "#{methodName}();\n"
-          else
-            jssh_command =  "#{methodName};\n"
-          end
-        else
-          #puts "In else loop : #{methodName}"
-          jssh_command =  "#{methodName}("
-
-          count = 0
-          if args != nil
-            for i in args
-              jssh_command << "," if count != 0
-              if i.kind_of? Numeric
-                jssh_command << i.to_s
-              else
-                jssh_command << "\"#{i.to_s.gsub(/"/,"\\\"")}\""
-              end
-              count = count + 1
-            end
-          end
-
-          jssh_command << ");\n"
-        end
-
-        if(method_type == "boolean")
-          jssh_command = jssh_command.gsub("\"false\"", "false")
-          jssh_command = jssh_command.gsub("\"true\"", "true")
-        end
-        #puts "jssh_command is #{jssh_command}"
-        jssh_socket.send("#{jssh_command}", 0)
-        returnValue = jssh_socket.read_socket
-        #puts "return value is : #{returnValue}"
-
-        @@current_level = 0
-
-        if(method_type == "boolean")
-          return false if(returnValue == "false")
-          return true if(returnValue == "true")
-        elsif(method_type == "number")
-          return returnValue.to_i
-        else
-          return returnValue
-        end
-      end
-    end
-=end
   end # Element
 end # FireWatir

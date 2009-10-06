@@ -143,6 +143,9 @@ module Watir
       '#<%s:0x%x url=%s title=%s>' % [self.class, hash*2, url.inspect, title.inspect]
     end
 
+    def exists?
+      jssh_socket.value_json("$A(getWindows()).include(#{window_var})")
+    end
 
     # Launches firebox browser
     # options as .new

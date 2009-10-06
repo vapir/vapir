@@ -3,7 +3,7 @@ $:.unshift(File.dirname(__FILE__)) unless $:.include?(File.dirname(__FILE__)) ||
 require 'socket'
 require 'active_support'
 
-require 'json'
+require 'json/pure'
 
 require 'watir'
 require 'watir/common_elements'

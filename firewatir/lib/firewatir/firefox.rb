@@ -92,7 +92,7 @@ module Watir
       @@jssh_socket
     end
     def jssh_socket
-      @@jssh_socket
+      @jssh_socket
     end
     
     # Description: 
@@ -120,11 +120,18 @@ module Watir
       # check for jssh not running, firefox may be open but not with -jssh
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
+      retried=false
       begin
         @@jssh_socket||=begin
           j=JsshSocket.new
           @@firewatir_jssh_objects=j.object('{}').store("FireWatir")
           j
+        end
+        @jssh_socket=@@jssh_socket
+      rescue Errno::ECONNRESET
+        if !retried
+          retried=true
+          retry
         end
       end
       @browser_jssh_objects = jssh_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
@@ -148,7 +155,7 @@ module Watir
     end
 
     def exists?
-      window_object && jssh_socket.object('getWindows()').to_js_array.include(window_object)
+      browser_window_object && jssh_socket.object('getWindows()').to_js_array.include(browser_window_object)
     end
 
     # Launches firebox browser
@@ -181,27 +188,35 @@ module Watir
 
     # Loads the given url in the browser. Waits for the page to get loaded.
     def goto(url)
-      set_browser_document()
-      jssh_socket.js_eval "#{browser_var}.loadURI(\"#{url}\")"
-      wait()
+      set_browser_document
+      browser_object.loadURI url
+      wait
     end
 
     # Loads the previous page (if there is any) in the browser. Waits for the page to get loaded.
-    def back()
-      jssh_socket.js_eval "if(#{browser_var}.canGoBack) #{browser_var}.goBack()"
-      wait()
+    def back
+      if browser_object.canGoBack
+        browser_object.goBack
+      else
+        raise "Cannot go back!"
+      end
+      wait
     end
 
     # Loads the next page (if there is any) in the browser. Waits for the page to get loaded.
-    def forward()
-      jssh_socket.js_eval "if(#{browser_var}.canGoForward) #{browser_var}.goForward()"
-      wait()
+    def forward
+      if browser_object.canGoForward
+        browser_object.goForward
+      else
+        raise "Cannot go forward!"
+      end
+      wait
     end
 
     # Reloads the current page in the browser. Waits for the page to get loaded.
-    def refresh()
-      jssh_socket.js_eval "#{browser_var}.reload()"
-      wait()
+    def refresh
+      browser_object.reload
+      wait
     end
     
     private
@@ -213,16 +228,16 @@ module Watir
 
     #   Sets the document, window and browser variables to point to correct object in JSSh.
     def set_browser_document
-      unless window_object
+      unless browser_window_object
         raise "Window must be set (using open_window or attach) before the browser document can be set!"
       end
-      @browser_object=@browser_jssh_objects.attr(:browser).assign(window_object.getBrowser)
+      @browser_object=@browser_jssh_objects.attr(:browser).assign(browser_window_object.getBrowser)
       
       # the following are not stored elsewhere; the ref will just be to attributes of the browser, so that updating the 
       # browser (in javascript) will cause all of these refs to reflect that as well 
       @document_object=browser_object.contentDocument
       @content_window_object=browser_object.contentWindow 
-        # note that window_object.content is the same thing, but simpler to refer to stuff on browser_object since that is updated by the nsIWebProgressListener below
+        # note that browser_window_object.content is the same thing, but simpler to refer to stuff on browser_object since that is updated by the nsIWebProgressListener below
       @body_object=document_object.body
     
       # Add eventlistener for browser window so that we can reset the document back whenever there is redirect
@@ -240,65 +255,18 @@ module Watir
       listener_object[:onStateChange]= jssh_socket.object(
         "function(aWebProgress, aRequest, aStateFlags, aStatus)
          { if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)
-           { #{browser_object.ref}=#{window_object.ref}.getBrowser();
+           { #{browser_object.ref}=#{browser_window_object.ref}.getBrowser();
            }
          }")
       browser_object.addProgressListener(listener_object)
-=begin
-      jssh_command = "var listObj = new Object();"; # create new object
-      jssh_command << "listObj.wpl = Components.interfaces.nsIWebProgressListener;"; # set the web progress listener.
-      jssh_command << "listObj.QueryInterface = function(aIID) {
-                                  if (aIID.equals(listObj.wpl) ||
-                                      aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-                                      aIID.equals(Components.interfaces.nsISupports))
-                                          return this;
-                                  throw Components.results.NS_NOINTERFACE;
-                              };" # set function to locate the object via QueryInterface
-      jssh_command << "listObj.onStateChange = function(aProgress, aRequest, aFlag, aStatus) {
-                                                if (aFlag & listObj.wpl.STATE_STOP) {
-                                                    if ( aFlag & listObj.wpl.STATE_IS_NETWORK ) {
-                                                       #{document_var} = #{browser_var}.contentDocument;
-                                                       #{body_var} = #{document_var}.body;
-                                                    }
-                                                }
-                                             };" # add function to be called when window state is change. When state is STATE_STOP &
-                                                 # STATE_IS_NETWORK then only everything is loaded. Now we can reset our variables.
-      jssh_command.gsub!(/\n/, "")
-      jssh_socket.js_eval jssh_command
-
-      jssh_command =  "var #{window_var} = getWindows()[#{@window_index}];"
-      jssh_command << "var #{browser_var} = #{window_var}.getBrowser();"
-      # Add listener create above to browser object
-      jssh_command << "#{browser_var}.addProgressListener( listObj,Components.interfaces.nsIWebProgress.NOTIFY_STATE_WINDOW );"
-      jssh_command << "var #{document_var} = #{browser_var}.contentDocument;"
-      jssh_command << "var #{body_var} = #{document_var}.body;"
-      jssh_socket.js_eval jssh_command
-
-      @window_title = jssh_socket.js_eval "#{document_var}.title"
-      @window_url = jssh_socket.js_eval "#{document_var}.URL"
-=end
     end
 
     public
-    attr_reader :window_object
-    def window_var
-      window_object.ref
-    end
-
+    attr_reader :browser_window_object
+    attr_reader :content_window_object
     attr_reader :browser_object
-    def browser_var
-      browser_object.ref
-    end
-    
     attr_reader :document_object
-    def document_var
-      document_object.ref
-    end
-    
     attr_reader :body_object
-    def body_var
-      body_object.ref
-    end
 
     public
     #   Closes the window.
@@ -316,8 +284,8 @@ module Watir
       else
         # Check if window exists, because there may be the case that it has been closed by click event on some element.
         # For e.g: Close Button, Close this Window link etc.
-        if @window_object && exists?
-          window_object.close
+        if exists?
+          browser_window_object.close
         end
       end
     end
@@ -330,9 +298,9 @@ module Watir
     #   Instance of newly attached window.
     def attach(how, what)
 
-      @window_object = find_window(how, what)
+      @browser_window_object = find_window(how, what)
 
-      unless @window_object
+      unless @browser_window_object
         raise Exception::NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")
       end
       set_browser_document
@@ -356,15 +324,15 @@ module Watir
 
     def open_window
       begin
-        @window_name="firewatir_window_%.16x"%rand(2**64)
-      end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@window_name.to_json}}) ? true : false")
+        @browser_window_name="firewatir_window_%.16x"%rand(2**64)
+      end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@browser_window_name.to_json}}) ? true : false")
       watcher=jssh_socket.object('Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(Components.interfaces.nsIWindowWatcher)')
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
-      # then we create the reference (with #attr and #pass so it's not evaluated) and store it (at which point it is evaluated) in @browser_jssh_objects[:window]
+      # then we create the reference (with #attr and #pass so it's not evaluated) and store it (at which point it is evaluated) in @browser_jssh_objects
       
-      opener_obj=watcher.attr(:openWindow).pass(nil, 'chrome://browser/content/browser.xul', @window_name, '', nil)
-      @window_object=@browser_jssh_objects[:window].assign(opener_obj)
-      return @window_object
+      opener_obj=watcher.attr(:openWindow).pass(nil, 'chrome://browser/content/browser.xul', @browser_window_name, '', nil)
+      @browser_window_object=@browser_jssh_objects[:browser_window].assign(opener_obj)
+      return @browser_window_object
     end
     private :open_window
 
@@ -413,12 +381,12 @@ module Watir
 
     # Returns the url of the page currently loaded in the browser.
     def url
-      @window_url = document_object.location.href
+      @url = document_object.location.href
     end
 
     # Returns the title of the page currently loaded in the browser.
     def title
-      @window_title = document_object.title
+      @title = document_object.title
     end
 
     #   Returns the Status of the page currently loaded in the browser from statusbar.
@@ -427,14 +395,15 @@ module Watir
     #   Status of the page.
     #
     def status
-      window_object.status || window_object.XULBrowserWindow.statusText
+      browser_window_object.status || browser_window_object.XULBrowserWindow.statusText
     end
 
 
     # Returns the html of the page currently loaded in the browser.
     def html
-      result = jssh_socket.js_eval("var htmlelem = #{document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML")
-      return "<html>" + result + "</html>"
+      raise NotImplementedError
+#      result = jssh_socket.js_eval("var htmlelem = #{document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML")
+#      return "<html>" + result + "</html>"
     end
 
     # Returns the text of the page currently loaded in the browser.
@@ -444,33 +413,29 @@ module Watir
 
     # Maximize the current browser window.
     def maximize()
-      window_object.maximize
+      browser_window_object.maximize
     end
 
     # Minimize the current browser window.
     def minimize()
-      window_object.minimize
+      browser_window_object.minimize
     end
 
+    ARBITRARY_TIMEOUT=300 # seconds 
     # Waits for the page to get loaded.
     def wait(last_url = nil)
-      #puts "In wait function "
-      isLoadingDocument = ""
-      start = Time.now
-
-      while isLoadingDocument != "false"
-        isLoadingDocument = jssh_socket.js_eval("#{browser_var}=#{window_var}.getBrowser(); #{browser_var}.webProgress.isLoadingDocument;")
-        #puts "Is browser still loading page: #{isLoadingDocument}"
-
-        # Raise an exception if the page fails to load
-        if (Time.now - start) > 300
+      started=Time.now
+      while browser_object.webProgress.isLoadingDocument
+        sleep 1
+        if Time.now - started > ARBITRARY_TIMEOUT
           raise "Page Load Timeout"
         end
       end
+
       # If the redirect is to a download attachment that does not reload this page, this
       # method will loop forever. Therefore, we need to ensure that if this method is called
       # twice with the same URL, we simply accept that we're done.
-      url = jssh_socket.js_eval("#{browser_var}.contentDocument.URL")
+      url= document_object.URL
 
       if(url != last_url)
         # Check for Javascript redirect. As we are connected to Firefox via JSSh. JSSh
@@ -479,50 +444,19 @@ module Watir
         # So we currently don't wait for such a page.
         # wait variable in JSSh tells if we should wait more for the page to get loaded
         # or continue. -1 means page is not redirected. Anyother positive values means wait.
-        jssh_command = "var wait = -1; var meta = null; meta = #{browser_var}.contentDocument.getElementsByTagName('meta');
-                                if(meta != null)
-                                {
-                                    var doc_url = #{browser_var}.contentDocument.URL;
-                                    for(var i=0; i< meta.length;++i)
-                                    {
-						    			var content = meta[i].content;
-							    		var regex = new RegExp(\"^refresh$\", \"i\");
-								    	if(regex.test(meta[i].httpEquiv))
-									    {
-										    var arrContent = content.split(';');
-    										var redirect_url = null;
-	    									if(arrContent.length > 0)
-		    								{
-			    								if(arrContent.length > 1)
-				    								redirect_url = arrContent[1];
-
-							    				if(redirect_url != null)
-						    					{
-								    				regex = new RegExp(\"^.*\" + redirect_url + \"$\");
-									    			if(!regex.test(doc_url))
-										    		{
-											    		wait = arrContent[0];
-												    }
-											    }
-											    break;
-										    }
-									    }
-								    }
-                                }
-                                wait;"
-        wait_time = jssh_socket.js_eval(jssh_command).to_i
-        begin
-          if(wait_time != -1)
-            sleep(wait_time)
-            # Call wait again. In case there are multiple redirects.
-            jssh_socket.js_eval "#{browser_var} = #{window_var}.getBrowser()"
-            wait(url)
+        metas=document_object.getElementsByTagName 'meta'
+        wait_time=metas.to_array.map do |meta|
+          if meta.httpEquiv =~ /^refresh$/i && (content_split=meta.content.split(';'))[1]!=url
+            content_split[0].to_i
           end
-        rescue
-        end
+        end.compact.max
+        
+        if wait_time
+          sleep(wait_time)
+          wait(url)
+        end    
       end
-      set_browser_document()
-      run_error_checks()
+      run_error_checks
       return self
     end
 

@@ -19,7 +19,6 @@ module Watir
       @how = attribute
       @what = value
       @option = nil
-      @element_name = ""
       
       unless [:text, :value, :jssh_name].include? attribute 
         raise Exception::MissingWayOfFindingObjectException, "Option does not support attribute #{@how}"
@@ -27,7 +26,7 @@ module Watir
       #puts @select_list.o.length
       #puts "what is : #{@what}, how is #{@how}, list name is : #{@select_list.element_name}"
       if(attribute == :jssh_name)
-        @element_name = @what
+        @dom_object = JsshObject.new(@what, jssh_socket)
         @option = self
       else    
         @select_list.each do |option| # items in the list
@@ -40,7 +39,7 @@ module Watir
           #puts "value is #{match_value}"
           if value.matches( match_value) #option.invoke(attribute))
             @option = option
-            @element_name = option.element_name
+            @dom_object = option.dom_object
             break
           end
         end

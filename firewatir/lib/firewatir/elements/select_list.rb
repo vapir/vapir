@@ -28,10 +28,8 @@ module Watir
 
     def each
       assert_exists
-      arr_options = js_options
-      #puts arr_options[0]#.length
-      for i in 0..arr_options.length - 1 do
-        yield FFOption.new(self, :jssh_name, arr_options[i])
+      js_options.each do |option|
+        yield FFOption.new(self, :jssh_name, option.ref)
       end
     end
 
@@ -48,7 +46,7 @@ module Watir
     def [] (key)
       assert_exists
       arr_options = js_options
-      return FFOption.new(self, :jssh_name, arr_options[key - 1])
+      return FFOption.new(self, :jssh_name, arr_options[key - 1].ref)
     end
 
     #
@@ -173,7 +171,7 @@ module Watir
     #   Array of option elements.
     #
     def js_options
-      dom_object.options.to_array.map(&:ref)
+      dom_object.options.to_array
     end
   
   end # Selects

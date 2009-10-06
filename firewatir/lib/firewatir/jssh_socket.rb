@@ -1,5 +1,6 @@
 require 'json/pure'
 require 'socket'
+require 'logger'
 
 class JsshError < StandardError
   attr_accessor :source, :lineNumber, :stack, :fileName
@@ -9,12 +10,27 @@ class JsshUnableToStart < JsshError; end
 class JsshUndefinedValueError < JsshError; end
 
 class JsshSocket
+  def self.logger
+    @@logger||=begin
+      logger=Logger.new nil#(File.join('c:/tmp/jssh_log.txt'))
+      logger.level = Logger::DEBUG
+      logger.datetime_format = "%Y-%m-%d %H:%M:%S"
+      logger.formatter=Logger::Formatter.new
+      logger
+    end
+  end
+  def logger
+    self.class.logger
+  end
+  
+  PROMPT="\n> "
+  
   # IP Address of the machine where the script is to be executed. Default to localhost.
   JSSH_IP = "127.0.0.1"
   JSSH_PORT = 9997
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
 
-  DEFAULT_SOCKET_TIMEOUT=8
+  DEFAULT_SOCKET_TIMEOUT=16
   LONG_SOCKET_TIMEOUT=32
   SHORT_SOCKET_TIMEOUT=(2**-16).to_f
   
@@ -35,11 +51,12 @@ class JsshSocket
     eat="Welcome to the Mozilla JavaScript Shell!"
     eaten=""
     while eat!=eaten
-      ret=read_socket(LONG_SOCKET_TIMEOUT)
+      ret=read_socket(LONG_SOCKET_TIMEOUT).chomp
+      expect=eat[eaten.length...ret.length]
       if !ret
-        raise JsshError, "Something went wrong initializing - no response (already ate #{eaten.inspect})" 
-      elsif ret != eat[0...ret.length]
-        raise JsshError, "Something went wrong initializing - message #{ret.inspect} != #{eat[0...ret.length].inspect}" 
+        raise JsshError, "Something went wrong initializing - no response (already received #{eaten.inspect})" 
+      elsif ret != expect
+        raise JsshError, "Something went wrong initializing - message #{ret.inspect} != #{expect.inspect}" 
       end
       eaten+=ret
     end
@@ -59,24 +76,29 @@ class JsshSocket
 #    @socket.send mesg, flags
   end
   
-  # reads data from the socket until it is done being ready. ("done being ready" is defined as, it isn't ready 
-  # for recv to be called for more stuff, following the first send of whatever arbitrary number of bytes, 
-  # after SHORT_SOCKET_TIMEOUT). times out (waiting for an initial recv from the socket) after the given number 
+  # reads data from the socket until it is done being ready. ("done being ready" is defined as Kernel.select saying
+  # it isn't ready immediately (zero timeout)).
+  # times out (waiting for an initial recv from the socket) after the given number 
   # of seconds, default is DEFAULT_SOCKET_TIMEOUT. 
   #
   # usually you will want read_value though. or value, which takes an expression. or value_json, which actually
   # deals with data types. 
   def recv_socket(timeout=DEFAULT_SOCKET_TIMEOUT)
-    received_any=false
-    received_data = ""
+    received_data = []
     data = ""
+    logger.debug "RECV_SOCKET is starting. timeout=#{timeout}"
     while(s= Kernel.select([@socket] , nil , nil, timeout))
-      timeout=SHORT_SOCKET_TIMEOUT
-      received_any=true
       data = @socket.recv(1024)
-      received_data += data
+      unless data==PROMPT && received_data.empty? # if we recv PROMPT here (first thing recv'd), then switch to zero timeout, then the value will probably get left on the socket 
+        timeout=0.0
+      end
+      received_data << data
+      logger.debug "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}"
     end
-    received_any ? received_data : nil
+    logger.debug "RECV_SOCKET is done. received_data=#{received_data.inspect}"
+    received_data.pop if received_data.last==PROMPT
+    received_data.shift if received_data.first==PROMPT
+    received_data.empty? ? nil : received_data.join('')
   end
 
   # reads from the socket and returns what seems to be the value that should be returned, by stripping prompts 
@@ -118,11 +140,15 @@ class JsshSocket
   end
 
   def send_and_read(js_expr, timeout=DEFAULT_SOCKET_TIMEOUT)
-    if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != "\n> "
+    logger.debug "SEND_AND_READ is starting. timeout=#{timeout}"
+    logger.debug "SEND_AND_READ is checking for leftovers"
+    if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != PROMPT
       STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
+      logger.warn("SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}")
     end
     @last_expression=js_expr
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
+    logger.debug "SEND_AND_READ sending #{js_expr.inspect}"
     @socket.send(js_expr, 0)
     return read_socket(timeout)
   end
@@ -210,8 +236,7 @@ class JsshSocket
                  });
          }
          Object.toJSON([false, result]);
-       }
-       catch(e)
+       }catch(e)
        { Object.toJSON([true, e]);
        }"
     val=send_and_read(wrapped_js)
@@ -316,8 +341,7 @@ class JsshSocket
             { type=typeof(expr);
               return (expr===null) ? 'null' : type;
             })(#{expression});
-          }
-          catch(e)
+          }catch(e)
           { if(e.name=='ReferenceError')
             { return 'undefined';
             }
@@ -343,7 +367,12 @@ class JsshSocket
   def parse_json(json)
     raise JSON::ParserError, "Not a string! got: #{json.inspect}" unless json.is_a?(String)
     raise JSON::ParserError, "Blank string!" if json==''
-    return *JSON.parse("["+json+"]")
+    begin
+      return *JSON.parse("["+json+"]")
+    rescue JSON::ParserError
+      $!.message += "\nParsing: #{json.inspect}"
+      raise
+    end
   end
 
   def object(ref)
@@ -371,7 +400,8 @@ class JsshObject
   # initializes a JsshObject with a string of javascript containing a reference to
   # the object, and a  JsshSocket that the object is defined on. 
   def initialize(ref, jssh_socket)
-    raise JsshError, "Empty object reference!" if !ref || ref==''
+    raise ArgumentError, "Empty object reference!" if !ref || ref==''
+    raise ArgumentError, "Reference must be a string - got #{ref.inspect}" unless ref.is_a?(String)
     raise ArgumentError, "Not given a JsshSocket, instead given #{jssh_socket.inspect}" unless jssh_socket.is_a?(JsshSocket)
     @ref=ref
     @jssh_socket=jssh_socket
@@ -383,6 +413,11 @@ class JsshObject
   end
 
   # returns the value just as a string with no attempt to deal with type using json. via JsshSocket#value 
+  #
+  # note that this can be slow if it evaluates to a blank string. for example, if ref is just ""
+  # then JsshSocket#value will wait DEFAULT_SOCKET_TIMEOUT seconds for data that is not to come. 
+  # this also happens with functions that return undefined. if ref="function(){do_some_stuff;}" 
+  # (with no return), it will also wait DEFAULT_SOCKET_TIMEOUT. 
   def val_str
     jssh_socket.value(ref)
   end
@@ -461,12 +496,16 @@ class JsshObject
   # assigns (via JsshSocket#assign) the given ruby value (converted to_json) to the reference
   # for this object. returns self. 
   def assign(val)
-    jssh_socket.assign(ref, val.to_json)
-    self
+    assign_expr val.to_json
   end
   # assigns the given javascript expression (string) to the reference for this object 
   def assign_expr(val)
-    jssh_socket.assign(ref, val)
+    jssh_socket.value_json("(function(val){#{ref}=val; return null;}(#{val}))")
+    # don't want to use JsshSocket#assign_json because converting the assignment to json is error-prone and we don't really care. 
+    # don't want to use JsshSocket#assign because the result can be blank and cause send_and_read to wait for data that's not coming - also 
+    # using a json function is better because it catches errors much more elegantly. 
+    # so, wrap it in a function that returns nil. 
+    self
   end
   
   # returns a JsshObject for this object - assumes that this object is a function - passing 
@@ -515,20 +554,24 @@ class JsshObject
   def store_rand_object_key(object)
     raise ArgumentError("Object is not a JsshObject: got #{object.inspect}") unless object.is_a?(JsshObject)
     store_rand_named do |r|
-      object.sub(r.to_json).ref
+      object.sub(r).ref
     end
   end
 
+  def sub_expr(key_expr)
+    JsshObject.new("#{ref}[#{key_expr}]", jssh_socket)
+  end
+  
   # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
   # (doesn't use to_json) 
   def sub(key)
-    JsshObject.new("#{ref}[#{key}]", jssh_socket)
+    sub_expr(key.to_json)
   end
 
-  # returns a JsshObjct referring to a subscript of this object, or a value if it is simple (see #val_or_object)
+  # returns a JsshObject referring to a subscript of this object, or a value if it is simple (see #val_or_object)
   # subscript is specified as ruby (converted to_json). 
   def [](key)
-    sub(key.to_json).val_or_object(:error_on_undefined => false)
+    sub(key).val_or_object(:error_on_undefined => false)
   end
   # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the given subscript
   # (key is converted to_json). 
@@ -615,6 +658,7 @@ class JsshObject
   #
   # $A and $H, used below, are methods of the Prototype javascript library, which add nice functional 
   # methods to arrays and hashes - see http://www.prototypejs.org/
+  # You can use these methods with method_missing just like any other:
   #
   # >> js_hash=jssh_socket.object('$H')
   # => #<JsshObject:0x2beb598 @ref="$H" ...>

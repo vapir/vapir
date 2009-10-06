@@ -22,21 +22,22 @@ module Watir
     def document_object
       @container.document_object
     end
-    def window_object
-      @container.window_object
+    def content_window_object
+      @container.content_window_object
+    end
+    def browser_window_object
+      @container.browser_window_object
     end
     
     def frames
       # TODO: FIX, copied from locate_frame, should be DRY 
-      if @container.is_a?(Firefox)
-        candidates=@container.window_object.content.frames # OR window_object.getBrowser.contentWindow.frames (they are equal) 
-      elsif @container.is_a?(FFFrame)
-        candidates=@container.dom_object.contentWindow.frames
+      if @container.is_a?(Firefox) || @container.is_a?(FFFrame)
+        candidates=@container.content_window_object.frames
       else
-        raise "locate_frame is not implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
+        raise "frames is not implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
       end
       
-      return candidates.to_array.map{|c| FFFrame.new(@container, :jssh_name, c.frameElement.store_rand_prefix('firewatir_frames'))}
+      return candidates.to_array.map{|c| FFFrame.new(@container, :jssh_name, c.frameElement.store_rand_prefix('firewatir_frames').ref)}
     end
 
     #

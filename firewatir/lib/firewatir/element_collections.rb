@@ -59,7 +59,7 @@ module Watir
       case @container
       when Firefox, FFFrame
         elements_tag = "elements_#{tag}"
-        container_name = "#{@container.document_var}"
+        container_name = "#{document_object.ref}"
       else
         elements_tag = "elements_#{@@current_level}_#{tag}"
         container_name = @container.element_name

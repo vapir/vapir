@@ -43,7 +43,7 @@ module Watir
       @how = how
       @what = what
       @container = container
-      @element_name = ""
+      #@element_name = ""
       #super(nil)
     end
 

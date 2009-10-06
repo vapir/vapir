@@ -33,7 +33,7 @@ module Watir
 
     def initialize(element, container=nil)
       @container = container
-      @element_name = element
+      #@element_name = element
       #puts "in initialize "
       #puts caller(0)
       #if(element != nil && element.class == String)
@@ -67,12 +67,6 @@ module Watir
       document_object.defaultView.getComputedStyle(dom_object, nil)
     end
     
-    def read_socket
-#      STDERR.puts "WARNING: read_socket on an Element is deprecated. From: "
-#      caller.each{|c| STDERR.puts "\t"+c}
-      jssh_socket.read_socket
-    end
-
     private
     def self.def_wrap(ruby_method_name, ole_method_name = nil)
       ole_method_name = ruby_method_name unless ole_method_name
@@ -82,47 +76,9 @@ module Watir
     end
 
     def get_attribute_value(attribute_name)
-      #if the attribut name is columnLength get number of cells in first row if rows exist.
-      case attribute_name
-#      when "columnLength"
-#        #rowsLength = dom_object.columns
-#        #if (rowsLength != 0 || rowsLength != "")
-#          return dom_object.rows[0].cells.length
-#        #end
-      when "text"
-        return text
-      when "url", "href", "src", "action", "name"
-        return_value = dom_object.getAttribute(attribute_name)
-      else
-        jssh_command = "var attribute = '';
-          if(#{element_object}.#{attribute_name} != undefined)
-              attribute = #{element_object}.#{attribute_name};
-          else
-              attribute = #{element_object}.getAttribute(\"#{attribute_name}\");
-          attribute;"
-        return_value = jssh_socket.js_eval(jssh_command)
-      end
-      if attribute_name == "value"
-        tagName = dom_object.tagName.downcase
-        type = dom_object.type
-
-        if tagName == "button" || ["image", "submit", "reset", "button"].include?(type)
-          if return_value == "" || return_value == "null"
-            return_value = dom_object.innerHTML
-          end
-        end
-      end
-
-      if return_value == "null" || return_value =~ /\[object\s.*\]/
-        return_value = ""
-      end
-      return return_value
+      dom_object.getAttribute attribute_name
     end
     private :get_attribute_value
-  
-#    def js_eval_method
-#      jssh_socket.js_eval("#{element_object}.#{method_name}")
-#    end
   
     #
     # Description:
@@ -221,7 +177,7 @@ module Watir
     # The only specifier attribute that doesn't match directly to an element attribute is 
     # :types, which will match any of a list of types. 
     def locate_specified_element(specifiers_list, index=nil)
-      #STDERR.puts specifiers_list.inspect+caller.map{|c|"\n\t#{c}"}.join('')
+      #STDERR.puts specifiers_list.inspect#+caller.map{|c|"\n\t#{c}"}.join('')
       ids=specifiers_list.map{|s|s[:id]}.compact.uniq
       tags=specifiers_list.map{|s|s[:tagName]}.compact.uniq
 
@@ -232,7 +188,7 @@ module Watir
         @container.dom_object
       end
 
-      if ids.size==1 && ids.first.is_a?(String)
+      if ids.size==1 && ids.first.is_a?(String) && (!index || index==1) # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
         candidates= if by_id=document_object.getElementById(ids.first)
           [by_id]
         else
@@ -274,511 +230,6 @@ module Watir
       return nil
     end
 
-    def locate_frame(how, what)
-      # Get all the frames the are there on the page.
-      #puts "how is #{how} and what is #{what}"
-      if @container.is_a?(Firefox)
-        candidates=window_object.content.frames # OR window_object.getBrowser.contentWindow.frames (they are equal) 
-      elsif @container.is_a?(FFFrame)
-        candidates=@container.dom_object.contentWindow.frames
-      else
-        raise "locate_frame is not implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
-      end
-
-      specifier=howwhat_to_specifier(how, what)
-      index=specifier.delete(:index)
-      if match=match_candidates(candidates.to_array.map{|c|c.frameElement}, specifier, index)
-        return match.store_rand_prefix('firewatir_frames')
-      end
-      return nil
-    end
-=begin
-    def locate_tagged_element(tag, how, what, types=nil, value=nil)
-      specifiers = (how.is_a?(Hash) && what.nil?) ? how : {how.to_sym => what}
-      STDOUT.puts({:specifiers => specifiers, :tag => tag, :types => types, :value => value}.inspect)
-      id = specifiers.delete(:id) if specifiers.key?(:id) && specifiers[:id].is_a?(String)
-      candidates=[]
-      if id
-        el=document_object.getElementById(id)
-        if el && el.tagName.downcase==tag.downcase
-          candidates=[el]
-        end
-      else
-        candidates=container_object.getElementsByTagName(tag)
-      end
-      index=specifiers.delete(:index)
-      match_count=0
-      (0...candidates.length).each do |i|
-        candidate=candidates[i]
-        match=true
-        match&&= specifiers.all?{|(how, what)| what===candidate[how]} # triple equals for regexps
-        match&&= (!types || types.detect{|type|type.downcase==candidate[:type].downcase})
-        if match
-          match_count+=1
-          if !index || index==match_count
-            return candidate
-          end
-        end
-      end
-      return nil
-      # quirk: check innerHTML for specifier :value if tag is button
-    end
-=end
-=begin  
-    def set_specifier(how, what)    
-      if how.class == Hash and what.nil?
-        specifiers = how
-      else
-        specifiers = {how => what}
-      end
-
-      @specifiers = {:index => 1} # default if not specified
-
-      specifiers.each do |how, what|
-        what = what.to_i if how == :index
-        how = :href if how == :url
-        how = :value if how == :caption
-        how = :class if how == :class_name
-
-        @specifiers[how] = what
-      end
-    end
-
-    #
-    # Description:
-    #   Locates the element on the page depending upon the parameters passed. Logic for locating the element is written
-    #   in JavaScript and then send to JSSh; so that we don't make small round-trips via socket to JSSh. This is done to
-    #   improve the performance for locating the element.
-    #
-    # Input:
-    #   tag - Tag name of the element to be located like "input", "a" etc. This is case insensitive.
-    #   how - The attribute by which you want to locate the element like id, name etc. You can use any attribute-value pair
-    #         that uniquely identifies that element on the page. If there are more that one element that have identical
-    #         attribute-value pair then first element that is found while traversing the DOM will be returned.
-    #   what - The value of the attribute specified by how.
-    #   types - Used if that HTML element to be located has different type like input can be of type image, button etc.
-    #           Default value is nil
-    #   value - This is used only in case of radio buttons where they have same name but different value.
-    #
-    # Output:
-    #   Returns nil if unable to locate the element, else return the element.
-    #
-    def locate_tagged_element_die(tag, how, what, types = nil, value = nil)
-      #puts caller(0)
-      #             how = :value if how == :caption
-      #             how = :href if how == :url
-      set_specifier(how, what)
-      #puts "(locate_tagged_element)current element is : #{@container.class} and tag is #{tag}"
-      # If there is no current element i.e. element in current context we are searching the whole DOM tree.
-      # So get all the elements.
-
-      if(types != nil and types.include?("button"))
-        jssh_command = "var isButtonElement = true;"
-      else
-        jssh_command = "var isButtonElement = false;"
-      end
-
-      # Because in both the below cases we need to get element with respect to document.
-      # when we locate a frame document is automatically adjusted to point to HTML inside the frame
-      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
-        #end
-        #if(@@current_element_object == "")
-        jssh_command << "var elements_#{tag} = null; elements_#{tag} = #{@container.document_var}.getElementsByTagName(\"#{tag}\");"
-        if(types != nil and (types.include?("textarea") or types.include?("button")) )
-          jssh_command << "elements_#{tag} = #{@container.document_var}.body.getElementsByTagName(\"*\");"
-        end
-        #    @@has_changed = true
-      else
-        #puts "container name is: " + @container.element_name
-        #locate if defined? locate
-        #@container.locate
-        jssh_command << "var elements_#{@@current_level}_#{tag} = #{@container.element_name}.getElementsByTagName(\"#{tag}\");"
-        if(types != nil and (types.include?("textarea") or types.include?("button") ) )
-          jssh_command << "elements_#{@@current_level}_#{tag} = #{@container.element_name}.getElementsByTagName(\"*\");"
-        end
-        #    @@has_changed = false
-      end
-
-
-      if(types != nil)
-        jssh_command << "var types = new Array("
-        count = 0
-        types.each do |type|
-          if count == 0
-            jssh_command << "\"#{type}\""
-            count += 1
-          else
-            jssh_command << ",\"#{type}\""
-          end
-        end
-        jssh_command << ");"
-      else
-        jssh_command << "var types = null;"
-      end
-      #jssh_command << "var elements = #{element_object}.getElementsByTagName('*');"
-      jssh_command << "var object_index = 1; var o = null; var element_name = \"\";"
-
-      case value
-      when Regexp
-        jssh_command << "var value = #{ rb_regexp_to_js(value) };"
-      when nil
-        jssh_command << "var value = null;"
-      else
-        jssh_command << "var value = \"#{value}\";"
-      end
-
-      #add hash arrays
-      sKey = "var hashKeys = new Array("
-      sVal = "var hashValues = new Array("
-      @specifiers.each do |k,v|
-        sKey += "\"#{k}\","
-        if v.is_a?(Regexp)
-          sVal += "#{rb_regexp_to_js(v)},"
-        else
-          sVal += "\"#{v}\","
-        end
-      end
-      sKey = sKey[0..sKey.length-2]
-      sVal = sVal[0..sVal.length-2]
-      jssh_command << sKey + ");"
-      jssh_command << sVal + ");"
-
-      #index
-      jssh_command << "var target_index = 1;
-                               for(var k=0; k<hashKeys.length; k++)
-                               {
-                                 if(hashKeys[k] == \"index\")
-                                 {
-                                   target_index = parseInt(hashValues[k]);
-                                   break;
-                                 }
-                               }"
-
-      #jssh_command << "elements.length;"
-      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
-
-        jssh_command << "for(var i=0; i<elements_#{tag}.length; i++)
-                                   {
-                                      if(element_name != \"\") break;
-                                      var element = elements_#{tag}[i];"
-      else
-        jssh_command << "for(var i=0; i<elements_#{@@current_level}_#{tag}.length; i++)
-                                   {
-                                      if(element_name != \"\") break;
-                                      var element = elements_#{@@current_level}_#{tag}[i];"
-      end
-
-      # Because in IE for button the value of "value" attribute also corresponds to the innerHTML if value attribute
-      # is not supplied. For e.g.: <button>Sign In</button>, in this case value of "value" attribute is "Sign In"
-      # though value attribute is not supplied. But for Firefox value of "value" attribute is null. So to make sure
-      # script runs on both IE and Watir we are also considering innerHTML if element is of button type.
-      jssh_command << "   var attribute = \"\";
-                                  var same_type = false;
-                                  if(types)
-                                  {
-                                      for(var j=0; j<types.length; j++)
-                                      {
-                                          if(types[j] == element.type || types[j] == element.tagName)
-                                          {
-                                              same_type = true;
-                                              break;
-                                          }
-                                      }
-                                  }
-                                  else
-                                  {
-                                      same_type = true;
-                                  }
-                                  if(same_type == true)
-                                  {
-                                      var how = \"\";
-                                      var what = null;
-                                      attribute = \"\";
-                                      for(var k=0; k<hashKeys.length; k++)
-                                      {
-                                         how = hashKeys[k];
-                                         what = hashValues[k];
-
-                                         if(how == \"index\")
-                                         {
-                                            attribute = parseInt(what);
-                                            what = parseInt(what);
-                                         }
-                                         else
-                                         {
-                                            if(how == \"text\")
-                                            {
-                                               attribute = element.textContent.replace(/\\xA0/g,' ').replace(/^\\s+|\\s+$/g, '').replace(/\\s+/g, ' ')
-                                            }
-                                            else
-                                            {
-                                               if(how == \"href\" || how == \"src\" || how == \"action\" || how == \"name\")
-                                               {
-                                                  attribute = element.getAttribute(how);
-                                               }
-                                               else
-                                               {
-                                                  if(eval(\"element.\"+how) != undefined)
-                                                      attribute = eval(\"element.\"+how);
-                                                  else
-                                                      attribute = element.getAttribute(how);
-                                               }
-                                            }
-                                            if(\"value\" == how && isButtonElement && (attribute == null || attribute == \"\"))
-                                            {
-                                               attribute = element.innerHTML;
-                                            }
-                                         }
-                                         if(attribute == \"\") o = 'NoMethodError';
-                                         var found = false;
-                                         if (typeof what == \"object\" || typeof what == \"function\")
-  			               {
-                                            var regExp = new RegExp(what);
-                                            found = regExp.test(attribute);
-                                         }
-                                         else
-                                         {
-                                            found = (attribute == what);
-                                         }"
-
-      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
-        jssh_command << "   if(found)
-                                      {
-                                          if(value)
-                                          {
-                                              if(element.value == value || (value.test && value.test(element.value)))
-                                              {
-                                                  o = element;
-                                                  element_name = \"elements_#{tag}[\" + i + \"]\";
-                                              }
-                                              else
-                                                break;
-                                          }
-                                          else
-                                          {
-                                              o = element;
-                                              element_name = \"elements_#{tag}[\" + i + \"]\";
-                                          }
-                                      }"
-      else
-        jssh_command << "   if(found)
-                                      {
-                                          if(value)
-                                          {
-                                              if(element.value == value || (value.test && value.test(element.value)))
-                                              {
-                                                  o = element;
-                                                  element_name = \"elements_#{@@current_level}_#{tag}[\" + i + \"]\";
-                                              }
-                                              else
-                                                break;
-                                          }
-                                          else
-                                          {
-                                              o = element;
-                                              element_name = \"elements_#{@@current_level}_#{tag}[\" + i + \"]\";
-                                          }
-                                      }"
-      end
-
-      jssh_command << "
-                                      else {
-                                          o = null;
-                                          element_name = \"\";
-                                          break;
-                                      }
-                                   }
-                                   if(element_name != \"\")
-                                   {
-                                     if(target_index == object_index)
-                                     {
-                                       break;
-                                     }
-                                     else if(target_index < object_index)
-                                     {
-                                       element_name = \"\";
-                                       o = null;
-                                       break;
-                                     }
-                                     else
-                                     {
-                                       object_index += 1;
-                                       element_name = \"\";
-                                       o = null;
-                                     }
-                                   }
-                                 }
-                               }
-                              element_name;"
-
-      # Remove \n that are there in the string as a result of pressing enter while formatting.
-      jssh_command.gsub!(/\n/, "")
-      #puts jssh_command
-      #out = File.new("c:\\result.log", "w")
-      #out << jssh_command
-      #out.close
-      jssh_socket.send("#{jssh_command};\n", 0)
-      element_name = jssh_socket.read_socket
-      #puts "element name in find control is : #{element_name}"
-      @@current_level = @@current_level + 1
-      #puts @container
-      #puts element_name
-      if(element_name != "")
-        return element_name #FFElement.new(element_name, @container)
-      else
-        return nil
-      end
-    end
-=end
-=begin
-    def rb_regexp_to_js(regexp)
-      old_exp = regexp.to_s
-      new_exp = regexp.inspect.sub(/\w*$/, '')
-      flags = old_exp.slice(2, old_exp.index(':') - 2)
-
-      for i in 0..flags.length do
-        flag = flags[i, 1]
-        if(flag == '-')
-          break;
-        else
-          new_exp << flag
-        end
-      end
-
-      new_exp
-    end
-=end
-=begin
-    #
-    # Description:
-    #   Locates frame element. Logic for locating the frame is written in JavaScript so that we don't make small
-    #   round trips to JSSh using socket. This is done to improve the performance for locating the element.
-    #
-    # Input:
-    #   how - The attribute for locating the frame. You can use any attribute-value pair that uniquely identifies
-    #         the frame on the page. If there are more than one frames that have identical attribute-value pair
-    #         then first frame that is found while traversing the DOM will be returned.
-    #   what - Value of the attribute specified by how
-    #
-    # Output:
-    #   Nil if unable to locate frame, else return the Frame element.
-    #
-    # TODO/FIX: If multiple tabs are open on the current window, will count frames from every tab, not just the current tab. 
-    #
-    def locate_frame(how, what)
-      # Get all the frames the are there on the page.
-      #puts "how is #{how} and what is #{what}"
-      jssh_command = ""
-      if(@container.is_a?(Firefox))
-        # In firefox 3 if you write Frame Name then it will not show anything. So we add .toString function to every element.
-        jssh_command = "var frameset = #{@container.window_var}.frames;
-                                  var elements_frames = new Array();
-                                  for(var i = 0; i < frameset.length; i++)
-                                  {
-                                      var frames = frameset[i].frames;
-                                      for(var j = 0; j < frames.length; j++)
-                                      {
-                                          frames[j].frameElement.toString = function() { return '[object HTMLFrameElement]'; };
-                                          elements_frames.push(frames[j].frameElement);
-
-                                      }
-                                  }"
-      else
-        jssh_command = "var frames = #{@container.element_name}.contentWindow.frames;
-                                  var elements_frames_#{@@current_level} = new Array();
-                                  for(var i = 0; i < frames.length; i++)
-                                  {
-                                      elements_frames_#{@@current_level}.push(frames[i].frameElement);
-                                  }"
-      end
-
-      jssh_command << "    var element_name = ''; var object_index = 1;var attribute = '';
-                                  var element = '';"
-      if(@container.is_a?(Firefox))
-        jssh_command << "for(var i = 0; i < elements_frames.length; i++)
-                                   {
-                                      element = elements_frames[i];"
-      else
-        jssh_command << "for(var i = 0; i < elements_frames_#{@@current_level}.length; i++)
-                                   {
-                                      element = elements_frames_#{@@current_level}[i];"
-      end
-      jssh_command << "       if(\"index\" == \"#{how}\")
-                                      {
-                                          attribute = object_index; object_index += 1;
-                                      }
-                                      else
-                                      {
-                                          attribute = element.getAttribute(\"#{how}\");
-                                          if(attribute == \"\" || attribute == null)
-                                          {
-                                              attribute = element.#{how};
-                                          }
-                                      }
-                                      var found = false;"
-      if(what.class == Regexp)
-        oldRegExp = what.to_s
-        newRegExp = "/" + what.source + "/"
-        flags = oldRegExp.slice(2, oldRegExp.index(':') - 2)
-
-        for i in 0..flags.length do
-          flag = flags[i, 1]
-          if(flag == '-')
-            break;
-          else
-            newRegExp << flag
-          end
-        end
-        #puts "old reg ex is #{what} new reg ex is #{newRegExp}"
-        jssh_command << "   var regExp = new RegExp(#{newRegExp});
-                                      found = regExp.test(attribute);"
-      elsif(how == :index)
-        jssh_command << "   found = (attribute == #{what});"
-      else
-        jssh_command << "   found = (attribute == \"#{what}\");"
-      end
-
-      jssh_command <<     "   if(found)
-                                      {"
-      if(@container.is_a?(Firefox))
-        jssh_command << "       element_name = \"elements_frames[\" + i + \"]\";
-                                          #{@container.document_var} = elements_frames[i].contentDocument;
-                                          #{@container.body_var} = #{@container.document_var}.body;"
-      else
-        jssh_command << "       element_name = \"elements_frames_#{@@current_level}[\" + i + \"]\";
-                                          #{@container.document_var} = elements_frames_#{@@current_level}[i].contentDocument;
-                                          #{@container.body_var} = #{@container.document_var}.body;"
-      end
-      jssh_command << "           break;
-                                      }
-                                  }
-                                  element_name;"
-
-      jssh_command.gsub!("\n", "")
-      #puts "jssh_command for finding frame is : #{jssh_command}"
-
-      jssh_socket.send("#{jssh_command};\n", 0)
-      element_name = jssh_socket.read_socket
-      @@current_level = @@current_level + 1
-      #puts "element_name for frame is : #{element_name}"
-
-      if(element_name != "")
-        return element_name
-      else
-        return nil
-      end
-    end
-=end
-=begin # rewrite to get the actual html, not stick a html tag around something 
-    def get_frame_html
-      jssh_socket.send("var htmlelem = #{@container.document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML;\n", 0)
-      #jssh_socket.send("body.innerHTML;\n", 0)
-      result = jssh_socket.read_socket
-      return "<html>" + result + "</html>"
-    end
-=end
-  
-  
     public
 
     #
@@ -908,13 +359,13 @@ module Watir
         # Firefox has a proprietary initializer for keydown/keypress/keyup.
         # Args are as follows:
         #   'type', bubbles, cancelable, windowObject, ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode
-        dom_event_init = "initKeyEvent(\"#{event}\", true, true, #{@container.window_var}, false, false, false, false, 0, 0)"
+        dom_event_init = "initKeyEvent(\"#{event}\", true, true, #{content_window_object.ref}, false, false, false, false, 0, 0)"
         when 'click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover',
                       'mouseup'
         dom_event_type = 'MouseEvents'
         # Args are as follows:
         #   'type', bubbles, cancelable, windowObject, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget
-        dom_event_init = "initMouseEvent(\"#{event}\", true, true, #{@container.window_var}, 1, 0, 0, 0, 0, false, false, false, false, 0, null)"
+        dom_event_init = "initMouseEvent(\"#{event}\", true, true, #{content_window_object.ref}, 1, 0, 0, 0, 0, false, false, false, false, 0, null)"
       else
         dom_event_type = 'HTMLEvents'
         dom_event_init = "initEvents(\"#{event}\", true, true)"
@@ -926,7 +377,7 @@ module Watir
       end
 
 
-      jssh_command  = "var event = #{@container.document_var}.createEvent(\"#{dom_event_type}\"); "
+      jssh_command  = "var event = #{document_object.ref}.createEvent(\"#{dom_event_type}\"); "
       jssh_command << "event.#{dom_event_init}; "
       jssh_command << "#{element_object}.dispatchEvent(event);"
 
@@ -997,8 +448,7 @@ module Watir
   
     def visible? 
       assert_exists 
-      val = jssh_socket.js_eval "var val = 'true'; var str = ''; var obj = #{element_object}; while (obj != null) { try { str = #{@container.document_var}.defaultView.getComputedStyle(obj,null).visibility; if (str=='hidden') { val = 'false'; break; } str = #{@container.document_var}.defaultView.getComputedStyle(obj,null).display; if (str=='none') { val = 'false'; break; } } catch(err) {} obj = obj.parentNode; } val;" 
-      return (val == 'false')? false: true 
+      currentStyle.visibility!='hidden' && currentStyle.display!='none'
     end 
 
     #
@@ -1111,7 +561,7 @@ module Watir
             dom_object.click
           else
             click_func=jssh_socket.object("(function(dom_object){return function(){dom_object.click()};})").pass(dom_object)
-            window_object.setTimeout(click_func, 0)
+            content_window_object.setTimeout(click_func, 0)
           end
         end
       end
@@ -1260,18 +710,14 @@ module Watir
     end
     
     def document_object
-      jssh_socket.object(document_var)
+      @container.document_object
     end
     
-    def document_var
-      @container.document_var
+    def content_window_object
+      @container.content_window_object
     end
-    
-    def window_object
-      jssh_socket.object(window_var)
-    end
-    def window_var
-      @container.window_var
+    def browser_window_object
+      @container.browser_window_object
     end
     
   end # Element

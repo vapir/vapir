@@ -1,25 +1,25 @@
-module FireWatir
-  class Pre < NonControlElement
+module Watir
+  class FFPre < FFNonControlElement
     TAG = 'PRE'
   end
 
-  class P < NonControlElement
+  class FFP < FFNonControlElement
     TAG = 'P'
   end
 
-  class Div < NonControlElement
+  class FFDiv < FFNonControlElement
     TAG = 'DIV'
   end
 
-  class Span < NonControlElement
+  class FFSpan < FFNonControlElement
     TAG = 'SPAN'
   end
 
-  class Strong < NonControlElement
+  class FFStrong < FFNonControlElement
     TAG = 'STRONG'
   end
 
-  class Label < NonControlElement
+  class FFLabel < FFNonControlElement
     TAG = 'LABEL'
 
     #
@@ -45,63 +45,63 @@ module FireWatir
     end
   end
 
-  class Ul < NonControlElement
+  class FFUl < FFNonControlElement
     TAG = 'UL'
   end
 
-  class Li < NonControlElement
+  class FFLi < FFNonControlElement
     TAG = 'LI'
   end
 
-  class Dl < NonControlElement
+  class FFDl < FFNonControlElement
     TAG = 'DL'
   end
 
-  class Dt < NonControlElement
+  class FFDt < FFNonControlElement
     TAG = 'DT'
   end
 
-  class Dd < NonControlElement
+  class FFDd < FFNonControlElement
     TAG = 'DD'
   end
 
-  class H1 < NonControlElement
+  class FFH1 < FFNonControlElement
     TAG = 'H1'
   end
 
-  class H2 < NonControlElement
+  class FFH2 < FFNonControlElement
     TAG = 'H2'
   end
 
-  class H3 < NonControlElement
+  class FFH3 < FFNonControlElement
     TAG = 'H3'
   end
 
-  class H4 < NonControlElement
+  class FFH4 < FFNonControlElement
     TAG = 'H4'
   end
 
-  class H5 < NonControlElement
+  class FFH5 < FFNonControlElement
     TAG = 'H5'
   end
 
-  class H6 < NonControlElement
+  class FFH6 < FFNonControlElement
     TAG = 'H6'
   end
 
-  class Map < NonControlElement
+  class FFMap < FFNonControlElement
     TAG = 'MAP'
   end
 
-  class Area < NonControlElement
+  class FFArea < FFNonControlElement
     TAG = 'AREA'
   end
 
-  class Body < NonControlElement
+  class FFBody < FFNonControlElement
     TAG = 'TBODY'
   end
   
-  class Em < NonControlElement
+  class FFEm < FFNonControlElement
     TAG = 'EM'
   end
 

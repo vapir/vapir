@@ -39,10 +39,10 @@
 
 require 'firewatir/exceptions'
 
-module FireWatir
-  module Container 
-    include FireWatir
-    include Watir::Exception
+module Watir
+  module FFContainer 
+    #include FireWatir
+    #include Watir::Exception
     include JsshSocket
     
     # IP Address of the machine where the script is to be executed. Default to localhost.
@@ -77,7 +77,7 @@ module FireWatir
         what = how
         how = :name
       end
-      Frame.new(self, how, what)
+      FFFrame.new(self, how, what)
     end
     
     #
@@ -105,7 +105,7 @@ module FireWatir
         what = how
         how = :name
       end    
-      Form.new(self, how, what)
+      FFForm.new(self, how, what)
     end
     
     #
@@ -126,7 +126,7 @@ module FireWatir
     #
     def table(how, what=nil)
       locate if respond_to?(:locate)
-      Table.new(self, how, what)
+      FFTable.new(self, how, what)
     end
     
     #
@@ -146,7 +146,7 @@ module FireWatir
     #
     def cell(how, what=nil)
       locate if respond_to?(:locate)
-      TableCell.new(self, how, what)
+      FFTableCell.new(self, how, what)
     end
     
     # 
@@ -166,7 +166,7 @@ module FireWatir
     #
     def row(how, what=nil)
       locate if respond_to?(:locate)
-      TableRow.new(self, how, what)
+      FFTableRow.new(self, how, what)
     end
     
     # 
@@ -194,7 +194,7 @@ module FireWatir
         what = how
         how = :value
       end    
-      Button.new(self, how, what)
+      FFButton.new(self, how, what)
     end    
     
     # 
@@ -214,7 +214,7 @@ module FireWatir
     #
     def file_field(how, what = nil)
       locate if respond_to?(:locate)
-      FileField.new(self, how, what)
+      FFFileField.new(self, how, what)
     end    
     
     #
@@ -235,7 +235,7 @@ module FireWatir
     #
     def text_field(how, what = nil)
       locate if respond_to?(:locate)
-      TextField.new(self, how, what)
+      FFTextField.new(self, how, what)
     end    
     
     # 
@@ -256,7 +256,7 @@ module FireWatir
     #
     def hidden(how, what=nil)
       locate if respond_to?(:locate)
-      return Hidden.new(self, how, what)
+      FFHidden.new(self, how, what)
     end
     
     #
@@ -277,7 +277,7 @@ module FireWatir
     #
     def select_list(how, what=nil) 
       locate if respond_to?(:locate)
-      return SelectList.new(self, how, what)
+      FFSelectList.new(self, how, what)
     end
     
     #
@@ -308,7 +308,7 @@ module FireWatir
     #
     def checkbox(how, what=nil, value = nil) 
       locate if respond_to?(:locate)
-      return CheckBox.new(self, how, what, value) 
+      FFCheckBox.new(self, how, what, value) 
     end
     
     #
@@ -339,7 +339,7 @@ module FireWatir
     #
     def radio(how, what=nil, value = nil) 
       locate if respond_to?(:locate)
-      return Radio.new(self, how, what, value) 
+      FFRadio.new(self, how, what, value) 
     end
     
     #
@@ -360,7 +360,7 @@ module FireWatir
     #
     def link(how, what=nil) 
       locate if respond_to?(:locate)
-      return Link.new(self, how, what)
+      FFLink.new(self, how, what)
     end
     
     #
@@ -381,7 +381,7 @@ module FireWatir
     #
     def image(how, what = nil)
       locate if respond_to?(:locate)
-      Image.new(self, how, what)
+      FFImage.new(self, how, what)
     end    
     
     
@@ -403,7 +403,7 @@ module FireWatir
     #
     def dl(how, what = nil)
       locate if respond_to?(:locate)
-      Dl.new(self, how, what)
+      FFDl.new(self, how, what)
     end
 
     #
@@ -424,7 +424,7 @@ module FireWatir
     #
     def dt(how, what = nil)
       locate if respond_to?(:locate)
-      Dt.new(self, how, what)
+      FFDt.new(self, how, what)
     end
 
     #
@@ -445,7 +445,7 @@ module FireWatir
     #
     def dd(how, what = nil)
       locate if respond_to?(:locate)
-      Dd.new(self, how, what)
+      FFDd.new(self, how, what)
     end
 
     # Description:
@@ -471,16 +471,17 @@ module FireWatir
     #   Prints all the available elements on the page.
     #
     def show_all_objects
-      puts "-----------Objects in the current context-------------" 
+      #puts "-----------Objects in the current context-------------" 
       locate if respond_to?(:locate)
-      elements = Document.new(self).all
-      puts elements.length
+      elements = FFDocument.new(self).all
+      #puts elements.length
       elements.each  do |n|
+        break
         puts n.tagName
         puts n.to_s
         puts "------------------------------------------" 
       end
-      puts "Total number of objects in the current context :	#{elements.length}"
+      #puts "Total number of objects in the current context :	#{elements.length}"
       return elements
       # Test the index access. 
       # puts doc[35].to_s

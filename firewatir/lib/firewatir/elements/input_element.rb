@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Base class containing items that are common between select list, text field, button, hidden, file field classes.
   #
-  class InputElement < Element
+  class FFInputElement < FFElement
     attr_accessor :element_name
     #
     # Description:

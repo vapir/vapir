@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Base class for checkbox and radio button elements.
   #
-  class RadioCheckCommon < Element
+  class FFRadioCheckCommon < FFElement
     attr_accessor :element_name
     #
     # Description:
@@ -94,7 +94,7 @@ module FireWatir
   # Description:
   #   Class for RadioButton element.
   #
-  class Radio < RadioCheckCommon
+  class FFRadio < FFRadioCheckCommon
     def initialize *args
       super
       @type = ["radio"]
@@ -114,7 +114,7 @@ module FireWatir
   # Description:
   # Class for Checkbox element.
   #
-  class CheckBox < RadioCheckCommon
+  class FFCheckBox < FFRadioCheckCommon
     def initialize *args
       super
       @type = ["checkbox"]

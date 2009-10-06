@@ -1,5 +1,5 @@
-module FireWatir
-  class Table < Element
+module Watir
+  class FFTable < FFElement
     attr_accessor :element_name
     TAG = 'TABLE'
 
@@ -127,7 +127,7 @@ module FireWatir
       arr_rows = get_rows
       table_rows = Array.new(arr_rows.length)
       for i in 0..arr_rows.length - 1 do
-        table_rows[i] = TableRow.new(@container, :jssh_name, arr_rows[i])
+        table_rows[i] = FFTableRow.new(@container, :jssh_name, arr_rows[i])
       end
       return table_rows
     end

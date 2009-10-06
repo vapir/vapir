@@ -81,11 +81,11 @@
 
 =end
 
-module FireWatir
+module Watir
   include Watir::Exception
 
-  class Firefox
-    include FireWatir::Container
+  class Firefox < Browser
+    include Watir::FFContainer
 
     # XPath Result type. Return only first node that matches the xpath expression.
     # More details: "http://developer.mozilla.org/en/docs/DOM:document.evaluate"
@@ -234,7 +234,7 @@ module FireWatir
       rescue
         no_of_tries += 1
         retry if no_of_tries < 3
-        raise UnableToStartJSShException, "Unable to connect to machine : #{MACHINE_IP} on port 9997. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
+        raise Watir::Exception::UnableToStartJSShException, "Unable to connect to machine : #{MACHINE_IP} on port 9997. Make sure that JSSh is properly installed and Firefox is running with '-jssh' option"
       end
       @error_checkers = []
     end
@@ -681,19 +681,19 @@ module FireWatir
 
     # Returns the document element of the page currently loaded in the browser.
     def document
-      Document.new(self)
+      FFDocument.new(self)
     end
 
     # Returns the first element that matches the given xpath expression or query.
     def element_by_xpath(xpath)
-      temp = Element.new(nil, self)
+      temp = FFElement.new(nil, self)
       element_name = temp.element_by_xpath(self, xpath)
       return element_factory(element_name)
     end
 
     # Return object of correct Element class while using XPath to get the element.
     def element_factory(element_name)
-      jssh_type = Element.new(element_name,self).element_type
+      jssh_type = FFElement.new(element_name,self).element_type
       #puts "jssh type is : #{jssh_type}" # DEBUG
       candidate_class = jssh_type =~ /HTML(.*)Element/ ? $1 : ''
       #puts candidate_class # DEBUG
@@ -705,13 +705,13 @@ module FireWatir
       end
 
       #puts firewatir_class # DEBUG
-      klass = FireWatir.const_get(firewatir_class)
+      klass = Watir.const_get(firewatir_class)
 
-      if klass == Element
+      if klass == FFElement
         klass.new(element_name,self)
-      elsif klass == CheckBox
+      elsif klass == FFCheckBox
         klass.new(self,:jssh_name,element_name,["checkbox"])
-      elsif klass == Radio
+      elsif klass == FFRadio
         klass.new(self,:jssh_name,element_name,["radio"])
       else
         klass.new(self,:jssh_name,element_name)
@@ -722,21 +722,21 @@ module FireWatir
     #   Return the class name for element of input type depending upon its type like checkbox, radio etc.
     def input_class(input_type)
       hash = {
-                'select-one' => 'SelectList',
-                'select-multiple' => 'SelectList',
-                'text' => 'TextField',
-                'password' => 'TextField',
-                'textarea' => 'TextField',
+                'select-one' => 'FFSelectList',
+                'select-multiple' => 'FFSelectList',
+                'text' => 'FFTextField',
+                'password' => 'FFTextField',
+                'textarea' => 'FFTextField',
         # TODO when there's no type, it's a TextField
-                'file' => 'FileField',
-                'checkbox' => 'CheckBox',
-                'radio' => 'Radio',
-                'reset' => 'Button',
-                'button' => 'Button',
-                'submit' => 'Button',
-                'image' => 'Button'
+                'file' => 'FFFileField',
+                'checkbox' => 'FFCheckBox',
+                'radio' => 'FFRadio',
+                'reset' => 'FFButton',
+                'button' => 'FFButton',
+                'submit' => 'FFButton',
+                'image' => 'FFButton'
       }
-      hash.default = 'Element'
+      hash.default = 'FFElement'
 
       hash[input_type]
     end
@@ -746,23 +746,23 @@ module FireWatir
     # returns its corresponding class in Firewatir.
     def jssh2firewatir(candidate_class)
       hash = {
-                'Div' => 'Div',
-                'Button' => 'Button',
-                'Frame' => 'Frame',
-                'Span' => 'Span',
-                'Paragraph' => 'P',
-                'Label' => 'Label',
-                'Form' => 'Form',
-                'Image' => 'Image',
-                'Table' => 'Table',
-                'TableCell' => 'TableCell',
-                'TableRow' => 'TableRow',
-                'Select' => 'SelectList',
-                'Link' => 'Link',
-                'Anchor' => 'Link' # FIXME is this right?
-        #'Option' => 'Option' #Option uses a different constructor
+                'Div' => 'FFDiv',
+                'Button' => 'FFButton',
+                'Frame' => 'FFFrame',
+                'Span' => 'FFSpan',
+                'Paragraph' => 'FFP',
+                'Label' => 'FFLabel',
+                'Form' => 'FFForm',
+                'Image' => 'FFImage',
+                'Table' => 'FFTable',
+                'TableCell' => 'FFTableCell',
+                'TableRow' => 'FFTableRow',
+                'Select' => 'FFSelectList',
+                'Link' => 'FFLink',
+                'Anchor' => 'FFLink' # FIXME is this right?
+        #'Option' => 'FFOption' #Option uses a different constructor
       }
-      hash.default = 'Element'
+      hash.default = 'FFElement'
       hash[candidate_class]
     end
     private :jssh2firewatir
@@ -778,7 +778,7 @@ module FireWatir
     #   Array of elements matching xpath query.
     #
     def elements_by_xpath(xpath)
-      element = Element.new(nil, self)
+      element = FFElement.new(nil, self)
       elem_names = element.elements_by_xpath(self, xpath)
       elem_names.inject([]) {|elements,name| elements << element_factory(name)}
     end
@@ -791,7 +791,7 @@ module FireWatir
     #   Name, id, method and action of all the forms available on the page.
     #
     def show_forms
-      forms = Document.new(self).get_forms()
+      forms = FFDocument.new(self).get_forms()
       count = forms.length
       puts "There are #{count} forms"
       for i in 0..count - 1 do
@@ -811,7 +811,7 @@ module FireWatir
     #   Name, id, src and index of all the images available on the page.
     #
     def show_images
-      images = Document.new(self).get_images
+      images = FFDocument.new(self).get_images
       puts "There are #{images.length} images"
       index = 1
       images.each do |l|
@@ -832,7 +832,7 @@ module FireWatir
     #   Name, id, href and index of all the links available on the page.
     #
     def show_links
-      links = Document.new(self).get_links
+      links = FFDocument.new(self).get_links
       puts "There are #{links.length} links"
       index = 1
       links.each do |l|
@@ -853,7 +853,7 @@ module FireWatir
     #   Name, id, class and index of all the divs available on the page.
     #
     def show_divs
-      divs = Document.new(self).get_divs
+      divs = FFDocument.new(self).get_divs
       puts "There are #{divs.length} divs"
       index = 1
       divs.each do |l|
@@ -874,7 +874,7 @@ module FireWatir
     #   Id, row count, column count (only first row) and index of all the tables available on the page.
     #
     def show_tables
-      tables = Document.new(self).get_tables
+      tables = FFDocument.new(self).get_tables
       puts "There are #{tables.length} tables"
       index = 1
       tables.each do |l|
@@ -895,7 +895,7 @@ module FireWatir
     #   Id, name and index of all the pre elements available on the page.
     #
     def show_pres
-      pres = Document.new(self).get_pres
+      pres = FFDocument.new(self).get_pres
       puts "There are #{pres.length} pres"
       index = 1
       pres.each do |l|
@@ -915,7 +915,7 @@ module FireWatir
     #   Name, id, class and index of all the spans available on the page.
     #
     def show_spans
-      spans = Document.new(self).get_spans
+      spans = FFDocument.new(self).get_spans
       puts "There are #{spans.length} spans"
       index = 1
       spans.each do |l|
@@ -936,7 +936,7 @@ module FireWatir
     #   Name, id, for and index of all the labels available on the page.
     #
     def show_labels
-      labels = Document.new(self).get_labels
+      labels = FFDocument.new(self).get_labels
       puts "There are #{labels.length} labels"
       index = 1
       labels.each do |l|
@@ -975,7 +975,7 @@ module FireWatir
 
       frames = Array.new(length)
       for i in 0..length - 1 do
-        frames[i] = Frame.new(self, :jssh_name, "elements_frames[#{i}]")
+        frames[i] = FFFrame.new(self, :jssh_name, "elements_frames[#{i}]")
       end
 
       for i in 0..length - 1 do

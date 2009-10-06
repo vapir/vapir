@@ -123,7 +123,7 @@ class TC_Bugs< Test::Unit::TestCase
     tag_method :test_close_bug_26, :fails_on_ie
     def test_close_bug_26
         browser.close()
-        browser = FireWatir::Firefox.new
+        browser = Watir::Firefox.new
     end
 
     def test_class_bug_29

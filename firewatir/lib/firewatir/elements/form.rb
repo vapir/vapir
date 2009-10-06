@@ -1,5 +1,5 @@
-module FireWatir
-  class Form < Element
+module Watir
+  class FFForm < FFElement
 
     attr_accessor :element_name
     #

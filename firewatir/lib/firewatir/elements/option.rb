@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Class for Option element.
   #
-  class Option < InputElement
+  class FFOption < FFInputElement
     #
     # Description:
     #   Initializes the instance of option object.
@@ -53,7 +53,7 @@ module FireWatir
     #
     def assert_exists
       unless @option
-        raise UnknownObjectException,  
+        raise Exception::UnknownObjectException,  
                 "Unable to locate an option using #{@how} and #{@what}"
       end
     end

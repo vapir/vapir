@@ -1,10 +1,10 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Class for returning the document element.
   #
-  class Document
-    include FireWatir::Container
+  class FFDocument
+    include Watir::FFContainer
     @@current_level = 0
 
     #
@@ -54,7 +54,7 @@ module FireWatir
       @arr_elements = "arr_coll_#{@@current_level}"
       jssh_command = "var arr_coll_#{@@current_level}=new Array(); "
 
-      if(@container.class == FireWatir::Firefox || @container.class == Frame)
+      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
         jssh_command <<"var element_collection = null; element_collection = #{@container.document_var}.getElementsByTagName(\"*\");
                                 if(element_collection != null && typeof(element_collection) != 'undefined')
                                 {
@@ -88,7 +88,7 @@ module FireWatir
       elements = nil
       elements = Array.new(@length)
       for i in 0..@length - 1 do
-        temp = Element.new("arr_coll_#{@@current_level}[#{i}]", @container)
+        temp = FFElement.new("arr_coll_#{@@current_level}[#{i}]", @container)
         elements[i] = temp
       end
       @@current_level += 1
@@ -114,7 +114,7 @@ module FireWatir
     #
     def each
       for i in 0..@length - 1
-        yield Element.new("#{@arr_elements}[#{i}]", @container)
+        yield FFElement.new("#{@arr_elements}[#{i}]", @container)
       end
     end
 
@@ -129,7 +129,7 @@ module FireWatir
     #   Element at the nth index.
     #
     def [](n)
-      return Element.new("#{@arr_elements}[#{n-1}]", @container)
+      return FFElement.new("#{@arr_elements}[#{n-1}]", @container)
     end
 
     #
@@ -146,7 +146,7 @@ module FireWatir
       forms = Array.new(length)
 
       for i in 0..length - 1 do
-        forms[i] = Form.new(@container, :jssh_name, "element_forms[#{i}]")
+        forms[i] = FFForm.new(@container, :jssh_name, "element_forms[#{i}]")
       end
       return forms
     end
@@ -160,7 +160,7 @@ module FireWatir
     #   Array containing Image elements
     #
     def get_images
-      return Images.new(@container)
+      return FFImages.new(@container)
     end
 
     #
@@ -172,7 +172,7 @@ module FireWatir
     #   Array containing Link elements
     #
     def get_links
-      return Links.new(@container)
+      return FFLinks.new(@container)
     end
 
     #
@@ -184,7 +184,7 @@ module FireWatir
     #   Array containing Div elements
     #
     def get_divs
-      return Divs.new(@container)
+      return FFDivs.new(@container)
     end
 
     #
@@ -196,7 +196,7 @@ module FireWatir
     #   Array containing Table elements
     #
     def get_tables
-      return Tables.new(@container)
+      return FFTables.new(@container)
     end
 
     #
@@ -208,7 +208,7 @@ module FireWatir
     #   Array containing Pre elements
     #
     def get_pres
-      return Pres.new(@container)
+      return FFPres.new(@container)
     end
 
     #
@@ -220,7 +220,7 @@ module FireWatir
     #   Array containing Span elements
     #
     def get_spans
-      return Spans.new(@container)
+      return FFSpans.new(@container)
     end
 
     #
@@ -232,7 +232,7 @@ module FireWatir
     #   Array containing Label elements
     #
     def get_labels
-      return Labels.new(@container)
+      return FFLabels.new(@container)
     end
     
   end # Docuemnt

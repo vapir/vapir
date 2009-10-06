@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Class for FileField element.
   #
-  class FileField < InputElement
+  class FFFileField < FFInputElement
     INPUT_TYPES = ["file"]
 
     #

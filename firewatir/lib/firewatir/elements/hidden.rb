@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Class for Hidden Field element.
   #
-  class Hidden < TextField
+  class FFHidden < FFTextField
     INPUT_TYPES =  ["hidden"]
 
     #

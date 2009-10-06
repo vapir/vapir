@@ -9,12 +9,10 @@ module Watir
 
     def self.inherited subclass
       class_name = subclass.to_s.demodulize
-      method_name = class_name.underscore
-      Watir::Container.module_eval <<-RUBY
-        def #{method_name}(how, what=nil)
-          return #{class_name}.new(self, how, what)
-        end
-      RUBY
+      method_name = class_name.sub(/\AFF/i,'').underscore
+#      puts "IN #{self}.inherited: subclass=#{subclass.inspect}; class_name=#{class_name.inspect}; method_name=#{method_name.inspect}"
+      Watir::FFContainer.module_eval "def #{method_name}(how, what=nil)
+      return #{class_name}.new(self, how, what); end"
     end
     include Watir::Exception
 

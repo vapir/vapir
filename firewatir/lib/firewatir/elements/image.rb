@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Class for Image element.
   #
-  class Image < Element
+  class FFImage < FFElement
     attr_accessor :element_name
     TAG = 'IMG'
     #
@@ -25,7 +25,7 @@ module FireWatir
     #
     def locate
       case @how
-      when:jssh_name
+      when :jssh_name
         @element_name = @what
       when :xpath
         @element_name = element_by_xpath(@container, @what)

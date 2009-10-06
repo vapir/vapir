@@ -51,7 +51,7 @@ before you invoke Browser.new.
 
 =end rdoc
   
-  module Browser
+  class Browser
     @@browser_classes = {}
     @@sub_options = {}
     @@default = nil
@@ -60,9 +60,18 @@ before you invoke Browser.new.
       # Create a new instance of a browser driver, as determined by the
       # configuration settings. (Don't be fooled: this is not actually 
       # an instance of Browser class.)
-      def new
+#      alias __orig_new__ new
+#      def inherited(subklass)
+#        class << subklass
+#          alias new __orig_new__
+#        end
+#      end
+      def new *args, &block
         set_sub_options
-        klass.new
+        #klass.new *args, &block
+        browser=klass.allocate
+        browser.send :initialize, *args, &block
+        browser
       end
       # Create a new instance as with #new and start the browser on the
       # specified url.
@@ -76,11 +85,11 @@ before you invoke Browser.new.
         klass.attach(how, what)
       end
       def set_options options
-        return unless defined?(klass.set_options)
+        raise unless defined?(klass.set_options)
         klass.set_options options
       end
       def options
-        return {} unless defined?(klass.options)
+        raise unless defined?(klass.options)
         klass.options
       end
 

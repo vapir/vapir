@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Class for Button element.
   #
-  class Button < InputElement
+  class FFButton < FFInputElement
     INPUT_TYPES = ["button", "submit", "image", "reset"]
 
     def locate

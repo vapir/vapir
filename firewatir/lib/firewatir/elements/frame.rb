@@ -1,5 +1,5 @@
-module FireWatir
-  class Frame < Element
+module Watir
+  class FFFrame < FFElement
 
     attr_accessor :element_name
     #

@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   # Class for Table row element.
   #
-  class TableRow < Element
+  class FFTableRow < FFElement
     attr_accessor :element_name
 
     #
@@ -91,7 +91,7 @@ module FireWatir
       arr_cells = get_cells
       row_cells = Array.new(arr_cells.length)
       for i in 0..arr_cells.length - 1 do
-        row_cells[i] = TableCell.new(@container, :jssh_name, arr_cells[i])
+        row_cells[i] = FFTableCell.new(@container, :jssh_name, arr_cells[i])
       end
       return row_cells
     end

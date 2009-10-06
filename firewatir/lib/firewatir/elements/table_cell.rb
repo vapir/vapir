@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   # Class for Table Cell.
   #
-  class TableCell < Element
+  class FFTableCell < FFElement
     attr_accessor :element_name
 
     # Description:

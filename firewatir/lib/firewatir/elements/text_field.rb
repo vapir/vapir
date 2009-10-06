@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   # Class for Text Field element.
   #
-  class TextField < InputElement
+  class FFTextField < FFInputElement
     INPUT_TYPES = ["text", "password", "textarea"]
 
     # Gets the size of the text field element.

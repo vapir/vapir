@@ -1,19 +1,20 @@
-module FireWatir
+module Watir
 
   #
   # Description:
   #   Class for iterating over elements of common type like links, images, divs etc.
   #
-  class ElementCollections
+  class FFElementCollections
     include Enumerable
     include JsshSocket
 
     def self.inherited subclass
       class_name = subclass.to_s.demodulize
-      method_name = class_name.underscore
+      method_name = class_name.sub(/\AFF/i,'').underscore
       element_class_name = class_name.singularize
+#      puts "IN #{self}.inherited: subclass=#{subclass.inspect}; class_name=#{class_name.inspect}; method_name=#{method_name.inspect}; element_class_name=#{element_class_name.inspect}"
 
-      FireWatir::Container.module_eval "def #{method_name}
+      Watir::FFContainer.module_eval "def #{method_name}
       locate if respond_to?(:locate)
       return #{class_name}.new(self); end"
 
@@ -54,7 +55,7 @@ module FireWatir
 
       # generate array of elements matching the tag
       case @container
-      when FireWatir::Firefox, FireWatir::Frame
+      when Firefox, FFFrame
         elements_tag = "elements_#{tag}"
         container_name = "#{@container.document_var}"
       else
@@ -182,7 +183,7 @@ module FireWatir
 
   #   Class for accessing all the button elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#buttons method
-  class Buttons < ElementCollections
+  class FFButtons < FFElementCollections
     def locate_elements
       locate_tagged_elements("input", ["button", "image", "submit", "reset"])
     end
@@ -190,7 +191,7 @@ module FireWatir
 
   #   Class for accessing all the File Field elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#file_fields method
-  class FileFields < ElementCollections
+  class FFFileFields < FFElementCollections
     def locate_elements
       locate_tagged_elements("input", ["file"])
     end
@@ -198,18 +199,18 @@ module FireWatir
 
   #   Class for accessing all the CheckBox elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#checkboxes method
-  class CheckBoxes < ElementCollections
+  class FFCheckBoxes < FFElementCollections
     def locate_elements
       locate_tagged_elements("input", ["checkbox"])
     end
   end
-  module Container
+  module FFContainer
     alias checkboxes check_boxes
   end
 
   #   Class for accessing all the Radio button elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#radios method
-  class Radios < ElementCollections
+  class FFRadios < FFElementCollections
     def locate_elements
       locate_tagged_elements("input", ["radio"])
     end
@@ -217,7 +218,7 @@ module FireWatir
 
   #   Class for accessing all the select list elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#select_lists method
-  class SelectLists < ElementCollections
+  class FFSelectLists < FFElementCollections
     def locate_elements
       locate_tagged_elements("select", ["select-one", "select-multiple"])
     end
@@ -225,15 +226,15 @@ module FireWatir
 
   #   Class for accessing all the link elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#links method
-  class Links < ElementCollections; end
+  class FFLinks < FFElementCollections; end
 
   #   Class for accessing all the image elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#images method
-  class Images < ElementCollections; end
+  class FFImages < FFElementCollections; end
 
   #   Class for accessing all the text field elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#text_fields method
-  class TextFields < ElementCollections
+  class FFTextFields < FFElementCollections
     def locate_elements
       locate_tagged_elements("input", ["text", "textarea", "password"])
     end
@@ -241,7 +242,7 @@ module FireWatir
 
   #   Class for accessing all the hidden elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#hiddens method
-  class Hiddens < ElementCollections
+  class FFHiddens < FFElementCollections
     def locate_elements
       locate_tagged_elements("input", ["hidden"])
     end
@@ -249,66 +250,66 @@ module FireWatir
 
   #   Class for accessing all the table elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#tables method
-  class Tables < ElementCollections; end
+  class FFTables < FFElementCollections; end
 
   #   Class for accessing all the label elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#labels method
-  class Labels < ElementCollections; end
+  class FFLabels < FFElementCollections; end
 
   #   Class for accessing all the pre element in the document.
   #   It would normally only be accessed by the FireWatir::Container#pres method
-  class Pres < ElementCollections; end
+  class FFPres < FFElementCollections; end
 
   #   Class for accessing all the paragraph elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#ps method
-  class Ps < ElementCollections; end
+  class FFPs < FFElementCollections; end
 
   #   Class for accessing all the span elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#spans method
-  class Spans < ElementCollections; end
+  class FFSpans < FFElementCollections; end
 
   #   Class for accessing all the strong elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#strongs method
-  class Strongs < ElementCollections; end
+  class FFStrongs < FFElementCollections; end
 
   #   Class for accessing all the div elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#divs method
-  class Divs < ElementCollections; end
+  class FFDivs < FFElementCollections; end
 
   #   Class for accessing all the ul elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#uls method
-  class Uls < ElementCollections; end
+  class FFUls < FFElementCollections; end
 
   #   Class for accessing all the li elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#lis method
-  class Lis < ElementCollections; end
+  class FFLis < FFElementCollections; end
 
   #   Class for accessing all the dl elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#dls method
-  class Dls < ElementCollections; end
+  class FFDls < FFElementCollections; end
 
   #   Class for accessing all the dt elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#dts method
-  class Dts < ElementCollections; end
+  class FFDts < FFElementCollections; end
 
   #   Class for accessing all the dd elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#dds method
-  class Dds < ElementCollections; end
+  class FFDds < FFElementCollections; end
 
   #   Class for accessing all the dd elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#dds method
-  class Ems < ElementCollections; end
+  class FFEms < FFElementCollections; end
 
   #   Class for accessing all the area elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#areas method
-  class Areas < ElementCollections; end
+  class FFAreas < FFElementCollections; end
 
   #   Class for accessing all the body elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#bodies method
-  class Bodies < ElementCollections; end
+  class FFBodies < FFElementCollections; end
 
   #   Class for accessing all the dd elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#maps method
-  class Maps < ElementCollections; end
+  class FFMaps < FFElementCollections; end
 
 end # FireWatir

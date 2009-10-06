@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Class for Link element.
   #
-  class Link < Element
+  class FFLink < FFElement
     attr_accessor :element_name
     TAG = 'A'
     #

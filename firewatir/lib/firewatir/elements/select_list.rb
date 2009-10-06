@@ -1,9 +1,9 @@
-module FireWatir
+module Watir
   #
   # Description:
   #   Class for SelectList element.
   #
-  class SelectList < InputElement
+  class FFSelectList < FFInputElement
     INPUT_TYPES = ["select-one", "select-multiple"]
 
     attr_accessor :o
@@ -32,7 +32,7 @@ module FireWatir
       arr_options = js_options
       #puts arr_options[0]#.length
       for i in 0..arr_options.length - 1 do
-        yield Option.new(self, :jssh_name, arr_options[i])
+        yield FFOption.new(self, :jssh_name, arr_options[i])
       end
     end
 

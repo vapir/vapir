@@ -1,8 +1,8 @@
-module FireWatir
+module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
-  class Element
-    include FireWatir::Container
+  class FFElement
+    include Watir::FFContainer
     # Number of spaces that separate the property from the value in the to_s method
     TO_S_SIZE = 14
 
@@ -49,6 +49,36 @@ module FireWatir
     private
     def self.def_wrap(ruby_method_name, ole_method_name = nil)
       ole_method_name = ruby_method_name unless ole_method_name
+=begin
+      define_method ruby_method_name do
+        assert_exists
+        # Every element has its name starting from element. If yes then
+        # use element_name to send the command to jssh. Else its a number
+        # and we are still searching for element, in this case use doc.all
+        # array with element_name as index to send command to jssh
+        #puts element_object.to_s
+        #if(@element_type == 'HTMLDivElement')
+        #    ole_method_name = 'innerHTML'
+        #end
+        jssh_socket.send('typeof(' + element_object.to_s + '.'+ole_method_name.to_s+')\n', 0)
+        return_type = read_socket()
+
+        return_value = get_attribute_value(ole_method_name)
+
+        #if(return_value == '' || return_value == "null")
+        #    return_value = ""
+        #end
+
+        if(return_type == "boolean")
+            return_value = false if return_value == "false"
+            return_value = true if return_value == "true"
+        end
+        #puts return_value
+        @@current_level = 0
+        return_value
+      end
+=end
+#=begin
       class_eval "def #{ruby_method_name}
                           assert_exists
                           # Every element has its name starting from element. If yes then
@@ -76,6 +106,7 @@ module FireWatir
                           @@current_level = 0
                           return return_value
                       end"
+#=end
     end
 
     def get_attribute_value(attribute_name)
@@ -261,7 +292,7 @@ module FireWatir
 
       # Because in both the below cases we need to get element with respect to document.
       # when we locate a frame document is automatically adjusted to point to HTML inside the frame
-      if(@container.class == FireWatir::Firefox || @container.class == Frame)
+      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
         #end
         #if(@@current_element_object == "")
         jssh_command << "var elements_#{tag} = null; elements_#{tag} = #{@container.document_var}.getElementsByTagName(\"#{tag}\");"
@@ -336,7 +367,7 @@ module FireWatir
                                }"
 
       #jssh_command << "elements.length;"
-      if(@container.class == FireWatir::Firefox || @container.class == Frame)
+      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
 
         jssh_command << "for(var i=0; i<elements_#{tag}.length; i++)
                                    {
@@ -422,7 +453,7 @@ module FireWatir
                                             found = (attribute == what);
                                          }"
 
-      if(@container.class == FireWatir::Firefox || @container.class == Frame)
+      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
         jssh_command << "   if(found)
                                       {
                                           if(value)
@@ -505,7 +536,7 @@ module FireWatir
       #puts @container
       #puts element_name
       if(element_name != "")
-        return element_name #Element.new(element_name, @container)
+        return element_name #FFElement.new(element_name, @container)
       else
         return nil
       end
@@ -548,7 +579,7 @@ module FireWatir
       # Get all the frames the are there on the page.
       #puts "how is #{how} and what is #{what}"
       jssh_command = ""
-      if(@container.class == FireWatir::Firefox)
+      if(@container.is_a?(Firefox))
         # In firefox 3 if you write Frame Name then it will not show anything. So we add .toString function to every element.
         jssh_command = "var frameset = #{@container.window_var}.frames;
                                   var elements_frames = new Array();
@@ -573,7 +604,7 @@ module FireWatir
 
       jssh_command << "    var element_name = ''; var object_index = 1;var attribute = '';
                                   var element = '';"
-      if(@container.class == FireWatir::Firefox)
+      if(@container.is_a?(Firefox))
         jssh_command << "for(var i = 0; i < elements_frames.length; i++)
                                    {
                                       element = elements_frames[i];"
@@ -619,7 +650,7 @@ module FireWatir
 
       jssh_command <<     "   if(found)
                                       {"
-      if(@container.class == FireWatir::Firefox)
+      if(@container.is_a?(Firefox))
         jssh_command << "       element_name = \"elements_frames[\" + i + \"]\";
                                           #{@container.document_var} = elements_frames[i].contentDocument;
                                           #{@container.body_var} = #{@container.document_var}.body;"
@@ -907,7 +938,7 @@ module FireWatir
     #
     def assert_exists
       unless exists?
-        raise UnknownObjectException.new(
+        raise Exception::UnknownObjectException.new(
                                          Watir::Exception.message_for_unable_to_locate(@how, @what))
       end
     end
@@ -919,7 +950,7 @@ module FireWatir
     #
     def assert_enabled
       unless enabled?
-        raise ObjectDisabledException, "object #{@how} and #{@what} is disabled"
+        raise Exception::ObjectDisabledException, "object #{@how} and #{@what} is disabled"
       end
     end
 
@@ -1256,6 +1287,7 @@ module FireWatir
     #   methodId - Id of the method that is called.
     #   *args - arguments sent to the methods.
     #
+=begin um, yeah, let's not do this nonsense. 
     def method_missing(methId, *args)
       methodName = methId.id2name
       #puts "method name is : #{methodName}"
@@ -1356,6 +1388,6 @@ module FireWatir
         end
       end
     end
-
+=end
   end # Element
 end # FireWatir

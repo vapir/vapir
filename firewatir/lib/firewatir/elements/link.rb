@@ -22,9 +22,9 @@ module Watir
 #      @container = container
 #    end
 
-    def self.tagName
-      'a'
-    end
+#    def self.tagName
+#      'a'
+#    end
     #
     # Description:
     #   Locate the link element on the page.

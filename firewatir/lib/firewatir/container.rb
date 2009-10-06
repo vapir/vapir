@@ -38,6 +38,7 @@
 =end
 
 require 'firewatir/exceptions'
+require 'firewatir/specifier'
 
 module Watir
   module FFContainer 
@@ -48,9 +49,8 @@ module Watir
     # The default color for highlighting objects as they are accessed.
     DEFAULT_HIGHLIGHT_COLOR = "yellow"
     
-    LocateAliases=Hash.new{|hash,key| [key]}.merge!(:text => [:text, :textContent])
-    
     private
+    
     # locates the element specified. 
     # specifiers_list is a list of specifiers, where a specifier is a hash of the javascript object to match. 
     # For example, the specifier_list
@@ -64,7 +64,7 @@ module Watir
     # case-insensitive. 
     # The only specifier attribute that doesn't match directly to an element attribute is 
     # :types, which will match any of a list of types. 
-    def locate_first_specified(specifiers_list, index=nil)
+    def locate_one_specified(specifiers_list, index=nil)
       #STDERR.puts specifiers_list.inspect#+caller.map{|c|"\n\t#{c}"}.join('')
 #debugger
 #      ids=specifiers_list.map{|s| s[:id] }.compact.uniq
@@ -85,7 +85,7 @@ module Watir
       end
       
       matched=0
-      match_candidates(candidates, specifiers_list) do |match|
+      Watir::Specifier.match_candidates(candidates, specifiers_list) do |match|
         matched+=1
         if !index || index==matched
           return match.store_rand_prefix("firewatir_elements")
@@ -93,29 +93,21 @@ module Watir
       end
       return nil
     end
-    def match_candidates(candidates, specifiers_list)
-      candidates.each do |candidate|
-        match=true
-        match&&= specifiers_list.any? do |specifier|
-          specifier.all? do |(how, what)|
-            if how==:types
-              what.any? do |type|
-                Watir.fuzzy_match(candidate[:type], type)
-              end
-            else
-              LocateAliases[how].any? do |how_alias|
-                Watir.fuzzy_match(candidate[how_alias], what)
-              end
-            end
-          end
-        end
-        if match
-          yield candidate
-        end
+    def locate_all_specified(specifiers_list)
+      tags=specifiers_list.map{|s| s[:tagName] }.compact.uniq
+      if tags.size==1 && tags.first.is_a?(String)
+        candidates=dom_object.getElementsByTagName(tags.first).to_array
+      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
+        candidates=dom_object.getElementsByTagName('*').to_array
       end
-      nil
+      
+      matched=[]
+      Watir::Specifier.match_candidates(candidates, specifiers_list) do |match|
+        matched << match.store_rand_prefix("firewatir_elements")
+      end
+      matched
     end
-    module_function :match_candidates
+    #module_function :match_candidates
     
     def extra
       {:container => self, :browser => self.browser, :jssh_socket => self.jssh_socket}
@@ -141,68 +133,110 @@ module Watir
     # Output:
     #   Frame object or nil if the specified frame does not exist. 
     #
-    def frame(how, what = nil)
-      if self.is_a?(Firefox) || self.is_a?(FFFrame)
-        candidates=content_window_object.frames.to_array.map{|c|c.frameElement}
-      else
-        raise NotImplementedError, "frame called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
-      end
-
-      specifiers, index=*howwhat_to_specifiers_index(how, what, :default_how => :name)
-      match_candidates(candidates, specifiers, index) do |match|
-        match=match.store_rand_prefix('firewatir_frames')
-        return FFFrame.new(match, extra.merge(:how => how, :what => what))
-      end
-      return nil
-    end
+#    def frame(how, what = nil)
+#      if self.is_a?(Firefox) || self.is_a?(FFFrame)
+#        candidates=content_window_object.frames.to_array.map{|c|c.frameElement}
+#      else
+#        raise NotImplementedError, "frame called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
+#      end
+#
+#      specifiers, index=*howwhat_to_specifiers_index(how, what, :default_how => :name)
+#      matched=0
+#      Watir::Specifier.match_candidates(candidates, specifiers) do |match|
+#        matched+=1
+#        if !index || index==matched
+#          return FFFrame.new(match.store_rand_prefix('firewatir_frames'), extra.merge(:how => how, :what => what))
+#        end
+#      end
+#      return nil
+#    end
     def frames
-      unless self.is_a?(Firefox) || self.is_a?(FFFrame)
+      unless self.is_a?(Browser) || self.is_a?(Frame)
         raise NotImplementedError, "frames called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
       end
       
       content_window_object.frames.to_array.map do |c|
-        FFFrame.new(c.frameElement.store_rand_prefix('firewatir_frames'), extra)
+        FFFrame.new(:dom_object, c.frameElement.store_rand_prefix('firewatir_frames'), extra)
       end
     end
     
-    def howwhat_to_specifier(how, what, default_how=nil)
-      spec=if what.nil?
-        case how
-        when String, Symbol
-          default_how ? {default_how => how} : {how.to_sym => what}
-        when Hash
-          how.dup
-        when nil
-          {}
+#    def howwhat_to_specifier(how, what, default_how=nil)
+#      spec=if what.nil?
+#        case how
+#        when String, Symbol
+#          default_how ? {default_how => how} : {how.to_sym => what}
+#        when Hash
+#          how.dup
+#        when nil
+#          {}
+#        else
+#          default_how ? {default_how => how} : (raise "Invalid how: #{how.inspect}; what: #{what.inspect}")
+#        end
+#      else # what is not nil
+#        if how.is_a?(String)||how.is_a?(Symbol)
+#          {how.to_sym => what}
+#        else
+#          raise "Invalid how: #{how.inspect}; what: #{what.inspect}"
+#        end
+#      end
+##      spec.inject({}) do |hash,(how,what)|
+##        hash[LocateAliases[how.to_sym]]=what
+##        hash
+##      end
+#    end
+    def normalize_howwhat_index(how, what, default_how=nil)
+      case how
+      when nil
+        raise
+      when Hash
+        how=how.dup
+        index=how.delete(:index)
+        what==nil ? [:attributes, how, index] : raise
+      when String, Symbol
+        if Watir::Specifier::HowList.include?(how)
+          [how, what,nil]
         else
-          default_how ? {default_how => how} : (raise "Invalid how: #{how.inspect}; what: #{what.inspect}")
+          if what.nil?
+            if default_how
+              [:attributes, {default_how => how}, nil]
+            else
+              raise
+            end
+          elsif how==:index
+            [:attributes, {}, what]
+          else
+            [:attributes, {how.to_sym => what}, nil]
+          end
         end
-      else # what is not nil
-        if how.is_a?(String)||how.is_a?(Symbol)
-          {how.to_sym => what}
-        else
-          raise "Invalid how: #{how.inspect}; what: #{what.inspect}"
-        end
+      else
+        raise
       end
-#      spec.inject({}) do |hash,(how,what)|
-#        hash[LocateAliases[how.to_sym]]=what
-#        hash
+    end
+#    def howwhat_to_specifiers_index(how, what, options={})
+#      default_how=options[:default_how] || options[:klass] && options[:klass].respond_to?(:default_how) && options[:klass].default_how
+#      hwspecifier=howwhat_to_specifier(how, what, default_how=nil)
+#      index=hwspecifier.delete :index
+#      if options[:klass]
+#        [options[:klass].specifiers.map{|s|s.merge(hwspecifier)}, index]
+#      else
+#        [[hwspecifier], index]
+#      end
+#    end
+#    module_function :howwhat_to_specifier, :howwhat_to_specifiers_index
+    def element_by_howwhat(klass, how, what)
+      #howwhat_specifier=howwhat_to_specifier(how, what, klass.respond_to?(:default_how) && klass.default_how)
+      #index=howwhat_specifier.delete(:index)
+      how, what, index=*normalize_howwhat_index(how, what, klass.respond_to?(:default_how) && klass.default_how)
+      element=klass.new(how, what, extra.merge(:index => index, :locate => false))
+      element.exists? ? element : nil
+#      if dom_object=locate_one_specified(*howwhat_to_specifiers_index(how, what, :klass => klass))
+#        klass.new(dom_object, extra.merge(:how => how, :what => what))
 #      end
     end
-    def howwhat_to_specifiers_index(how, what, options={})
-      default_how=options[:default_how] || options[:klass] && options[:klass].respond_to?(:default_how) && options[:klass].default_how
-      hwspecifier=howwhat_to_specifier(how, what, default_how=nil)
-      index=hwspecifier.delete :index
-      if options[:klass]
-        [options[:klass].specifiers.map{|s|s.merge(hwspecifier)}, index]
-      else
-        [[hwspecifier], index]
-      end
-    end
-    module_function :howwhat_to_specifier, :howwhat_to_specifiers_index
-    def element_by_howwhat(klass, how, what)
-      if dom_object=locate_first_specified(*howwhat_to_specifiers_index(how, what, :klass => klass))
-        klass.new(dom_object, extra.merge(:how => how, :what => what))
+    
+    def element_collection(klass)
+      locate_all_specified(klass.specifiers).map do |dom_object|
+        klass.new(:dom_object, dom_object, extra)
       end
     end
     

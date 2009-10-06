@@ -87,7 +87,7 @@ module Watir
     #
     def options
       dom_object.options.to_array.map do |option_object|
-        FFOption.new(option_object, extra)
+        FFOption.new(:dom_object, option_object, extra)
       end
 #      raise NotImplementedError
 #      assert_exists
@@ -97,7 +97,10 @@ module Watir
 #      return returnArray
     end
 
-#    alias getAllContents options
+    def option_texts
+      options.map{|o| o.text }
+    end
+    alias getAllContents option_texts
 
     #
     # Description:
@@ -108,21 +111,15 @@ module Watir
     #   Array containing the selected items of the select list.
     #
     def selected_options
-      raise NotImplementedError
       assert_exists
-      returnArray = []
-      #element.log "There are #{@o.length} items"
-      each do |thisItem|
-        #puts "#{thisItem.selected}"
-        if thisItem.selected
-          #element.log "Item ( #{thisItem.text} ) is selected"
-          returnArray << thisItem.text
-        end
-      end
-      return returnArray
+      options.select{|o|o.selected}
     end
 
-    alias getSelectedItems selected_options
+    def selected_option_texts
+      selected_options.map{|o| o.text }
+    end
+    
+    alias getSelectedItems selected_option_texts
 
     #
     # Description:

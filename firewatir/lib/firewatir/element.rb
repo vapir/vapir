@@ -1,3 +1,5 @@
+require 'firewatir/specifier'
+
 module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
@@ -31,139 +33,26 @@ module Watir
     #   element - Name of the variable with which the element is referenced in JSSh.
     #
 
-    def initialize(dom_object, extra={})
-      @dom_object=dom_object
-      raise ArgumentError, "first argument should be a JsshObject, not: #{dom_object.inspect}" unless dom_object.is_a?(JsshObject)
+    def initialize(how, what, extra={})
+      @how, @what=how, what
+#      @specifier=specifier
+#      raise ArgumentError, "first argument should be a specifier hash, not: #{specifier.inspect}" unless specifier.is_a?(Hash)
       @extra=extra
-      @how=extra[:how]
-      @what=extra[:what]
+#      @how=extra[:how]
+#      @what=extra[:what]
+      @index=extra[:index]
       @container=extra[:container]
       @browser=extra[:browser]
-      @jssh_socket=extra[:jssh_socket] || (@dom_object ? @dom_object.jssh_socket : @browser ? @browser.jssh_socket : nil)
+      @jssh_socket=extra[:jssh_socket] || (@container ? @container.jssh_socket : @browser ? @browser.jssh_socket : nil)
+      locate! unless extra.key?(:locate) && !extra[:locate]
     end
 
-    def self.factory(dom_object, extra={})
-      curr_klass=self
-      ObjectSpace.each_object(Class) do |klass|
-        if klass < curr_klass
-          Watir::FFContainer.match_candidates([dom_object], klass.specifiers) do |match|
-            curr_klass=klass
-          end
-        end
-      end
-      curr_klass.new(dom_object, extra)
-    end
-    
     attr_reader :browser
+    attr_reader :container
     attr_reader :jssh_socket
-  
-    class << self
-      #default specifier is just the tagName, which should be specified on the class 
-      def specifiers
-        if self.const_defined?('Specifiers')
-          #self.const_get('Specifiers')
-          self::Specifiers
-        elsif self.const_defined?('TAG')
-          [{:tagName => self::TAG}]
-        else
-          raise StandardError, "No way found to specify #{self}."
-        end
-#        tagName=self.tagName || (raise StandardError, "No tag name defined on class #{self}.")
-#        tagName ? [{:tagName => tagName}] : []
-      end
-      
-      # tagName used to be defined in the TAG const, so check for that. tagName should be overridden. 
-      def tagName
-        self.const_defined?('TAG') ? self.const_get('TAG') : nil
-      end
-      
-      def default_how
-        self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
-      end
-      
-      def container_methods
-        self.const_defined?('ContainerMethods') ? self.const_get('ContainerMethods') : []
-      end
-      
-#      def js_object_types
-#        self.const_defined?('JSObjectTypes') ? self.const_get('JSObjectTypes') : []
-#      end
-    end
-
+    attr_reader :how, :what, :index
     attr_reader :dom_object
-
-    alias ole_object dom_object
-    
-    def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
-      document_object.defaultView.getComputedStyle(dom_object, nil)
-    end
-    
-    private
-    def self.def_wrap(ruby_method_name, ole_method_name = nil)
-      ole_method_name = ruby_method_name unless ole_method_name
-      define_method ruby_method_name do
-        dom_object.get(ole_method_name)
-      end
-    end
-
-    def get_attribute_value(attribute_name)
-      dom_object.getAttribute attribute_name
-    end
-    private :get_attribute_value
-  
-    #
-    # Description:
-    #   Returns an array of the properties of an element, in a format to be used by the to_s method.
-    #   additional attributes are returned based on the supplied atributes hash.
-    #   name, type, id, value and disabled attributes are common to all the elements.
-    #   This method is used internally by to_s method.
-    #
-    # Output:
-    #   Array with values of the following properties:
-    #   name, type, id, value disabled and the supplied attribues list.
-    #
-    def string_creator(attributes = nil)
-      n = []
-      n << "name:".ljust(TO_S_SIZE) + get_attribute_value("name").inspect
-      n << "type:".ljust(TO_S_SIZE) + get_attribute_value("type").inspect
-      n << "id:".ljust(TO_S_SIZE) + get_attribute_value("id").inspect
-      n << "value:".ljust(TO_S_SIZE) + get_attribute_value("value").inspect
-      n << "disabled:".ljust(TO_S_SIZE) + get_attribute_value("disabled").inspect
-      #n << "style:".ljust(TO_S_SIZE) + get_attribute_value("style")
-      #n << "class:".ljust(TO_S_SIZE) + get_attribute_value("className")
-
-      if(attributes != nil)
-        attributes.each do |key,value|
-          n << "#{key}:".ljust(TO_S_SIZE) + get_attribute_value(value).inspect
-        end
-      end
-      return n
-    end
-
-    #
-    # Description:
-    #   Sets and clears the colored highlighting on the currently active element.
-    #
-    # Input:
-    #   set_or_clear - this can have following two values
-    #   :set - To set the color of the element.
-    #   :clear - To clear the color of the element.
-    #
-    def highlight(set_or_clear)
-      if set_or_clear == :set
-        @original_color=dom_object.style.background
-        dom_object.style.background=DEFAULT_HIGHLIGHT_COLOR
-      elsif set_or_clear==:clear
-        begin
-          dom_object.style.background=@original_color
-        ensure
-          @original_color=nil
-        end
-      else
-        raise ArgumentError, "argument must me :set or :clear; got #{set_or_clear.inspect}"
-      end
-    end
-    protected :highlight
+#    alias ole_object dom_object
 
 #    LocateAliases=Hash.new{|hash,key| key}.merge!(:text => :textContent)
 #    def howwhat_to_specifier(how, what)
@@ -174,8 +63,68 @@ module Watir
 #      end
 #    end
 
+    def container_candidates(specifiers)
+      raise unless @container
+      ids=specifiers.map{|s| s[:id] }.compact.uniq
+      tags=specifiers.map{|s| s[:tagName] }.compact.uniq
+
+      # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
+      # also, only check by id on a browser or a frame since otherwise document_object.getElementById may return something above @container in the DOM 
+      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && (@container.is_a?(Browser) || @container.is_a?(Frame))
+        candidates= if by_id=document_object.getElementById(ids.first)
+          [by_id]
+        else
+          []
+        end
+      elsif tags.size==1 && tags.first.is_a?(String)
+        candidates=@container.dom_object.getElementsByTagName(tags.first).to_array
+      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
+        candidates=@container.dom_object.getElementsByTagName('*').to_array
+      end
+      candidates
+    end
+
     # locates a javascript reference for this element
-    def locate
+    def locate(options={})
+      default_options={}
+      default_options[:reload]=@browser && @updated_at && @browser.updated_at > @updated_at
+      options=default_options.merge(options)
+      if options[:reload]
+        @dom_object=nil
+      end
+      @dom_object||= begin
+        case @how
+        when :jssh_object, :dom_object
+          raise if options[:reload]
+          @what
+        when :jssh_name
+          raise if options[:reload]
+          JsshObject.new(@what, jssh_socket)
+        when :xpath
+          raise NotImplementedError
+        when :attributes
+          if options[:reload]
+            raise unless @container
+            @container.locate(:reload => options[:reload])
+          end
+          specified_attributes=@what
+          specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
+          
+          matched_candidate=nil
+          matched_count=0
+          Watir::Specifier.match_candidates(container_candidates(specifiers), specifiers) do |match|
+          matched_count+=1
+            if !@index || @index==matched_count
+              matched_candidate=match.store_rand_prefix("firewatir_elements")
+              break
+            end
+          end
+          matched_candidate
+        else
+          raise Watir::Exception::MissingWayOfFindingObjectException
+        end
+      end
+      @updated_at=Time.now
       @dom_object
 =begin
       ||= case @how
@@ -193,6 +142,9 @@ module Watir
         locate_specified_element(specifiers, index)
       end
 =end
+    end
+    def locate!(options={})
+      locate(options) || raise(Watir::Exception::UnknownObjectException)
     end
 
     # locates the element specified. 
@@ -263,6 +215,119 @@ module Watir
 #      return nil
 #    end
 
+    class << self
+      def factory(dom_object, extra={})
+        curr_klass=self
+        ObjectSpace.each_object(Class) do |klass|
+          if klass < curr_klass
+            Watir::FFContainer.match_candidates([dom_object], klass.specifiers) do |match|
+              curr_klass=klass
+            end
+          end
+        end
+        curr_klass.new(dom_object, extra)
+      end
+    
+      # look for constants to define specifiers - either class::Specifier, or
+      # the simpler class::TAG
+      def specifiers
+        if self.const_defined?('Specifiers')
+          #self.const_get('Specifiers')
+          self::Specifiers
+        elsif self.const_defined?('TAG')
+          [{:tagName => self::TAG}]
+        else
+          raise StandardError, "No way found to specify #{self}."
+        end
+#        tagName=self.tagName || (raise StandardError, "No tag name defined on class #{self}.")
+#        tagName ? [{:tagName => tagName}] : []
+      end
+      
+      # tagName used to be defined in the TAG const, so check for that. tagName should be overridden. 
+#      def tagName
+#        self.const_defined?('TAG') ? self.const_get('TAG') : nil
+#      end
+      
+      def default_how
+        self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
+      end
+      
+      def container_methods
+        self.const_defined?('ContainerMethods') ? self.const_get('ContainerMethods') : []
+      end
+    end
+
+    private
+    def self.def_wrap(ruby_method_name, ole_method_name = nil)
+      ole_method_name = ruby_method_name unless ole_method_name
+      define_method ruby_method_name do
+        dom_object.get(ole_method_name)
+      end
+    end
+  
+    def get_attribute_value(attribute_name)
+      dom_object.getAttribute attribute_name
+    end
+    private:get_attribute_value
+  
+    def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
+      document_object.defaultView.getComputedStyle(dom_object, nil)
+    end
+    
+    #
+    # Description:
+    #   Returns an array of the properties of an element, in a format to be used by the to_s method.
+    #   additional attributes are returned based on the supplied atributes hash.
+    #   name, type, id, value and disabled attributes are common to all the elements.
+    #   This method is used internally by to_s method.
+    #
+    # Output:
+    #   Array with values of the following properties:
+    #   name, type, id, value disabled and the supplied attribues list.
+    #
+    def string_creator(attributes = nil)
+      n = []
+      n << "name:".ljust(TO_S_SIZE) + get_attribute_value("name").inspect
+      n << "type:".ljust(TO_S_SIZE) + get_attribute_value("type").inspect
+      n << "id:".ljust(TO_S_SIZE) + get_attribute_value("id").inspect
+      n << "value:".ljust(TO_S_SIZE) + get_attribute_value("value").inspect
+      n << "disabled:".ljust(TO_S_SIZE) + get_attribute_value("disabled").inspect
+      #n << "style:".ljust(TO_S_SIZE) + get_attribute_value("style")
+      #n << "class:".ljust(TO_S_SIZE) + get_attribute_value("className")
+    
+      if(attributes != nil)
+        attributes.each do |key,value|
+          n << "#{key}:".ljust(TO_S_SIZE) + get_attribute_value(value).inspect
+        end
+      end
+      return n
+    end
+  
+    #
+    # Description:
+    #   Sets and clears the colored highlighting on the currently active element.
+    #
+    # Input:
+    #   set_or_clear - this can have following two values
+    #   :set - To set the color of the element.
+    #   :clear - To clear the color of the element.
+    #
+    def highlight(set_or_clear)
+      if set_or_clear == :set
+        @original_color=dom_object.style.background
+        dom_object.style.background=DEFAULT_HIGHLIGHT_COLOR
+      elsif set_or_clear==:clear
+        begin
+          dom_object.style.background=@original_color
+        ensure
+          @original_color=nil
+        end
+      else
+        raise ArgumentError, "argument must me :set or :clear; got #{set_or_clear.inspect}"
+      end
+    end
+    protected :highlight
+  
     public
 
     #
@@ -291,7 +356,7 @@ module Watir
 
 
     def inspect
-      '#<%s:0x%x located=%s how=%s what=%s>' % [self.class, hash*2, !!@o, @how.inspect, @what.inspect]
+      '#<%s:0x%x dom_ref=%s how=%s what=%s>' % [self.class, hash*2, @dom_object.ref, @how.inspect, @what.inspect]
     end
 
     #
@@ -308,10 +373,11 @@ module Watir
     #   Array of elements that matched the xpath expression provided as parameter.
     #
     def elements_by_xpath(container, xpath)
+      raise NotImplementedError
       elements=[]
       result=document_object.evaluate xpath, document_object, nil, ORDERED_NODE_ITERATOR_TYPE, nil
       while element=result.iterateNext
-        elements << element.store_rand_object_key(@@browser_jssh_objects)
+        elements << element.store_rand_object_key(@browser_jssh_objects)
       end
       elements
     end
@@ -330,6 +396,7 @@ module Watir
     #   First element in DOM that matched the XPath expression or query.
     #
     def element_by_xpath(container, xpath)
+      raise NotImplementedError
       document_object.evaluate(xpath, document_object, nil, FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue.store_rand_object_key(@browser_jssh_objects)
     end
 
@@ -481,7 +548,7 @@ module Watir
   
     def visible? 
       assert_exists 
-      currentStyle.visibility!='hidden' && currentStyle.display!='none'
+      currentStyle.visibility!='hidden' && currentStyle[:display]!='none' # note: don't use #display as it is defined on Object. http://www.ruby-doc.org/core/classes/Object.html#M000340
     end 
 
     #
@@ -509,11 +576,12 @@ module Watir
     #   Text of the element.
     #
     def text()
-      assert_exists
-      element = (element_type == "HTMLFrameElement") ? "body" : element_object
-      return_value = jssh_socket.js_eval("#{element}.textContent.replace(/\\xA0/g, ' ').replace(/\\s+/g, ' ')").strip
-      @@current_level = 0
-      return return_value
+      dom_object.textContent
+#      assert_exists
+#      element = (element_type == "HTMLFrameElement") ? "body" : element_object
+#      return_value = jssh_socket.js_eval("#{element}.textContent.replace(/\\xA0/g, ' ').replace(/\\s+/g, ' ')").strip
+#      @@current_level = 0
+#      return return_value
     end
     alias innerText text
 
@@ -559,17 +627,20 @@ module Watir
     # Output:
     #   Array with value of properties shown above.
     #
-    def to_s(attributes=nil)
-      #puts "here in to_s"
-      #puts caller(0)
-      assert_exists
-      if(element_type == "HTMLTableCellElement")
-        return text()
-      else
-        result = string_creator(attributes).join("\n")
-        @@current_level = 0
-        return result
-      end
+#    def to_s(attributes=nil)
+#      #puts "here in to_s"
+#      #puts caller(0)
+#      assert_exists
+#      if(element_type == "HTMLTableCellElement")
+#        return text()
+#      else
+#        result = string_creator(attributes).join("\n")
+#        @@current_level = 0
+#        return result
+#      end
+#    end
+    def to_s(*args)
+      inspect
     end
 
     def internal_click(options={})

@@ -3,35 +3,6 @@ module Watir
     include Table
     TAG = 'TABLE'
 
-    #   - how - Attribute to identify the table element.
-    #   - what - Value of that attribute.
-#    def initialize(container, how, what)
-#      @how = how
-#      @what = what
-#      @container = container
-#      @o = nil
-#      #super nil
-#    end
-
-    def self.tagName
-      'table'
-    end
-
-    #
-    # Description:
-    #   Locate the table element.
-    #
-#    def locate
-#      case @how
-#      when :jssh_name
-#        @element_name = @what
-#      when :xpath
-#        @element_name = element_by_xpath(@container, @what)
-#      else
-#        @element_name = locate_tagged_element('TABLE', @how, @what)
-#      end
-#      @o = self
-#    end
 
     #
     # Description:
@@ -48,14 +19,14 @@ module Watir
           else
             self.border=1
           end
-        rescue
+        #rescue
           @original_border = nil
         end
       else
         begin
           self.border= @original_border unless @original_border == nil
           @original_border = nil
-        rescue
+        #rescue
           # we could be here for a number of reasons...
         ensure
           @original_border = nil
@@ -129,7 +100,7 @@ module Watir
     def rows
       assert_exists
       dom_object.rows.to_array.map do |row|
-        FFTableRow.new(row, extra)
+        FFTableRow.new(:dom_object, row, extra)
       end
     end
 
@@ -144,9 +115,7 @@ module Watir
     #   Table Row element
     #
     def [](key)
-      assert_exists
-      arr_rows = rows
-      return arr_rows[key - 1]
+      rows[key-1]
     end
 
     #

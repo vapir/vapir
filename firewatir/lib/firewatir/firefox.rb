@@ -247,6 +247,9 @@ module Watir
       @content_window_object=browser_object.contentWindow 
         # note that browser_window_object.content is the same thing, but simpler to refer to stuff on browser_object since that is updated by the nsIWebProgressListener below
       @body_object=document_object.body
+      
+      @updated_at_epoch_ms=@browser_jssh_objects.attr(:updated_at_epoch_ms).assign_expr('new Date().getTime()')
+      @updated_at_offset=Time.now.to_f-jssh_socket.value_json('new Date().getTime()')/1000.0
     
       # Add eventlistener for browser window so that we can reset the document back whenever there is redirect
       # or browser loads on its own after some time. Useful when you are searching for flight results etc and
@@ -263,7 +266,8 @@ module Watir
       listener_object[:onStateChange]= jssh_socket.object(
         "function(aWebProgress, aRequest, aStateFlags, aStatus)
          { if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)
-           { #{browser_object.ref}=#{browser_window_object.ref}.getBrowser();
+           { #{@updated_at_epoch_ms.ref}=new Date().getTime();
+             #{browser_object.ref}=#{browser_window_object.ref}.getBrowser();
            }
          }")
       browser_object.addProgressListener(listener_object)
@@ -275,6 +279,10 @@ module Watir
     attr_reader :browser_object
     attr_reader :document_object
     attr_reader :body_object
+    
+    def updated_at
+      Time.at(@updated_at_epoch_ms.val/1000.0)+@updated_at_offset
+    end
 
     public
     #   Closes the window.

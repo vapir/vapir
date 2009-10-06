@@ -5,10 +5,7 @@ module Watir
   #
   class FFTableRow < FFElement
     include TableRow
-
-    def self.tagName
-      'tr'
-    end
+    TAG='tr'
     #
     # Description:
     #   Locate the table row element on the page.
@@ -92,7 +89,7 @@ module Watir
     def cells
       assert_exists
       dom_object.cells.to_array.map do |cell|
-        FFTableCell.new(cell, extra)
+        FFTableCell.new(:dom_object, cell, extra)
       end
     end
 

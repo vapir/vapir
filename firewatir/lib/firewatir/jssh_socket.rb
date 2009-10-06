@@ -494,6 +494,7 @@ class JsshObject
     # don't want to use JsshSocket#assign because the result can be blank and cause send_and_read to wait for data that's not coming - also 
     # using a json function is better because it catches errors much more elegantly. 
     # so, wrap it in a function that returns nil. 
+    @type=nil
     self
   end
   

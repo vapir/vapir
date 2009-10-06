@@ -22,9 +22,9 @@ module Watir
 #      @container = container
 #    end
 
-    def self.tagName
-      'img'
-    end
+#    def self.tagName
+#      'img'
+#    end
     # Description:
     #   Locate the image element on the page.
     #

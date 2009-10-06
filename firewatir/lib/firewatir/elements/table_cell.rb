@@ -5,10 +5,7 @@ module Watir
   #
   class FFTableCell < FFElement
     include TableCell
-
-    def self.tagName
-      'td'
-    end
+    TAG='td'
     # Description:
     #   Locate the table cell element on the page.
     #

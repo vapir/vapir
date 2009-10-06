@@ -4,6 +4,7 @@ module Watir
   #   Class for Link element.
   #
   class FFLink < FFElement
+    include Link
     attr_accessor :element_name
     TAG = 'A'
     #

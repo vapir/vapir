@@ -5,6 +5,7 @@ module Watir
   # many of the methods available to this object are inherited from the Element class
   #
   class IELink < IEElement
+    include Link
     # Returns an initialized instance of a link object
     #   * container  - an instance of a container
     #   * how         - symbol - how we access the link

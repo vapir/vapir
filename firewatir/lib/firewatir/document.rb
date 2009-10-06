@@ -17,6 +17,7 @@ module Watir
       @elements = nil
       @arr_elements = ""
       @container = container
+      @document_var = container.document_var
     end
     
     def frames
@@ -95,6 +96,11 @@ module Watir
       @@current_level += 1
       return elements
 
+    end
+
+    def getElementById(id)
+      el=jssh_socket.object(@document_var).getElementById(id)
+      el.type=='undefined' ? nil : el
     end
 
     #

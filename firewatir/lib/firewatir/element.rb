@@ -50,6 +50,11 @@ module Watir
     def dom_object
       JsshObject.new(@element_name, Firefox.jssh_socket)
     end
+    alias ole_object dom_object
+    
+    def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
+      document_obj.defaultView.getComputedStyle(dom_object, nil)
+    end
     
     def read_socket
 #      STDERR.puts "WARNING: read_socket on an Element is deprecated. From: "
@@ -61,22 +66,22 @@ module Watir
     def self.def_wrap(ruby_method_name, ole_method_name = nil)
       ole_method_name = ruby_method_name unless ole_method_name
       define_method ruby_method_name do
-        dom_object.get(ole_method_name).val
+        dom_object.get(ole_method_name)
       end
     end
 
     def get_attribute_value(attribute_name)
       #if the attribut name is columnLength get number of cells in first row if rows exist.
       case attribute_name
-      when "columnLength"
-        rowsLength = dom_object.columns!
-        if (rowsLength != 0 || rowsLength != "")
-          return dom_object.rows[0].cells.length!
-        end
+#      when "columnLength"
+#        #rowsLength = dom_object.columns
+#        #if (rowsLength != 0 || rowsLength != "")
+#          return dom_object.rows[0].cells.length
+#        #end
       when "text"
         return text
       when "url", "href", "src", "action", "name"
-        return_value = dom_object.getAttribute!(attribute_name)
+        return_value = dom_object.getAttribute(attribute_name)
       else
         jssh_command = "var attribute = '';
           if(#{element_object}.#{attribute_name} != undefined)
@@ -87,12 +92,12 @@ module Watir
         return_value = jssh_socket.js_eval(jssh_command)
       end
       if attribute_name == "value"
-        tagName = dom_object.tagName!.downcase
-        type = dom_object.type?
+        tagName = dom_object.tagName.downcase
+        type = dom_object.type
 
         if tagName == "button" || ["image", "submit", "reset", "button"].include?(type)
           if return_value == "" || return_value == "null"
-            return_value = dom_object.innerHTML!
+            return_value = dom_object.innerHTML
           end
         end
       end
@@ -920,10 +925,17 @@ module Watir
     #   Returns true if element exists and is enabled, else returns false.
     #
     def enabled?
-      assert_exists
-      !dom_object.disabled!
+      !disabled
     end
 
+    # Returns whether the element is disabled
+    def disabled
+      assert_exists
+      disabled=dom_object.attr :disabled
+      disabled.type=='undefined' ? false : disabled.val
+    end
+    alias disabled? disabled
+    
     #
     # Description:
     #   Checks element for display: none or visibility: hidden, these are
@@ -992,11 +1004,6 @@ module Watir
     def_wrap :name
     # Returns the id of the element
     def_wrap :id
-    # Returns whether the element is disabled
-    def disabled
-      ! enabled?
-    end
-    alias disabled? disabled
     # Returns the state of the element
     def_wrap :checked
     # Returns the value of the element
@@ -1019,6 +1026,8 @@ module Watir
     def_wrap :html, :innerHTML
     # Return the action of form
     def_wrap :action
+    def_wrap :style
+    def_wrap :scrollIntoView
 
     #
     # Description:
@@ -1231,19 +1240,27 @@ module Watir
     private :get_cells
     
     def invoke(js_method)
-      dom_object.attr(js_method).val_str
+      dom_object.get(js_method)
     end
   
     def assign(property, value)
       locate
-      jssh_socket.send("#{element_object}[#{property.to_json}]=#{value.to_json};\n", 0)
-      return read_socket
+      dom_object.attr(property).assign(value)
+#      jssh_socket.send("#{element_object}[#{property.to_json}]=#{value.to_json};\n", 0)
+#      return read_socket
+    end
+    
+    def document_obj
+      jssh_socket.object(document_var)
     end
     
     def document_var
       @container.document_var
     end
     
+    def window_obj
+      jssh_socket.object(window_var)
+    end
     def window_var
       @container.window_var
     end

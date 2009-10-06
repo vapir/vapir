@@ -79,7 +79,7 @@ module Watir
 
     def to_s
       assert_exists
-      r = super({"rows" => "rows.length","columns" => "columnLength", "cellspacing" => "cellspacing", "cellpadding" => "cellpadding", "border" => "border"})
+      r = super({"rows" => "rows.length", "cellspacing" => "cellspacing", "cellpadding" => "cellpadding", "border" => "border"})
       # r += self.column_count.to_s
     end
 

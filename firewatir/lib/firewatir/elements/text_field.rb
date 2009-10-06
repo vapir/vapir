@@ -105,11 +105,11 @@ module Watir
 
       highlight(:set)
 
-      @o.invoke("scrollIntoView()")
-      @o.invoke("focus()")
-      @o.invoke("select()")
+      dom_object.scrollIntoView
+      dom_object.focus
+      dom_object.select
       @o.fireEvent("onSelect")
-      @o.assign('value', "")
+      dom_object.value=""
       @o.fireEvent("onKeyPress")
       @o.fireEvent("onChange")
       @container.wait()
@@ -131,8 +131,8 @@ module Watir
       assert_not_readonly
 
       highlight(:set)
-      @o.invoke("scrollIntoView()")
-      @o.invoke("focus()")
+      dom_object.scrollIntoView
+      dom_object.focus
       doKeyPress( setThis )
       highlight(:clear)
     end
@@ -152,9 +152,9 @@ module Watir
       assert_not_readonly
 
       highlight(:set)
-      @o.invoke("scrollIntoView()")
-      @o.invoke("focus()")
-      @o.invoke("select()")
+      dom_object.scrollIntoView
+      dom_object.focus
+      dom_object.select
       @o.fireEvent("onSelect")
       @o.assign('value', "")
       @o.fireEvent("onKeyPress")

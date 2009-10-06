@@ -37,4 +37,6 @@ module Watir
   end
   module TableCell
   end
+  module Link
+  end
 end

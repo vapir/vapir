@@ -119,12 +119,14 @@ class JsshSocket
     str=str+"\n" unless str =~ /\n\z/
     @socket.send(str, 0)
     value = read_socket(timeout)
-    if md = /^(\w+)Error:(.*)$/.match(value)
+    if md = /\A(\w+)Error:(.*)/m.match(value)
       errclassname="JsshJavascript#{md[1]}Error"
       unless JsshSocket.const_defined?(errclassname)
         JsshSocket.const_set(errclassname, Class.new(JsshError))
       end
       raise JsshSocket.const_get(errclassname), "#{md[2]} - evaluating #{str.inspect}"
+    elsif md = /\Auncaught exception: (.*)/m.match(value)
+      raise JsshError, "#{md[1]} - evaluating #{str.inspect}"
     end
     value
   end
@@ -250,9 +252,11 @@ class JsshSocket
     end
   end
 
-  # returns the type of the given expression. Uses #js_eval; see its documentation.
+  # returns the type of the given expression using javascript typeof operator, with the exception that
+  # if the expression is null, returns 'null' - whereas typeof(null) in javascript returns 'object'
   def typeof(expression)
-    js_eval("typeof(#{expression})")
+    type,isnull = *value_json("(function(expr){return [typeof(expr), expr==null];})(#{expression})")
+    (isnull && type!='undefined') ? 'null' : type
   end
 
   # sticks a json string inside array brackets because on windows (at least?) 
@@ -278,8 +282,17 @@ end
 
 class JsshObject
   attr_reader :ref, :jssh_socket
-  attr_accessor :function_result
-  
+  attr_reader :function_result
+  attr_reader :type
+  protected
+  def type=(type)
+    @type=type
+  end
+  def function_result=(fr)
+    @function_result=fr
+  end
+
+  public
   # initializes a JsshObject with a string of javascript containing a reference to
   # the object, and a  JsshSocket that the object is defined on. 
   def initialize(ref, jssh_socket)
@@ -310,13 +323,28 @@ class JsshObject
   # Raises an error if this JsshObject points to something other than a javascript 'object'
   # type ('function' or 'number' or whatever)
   def object_type
-    type=self.type
-    case type
-    when 'object'
-      self.toString.val =~ /\A\[object\s+(.*)\]\Z/
-      $1
+    @object_type ||= begin
+      case type
+      when 'object'
+        self.toString.val =~ /\A\[object\s+(.*)\]\Z/
+        $1
+      else
+        raise JsshError, "Type is #{type}, not object"
+      end
+    end
+  end
+  
+  def val_or_object
+    case self.type
+    when 'undefined'
+      function_result ? nil : (raise JsshUndefinedValueError, "undefined expression #{ref}")
+    when 'boolean','number','string','null'
+      val
+    when 'function','object'
+      self
     else
-      raise JsshError, "Type is #{type}, not object"
+      # here we perhaps could (but won't for now) raise JsshError, "Unknown type: #{type}"
+      self
     end
   end
   
@@ -329,12 +357,10 @@ class JsshObject
     type=attr_obj.type
     case type
     when 'function'
-      attr_obj.pass(*args)
-    when 'undefined'
-      raise JsshUndefinedValueError, "undefined expression #{attr_obj.ref}"
+      attr_obj.pass(*args).val_or_object
     else
       if args.empty?
-        attr_obj
+        attr_obj.val_or_object
       else
         raise ArgumentError, "Cannot pass arguments to expression #{attr_obj.ref} of type #{type}"
       end
@@ -392,7 +418,7 @@ class JsshObject
   #
   # >> foo=document.getElementById('guser').store('foo')
   # => #<JsshObject:0x2dff870 @ref="foo" ...>
-  # >> foo.tagName!
+  # >> foo.tagName
   # => "DIV"
   def store(js_variable)
     stored=JsshObject.new(js_variable, jssh_socket)
@@ -403,38 +429,61 @@ class JsshObject
 
   # method_missing handles unknown method calls in a way that makes it possible to write 
   # javascript-like syntax in ruby, to some extent. 
+  #
+  # method_missing will only try to deal with methods that look like /^[a-z_][a-z0-9_]*$/i - no
+  # special characters, only alphanumeric/underscores, starting with alpha or underscore - with
+  # the exception of three special behaviors:
   # 
-  # if doing assignment (method ends with = ), calls JsshSocket#assign_json to do the assignment 
-  # and returns the assigned value. 
+  # If the method ends with an equals sign (=), it does assignment - it calls JsshSocket#assign_json 
+  # to do the assignment and returns the assigned value. 
   #
-  # otherwise, calls #get to return a JsshObject. 
+  # If the method ends with a bang (!), then it will attempt to get the value (using json) of the
+  # reference, using JsonObject#val. For simple types (null, string, boolean, number), this is what 
+  # happens by default anyway, but if you have an object or an array that you know you can json-ize, 
+  # you can use ! to force that. See #get documentation  for more information. 
   #
-  # now, #get always returns a JsshObject. this means that you can string together method_missings.
-  # but at some point you will want a value out of the expression. 
-  # at that point you can either call #val, or you can stick a ! at the end of the method and 
-  # method_missing will call #val
-  # you can add a ? to call #val_str - this is safer, because the javascript conversion to json 
-  # can error. This also catches the JsshUndefinedValueError that #get throws and just returns nil
+  # If the method ends with a question mark (?), then it will attempt to get a string representing the
+  # value, using JsonObject#val_str. This is safer than ! because the javascript conversion to json 
+  # can error. This also catches the JsshUndefinedValueError that can occur, and just returns nil
   # for undefined stuff. 
   #
-  # method_missing doesn't deal with anything other than methods named with alphanumeric or underscores. 
-  # no special characters, except for =, !, or ? at the end. 
+  # otherwise, method_missing calls to #get, and returns a JsshObject, a string, a boolean, a number, or
+  # null - see documentation for #get. 
+  #
+  # Since #get returns a JsshObject for javascript objects, this means that you can string together 
+  # method_missings and the result looks rather like javascript.
   #
   # this lets you do things like:
-  # >> jssh_socket.object('getWindows()').length!
+  # >> jssh_socket.object('getWindows()').length
   # => 2
   # >> jssh_socket.object('getWindows()')[1].getBrowser.contentDocument?
   # => "[object XPCNativeWrapper [object HTMLDocument]]"
   # >> document=jssh_socket.object('getWindows()')[1].getBrowser.contentDocument
   # => #<JsshObject:0x34f01fc @ref="getWindows()[1].getBrowser().contentDocument" ...>
-  # >> document.title!
+  # >> document.title
   # => "ruby - Google Search"
-  # >> document.forms[0].q.value!
+  # >> document.forms[0].q.value
   # => "ruby"
   # >> document.forms[0].q.value='foobar'
   # => "foobar"
-  # >> document.forms[0].q.value!
+  # >> document.forms[0].q.value
   # => "foobar"
+  #
+  # $A and $H, used below, are methods of the Prototype javascript library, which add nice functional 
+  # methods to arrays and hashes - see http://www.prototypejs.org/
+  #
+  # >> js_hash=jssh_socket.object('$H')
+  # => #<JsshObject:0x2beb598 @ref="$H" ...>
+  # >> js_arr=jssh_socket.object('$A')
+  # => #<JsshObject:0x2be40e0 @ref="$A" ...>
+  #
+  # >> js_arr.pass(document.body.childNodes).pluck! :tagName
+  # => ["TEXTAREA", "DIV", "NOSCRIPT", "DIV", "DIV", "DIV", "BR", "TABLE", "DIV", "DIV", "DIV", "TEXTAREA", "DIV", "DIV", "SCRIPT"]
+  # >> js_arr.pass(document.body.childNodes).pluck! :id
+  # => ["csi", "header", "", "ssb", "tbd", "res", "", "nav", "wml", "", "", "hcache", "xjsd", "xjsi", ""]
+  # >> js_hash.pass(document.getElementById('tbd')).keys!
+  # => ["addEventListener", "appendChild", "className", "parentNode", "getElementsByTagName", "title", "style", "innerHTML", "nextSibling", "tagName", "id", "nodeName", "nodeValue", "nodeType", "childNodes", "firstChild", "lastChild", "previousSibling", "attributes", "ownerDocument", "insertBefore", "replaceChild", "removeChild", "hasChildNodes", "cloneNode", "normalize", "isSupported", "namespaceURI", "prefix", "localName", "hasAttributes", "getAttribute", "setAttribute", "removeAttribute", "getAttributeNode", "setAttributeNode", "removeAttributeNode", "getAttributeNS", "setAttributeNS", "removeAttributeNS", "getAttributeNodeNS", "setAttributeNodeNS", "getElementsByTagNameNS", "hasAttribute", "hasAttributeNS", "ELEMENT_NODE", "ATTRIBUTE_NODE", "TEXT_NODE", "CDATA_SECTION_NODE", "ENTITY_REFERENCE_NODE", "ENTITY_NODE", "PROCESSING_INSTRUCTION_NODE", "COMMENT_NODE", "DOCUMENT_NODE", "DOCUMENT_TYPE_NODE", "DOCUMENT_FRAGMENT_NODE", "NOTATION_NODE", "lang", "dir", "align", "offsetTop", "offsetLeft", "offsetWidth", "offsetHeight", "offsetParent", "scrollTop", "scrollLeft", "scrollHeight", "scrollWidth", "clientTop", "clientLeft", "clientHeight", "clientWidth", "tabIndex", "contentEditable", "blur", "focus", "spellcheck", "removeEventListener", "dispatchEvent", "baseURI", "compareDocumentPosition", "textContent", "isSameNode", "lookupPrefix", "isDefaultNamespace", "lookupNamespaceURI", "isEqualNode", "getFeature", "setUserData", "getUserData", "DOCUMENT_POSITION_DISCONNECTED", "DOCUMENT_POSITION_PRECEDING", "DOCUMENT_POSITION_FOLLOWING", "DOCUMENT_POSITION_CONTAINS", "DOCUMENT_POSITION_CONTAINED_BY", "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC", "getElementsByClassName", "getClientRects", "getBoundingClientRect"]
+  #
   def method_missing(method, *args)
     method=method.to_s
     if method =~ /^([a-z_][a-z0-9_]*)([=?!])?$/i
@@ -447,10 +496,12 @@ class JsshObject
     when nil
       get(method, *args)
     when '!'
-      get(method, *args).val
+      got=get(method, *args)
+      got.is_a?(JsshObject) ? got.val : got
     when '?'
       begin
-        get(method, *args).val_str
+        got=get(method, *args)
+        got.is_a?(JsshObject) ? got.val_str : got
       rescue JsshUndefinedValueError
         nil
       end

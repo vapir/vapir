@@ -41,7 +41,7 @@ module Watir
     #   Checks if object is read-only or not.
     #
     def assert_not_readonly
-      raise ObjectReadOnlyException, "Textfield #{@how} and #{@what} is read only." if self.readonly?
+      raise Exception::ObjectReadOnlyException, "Textfield #{@how} and #{@what} is read only." if self.readonly?
     end
 
     #
@@ -104,11 +104,11 @@ module Watir
 
       highlight(:set)
 
-      @o.scrollIntoView
-      @o.focus
-      @o.select()
+      @o.invoke("scrollIntoView()")
+      @o.invoke("focus()")
+      @o.invoke("select()")
       @o.fireEvent("onSelect")
-      @o.value = ""
+      @o.assign('value', "")
       @o.fireEvent("onKeyPress")
       @o.fireEvent("onChange")
       @container.wait()
@@ -130,8 +130,8 @@ module Watir
       assert_not_readonly
 
       highlight(:set)
-      @o.scrollIntoView
-      @o.focus
+      @o.invoke("scrollIntoView()")
+      @o.invoke("focus()")
       doKeyPress( setThis )
       highlight(:clear)
     end
@@ -151,11 +151,11 @@ module Watir
       assert_not_readonly
 
       highlight(:set)
-      @o.scrollIntoView
-      @o.focus
-      @o.select()
+      @o.invoke("scrollIntoView()")
+      @o.invoke("focus()")
+      @o.invoke("select()")
       @o.fireEvent("onSelect")
-      @o.value = ""
+      @o.assign('value', "")
       @o.fireEvent("onKeyPress")
       doKeyPress( setThis )
       highlight(:clear)
@@ -200,7 +200,7 @@ module Watir
         #sleep element.typingspeed   # typing speed
         c = value[i,1]
         #element.log  " adding c.chr " + c  #.chr.to_s
-        @o.value = "#{(@o.value.to_s + c)}"   #c.chr
+        @o.assign('value', @o.value.to_s + c)   #c.chr
         @o.fireEvent("onKeyDown")
         @o.fireEvent("onKeyPress")
         @o.fireEvent("onKeyUp")

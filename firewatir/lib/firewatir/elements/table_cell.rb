@@ -47,7 +47,7 @@ module Watir
     #
     def colspan
       assert_exists
-      @o.colSpan
+      @o.invoke("colSpan")
     end
 
   end # TableCell

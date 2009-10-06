@@ -938,8 +938,7 @@ module Watir
     #
     def assert_exists
       unless exists?
-        raise Exception::UnknownObjectException.new(
-                                         Watir::Exception.message_for_unable_to_locate(@how, @what))
+        raise Exception::UnknownObjectException.new(Watir::Exception.message_for_unable_to_locate(@how, @what))
       end
     end
 
@@ -1271,12 +1270,25 @@ module Watir
         end
         return return_array
       else
-        puts "The element must be of table row type to execute this function."
+        raise "The element must be of table row type to execute this function."
         return nil
       end
     end
     private :get_cells
-
+    
+    def invoke(js_method)
+      locate
+      raise "no element_object is set" if !element_object || element_object.blank?
+      jssh_socket.send("#{element_object}.#{js_method}\n", 0)
+      return read_socket
+    end
+  
+    def assign(property, value)
+      locate
+      jssh_socket.send("#{element_object}[#{property.to_json}]=#{value.to_json};\n", 0)
+      return read_socket
+    end
+    
     #
     # Description:
     #   Traps all the function calls for an element that is not defined and fires them again

@@ -18,7 +18,7 @@ module Watir
       wait = false
       each do |selectBoxItem|
         if selectBoxItem.selected
-          selectBoxItem.selected = false
+          selectBoxItem.assign('selected', false)
           wait = true
         end
       end
@@ -49,7 +49,7 @@ module Watir
     def [] (key)
       assert_exists
       arr_options = js_options
-      return Option.new(self, :jssh_name, arr_options[key - 1])
+      return FFOption.new(self, :jssh_name, arr_options[key - 1])
     end
 
     #
@@ -127,7 +127,7 @@ module Watir
     #
     def option (attribute, value)
       assert_exists
-      Option.new(self, attribute, value)
+      FFOption.new(self, attribute, value)
     end
     
     private
@@ -153,14 +153,14 @@ module Watir
         found = true  
         next if option.selected
         
-        option.selected = true
+        option.assign('selected', true)
         fireEvent("onChange")
         wait
       end
       highlight( :clear )
 
       unless found
-        raise NoValueFoundException, "No option with #{attribute} of #{value.inspect} in this select element"
+        raise Exception::NoValueFoundException, "No option with #{attribute} of #{value.inspect} in this select element"
       end
       
       value

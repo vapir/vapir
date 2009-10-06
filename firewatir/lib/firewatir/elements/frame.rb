@@ -26,7 +26,7 @@ module Watir
       @o = self
 
       unless @element_name
-        raise UnknownFrameException, "Unable to locate a frame using #{@how} and #{@what}. "
+        raise Exception::UnknownFrameException, "Unable to locate a frame using #{@how} and #{@what}. "
       end
     end
 

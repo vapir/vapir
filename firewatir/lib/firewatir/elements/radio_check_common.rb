@@ -104,7 +104,7 @@ module Watir
       assert_exists
       assert_enabled
       #higlight(:set)
-      @o.checked = false
+      @o.assign('checked', false)
       #highlight(:clear)
     end
 

@@ -331,7 +331,7 @@ module Watir
       window_number = find_window(how, what)
 
       if(window_number.nil?)
-        raise NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")
+        raise Exception::NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")
       elsif(window_number >= 0)
         @window_index = window_number
         set_browser_document()
@@ -921,7 +921,7 @@ module Watir
       spans.each do |l|
         puts "span:  name: #{l.name}"
         puts "         id: #{l.id}"
-        puts "      class: #{l.className}"
+        puts "      class: #{l.invoke("className")}"
         puts "      index: #{index}"
         index += 1
       end

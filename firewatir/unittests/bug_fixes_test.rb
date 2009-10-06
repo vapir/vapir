@@ -47,7 +47,7 @@ class TC_Bugs< Test::Unit::TestCase
         elements = browser.elements_by_xpath("//a")
         assert_equal(11, elements.length)
         assert_equal("links2.html", elements[0].href)
-        assert_equal("link_class_1", elements[1].className)
+        assert_equal("link_class_1", elements[1].invoke("className"))
         assert_equal("link_id", elements[5].id)
         assert_equal("Link Using an ID", elements[5].text)
     end

@@ -3,6 +3,8 @@ $:.unshift(File.dirname(__FILE__)) unless $:.include?(File.dirname(__FILE__)) ||
 require 'socket'
 require 'active_support'
 
+require 'json'
+
 require 'firewatir/exceptions'
 require 'firewatir/jssh_socket'
 require 'firewatir/container'

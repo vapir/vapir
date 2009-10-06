@@ -21,8 +21,7 @@ module Watir
       @element_name = ""
       
       unless [:text, :value, :jssh_name].include? attribute 
-        raise MissingWayOfFindingObjectException,
-                "Option does not support attribute #{@how}"
+        raise Exception::MissingWayOfFindingObjectException, "Option does not support attribute #{@how}"
       end
       #puts @select_list.o.length
       #puts "what is : #{@what}, how is #{@how}, list name is : #{@select_list.element_name}"

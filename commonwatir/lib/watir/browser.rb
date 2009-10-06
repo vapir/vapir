@@ -85,17 +85,17 @@ before you invoke Browser.new.
         klass.attach(how, what)
       end
       def set_options options
-        raise unless defined?(klass.set_options)
+        raise if !defined?(klass.set_options) || self==klass # latter means this method is inherited
         klass.set_options options
       end
       def options
-        raise unless defined?(klass.options)
+        raise if !defined?(klass.options) || self==klass # latter means this options method is inherited
         klass.options
       end
 
       def klass
         key = Watir.options[:browser]
-        eval @@browser_classes[key] # this triggers the autoload
+        eval(@@browser_classes[key]) # this triggers the autoload
       end
       private :klass
       # Add support for the browser option, using the specified class, 

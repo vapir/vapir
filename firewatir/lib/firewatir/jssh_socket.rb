@@ -334,10 +334,15 @@ class JsshObject
     end
   end
   
-  def val_or_object
+  def val_or_object(options={})
+    options={:error_on_undefined=>true}.merge(options)
     case self.type
     when 'undefined'
-      function_result ? nil : (raise JsshUndefinedValueError, "undefined expression #{ref}")
+      if function_result || !options[:error_on_undefined]
+        nil
+      else
+        raise JsshUndefinedValueError, "undefined expression #{ref}"
+      end
     when 'boolean','number','string','null'
       val
     when 'function','object'
@@ -378,14 +383,15 @@ class JsshObject
     JsshObject.new("#{ref}[#{key}]", jssh_socket)
   end
 
-  # returns a JsshObjct referring to a subscript of this object, specified as ruby (convert to_json) 
+  # returns a JsshObjct referring to a subscript of this object, or a value if it is simple (see #val_or_object)
+  # subscript is specified as ruby (converted to_json). 
   def [](key)
-    sub(key.to_json)
+    sub(key.to_json).val_or_object(:error_on_undefined => false)
   end
   # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the given subscript
   # (key is converted to_json). 
   def []=(key, value)
-    self[key].assign(value)
+    self.sub(key).assign(value)
   end
 
   # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the reference

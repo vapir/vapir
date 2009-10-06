@@ -47,13 +47,47 @@ module Watir
       #puts "@element_type is #{@element_type}"
     end
 
+    class << self
+      #default specifier is just the tagName, which should be specified on the class 
+      def specifiers
+        tagName=self.tagName || (raise StandardError, "No tag name defined on class #{self}. self.const_defined?('TAG')=#{self.const_defined?('TAG')}; self.const_get('TAG')=#{self.const_get('TAG')}; tagName=#{self.tagName}")
+        [:tagName => tagName]
+      end
+      
+      # tagName used to be defined in the TAG const, so check for that. tagName should be overridden. 
+      def tagName
+        self.const_defined?('TAG') ? self.const_get('TAG') : nil
+      end
+    end
+
+    # locates a javascript reference for this element
+    def locate
+      case @how
+      when :jssh_name
+        @element_name = @what
+      when :xpath
+        @element_name = element_by_xpath(@container, @what)
+      else
+        current_specifier= if @how.is_a?(Hash) && @what.nil?
+          @how
+        else
+          {@how.to_sym => @what}
+        end
+        index=current_specifier.delete(:index)
+        
+        specifiers=self.class.specifiers.map{|spec| spec.merge(current_specifier)}
+        @element_name = locate_specified_element(specifiers, index)
+      end
+      @o = self
+    end
+
     def dom_object
       JsshObject.new(@element_name, Firefox.jssh_socket)
     end
     alias ole_object dom_object
     
     def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
-      document_obj.defaultView.getComputedStyle(dom_object, nil)
+      document_object.defaultView.getComputedStyle(dom_object, nil)
     end
     
     def read_socket
@@ -183,6 +217,7 @@ module Watir
     # Output:
     #   Array of row elements in an table or nil
     #
+    # FIX: why is this here and not on the table class?
     def get_rows()
       #puts "#{element_object} and #{element_type}"
       if(element_type == "HTMLTableElement")
@@ -200,8 +235,118 @@ module Watir
       end
     end
     private :get_rows
+  
+    # locates the element specified. 
+    # specifiers_list is a list of specifiers, where a specifier is a hash of the javascript object to match. 
+    # For example, the specifier_list
+    #   [ {:tagName => 'textarea'},
+    #     {:tagName => 'input', :types => ['text', 'textarea','password']},
+    #   ]
+    # (used by FFTextField) will match all input fields. 
+    # if ANY of the specifiers in the list match (not ALL), a given element is considered a match. 
+    # but ALL of the attributes specified must match. 
+    # regexps can be used to match attributes to regexp; if both are strings, then the match is 
+    # case-insensitive. 
+    # The only specifier attribute that doesn't match directly to an element attribute is 
+    # :types, which will match any of a list of types. 
+    def locate_specified_element(specifiers_list, index=nil)
+      STDERR.puts specifiers_list.inspect
+      ids=specifiers_list.map{|s|s[:id]}.compact.uniq
+      tags=specifiers_list.map{|s|s[:tagName]}.compact.uniq
 
-    def set_specifier(how, what)
+      #FIX: @countainer should always have a dom_object, can return document_object if that's the container. 
+      container_object = if @container.is_a?(Firefox) || @container.is_a?(FFFrame)
+        document_object
+      else
+        @container.dom_object
+      end
+
+      if ids.size==1
+        candidates=if by_id=document_object.getElementById(ids.first)
+          [by_id]
+        else
+          []
+        end
+      elsif tags.size==1
+        candidates=container_object.getElementsByTagName(tags.first)
+      else
+        candidates=container_object.getElementsByTagName('*')
+      end
+      
+      matched=0
+      fuzzy_match=proc do |_attr, _what|
+        case _what
+        when String, Symbol
+          _attr.downcase==_what.to_s.downcase
+        when Regexp
+          _attr =~ _what
+        else
+          _attr==_what
+        end
+      end
+      (0...candidates.length).each do |i|
+        candidate=candidates[i]
+        unless candidate
+          csub=candidates.sub(i)
+          csub.type
+          raise Exception, "nil candidate! #{csub.inspect}"
+        end
+        match=true
+        match&&= specifiers_list.any? do |specifier|
+          specifier.all? do |(how, what)|
+            if how==:types
+              what.any? do |type|
+                fuzzy_match.call(candidate[:type], type)
+              end
+            else
+              fuzzy_match.call(candidate[how], what)
+            end
+          end
+        end
+        if match
+          matched+=1
+          if !index || index==matched
+            return candidate.store("firewatir_elements_#{rand(2**32)}").ref
+          end
+        end
+      end
+      return nil
+    end
+
+=begin
+    def locate_tagged_element(tag, how, what, types=nil, value=nil)
+      specifiers = (how.is_a?(Hash) && what.nil?) ? how : {how.to_sym => what}
+      STDOUT.puts({:specifiers => specifiers, :tag => tag, :types => types, :value => value}.inspect)
+      id = specifiers.delete(:id) if specifiers.key?(:id) && specifiers[:id].is_a?(String)
+      candidates=[]
+      if id
+        el=document_object.getElementById(id)
+        if el && el.tagName.downcase==tag.downcase
+          candidates=[el]
+        end
+      else
+        candidates=container_object.getElementsByTagName(tag)
+      end
+      index=specifiers.delete(:index)
+      match_count=0
+      (0...candidates.length).each do |i|
+        candidate=candidates[i]
+        match=true
+        match&&= specifiers.all?{|(how, what)| what===candidate[how]} # triple equals for regexps
+        match&&= (!types || types.detect{|type|type.downcase==candidate[:type].downcase})
+        if match
+          match_count+=1
+          if !index || index==match_count
+            return candidate.ref
+          end
+        end
+      end
+      return nil
+      # quirk: check innerHTML for specifier :value if tag is button
+    end
+=end
+=begin  
+    def set_specifier(how, what)    
       if how.class == Hash and what.nil?
         specifiers = how
       else
@@ -239,7 +384,7 @@ module Watir
     # Output:
     #   Returns nil if unable to locate the element, else return the element.
     #
-    def locate_tagged_element(tag, how, what, types = nil, value = nil)
+    def locate_tagged_element_die(tag, how, what, types = nil, value = nil)
       #puts caller(0)
       #             how = :value if how == :caption
       #             how = :href if how == :url
@@ -505,7 +650,8 @@ module Watir
         return nil
       end
     end
-
+=end
+=begin
     def rb_regexp_to_js(regexp)
       old_exp = regexp.to_s
       new_exp = regexp.inspect.sub(/\w*$/, '')
@@ -522,7 +668,8 @@ module Watir
 
       new_exp
     end
-
+=end
+  
     #
     # Description:
     #   Locates frame element. Logic for locating the frame is written in JavaScript so that we don't make small
@@ -650,11 +797,6 @@ module Watir
       return "<html>" + result + "</html>"
     end
 
-    def submit_form
-      #puts "form name is : #{element_object}"
-      jssh_socket.send("#{element_object}.submit();\n" , 0)
-      jssh_socket.read_socket
-    end
 
     public
 
@@ -1250,7 +1392,7 @@ module Watir
 #      return read_socket
     end
     
-    def document_obj
+    def document_object
       jssh_socket.object(document_var)
     end
     
@@ -1258,7 +1400,7 @@ module Watir
       @container.document_var
     end
     
-    def window_obj
+    def window_object
       jssh_socket.object(window_var)
     end
     def window_var

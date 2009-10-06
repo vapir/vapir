@@ -14,21 +14,25 @@ module Watir
       #super nil
     end
 
+    def self.tagName
+      'table'
+    end
+
     #
     # Description:
     #   Locate the table element.
     #
-    def locate
-      case @how
-      when :jssh_name
-        @element_name = @what
-      when :xpath
-        @element_name = element_by_xpath(@container, @what)
-      else
-        @element_name = locate_tagged_element('TABLE', @how, @what)
-      end
-      @o = self
-    end
+#    def locate
+#      case @how
+#      when :jssh_name
+#        @element_name = @what
+#      when :xpath
+#        @element_name = element_by_xpath(@container, @what)
+#      else
+#        @element_name = locate_tagged_element('TABLE', @how, @what)
+#      end
+#      @o = self
+#    end
 
     #
     # Description:

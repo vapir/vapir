@@ -7,22 +7,25 @@ module Watir
     include TableRow
     attr_accessor :element_name
 
+    def self.tagName
+      'tr'
+    end
     #
     # Description:
     #   Locate the table row element on the page.
     #
-    def locate
-      @o = nil
-      case @how
-      when :jssh_name
-        @element_name = @what
-      when :xpath
-        @element_name = element_by_xpath(@container, @what)
-      else
-        @element_name = locate_tagged_element("TR", @how, @what)
-      end
-      @o = self
-    end
+#    def locate
+#      @o = nil
+#      case @how
+#      when :jssh_name
+#        @element_name = @what
+#      when :xpath
+#        @element_name = element_by_xpath(@container, @what)
+#      else
+#        @element_name = locate_tagged_element("TR", @how, @what)
+#      end
+#      @o = self
+#    end
 
     #
     # Description:

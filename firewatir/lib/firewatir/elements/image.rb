@@ -20,20 +20,23 @@ module Watir
       @container = container
     end
 
+    def self.tagName
+      'img'
+    end
     # Description:
     #   Locate the image element on the page.
     #
-    def locate
-      case @how
-      when :jssh_name
-        @element_name = @what
-      when :xpath
-        @element_name = element_by_xpath(@container, @what)
-      else
-        @element_name = locate_tagged_element('IMG', @how, @what)
-      end
-      @o = self
-    end
+#    def locate
+#      case @how
+#      when :jssh_name
+#        @element_name = @what
+#      when :xpath
+#        @element_name = element_by_xpath(@container, @what)
+#      else
+#        @element_name = locate_tagged_element('IMG', @how, @what)
+#      end
+#      @o = self
+#    end
 
     #
     # Description:

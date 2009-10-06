@@ -26,17 +26,17 @@ module Watir
     # Description:
     #   Locate the element on the page. Element can be a checkbox or radio button.
     #
-    def locate
-      case @how
-      when :jssh_name
-        @element_name = @what
-      when :xpath
-        @element_name = element_by_xpath(@container, @what)
-      else
-        @element_name = locate_tagged_element("input", @how, @what, @type, @value)
-      end
-      @o = self
-    end
+#    def locate
+#      case @how
+#      when :jssh_name
+#        @element_name = @what
+#      when :xpath
+#        @element_name = element_by_xpath(@container, @what)
+#      else
+#        @element_name = locate_tagged_element("input", @how, @what, @type, @value)
+#      end
+#      @o = self
+#    end
 
     #
     # Description:
@@ -102,6 +102,10 @@ module Watir
       @type = ["radio"]
     end
 
+    def self.specifiers
+      [{:tagName => 'input', :type => 'radio'}]
+    end
+    
     def clear
       assert_exists
       assert_enabled
@@ -123,6 +127,9 @@ module Watir
       @type = ["checkbox"]
     end
 
+    def self.specifiers
+      [{:tagName => 'input', :type => 'checkbox'}]
+    end
     #
     # Description:
     #   Checks or unchecks the checkbox. If no value is supplied it will check the checkbox.

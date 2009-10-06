@@ -18,17 +18,17 @@ module Watir
     # Description:
     #   Locate the element on the page. Element can be a span, div, label, p or pre HTML tag.
     #
-    def locate
-      case @how
-      when :jssh_name
-        @element_name = @what
-      when :xpath
-        @element_name = element_by_xpath(@container, @what)
-      else
-        @element_name = locate_tagged_element(self.class::TAG, @how, @what)
-      end
-      @o = self
-    end
+#    def locate
+#      case @how
+#      when :jssh_name
+#        @element_name = @what
+#      when :xpath
+#        @element_name = element_by_xpath(@container, @what)
+#      else
+#        @element_name = locate_tagged_element(self.class::TAG, @how, @what)
+#      end
+#      @o = self
+#    end
 
     #   - how - Attribute to identify the element.
     #   - what - Value of that attribute.

@@ -16,6 +16,7 @@ module Watir
   #
   # Is includable for classes that have @container, document and ole_inner_elements
   module IEContainer
+    include Container
     include Watir::Exception
     
     # Note: @container is the container of this object, i.e. the container

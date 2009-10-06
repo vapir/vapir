@@ -4,6 +4,7 @@ module Watir
   #   Class for SelectList element.
   #
   class FFSelectList < FFInputElement
+    include SelectList
     INPUT_TYPES = ["select-one", "select-multiple"]
 
     attr_accessor :o

@@ -4,6 +4,7 @@ module Watir
   #   Class for Option element.
   #
   class FFOption < FFInputElement
+    include Option
     #
     # Description:
     #   Initializes the instance of option object.

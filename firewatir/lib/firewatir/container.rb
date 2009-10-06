@@ -41,6 +41,7 @@ require 'firewatir/exceptions'
 
 module Watir
   module FFContainer 
+    include Container
     #include FireWatir
     #include Watir::Exception
     include JsshSocket

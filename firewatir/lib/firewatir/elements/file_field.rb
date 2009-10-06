@@ -4,6 +4,7 @@ module Watir
   #   Class for FileField element.
   #
   class FFFileField < FFInputElement
+    include FileField
     INPUT_TYPES = ["file"]
 
     #

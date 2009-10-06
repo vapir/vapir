@@ -6,6 +6,7 @@ module Watir
   # many of the methods available to this object are inherited from the Element class
   #
   class IETable < IEElement
+    include Table
     include IEContainer
     
     # Returns the table object containing the element
@@ -258,6 +259,7 @@ module Watir
   end
     
   class IETableRow < IEElement
+    include TableRow
     
     def locate
       @o = nil
@@ -316,6 +318,7 @@ module Watir
   
   # this class is a table cell - when called via the Table object
   class IETableCell < IEElement
+    include TableCell
     include Watir::Exception
     include IEContainer
     

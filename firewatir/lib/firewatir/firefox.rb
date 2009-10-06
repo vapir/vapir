@@ -1019,8 +1019,8 @@ module Watir
 
     def path_from_registry
       raise NotImplementedError, "(need to know how to access windows registry on JRuby)" if RUBY_PLATFORM =~ /java/
-      require 'win32/registry.rb'
-      lm = Win32::Registry::HKEY_LOCAL_MACHINE
+      require 'win32/registry'
+      lm = ::Win32::Registry::HKEY_LOCAL_MACHINE
       lm.open('SOFTWARE\Mozilla\Mozilla Firefox') do |reg|
         reg1 = lm.open("SOFTWARE\\Mozilla\\Mozilla Firefox\\#{reg.keys[0]}\\Main")
         if entry = reg1.find { |key, type, data| key =~ /pathtoexe/i }

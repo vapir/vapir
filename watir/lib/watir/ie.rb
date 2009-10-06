@@ -38,6 +38,7 @@
 require 'watir/win32ole'
 
 require 'logger'
+require 'watir/common_elements'
 require 'watir/winClicker'
 require 'watir/exceptions'
 require 'watir/utils'

@@ -4,6 +4,7 @@ module Watir
   #   Class for Button element.
   #
   class FFButton < FFInputElement
+    include Button
     INPUT_TYPES = ["button", "submit", "image", "reset"]
 
     def locate

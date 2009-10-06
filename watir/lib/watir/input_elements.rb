@@ -1,6 +1,7 @@
 module Watir
   
   class IEInputElement < IEElement
+    include InputElement
     def locate
       @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES)
     end
@@ -19,6 +20,7 @@ module Watir
   # This class is the way in which select boxes are manipulated.
   # Normally a user would not need to create this object as it is returned by the Watir::Container#select_list method
   class IESelectList < IEInputElement
+    include SelectList
     INPUT_TYPES = ["select-one", "select-multiple"]
     
     attr_accessor :o
@@ -154,6 +156,7 @@ module Watir
   
   # An item in a select list
   class IEOption
+    include Option
     include IEOptionAccess
     include Watir::Exception
     def initialize(select_list, attribute, value)
@@ -193,6 +196,7 @@ module Watir
   
   # Returned by the Watir::Container#button method
   class IEButton < IEInputElement
+    include Button
     INPUT_TYPES = ["button", "submit", "image", "reset"]
   end
 
@@ -203,6 +207,7 @@ module Watir
   # This class is the main class for Text Fields
   # Normally a user would not need to create this object as it is returned by the Watir::Container#text_field method
   class IETextField < IEInputElement
+    include TextField
     INPUT_TYPES = ["text", "password", "textarea"]
     
     def_wrap_guard :size
@@ -406,6 +411,7 @@ module Watir
   # this class can be used to access hidden field objects
   # Normally a user would not need to create this object as it is returned by the Watir::Container#hidden method
   class IEHidden < IETextField
+    include Hidden
     INPUT_TYPES = ["hidden"]
     
     # set is overriden in this class, as there is no way to set focus to a hidden field
@@ -439,6 +445,7 @@ module Watir
   # Windows dialog is opened and handled in this case by autoit 
   # launching into a new process. 
   class IEFileField < IEInputElement
+    include FileField
     INPUT_TYPES = ["file"]
     POPUP_TITLES = ['Choose file', 'Choose File to Upload']
     
@@ -483,6 +490,7 @@ module Watir
   # most of the methods available to this element are inherited from the Element class
   #
   class IERadioCheckCommon < IEInputElement
+    include RadioCheckCommon
     def locate
       @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES, @value)
     end
@@ -519,6 +527,7 @@ module Watir
   #++
   # This class is the watir representation of a radio button.
   class IERadio < IERadioCheckCommon
+    include Radio
     INPUT_TYPES = ["radio"]
     # This method clears a radio button. One of them will almost always be set.
     # Returns true if set or false if not set.
@@ -546,6 +555,7 @@ module Watir
   
   # This class is the watir representation of a check box.
   class IECheckBox < IERadioCheckCommon
+    include CheckBox
     INPUT_TYPES = ["checkbox"]
     # With no arguments supplied, sets the check box.
     # If the optional value is supplied, the checkbox is set, when its true and 

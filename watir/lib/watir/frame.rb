@@ -1,5 +1,6 @@
 module Watir
   class IEFrame
+    include Frame
     include IEContainer
     include IEPageContainer
     

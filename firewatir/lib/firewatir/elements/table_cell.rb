@@ -4,6 +4,7 @@ module Watir
   # Class for Table Cell.
   #
   class FFTableCell < FFElement
+    include TableCell
     attr_accessor :element_name
 
     # Description:

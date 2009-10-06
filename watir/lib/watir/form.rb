@@ -27,6 +27,7 @@ module Watir
   
   #   Form Factory object
   class IEForm < IEElement
+    include Form
     include IEFormAccess
     include IEContainer
     

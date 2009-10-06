@@ -1,5 +1,6 @@
 module Watir
   class FFFrame < FFElement
+    include Frame
 
     attr_accessor :element_name
     #

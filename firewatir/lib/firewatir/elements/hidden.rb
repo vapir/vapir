@@ -4,6 +4,7 @@ module Watir
   #   Class for Hidden Field element.
   #
   class FFHidden < FFTextField
+    include Hidden
     INPUT_TYPES =  ["hidden"]
 
     #
@@ -39,9 +40,9 @@ module Watir
     #
     # Description:
     #   Does nothing, as you cant set focus to a hidden field. Overridden here so that exception doesn't occurs.
-    #
-    def focus
-    end
+    # commented here because exception should occur if you try to focus a hidden field? 
+    #def focus
+    #end
 
     #
     # Description:

@@ -4,6 +4,7 @@ module Watir
   # Class for Table row element.
   #
   class FFTableRow < FFElement
+    include TableRow
     attr_accessor :element_name
 
     #

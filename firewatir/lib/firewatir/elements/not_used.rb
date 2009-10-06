@@ -96,7 +96,7 @@
 # # it would normally only be accessed by the iterator methods ( spans , links etc) of IE
 # class ElementCollections
 #   include Enumerable
-#   include Container
+#   include FFContainer
 # 
 #   # Super class for all the iteractor classes
 #   #   * container  - an instance of an IE object
@@ -243,7 +243,7 @@
 #   # Class for handling javascript popup. Not in use currently, will be available in future. See unit tests on how to handle
 #   # javascript pop up (unittests/javascript_test.rb).
 #   class JSPopUp
-#     include Container
+#     include FFContainer
 # 
 #     def has_appeared(text)
 #       require 'socket'

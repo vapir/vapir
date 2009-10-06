@@ -1,5 +1,6 @@
 module Watir
   class FFForm < FFElement
+    include Form
 
     attr_accessor :element_name
     #

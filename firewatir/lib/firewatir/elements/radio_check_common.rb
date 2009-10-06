@@ -4,6 +4,7 @@ module Watir
   #   Base class for checkbox and radio button elements.
   #
   class FFRadioCheckCommon < FFElement
+    include RadioCheckCommon
     attr_accessor :element_name
     #
     # Description:
@@ -95,6 +96,7 @@ module Watir
   #   Class for RadioButton element.
   #
   class FFRadio < FFRadioCheckCommon
+    include Radio
     def initialize *args
       super
       @type = ["radio"]
@@ -115,6 +117,7 @@ module Watir
   # Class for Checkbox element.
   #
   class FFCheckBox < FFRadioCheckCommon
+    include CheckBox
     def initialize *args
       super
       @type = ["checkbox"]

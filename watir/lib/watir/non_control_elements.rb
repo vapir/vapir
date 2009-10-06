@@ -6,7 +6,7 @@ module Watir
   # many of the methods available to this object are inherited from the Element class
   #
   class IENonControlElement < IEElement
-
+    include NonControlElement
     def self.inherited subclass
       class_name = subclass.to_s.demodulize
       method_name = class_name.sub(/\AIE/i,'').underscore

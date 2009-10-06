@@ -4,6 +4,7 @@ module Watir
   #   Class for returning the document element.
   #
   class FFDocument
+    include Document
     include Watir::FFContainer
     @@current_level = 0
 

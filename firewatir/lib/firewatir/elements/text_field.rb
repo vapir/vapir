@@ -4,6 +4,7 @@ module Watir
   # Class for Text Field element.
   #
   class FFTextField < FFInputElement
+    include TextField
     INPUT_TYPES = ["text", "password", "textarea"]
 
     # Gets the size of the text field element.

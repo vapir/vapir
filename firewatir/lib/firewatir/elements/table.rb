@@ -1,5 +1,6 @@
 module Watir
   class FFTable < FFElement
+    include Table
     attr_accessor :element_name
     TAG = 'TABLE'
 

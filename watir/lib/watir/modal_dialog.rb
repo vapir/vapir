@@ -1,5 +1,5 @@
 module Watir
-  class ModalDialog
+  class IEModalDialog
     include IEContainer
     include IEPageContainer
     include Win32

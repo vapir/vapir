@@ -16,14 +16,8 @@ module Watir
     #
     def set(path)
       assert_exists
-
-      path.gsub!("\\", "\\\\\\")
-
-      jssh_socket.send("#{element_object}.value = \"#{path}\";\n", 0)
-      jssh_socket.read_socket
+      dom_object.value=path
       fireEvent("onChange")
-      
-      @@current_level = 0
     end
 
   end # FileField

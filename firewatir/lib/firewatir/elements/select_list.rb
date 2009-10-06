@@ -173,14 +173,7 @@ module Watir
     #   Array of option elements.
     #
     def js_options
-      jssh_socket.send("#{element_object}.options.length;\n", 0)
-      length = jssh_socket.read_socket.to_i
-      # puts "options length is : #{length}"
-      arr_options = Array.new(length)
-      for i in 0..length - 1
-        arr_options[i] = "#{element_object}.options[#{i}]"
-      end
-      return arr_options
+      dom_object.options.to_array.map(&:ref)
     end
   
   end # Selects

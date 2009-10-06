@@ -53,9 +53,10 @@ class JsshSocket
   # sends the given message to the jssh socket. one usually wants to use less low-level stuff than this; this may 
   # become private. 
   def send(mesg, flags=0)
+    raise NotImplementedError, "send is gone. use send_and_read, or, preferably, something better"
 #    STDERR.puts "calling send on a JsshSocket directly is deprecated. From:\n"
 #    caller.each{|c| STDERR.puts "\t"+c}
-    @socket.send mesg, flags
+#    @socket.send mesg, flags
   end
   
   # reads data from the socket until it is done being ready. ("done being ready" is defined as, it isn't ready 
@@ -118,8 +119,9 @@ class JsshSocket
 
   def send_and_read(js_expr, timeout=DEFAULT_SOCKET_TIMEOUT)
     if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != "\n> "
-      STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}")
+      STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
     end
+    @last_expression=js_expr
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
     @socket.send(js_expr, 0)
     return read_socket(timeout)
@@ -134,7 +136,7 @@ class JsshSocket
     else
       JsshError
     end
-    err=errclass.new(message)
+    err=errclass.new(message+"\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
     err.source=source
     ["lineNumber", "stack", "fileName"].each do |attr|
       if stuff.key?(attr)
@@ -195,11 +197,18 @@ class JsshSocket
   # returns the value of the given javascript expression. Assuming that it can
   # be converted to JSON, will return the equivalent ruby data type to the javascript
   # value. Will raise an error if the javascript errors. 
-  def value_json(js)
+  def value_json(js, options={})
+    options={:error_on_undefined => true}.merge(options)
     ensure_prototype
     wrapped_js=
       "try
-       { result=(function(){return #{js}})();
+       { var result_f=(function(){return #{js}});
+         var result=result_f();
+         if((typeof result) == 'undefined' && #{options[:error_on_undefined].to_json})
+         { throw({'name': 'ReferenceError',
+                  'message': 'undefined expression in: '+result_f.toString()
+                 });
+         }
          Object.toJSON([false, result]);
        }
        catch(e)
@@ -207,16 +216,19 @@ class JsshSocket
        }"
     val=send_and_read(wrapped_js)
     errord_and_val=*parse_json(val)
-    case errord_and_val.length
-    when 1
-      raise JsshUndefinedValueError, "undefined expression #{js}"
-    when 2
-      errord,val= *errord_and_val
-    else
+    unless errord_and_val.length==2
       raise RuntimeError, "unexpected result: \n\t#{errord_and_val.inspect} \nencountered parsing value: \n\t#{val.inspect} \nreturned from expression: \n\t#{js.inspect}"
     end
+    errord,val= *errord_and_val
     if errord
-      js_error(val['name'],val['message'],js,val)
+      case val
+      when Hash
+        js_error(val['name'],val['message'],js,val)
+      when String
+        js_error(nil, val, js)
+      else
+        js_error(nil, val.inspect, js)
+      end
     else
       val
     end
@@ -367,7 +379,7 @@ class JsshObject
   
   # returns the value, via JsshSocket#value_json
   def val
-    jssh_socket.value_json(ref)
+    jssh_socket.value_json(ref, :error_on_undefined => !function_result)
   end
 
   # returns the value just as a string with no attempt to deal with type using json. via JsshSocket#value 
@@ -404,8 +416,10 @@ class JsshObject
     else
       case self.type
       when 'undefined'
-        if function_result || !options[:error_on_undefined]
+        if function_result
           nil
+        elsif !options[:error_on_undefined]
+          self
         else
           raise JsshUndefinedValueError, "undefined expression #{ref}"
         end
@@ -444,27 +458,11 @@ class JsshObject
     JsshObject.new("#{ref}.#{attribute}", jssh_socket)
   end
 
-  # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
-  # (doesn't use to_json) 
-  def sub(key)
-    JsshObject.new("#{ref}[#{key}]", jssh_socket)
-  end
-
-  # returns a JsshObjct referring to a subscript of this object, or a value if it is simple (see #val_or_object)
-  # subscript is specified as ruby (converted to_json). 
-  def [](key)
-    sub(key.to_json).val_or_object(:error_on_undefined => false)
-  end
-  # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the given subscript
-  # (key is converted to_json). 
-  def []=(key, value)
-    self.sub(key).assign(value)
-  end
-
-  # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the reference
-  # for this object
+  # assigns (via JsshSocket#assign) the given ruby value (converted to_json) to the reference
+  # for this object. returns self. 
   def assign(val)
-    jssh_socket.assign_json(ref, val)
+    jssh_socket.assign(ref, val.to_json)
+    self
   end
   # assigns the given javascript expression (string) to the reference for this object 
   def assign_expr(val)
@@ -521,6 +519,58 @@ class JsshObject
     end
   end
 
+  # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
+  # (doesn't use to_json) 
+  def sub(key)
+    JsshObject.new("#{ref}[#{key}]", jssh_socket)
+  end
+
+  # returns a JsshObjct referring to a subscript of this object, or a value if it is simple (see #val_or_object)
+  # subscript is specified as ruby (converted to_json). 
+  def [](key)
+    sub(key.to_json).val_or_object(:error_on_undefined => false)
+  end
+  # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the given subscript
+  # (key is converted to_json). 
+  def []=(key, value)
+    self.sub(key).assign(value)
+  end
+
+  # calls a binary operator with self and another operand 
+  def binary_operator(operator, operand)
+    JsshObject.new("(#{ref}#{operator}#{operand.to_json})", jssh_socket).val_or_object
+  end
+  def +(operand)
+    binary_operator('+', operand)
+  end
+  def -(operand)
+    binary_operator('-', operand)
+  end
+  def /(operand)
+    binary_operator('/', operand)
+  end
+  def *(operand)
+    binary_operator('*', operand)
+  end
+  def %(operand)
+    binary_operator('%', operand)
+  end
+  def ==(operand)
+    binary_operator('==', operand)
+  end
+  def >(operand)
+    binary_operator('>', operand)
+  end
+  def <(operand)
+    binary_operator('<', operand)
+  end
+  def >=(operand)
+    binary_operator('>=', operand)
+  end
+  def <=(operand)
+    binary_operator('<=', operand)
+  end
+  
   # method_missing handles unknown method calls in a way that makes it possible to write 
   # javascript-like syntax in ruby, to some extent. 
   #
@@ -620,5 +670,54 @@ class JsshObject
   end
   def to_js_hash_safe
     jssh_socket.object('$_H').pass(self)
+  end
+  def to_array
+    JsshArray.new(self.ref, self.jssh_socket)
+  end
+  def to_hash
+    JsshHash.new(self.ref, self.jssh_socket)
+  end
+end
+
+
+class JsshArray < JsshObject
+  def each
+    length=self.length
+    raise JsshError, "length #{length.inspect} is not a non-negative integer on #{self.ref}" unless length.is_a?(Integer) && length >= 0
+    for i in 0...length
+      yield self[i]
+    end
+  end
+  include Enumerable
+  def to_json # Enumerable clobbers this; redefine
+    ref
+  end
+end
+
+class JsshHash < JsshObject
+  def keys
+    keyfunc="function(obj)
+             { var keys=[];
+               for(var key in obj)
+               { keys.push(key);
+               }
+               return keys;
+             }"
+    @keys=jssh_socket.object(keyfunc).call(self)
+  end
+  def each
+    keys.each do |key|
+      yield [key, self[key]]
+    end
+  end
+  def each_pair
+    each do |(k,v)|
+      yield k,v
+    end
+  end
+
+  include Enumerable
+  def to_json # Enumerable clobbers this; redefine
+    ref
   end
 end

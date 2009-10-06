@@ -12,7 +12,6 @@ module Watir
       return #{class_name}.new(self, how, what); end"
     end
 
-    attr_accessor :element_name
 
     #
     # Description:

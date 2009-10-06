@@ -86,10 +86,6 @@ module Watir
 
   class Firefox < Browser
     include Watir::FFContainer
-
-    # XPath Result type. Return only first node that matches the xpath expression.
-    # More details: "http://developer.mozilla.org/en/docs/DOM:document.evaluate"
-    FIRST_ORDERED_NODE_TYPE = 9
                     
     @@jssh_socket=nil
     def self.jssh_socket
@@ -119,24 +115,32 @@ module Watir
         options = {:waitTime => options}
       end
 
+      firefox_is_running = true #TODO/FIX: implement this. 
+
       # check for jssh not running, firefox may be open but not with -jssh
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
       begin
-        @@jssh_socket||=JsshSocket.new
-#      rescue JsshSocket::UnableToStartJSShException
+        @@jssh_socket||=begin
+          j=JsshSocket.new
+          @@firewatir_jssh_objects=j.object('{}').store("FireWatir")
+          j
+        end
       end
-
+      @browser_jssh_objects = jssh_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
+      
       if current_os == :macosx && !%x{ps x | grep firefox-bin | grep -v grep}.empty?
 #        raise "Firefox is running without -jssh" if jssh_down
         open_window unless options[:suppress_launch_process]
       elsif not options[:suppress_launch_process]
-        launch_browser(options)
+        if firefox_is_running
+          open_window
+        else
+          launch_browser(options)
+        end
+        set_browser_document
       end
-
-      set_defaults()
-      get_window_number()
-      set_browser_document()
+      set_defaults
     end
 
     def inspect
@@ -144,7 +148,7 @@ module Watir
     end
 
     def exists?
-      jssh_socket.value_json("$A(getWindows()).include(#{window_var})")
+      window_object && jssh_socket.object('getWindows()').to_js_array.include(window_object)
     end
 
     # Launches firebox browser
@@ -173,33 +177,10 @@ module Watir
       ff.goto(url)
       return ff
     end
-
-    # Gets the window number opened.
-    # Currently, this returns the most recently opened window, which may or may
-    # not be the current window.
-    def get_window_number()
-      # If at any time a non-browser window like the "Downloads" window
-      #   pops up, it will become the topmost window, so make sure we
-      #   ignore it.
-      window_count = jssh_socket.value_json("getWindows().length") - 1
-      while jssh_socket.js_eval("getWindows()[#{window_count}].getBrowser") == ''
-        window_count -= 1;
-      end
-
-      # now correctly handles instances where only browserless windows are open
-      # opens one we can use if count is 0
-
-      if window_count < 0
-        open_window
-        window_count = 1
-      end
-      @window_index = window_count
-    end
-    private :get_window_number
+    
 
     # Loads the given url in the browser. Waits for the page to get loaded.
     def goto(url)
-      get_window_number()
       set_browser_document()
       jssh_socket.js_eval "#{browser_var}.loadURI(\"#{url}\")"
       wait()
@@ -222,15 +203,7 @@ module Watir
       jssh_socket.js_eval "#{browser_var}.reload()"
       wait()
     end
-
-    # Executes the given JavaScript string
-    def execute_script(source)
-      result = jssh_socket.js_eval source.to_s
-      wait()
-
-      result
-    end
-
+    
     private
     # This function creates a new socket at port 9997 and sets the default values for instance and class variables.
     # Generatesi UnableToStartJSShException if cannot connect to jssh even after 3 tries.
@@ -240,10 +213,38 @@ module Watir
 
     #   Sets the document, window and browser variables to point to correct object in JSSh.
     def set_browser_document
+      unless window_object
+        raise "Window must be set (using open_window or attach) before the browser document can be set!"
+      end
+      @browser_object=@browser_jssh_objects.attr(:browser).assign(window_object.getBrowser)
+      
+      # the following are not stored elsewhere; the ref will just be to attributes of the browser, so that updating the 
+      # browser (in javascript) will cause all of these refs to reflect that as well 
+      @document_object=browser_object.contentDocument
+      @content_window_object=browser_object.contentWindow 
+        # note that window_object.content is the same thing, but simpler to refer to stuff on browser_object since that is updated by the nsIWebProgressListener below
+      @body_object=document_object.body
+    
       # Add eventlistener for browser window so that we can reset the document back whenever there is redirect
       # or browser loads on its own after some time. Useful when you are searching for flight results etc and
       # page goes to search page after that it goes automatically to results page.
       # Details : http://zenit.senecac.on.ca/wiki/index.php/Mozilla.dev.tech.xul#What_is_an_example_of_addProgressListener.3F
+      listener_object=@browser_jssh_objects[:listener_object].assign({})
+      listener_object[:QueryInterface]=jssh_socket.object(
+        "function(aIID)
+         { if(aIID.equals(Components.interfaces.nsIWebProgressListener) || aIID.equals(Components.interfaces.nsISupportsWeakReference) || aIID.equals(Components.interfaces.nsISupports))
+           { return this;
+           }
+           throw Components.results.NS_NOINTERFACE;
+         }")
+      listener_object[:onStateChange]= jssh_socket.object(
+        "function(aWebProgress, aRequest, aStateFlags, aStatus)
+         { if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)
+           { #{browser_object.ref}=#{window_object.ref}.getBrowser();
+           }
+         }")
+      browser_object.addProgressListener(listener_object)
+=begin
       jssh_command = "var listObj = new Object();"; # create new object
       jssh_command << "listObj.wpl = Components.interfaces.nsIWebProgressListener;"; # set the web progress listener.
       jssh_command << "listObj.QueryInterface = function(aIID) {
@@ -275,21 +276,28 @@ module Watir
 
       @window_title = jssh_socket.js_eval "#{document_var}.title"
       @window_url = jssh_socket.js_eval "#{document_var}.URL"
+=end
     end
 
     public
+    attr_reader :window_object
     def window_var
-      "window"
+      window_object.ref
     end
-    #private
+
+    attr_reader :browser_object
     def browser_var
-      "browser"
+      browser_object.ref
     end
-    def document_var # unfinished
-      "document"
+    
+    attr_reader :document_object
+    def document_var
+      document_object.ref
     end
-    def body_var # unfinished
-      "body"
+    
+    attr_reader :body_object
+    def body_var
+      body_object.ref
     end
 
     public
@@ -308,13 +316,9 @@ module Watir
       else
         # Check if window exists, because there may be the case that it has been closed by click event on some element.
         # For e.g: Close Button, Close this Window link etc.
-        window_number = find_window(:url, @window_url)
-
-        # If matching window found. Close the window.
-        if window_number > 0
-          jssh_socket.js_eval "getWindows()[#{window_number}].close()"
+        if @window_object && exists?
+          window_object.close
         end
-
       end
     end
 
@@ -326,15 +330,12 @@ module Watir
     #   Instance of newly attached window.
     def attach(how, what)
 
-      $stderr.puts("warning: #{self.class}.attach is experimental") if $VERBOSE
-      window_number = find_window(how, what)
+      @window_object = find_window(how, what)
 
-      if(window_number.nil?)
+      unless @window_object
         raise Exception::NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")
-      elsif(window_number >= 0)
-        @window_index = window_number
-        set_browser_document()
       end
+      set_browser_document
       self
     end
 
@@ -354,64 +355,35 @@ module Watir
     # this will only be called one time per instance we're only ever going to run in 1 window
 
     def open_window
-
-      if @opened_new_window
-        return @opened_new_window
-      end
-
-      jssh_command = "var windows = getWindows(); var window = windows[0];
-                      window.open();
-                      var windows = getWindows(); var window_number = windows.length - 1;
-                      window_number;"
-
-      window_number = jssh_socket.js_eval(jssh_command).to_i
-      @opened_new_window = window_number
-      return window_number if window_number >= 0
+      begin
+        @window_name="firewatir_window_%.16x"%rand(2**64)
+      end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@window_name.to_json}}) ? true : false")
+      watcher=jssh_socket.object('Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(Components.interfaces.nsIWindowWatcher)')
+      # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
+      # then we create the reference (with #attr and #pass so it's not evaluated) and store it (at which point it is evaluated) in @browser_jssh_objects[:window]
+      
+      opener_obj=watcher.attr(:openWindow).pass(nil, 'chrome://browser/content/browser.xul', @window_name, '', nil)
+      @window_object=@browser_jssh_objects[:window].assign(opener_obj)
+      return @window_object
     end
     private :open_window
 
-    # return the window index for the browser window with the given title or url.
+    # return the window jssh object for the browser window with the given title or url.
     #   how - :url or :title
     #   what - string or regexp
     # Start searching windows in reverse order so that we attach/find the latest opened window.
     def find_window(how, what)
-      jssh_command =  "var windows = getWindows(); var window_number = false; var found = false;
-                             for(var i = windows.length - 1; i >= 0; i--)
-                             {
-                                var attribute = '';
-                                if(typeof(windows[i].getBrowser) != 'function')
-                                {
-                                    continue;
-                                }
-                                var browser = windows[i].getBrowser();
-                                if(!browser)
-                                {
-                                  continue;
-                                }
-                                if(\"#{how}\" == \"url\")
-                                {
-                                    attribute = browser.contentDocument.URL;
-                                }
-                                if(\"#{how}\" == \"title\")
-                                {
-                                    attribute = browser.contentDocument.title;
-                                }"
-      if(what.class == Regexp)
-        jssh_command << "var regExp = new RegExp(#{what.inspect});
-                                 found = regExp.test(attribute);"
-      else
-        jssh_command << "found = (attribute == \"#{what}\");"
+      orig_how=how
+      hows=[:title, :URL]
+      how=hows.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
+      raise ArgumentError, "how should be one of: #{hows.inspect} (was #{orig_how.inspect})" unless how
+      mediator=jssh_socket.object('Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator)').store_rand_object_key(@@firewatir_jssh_objects)
+      enumerator=mediator.getEnumerator("navigator:browser")
+      while enumerator.hasMoreElements
+        win=enumerator.getNext
+        break if Watir.fuzzy_match(win.getBrowser.contentDocument[how],what)
       end
-
-      jssh_command <<     "if(found)
-                                {
-                                    window_number = i;
-                                    break;
-                                }
-                            }
-                            window_number;"
-      window_number = jssh_socket.js_eval(jssh_command).to_s
-      return window_number == 'false' ? nil : window_number.to_i
+      win
     end
     private :find_window
 
@@ -441,12 +413,12 @@ module Watir
 
     # Returns the url of the page currently loaded in the browser.
     def url
-      @window_url = jssh_socket.js_eval "#{document_var}.location"
+      @window_url = document_object.location.href
     end
 
     # Returns the title of the page currently loaded in the browser.
     def title
-      @window_title = jssh_socket.js_eval "#{document_var}.title"
+      @window_title = document_object.title
     end
 
     #   Returns the Status of the page currently loaded in the browser from statusbar.
@@ -455,8 +427,7 @@ module Watir
     #   Status of the page.
     #
     def status
-      js_status = jssh_socket.js_eval("#{window_var}.status")
-      js_status.empty? ? jssh_socket.js_eval("#{WINDOW_VAR}.XULBrowserWindow.statusText;") : js_status
+      window_object.status || window_object.XULBrowserWindow.statusText
     end
 
 
@@ -468,17 +439,17 @@ module Watir
 
     # Returns the text of the page currently loaded in the browser.
     def text
-      jssh_socket.js_eval("#{body_var}.textContent").strip
+      body_object.textContent
     end
 
     # Maximize the current browser window.
     def maximize()
-      jssh_socket.js_eval "#{window_var}.maximize()"
+      window_object.maximize
     end
 
     # Minimize the current browser window.
     def minimize()
-      jssh_socket.js_eval "#{window_var}.minimize()"
+      window_object.minimize
     end
 
     # Waits for the page to get loaded.
@@ -685,6 +656,7 @@ module Watir
 
     # Returns the first element that matches the given xpath expression or query.
     def element_by_xpath(xpath)
+      raise "borken xpath"
       temp = FFElement.new(nil, self)
       element_name = temp.element_by_xpath(self, xpath)
       return element_factory(element_name)

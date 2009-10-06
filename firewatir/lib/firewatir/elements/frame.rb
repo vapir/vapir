@@ -2,7 +2,6 @@ module Watir
   class FFFrame < FFElement
     include Frame
 
-    attr_accessor :element_name
     #
     # Description:
     #   Initializes the instance of frame or iframe object.
@@ -26,9 +25,6 @@ module Watir
       #puts @element_name
       @o = self
 
-      unless @element_name
-        raise Exception::UnknownFrameException, "Unable to locate a frame using #{@how} and #{@what}. "
-      end
     end
 
     def html
@@ -52,5 +48,8 @@ module Watir
       "browser"
     end
 
+    def document
+      @container.document
+    end
   end # Frame
 end # FireWatir

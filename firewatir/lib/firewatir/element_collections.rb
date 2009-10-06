@@ -112,8 +112,7 @@ module Watir
       # Remove \n that are there in the string as a result of pressing enter while formatting.
       jssh_command.gsub!(/\n/, "")
       #puts jssh_command
-      jssh_socket.send("#{jssh_command};\n", 0)
-      length = jssh_socket.read_socket.to_i;
+      length=jssh_socket.send_and_read(jssh_command).to_i
       #puts "elements length is in locate_tagged_elements is : #{length}"
 
       elements = (0...length).collect {|i| "#{result_name}[#{i}]"}

@@ -1,4 +1,26 @@
 module Watir
+  def self.fuzzy_match(attr, what)
+    case what
+    when String, Symbol
+      case attr
+      when String, Symbol
+        attr.to_s.downcase==what.to_s.downcase
+      else
+        attr==what
+      end
+    when Regexp
+      case attr
+      when Regexp
+        attr==what
+      else
+        attr =~ what
+      end
+    else
+      attr==what
+    end
+  end
+end
+module Watir
   module Container
   end
   module Document

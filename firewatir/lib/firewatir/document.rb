@@ -17,31 +17,26 @@ module Watir
       @elements = nil
       @arr_elements = ""
       @container = container
-      @document_var = container.document_var
+    end
+    
+    def document_object
+      @container.document_object
+    end
+    def window_object
+      @container.window_object
     end
     
     def frames
-      jssh_command = "var frameset = #{@container.window_var}.frames;
-                      var elements_frames = new Array();
-                      for(var i = 0; i < frameset.length; i++)
-                      {
-                          var frames = frameset[i].frames;
-                          for(var j = 0; j < frames.length; j++)
-                          {
-                              elements_frames.push(frames[j].frameElement);    
-                          }
-                      }
-                      elements_frames.length;"
-      
-      jssh_command.gsub!("\n", "")
-      jssh_socket.send("#{jssh_command};\n", 0)
-      length = jssh_socket.read_socket.to_i 
-      
-      frame_array = Array.new(length)
-      for i in 0..length - 1 do
-          frame_array[i] = Frame.new(self, :jssh_name, "elements_frames[#{i}]")
+      # TODO: FIX, copied from locate_frame, should be DRY 
+      if @container.is_a?(Firefox)
+        candidates=@container.window_object.content.frames # OR window_object.getBrowser.contentWindow.frames (they are equal) 
+      elsif @container.is_a?(FFFrame)
+        candidates=@container.dom_object.contentWindow.frames
+      else
+        raise "locate_frame is not implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
       end
-      frame_array
+      
+      return candidates.to_array.map{|c| FFFrame.new(@container, :jssh_name, c.frameElement.store_rand_prefix('firewatir_frames'))}
     end
 
     #
@@ -57,7 +52,7 @@ module Watir
       jssh_command = "var arr_coll_#{@@current_level}=new Array(); "
 
       if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
-        jssh_command <<"var element_collection = null; element_collection = #{@container.document_var}.getElementsByTagName(\"*\");
+        jssh_command <<"var element_collection = null; element_collection = #{document_object.ref}.getElementsByTagName(\"*\");
                                 if(element_collection != null && typeof(element_collection) != 'undefined')
                                 {
                                     for (var i = 0; i < element_collection.length; i++)
@@ -83,8 +78,7 @@ module Watir
       # Remove \n that are there in the string as a result of pressing enter while formatting.
       jssh_command.gsub!(/\n/, "")
       #puts  jssh_command
-      jssh_socket.send("#{jssh_command};\n", 0)
-      @length = jssh_socket.read_socket.to_i;
+      @length = jssh_socket.send_and_read(jssh_command).to_i;
       #puts "elements length is in locate_tagged_elements is : #{@length}"
 
       elements = nil
@@ -99,7 +93,7 @@ module Watir
     end
 
     def getElementById(id)
-      el=jssh_socket.object(@document_var).getElementById(id)
+      el=document_object.getElementById(id)
       el.type=='undefined' ? nil : el
     end
 
@@ -148,14 +142,7 @@ module Watir
     #   Array containing Form elements
     #
     def get_forms()
-      jssh_socket.send("var element_forms = #{@container.document_var}.forms; element_forms.length;\n", 0)
-      length = jssh_socket.read_socket.to_i
-      forms = Array.new(length)
-
-      for i in 0..length - 1 do
-        forms[i] = FFForm.new(@container, :jssh_name, "element_forms[#{i}]")
-      end
-      return forms
+      document_object.forms.to_array.map
     end
 
     #

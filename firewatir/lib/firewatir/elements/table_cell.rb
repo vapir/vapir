@@ -5,7 +5,6 @@ module Watir
   #
   class FFTableCell < FFElement
     include TableCell
-    attr_accessor :element_name
 
     def self.tagName
       'td'

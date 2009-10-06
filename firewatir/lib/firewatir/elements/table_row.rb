@@ -5,7 +5,6 @@ module Watir
   #
   class FFTableRow < FFElement
     include TableRow
-    attr_accessor :element_name
 
     def self.tagName
       'tr'
@@ -92,12 +91,9 @@ module Watir
     #
     def cells
       assert_exists
-      arr_cells = get_cells
-      row_cells = Array.new(arr_cells.length)
-      for i in 0..arr_cells.length - 1 do
-        row_cells[i] = FFTableCell.new(@container, :jssh_name, arr_cells[i])
+      dom_object.cells.to_array.map do |cell|
+        FFTableCell.new(@container, :jssh_name, cell.ref)
       end
-      return row_cells
     end
 
   end # TableRow

@@ -952,8 +952,11 @@ var Prototype = {
   function toJSON() {
     var results = [];
     this.each(function(object) {
-      var value = Object.toJSON(object);
-      if (!Object.isUndefined(value)) results.push(value);
+      var value = Object.toJSON(object );
+      if (!Object.isUndefined(value))
+        results.push(value);
+      else
+        results.push('null');
     });
     return '[' + results.join(', ') + ']';
   }

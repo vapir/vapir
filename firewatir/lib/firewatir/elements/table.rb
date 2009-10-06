@@ -1,7 +1,6 @@
 module Watir
   class FFTable < FFElement
     include Table
-    attr_accessor :element_name
     TAG = 'TABLE'
 
     #   - how - Attribute to identify the table element.
@@ -129,12 +128,9 @@ module Watir
     #
     def rows
       assert_exists
-      arr_rows = get_rows
-      table_rows = Array.new(arr_rows.length)
-      for i in 0..arr_rows.length - 1 do
-        table_rows[i] = FFTableRow.new(@container, :jssh_name, arr_rows[i])
+      dom_object.rows.to_array.map do |row|
+        FFTableRow.new(@container, :jssh_name, row.ref)
       end
-      return table_rows
     end
 
     #

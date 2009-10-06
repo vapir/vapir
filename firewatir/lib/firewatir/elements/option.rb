@@ -81,8 +81,7 @@ module Watir
     #
     def class_name
       assert_exists
-      jssh_socket.send("#{element_object}.className;\n", 0)
-      return jssh_socket.read_socket
+      dom_object.className
     end
     
     #
@@ -94,8 +93,7 @@ module Watir
     #
     def text
       assert_exists
-      jssh_socket.send("#{element_object}.text;\n", 0)
-      return jssh_socket.read_socket
+      dom_object.text
     end
     
     #
@@ -107,8 +105,7 @@ module Watir
     #
     def value
       assert_exists
-      jssh_socket.send("#{element_object}.value;\n", 0)
-      return jssh_socket.read_socket
+      dom_object.value
     end
     
     #
@@ -120,10 +117,7 @@ module Watir
     #
     def selected
       assert_exists
-      jssh_socket.send("#{element_object}.selected;\n", 0)
-      value = jssh_socket.read_socket
-      return true if value == "true"
-      return false if value == "false"
+      dom_object.selected
     end
     
     

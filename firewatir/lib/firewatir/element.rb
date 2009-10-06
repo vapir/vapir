@@ -6,6 +6,7 @@ module Watir
     include Watir::FFContainer
     # Number of spaces that separate the property from the value in the to_s method
     TO_S_SIZE = 14
+  
 
     # How to get the nodes using XPath in mozilla.
     ORDERED_NODE_ITERATOR_TYPE = 5
@@ -18,8 +19,6 @@ module Watir
     @@current_level = 0
     # This stores the name of the element that is about to trigger an Javascript pop up.
     #@@current_js_object = nil
-
-    attr_accessor :element_name
     #
     # Description:
     #    Creates new instance of element. If argument is not nil and is of type string this
@@ -31,10 +30,10 @@ module Watir
     # Input:
     #   element - Name of the variable with which the element is referenced in JSSh.
     #
+
     def initialize(element, container=nil)
       @container = container
       @element_name = element
-      @element_type = element_type
       #puts "in initialize "
       #puts caller(0)
       #if(element != nil && element.class == String)
@@ -50,7 +49,7 @@ module Watir
     class << self
       #default specifier is just the tagName, which should be specified on the class 
       def specifiers
-        tagName=self.tagName || (raise StandardError, "No tag name defined on class #{self}. self.const_defined?('TAG')=#{self.const_defined?('TAG')}; self.const_get('TAG')=#{self.const_get('TAG')}; tagName=#{self.tagName}")
+        tagName=self.tagName || (raise StandardError, "No tag name defined on class #{self}.")
         [:tagName => tagName]
       end
       
@@ -60,35 +59,8 @@ module Watir
       end
     end
 
-    # locates a javascript reference for this element
-    def locate
-      if !@already_located
-        @element_name = case @how
-        when :jssh_name
-          @what
-        when :xpath
-          element_by_xpath(@container, @what)
-        else
-          current_specifier= if @how.is_a?(Hash) && @what.nil?
-            @how
-          else
-            aliases=Hash.new{|hash,key| key}
-            aliases.merge!(:text => :textContent)
-            {aliases[@how.to_sym] => @what}
-          end
-          index=current_specifier.delete(:index)
-          
-          specifiers=self.class.specifiers.map{|spec| spec.merge(current_specifier)}
-          locate_specified_element(specifiers, index)
-        end
-        @already_located=true
-        return @element_name
-      end
-    end
+    attr_reader :dom_object
 
-    def dom_object
-      JsshObject.new(@element_name, Firefox.jssh_socket)
-    end
     alias ole_object dom_object
     
     def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
@@ -192,62 +164,56 @@ module Watir
     #
     def highlight(set_or_clear)
       if set_or_clear == :set
-        #puts "element_name is : #{element_object}"
-        jssh_command = " var original_color = #{element_object}.style.background;"
-        jssh_command << " #{element_object}.style.background = \"#{DEFAULT_HIGHLIGHT_COLOR}\"; original_color;"
-
-        # TODO: Need to change this so that it would work if user sets any other color.
-        #puts "color is : #{DEFAULT_HIGHLIGHT_COLOR}"
-        jssh_socket.send("#{jssh_command}\n", 0)
-        @original_color = jssh_socket.read_socket
-
-      else # BUG: assumes is :clear, but could actually be anything
+        @original_color=dom_object.style.background
+        dom_object.style.background=DEFAULT_HIGHLIGHT_COLOR
+      elsif set_or_clear==:clear
         begin
-          jssh_socket.send("#{element_object}.style.background = \"#{@original_color}\";\n", 0)
-          jssh_socket.read_socket
-        rescue
-          # we could be here for a number of reasons...
-          # e.g. page may have reloaded and the reference is no longer valid
+          dom_object.style.background=@original_color
         ensure
-          @original_color = nil
+          @original_color=nil
         end
+      else
+        raise ArgumentError, "argument must me :set or :clear; got #{set_or_clear.inspect}"
       end
     end
     protected :highlight
 
-    #
-    # Description:
-    #   Returns array of rows for a given table. Returns nil if calling element is not of table type.
-    #
-    # Output:
-    #   Array of row elements in an table or nil
-    #
-    # FIX: why is this here and not on the table class?
-    def get_rows()
-      #puts "#{element_object} and #{element_type}"
-      if(element_type == "HTMLTableElement")
-        jssh_socket.send("#{element_object}.rows.length;\n", 0)
-        length = jssh_socket.read_socket.to_i
-        #puts "The number of rows in the table are : #{no_of_rows}"
-        return_array = Array.new(length)
-        for i in 0..length - 1 do
-          return_array[i] = "#{element_object}.rows[#{i}]"
-        end
-        return return_array
+    LocateAliases=Hash.new{|hash,key| key}.merge!(:text => :textContent)
+    def howwhat_to_specifier(how, what)
+      if how.is_a?(Hash) && what.nil?
+        how
       else
-        puts "Trying to access rows for Element of type #{element_type}. Element must be of table type to execute this function."
-        return nil
+        {LocateAliases[how.to_sym] => what}
       end
     end
-    private :get_rows
-  
+
+    # locates a javascript reference for this element
+    def locate
+      if !@already_located
+        @dom_object= case @how
+        when :jssh_name
+          JsshObject.new(@what, jssh_socket)
+        when :xpath
+          element_by_xpath(@container, @what)
+        else
+          current_specifier=howwhat_to_specifier(@how, @what)
+          index=current_specifier.delete(:index)
+          
+          specifiers=self.class.specifiers.map{|spec| spec.merge(current_specifier)}
+          locate_specified_element(specifiers, index)
+        end
+        @already_located=true
+        return @dom_object
+      end
+    end
+
     # locates the element specified. 
     # specifiers_list is a list of specifiers, where a specifier is a hash of the javascript object to match. 
     # For example, the specifier_list
     #   [ {:tagName => 'textarea'},
     #     {:tagName => 'input', :types => ['text', 'textarea','password']},
     #   ]
-    # (used by FFTextField) will match all input fields. 
+    # (used by FFTextField) will match all text input fields. 
     # if ANY of the specifiers in the list match (not ALL), a given element is considered a match. 
     # but ALL of the attributes specified must match. 
     # regexps can be used to match attributes to regexp; if both are strings, then the match is 
@@ -273,63 +239,59 @@ module Watir
           []
         end
       elsif tags.size==1 && tags.first.is_a?(String)
-        candidates=container_object.getElementsByTagName(tags.first)
+        candidates=container_object.getElementsByTagName(tags.first).to_array
       else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=container_object.getElementsByTagName('*')
+        candidates=container_object.getElementsByTagName('*').to_array
       end
       
-      matched=0
-      fuzzy_match=proc do |_attr, _what|
-        case _what
-        when String, Symbol
-          case _attr
-          when String
-            _attr.downcase==_what.to_s.downcase
-          else
-            _attr==_what
-          end
-        when Regexp
-          case _attr
-          when Regexp
-            _attr==_what
-          else
-            _attr =~ _what
-          end
-        else
-          _attr==_what
-        end
+      if match=match_candidates(candidates, specifiers_list,index)
+        return match.store_rand_prefix("firewatir_elements")
       end
-      (0...candidates.length).each do |i|
-        candidate=candidates[i]
-        unless candidate
-          csub=candidates.sub(i)
-          csub.type
-          raise Exception, "nil candidate! #{csub.inspect}"
-        end
+      return nil
+    end
+    def match_candidates(candidates, specifiers_list, index)
+      matched=0
+      candidates.each_with_index do |candidate,i|
         match=true
         match&&= specifiers_list.any? do |specifier|
           specifier.all? do |(how, what)|
             if how==:types
               what.any? do |type|
-                fuzzy_match.call(candidate[:type], type)
+                Watir.fuzzy_match(candidate[:type], type)
               end
             else
-              fuzzy_match.call(candidate[how], what)
+              Watir.fuzzy_match(candidate[how], what)
             end
           end
         end
         if match
           matched+=1
           if !index || index==matched
-            #STDERR.puts "FOUND"
-            return candidate.store_rand_prefix("firewatir_elements").ref
+            return candidate
           end
         end
       end
-      #STDERR.puts "NOT FOUND"
       return nil
     end
 
+    def locate_frame(how, what)
+      # Get all the frames the are there on the page.
+      #puts "how is #{how} and what is #{what}"
+      if @container.is_a?(Firefox)
+        candidates=window_object.content.frames # OR window_object.getBrowser.contentWindow.frames (they are equal) 
+      elsif @container.is_a?(FFFrame)
+        candidates=@container.dom_object.contentWindow.frames
+      else
+        raise "locate_frame is not implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
+      end
+
+      specifier=howwhat_to_specifier(how, what)
+      index=specifier.delete(:index)
+      if match=match_candidates(candidates.to_array.map{|c|c.frameElement}, specifier, index)
+        return match.store_rand_prefix('firewatir_frames')
+      end
+      return nil
+    end
 =begin
     def locate_tagged_element(tag, how, what, types=nil, value=nil)
       specifiers = (how.is_a?(Hash) && what.nil?) ? how : {how.to_sym => what}
@@ -354,7 +316,7 @@ module Watir
         if match
           match_count+=1
           if !index || index==match_count
-            return candidate.ref
+            return candidate
           end
         end
       end
@@ -686,7 +648,7 @@ module Watir
       new_exp
     end
 =end
-  
+=begin
     #
     # Description:
     #   Locates frame element. Logic for locating the frame is written in JavaScript so that we don't make small
@@ -806,15 +768,17 @@ module Watir
         return nil
       end
     end
-
+=end
+=begin # rewrite to get the actual html, not stick a html tag around something 
     def get_frame_html
       jssh_socket.send("var htmlelem = #{@container.document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML;\n", 0)
       #jssh_socket.send("body.innerHTML;\n", 0)
       result = jssh_socket.read_socket
       return "<html>" + result + "</html>"
     end
-
-
+=end
+  
+  
     public
 
     #
@@ -850,7 +814,7 @@ module Watir
     # Description:
     #   Returns array of elements that matches a given XPath query.
     #   Mozilla browser directly supports XPath query on its DOM. So no need to create the DOM tree as WATiR does for IE.
-    #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
+    #   Refer: https://developer.mozilla.org/en/DOM/document.evaluate
     #   Used internally by Firewatir use ff.elements_by_xpath instead.
     #
     # Input:
@@ -860,37 +824,12 @@ module Watir
     #   Array of elements that matched the xpath expression provided as parameter.
     #
     def elements_by_xpath(container, xpath)
-      rand_no = rand(1000)
-      #jssh_command = "var xpathResult = document.evaluate(\"count(#{xpath})\", document, null, #{NUMBER_TYPE}, null); xpathResult.numberValue;"
-      #jssh_socket.send("#{jssh_command}\n", 0);
-      #node_count = jssh_socket.read_socket
-      xpath.gsub!("\"", "\\\"")
-      jssh_command = "var element_xpath_#{rand_no} = new Array();"
-
-      jssh_command << "var result = #{@container.document_var}.evaluate(\"#{xpath}\", #{@container.document_var}, null, #{ORDERED_NODE_ITERATOR_TYPE}, null);
-                               var iterate = result.iterateNext();
-                               while(iterate)
-                               {
-                                  element_xpath_#{rand_no}.push(iterate);
-                                  iterate = result.iterateNext();
-                               }
-                               element_xpath_#{rand_no}.length;
-                               "
-
-      # Remove \n that are there in the string as a result of pressing enter while formatting.
-      jssh_command.gsub!(/\n/, "")
-      #puts jssh_command
-      jssh_socket.send("#{jssh_command};\n", 0)
-      node_count = jssh_socket.read_socket
-      #puts "value of count is : #{node_count}"
-
-      elements = Array.new(node_count.to_i)
-
-      for i in 0..elements.length - 1 do
-        elements[i] = "element_xpath_#{rand_no}[#{i}]"
+      elements=[]
+      result=document_object.evaluate xpath, document_object, nil, ORDERED_NODE_ITERATOR_TYPE, nil
+      while element=result.iterateNext
+        elements << element.store_rand_object_key(@@browser_jssh_objects)
       end
-
-      return elements;
+      elements
     end
 
     #
@@ -907,22 +846,7 @@ module Watir
     #   First element in DOM that matched the XPath expression or query.
     #
     def element_by_xpath(container, xpath)
-      #puts "here locating element by xpath"
-      rand_no = rand(1000)
-      xpath.gsub!("\"", "\\\"")
-      jssh_command = "var element_xpath_#{rand_no} = null; element_xpath_#{rand_no} = #{@container.document_var}.evaluate(\"#{xpath}\", #{container.document_var}, null, #{FIRST_ORDERED_NODE_TYPE}, null).singleNodeValue; element_xpath_#{rand_no};"
-
-      jssh_socket.send("#{jssh_command}\n", 0)
-      result = jssh_socket.read_socket
-      #puts "command send to jssh is : #{jssh_command}"
-      #puts "result is : #{result}"
-      if(result == "null" || result == "" || result.include?("exception"))
-        @@current_level = 0
-        return nil
-      else
-        @@current_level += 1
-        return "element_xpath_#{rand_no}"
-      end
+      document_object.evaluate(xpath, document_object, nil, FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue.store_rand_object_key(@browser_jssh_objects)
     end
 
     #
@@ -934,16 +858,9 @@ module Watir
     #   Name of the variable with which element is referenced in JSSh
     #
     def element_object
-      #puts caller.join("\n")
-      #puts "In element_object element name is : #{@element_name}"
-      #puts "in element_object : #{@container.class}"
-      #if(@container.class == FireWatir::Firefox)
-      return @element_name #if @element_name != nil
-      #else
-      #    return @container.element_name
-      #end
-      #return @o.element_name if @o != nil
+      @dom_object.ref if @dom_object
     end
+    alias element_name element_object
     private :element_object
 
     #
@@ -954,25 +871,7 @@ module Watir
     #   Type of the element.
     #
     def element_type
-      #puts "in element_type object is : #{element_object}"
-      # Get the type of the element.
-      jssh_socket.send("#{element_object};\n", 0)
-      temp = jssh_socket.read_socket
-
-      if temp == ""
-        return nil
-      end
-
-      #puts "#{element_object} and type is #{temp}"
-      temp =~ /\[object\s(.*)\]/
-      if $1
-        return $1
-      else
-        # This is done because in JSSh if you write element name of anchor type
-        # then it displays the link to which it navigates instead of displaying
-        # object type. So above regex match will return nil
-        return "HTMLAnchorElement"
-      end
+      dom_object.object_type
     end
     #private :element_type
 
@@ -987,12 +886,10 @@ module Watir
     # TODO: Provide ability to specify event parameters like keycode for key events, and click screen
     #       coordinates for mouse events.
     def fire_event(event, wait = true)
-      assert_exists()
-      event = event.to_s # in case event was given as a symbol
+      assert_exists
+      event = event.to_s.downcase # in case event was given as a symbol
 
-      event = event.downcase
-
-      event =~ /on(.*)/i
+      event =~ /\Aon(.*)\z/i
       event = $1 if $1
 
       # check if we've got an old-school on-event
@@ -1034,9 +931,7 @@ module Watir
       jssh_command << "#{element_object}.dispatchEvent(event);"
 
       #puts "JSSH COMMAND:\n#{jssh_command}\n"
-
-      jssh_socket.send("#{jssh_command}\n", 0)
-      jssh_socket.read_socket if wait
+      jssh_socket.send_and_read jssh_command
       wait() if wait
 
       @@current_level = 0
@@ -1114,30 +1009,10 @@ module Watir
     #   True if element exists, false otherwise.
     #
     def exists?
-      # puts "element is : #{element_object}"
-      # puts caller(0)
-      # If elements array has changed locate the element again. So that the element name points to correct element.
-      if(element_object == nil || element_object == "")
-        @@current_level = 0
-        #puts "locating element"
-        locate if respond_to?(:locate)
-        if(@element_name == nil || @element_name == "")
-          return false
-        else
-          #puts caller(0)
-          #puts "element name is : #{@element_name}"
-          return true
-        end
-      else
-        #puts "not locating the element again"
-        return true
-      end
-      #@@current_level = 0
-      #if(element_object == nil || element_object == "")
-      #    return false
-      #else
-      #    return true
-      #end
+      # TODO/FIX: this doesn't really say if it exists, just if it did when locate was first called. 
+      # should really do something to check if the object exists in the dom or something. 
+      locate
+      !!@dom_object
     rescue UnknownFrameException
       false
     end
@@ -1374,30 +1249,6 @@ module Watir
     #end
     #private :click_js_popup_creator_button
 
-    #
-    # Description:
-    #   Gets all the cells of the row of a table.
-    #
-    # Output:
-    #   Array of table cell elements.
-    #
-    def get_cells
-      assert_exists
-      #puts "element name in cells is : #{element_object}"
-      if(element_type == "HTMLTableRowElement")
-        jssh_socket.send("#{element_object}.cells.length;\n", 0)
-        length = read_socket.to_i
-        return_array = Array.new(length)
-        for i in 0..length - 1 do
-          return_array[i] = "#{element_object}.cells[#{i}]"
-        end
-        return return_array
-      else
-        raise "The element must be of table row type to execute this function."
-        return nil
-      end
-    end
-    private :get_cells
     
     def invoke(js_method)
       dom_object.get(js_method)
@@ -1406,8 +1257,6 @@ module Watir
     def assign(property, value)
       locate
       dom_object.attr(property).assign(value)
-#      jssh_socket.send("#{element_object}[#{property.to_json}]=#{value.to_json};\n", 0)
-#      return read_socket
     end
     
     def document_object

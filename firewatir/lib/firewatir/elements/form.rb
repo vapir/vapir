@@ -2,7 +2,6 @@ module Watir
   class FFForm < FFElement
     include Form
 
-    attr_accessor :element_name
     #
     # Description:
     #   Initializes the instance of form object.

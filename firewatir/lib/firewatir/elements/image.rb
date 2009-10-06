@@ -4,7 +4,6 @@ module Watir
   #   Class for Image element.
   #
   class FFImage < FFElement
-    attr_accessor :element_name
     TAG = 'IMG'
     #
     # Description:

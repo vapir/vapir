@@ -12,7 +12,6 @@ module Watir
       ]
     end
     include InputElement
-    attr_accessor :element_name
     #
     # Description:
     #   Locate the element on the page. Element can be a select list, text field, button, hidden, file field.

@@ -5,7 +5,6 @@ module Watir
   #
   class FFRadioCheckCommon < FFElement
     include RadioCheckCommon
-    attr_accessor :element_name
     #
     # Description:
     #   Initializes the instance of element object. Element can be checkbox or radio button.

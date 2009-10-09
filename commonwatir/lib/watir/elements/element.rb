@@ -1,5 +1,5 @@
 module Watir
-  class Element
+  module Element
     # Flash the element the specified number of times.
     # Defaults to 10 flashes.
     def flash number=10

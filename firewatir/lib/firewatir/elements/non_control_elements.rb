@@ -1,40 +1,46 @@
 module Watir
-  class FFPre < FFNonControlElement
+  class FFPre < FFElement
+    include FFNonControlElement
     include Pre
     TAG = 'PRE'
     ContainerMethods=:pre
     ContainerCollectionMethods=:pres
   end
 
-  class FFP < FFNonControlElement
+  class FFP < FFElement
+    include FFNonControlElement
     include P
     TAG = 'P'
     ContainerMethods=:p
     ContainerCollectionMethods=:ps
   end
 
-  class FFDiv < FFNonControlElement
+  class FFDiv < FFElement
+    include FFNonControlElement
     include Div
     TAG = 'DIV'
     ContainerMethods=:div
     ContainerCollectionMethods=:divs
   end
 
-  class FFSpan < FFNonControlElement
+  class FFSpan < FFElement
+    include FFNonControlElement
     include Span
     TAG = 'SPAN'
     ContainerMethods=:span
     ContainerCollectionMethods=:spans
   end
 
-  class FFStrong < FFNonControlElement
+  class FFStrong < FFElement
+    include FFNonControlElement
     include Strong
     TAG = 'STRONG'
     ContainerMethods=:strong
     ContainerCollectionMethods=:strongs
   end
 
-  class FFLabel < FFNonControlElement
+  class FFLabel < FFElement
+    include FFNonControlElement
     include Label
     TAG = 'LABEL'
     ContainerMethods=:label
@@ -71,77 +77,92 @@ module Watir
     end
   end
 
-  class FFUl < FFNonControlElement
+  class FFUl < FFElement
+    include FFNonControlElement
     include Ul
     TAG = 'UL'
   end
 
-  class FFLi < FFNonControlElement
+  class FFLi < FFElement
+    include FFNonControlElement
     include Li
     TAG = 'LI'
   end
 
-  class FFDl < FFNonControlElement
+  class FFDl < FFElement
+    include FFNonControlElement
     include Dl
     TAG = 'DL'
   end
 
-  class FFDt < FFNonControlElement
+  class FFDt < FFElement
+    include FFNonControlElement
     include Dt
     TAG = 'DT'
   end
 
-  class FFDd < FFNonControlElement
+  class FFDd < FFElement
+    include FFNonControlElement
     include Dd
     TAG = 'DD'
   end
 
-  class FFH1 < FFNonControlElement
+  class FFH1 < FFElement
+    include FFNonControlElement
     include H1
     TAG = 'H1'
   end
 
-  class FFH2 < FFNonControlElement
+  class FFH2 < FFElement
+    include FFNonControlElement
     include H2
     TAG = 'H2'
   end
 
-  class FFH3 < FFNonControlElement
+  class FFH3 < FFElement
+    include FFNonControlElement
     include H3
     TAG = 'H3'
   end
 
-  class FFH4 < FFNonControlElement
+  class FFH4 < FFElement
+    include FFNonControlElement
     include H4
     TAG = 'H4'
   end
 
-  class FFH5 < FFNonControlElement
+  class FFH5 < FFElement
+    include FFNonControlElement
     include H5
     TAG = 'H5'
   end
 
-  class FFH6 < FFNonControlElement
+  class FFH6 < FFElement
+    include FFNonControlElement
     include H6
     TAG = 'H6'
   end
 
-  class FFMap < FFNonControlElement
+  class FFMap < FFElement
+    include FFNonControlElement
     include Map
     TAG = 'MAP'
   end
 
-  class FFArea < FFNonControlElement
+  class FFArea < FFElement
+    include FFNonControlElement
     include Area
     TAG = 'AREA'
   end
 
-  class FFTBody < FFNonControlElement
+  class FFTBody < FFElement
+    include FFNonControlElement
     include TBody
     TAG = 'TBODY'
   end
   
-  class FFEm < FFNonControlElement
+  class FFEm < FFElement
+    include FFNonControlElement
     include Em
     TAG = 'EM'
   end

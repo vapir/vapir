@@ -15,7 +15,6 @@ class JsshSocket
       logger=Logger.new nil#(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::CREAT))
       logger.level = Logger::INFO
       logger.formatter=Logger::Formatter.new
-#      logger.datetime_format = "%Y-%m-%d %H:%M:%S"
       logger
     end
   end
@@ -26,12 +25,13 @@ class JsshSocket
   PROMPT="\n> "
   
   # IP Address of the machine where the script is to be executed. Default to localhost.
-  JSSH_IP = "127.0.0.1"
-  JSSH_PORT = 9997
+  @@default_jssh_ip = "127.0.0.1"
+  @@default_jssh_port = 9997
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
 
   DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
+  SHORT_SOCKET_TIMEOUT=(2**-16).to_f
 
   attr_reader :ip, :port, :prototype
   
@@ -41,8 +41,8 @@ class JsshSocket
   # * :jssh_port => the port to connect to, default 9997
   # * :send_prototype => true|false, whether to load and send the Prototype library (the functional programming part of it anyway, and JSON bits)
   def initialize(options={})
-    @ip=options[:jssh_ip] || JSSH_IP
-    @port=options[:jssh_port] || JSSH_PORT
+    @ip=options[:jssh_ip] || @@default_jssh_ip
+    @port=options[:jssh_port] || @@default_jssh_port
     @prototype=options.key?(:send_prototype) ? options[:send_prototype] : true
     begin
       @socket = TCPSocket::new(@ip, @port)
@@ -93,7 +93,7 @@ class JsshSocket
     while(s= Kernel.select([@socket] , nil , nil, timeout))
       data = @socket.recv(1024)
       unless data==PROMPT && received_data.empty? # if we recv PROMPT here (first thing recv'd), then switch to zero timeout, then the value will probably get left on the socket 
-        timeout=0.0
+        timeout=SHORT_SOCKET_TIMEOUT
       end
       received_data << data
       logger.debug "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}"
@@ -143,7 +143,7 @@ class JsshSocket
   def send_and_read(js_expr, timeout=DEFAULT_SOCKET_TIMEOUT)
     logger.debug "SEND_AND_READ is starting. timeout=#{timeout}"
     logger.debug "SEND_AND_READ is checking for leftovers"
-    if (leftover=recv_socket(0)) && leftover != PROMPT
+    if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != PROMPT
       STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
       logger.warn("SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}")
     end
@@ -156,10 +156,10 @@ class JsshSocket
   
   def js_error(errclassname, message, source, stuff={})
     errclass=if errclassname
-      unless JsshSocket.const_defined?(errclassname)
-        JsshSocket.const_set(errclassname, Class.new(JsshError))
+      unless JsshError.const_defined?(errclassname)
+        JsshError.const_set(errclassname, Class.new(JsshError))
       end
-      JsshSocket.const_get(errclassname)
+      JsshError.const_get(errclassname)
     else
       JsshError
     end
@@ -181,14 +181,14 @@ class JsshSocket
   
   # assigns to the javascript reference on the left the javascript expression on the right. 
   # returns the value of the expression as reported by JSSH, which
-  # will be a string, the expression's toString. Uses #js_eval; see its documentation.
+  # will be a string, the expression's toString. Uses #value; see its documentation.
   def assign(js_left, js_right)
     value("#{js_left}= #{js_right}")
   end
   
   # calls to the given function (javascript reference to a function) passing it the
   # given arguments (javascript expressions). returns the return value of the function,
-  # a string, the toString of the javascript value. Uses #js_eval; see its documentation.
+  # a string, the toString of the javascript value. Uses #value; see its documentation.
   def call(js_function, *js_args)
     value("#{js_function}(#{js_args.join(', ')})")
   end
@@ -341,6 +341,10 @@ class JsshSocket
         })()"
     type=value_json js
   end
+  
+  def instanceof(js_expression, js_interface)
+    value_json "(#{js_expression}) instanceof (#{js_interface})"
+  end
 
   # sticks a json string inside array brackets because on windows (at least?) 
   # the ruby json library craps out on some stuff. 
@@ -371,6 +375,16 @@ class JsshSocket
   
   def temp_object
     @temp_object ||= object('JsshTemp')
+  end
+  def Components
+    @components ||= object('Components')
+  end
+  def getWindows
+    @getwindows ||= object('getWindows()')
+  end
+  
+  def inspect
+    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:ip, :port, :prototype].map{|attr| aa="@#{attr}";aa+'='+instance_variable_get(aa).inspect}.join(', ')}>"
   end
 end
 
@@ -415,6 +429,22 @@ class JsshObject
   # returns javascript typeof this object 
   def type
     @type ||= jssh_socket.typeof(ref)
+  end
+  
+  # returns javascript instanceof operator on this and the given interface (expected to be a JsshObject)
+  # note that this is javascript, not to be confused with ruby's #instance_of? method. 
+  # 
+  # example:
+  # window.instanceof(window.jssh_socket.components.interfaces.nsIDOMChromeWindow)
+  # => true
+  def instanceof(interface)
+    jssh_socket.instanceof(self.ref, interface.ref)
+  end
+  def implemented_interfaces
+    jssh_socket.components.interfaces.to_hash.inject([]) do |list, (key, interface)|
+      list << interface if instanceof?(interface)
+      list
+    end
   end
   
   # returns the type of object that is reported by the javascript toString() method, which
@@ -480,6 +510,9 @@ class JsshObject
   
   # returns a JsshObject referencing the given attribute of this object 
   def attr(attribute)
+    unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
+      raise JsshError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
+    end
     JsshObject.new("#{ref}.#{attribute}", jssh_socket)
   end
 
@@ -529,8 +562,10 @@ class JsshObject
   end
   
   def store_rand_named(&name_proc)
+    base=36
+    length=6
     begin
-      name=name_proc.call("%.16x"%rand(2**64))
+      name=name_proc.call(("%#{length}s"%rand(base**length).to_s(base)).tr(' ','0'))
     end while JsshObject.new(name,jssh_socket).type!='undefined'
     # okay, more than one iteration is ridiculously unlikely, sure, but just to be safe. 
     store(name)
@@ -549,12 +584,14 @@ class JsshObject
     end
   end
 
+  # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
+  # (doesn't use to_json) 
   def sub_expr(key_expr)
     JsshObject.new("#{ref}[#{key_expr}]", jssh_socket)
   end
   
-  # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
-  # (doesn't use to_json) 
+  # returns a JsshObject referring to a subscript of this object, specified as a ruby object converted to 
+  # javascript via to_json 
   def sub(key)
     sub_expr(key.to_json)
   end
@@ -665,7 +702,7 @@ class JsshObject
   #
   def method_missing(method, *args)
     method=method.to_s
-    if method =~ /^([a-z_][a-z0-9_]*)([=?!])?$/i
+    if method =~ /\A([a-z_][a-z0-9_]*)([=?!])?\z/i
       method = $1
       special = $2
     else # don't deal with any special character crap 
@@ -740,8 +777,58 @@ class JsshObject
   def to_hash
     JsshHash.new(self.ref, self.jssh_socket)
   end
+  def to_dom
+    JsshDOMNode.new(self.ref, self.jssh_socket)
+  end
+  def to_ruby_hash(options={})
+    options={:recurse => 1}.merge(options)
+    return self if !options[:recurse] || options[:recurse]==0
+    return self if self.type!='object'
+    next_options=options.merge(:recurse => options[:recurse]-1)
+    begin
+      keys=self.to_hash.keys
+    rescue JsshError
+      return self
+    end
+    keys.inject({}) do |hash, key|
+      val=begin
+        self[key]
+      rescue JsshError
+        $!
+      end
+      hash[key]=if val.is_a?(JsshObject)
+        val.to_ruby_hash(next_options)
+      else
+        val
+      end
+      hash
+    end
+  end
+  
+  def inspect
+    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :ref].map{|attr| attr.to_s+'='+send(attr).inspect}.join(', ')}>"
+  end
 end
 
+class JsshDOMNode < JsshObject
+  def inspect
+#    "\#<#{self.class.name} #{[:nodeName, :nodeType, :tagName, :textContent, :id, :name, :value, :type].map{|attrn| attr=attr(attrn);attrn.to_s+'='+(attr.type=='undefined' ? 'undefined' : attr.val_or_object(:error_on_undefined => false).inspect)}.join(', ')}>"
+    "\#<#{self.class.name} #{[:nodeName, :nodeType, :nodeValue, :tagName, :textContent, :id, :name, :value, :type, :className, :hidden].map{|attrn|attr=attr(attrn);(['undefined','null'].include?(attr.type) ? nil : attrn.to_s+'='+attr.val_or_object(:error_on_undefined => false).inspect)}.select{|a|a}.join(', ')}>"
+  end
+  def dump(options={})
+    options={:recurse => nil, :level => 0}.merge(options)
+    next_options=options.merge(:recurse => options[:recurse] && (options[:recurse]-1), :level => options[:level]+1)
+    result=(" "*options[:level]*2)+self.inspect+"\n"
+    if options[:recurse]==0
+      result+=(" "*next_options[:level]*2)+"...\n"
+    else 
+      self.childNodes.to_array.each do |child|
+        result+=child.to_dom.dump(next_options)
+      end
+    end
+    result
+  end
+end
 
 class JsshArray < JsshObject
   def each

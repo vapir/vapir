@@ -26,6 +26,7 @@ module Watir
       end
       nil
     end
+    module_function
     def fuzzy_match(attr, what)
       case what
       when String, Symbol
@@ -47,39 +48,4 @@ module Watir
       end
     end
   end
-=begin
-  class Specifier
-    MatchAliases=Hash.new{|hash,key| [key]}.merge!(:text => [:text, :textContent])
-    # options:
-    # - :specifiers => an array of specifier hashes
-    # - :how, :what => 
-    def initialize(options={})
-      options={}.merge(options)
-      @howwhat_specifier=if what.nil?
-        case how
-        when String, Symbol
-          default_how ? {default_how => how} : {how.to_sym => what}
-        when Hash
-          how.dup
-        when nil
-          {}
-        else
-          default_how ? {default_how => how} : (raise "Invalid how: #{how.inspect}; what: #{what.inspect}")
-        end
-      else # what is not nil
-        if how.is_a?(String)||how.is_a?(Symbol)
-          {how.to_sym => what}
-        else
-          raise "Invalid how: #{how.inspect}; what: #{what.inspect}"
-        end
-      end
-#      spec.inject({}) do |hash,(how,what)|
-#        hash[MatchAliases[how.to_sym]]=what
-#        hash
-#      end
-    end
-    def self.howwhat_to_specifier(how, what, )
-    
-  end
-=end
 end

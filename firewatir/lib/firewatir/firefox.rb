@@ -166,6 +166,25 @@ module Watir
       self.class.firefox_is_running?
     end
 
+    
+    def hwnd
+      win_window.hwnd
+    end
+    def win_window
+      #TODO/FIX: this will break if two windows have the same title. 
+      @win_window||=begin
+        require 'lib/win_window'
+        candidates=WinWindow::All.select do |win|
+          win.class_name=="MozillaUIWindowClass" && win.text==browser_window_object.title
+        end
+        raise unless candidates.size==1
+        candidates.first
+      end
+    end
+    def bring_to_front
+      win_window.set_foreground!
+    end
+    
     def dom_object
       document_object
     end
@@ -362,7 +381,7 @@ module Watir
       begin
         @browser_window_name="firewatir_window_%.16x"%rand(2**64)
       end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@browser_window_name.to_json}}) ? true : false")
-      watcher=jssh_socket.object('Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(Components.interfaces.nsIWindowWatcher)')
+      watcher=components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(components.interfaces.nsIWindowWatcher)
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
       # then we create the reference (with #attr and #pass so it's not evaluated) and store it (at which point it is evaluated) in @browser_jssh_objects
       
@@ -374,14 +393,14 @@ module Watir
 
     def self.each
       if firefox_is_running?
-        each_window_object do |win|
+        each_browser_window_object do |win|
           yield self.attach(:jssh_object, win)
         end
       end
     end
 
-    def self.each_window_object
-      mediator=jssh_socket.object('Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator)').store_rand_object_key(@@firewatir_jssh_objects)
+    def self.each_browser_window_object
+      mediator=components.classes["@mozilla.org/appshell/window-mediator;1"].getService(components.interfaces.nsIWindowMediator)
       enumerator=mediator.getEnumerator("navigator:browser")
       while enumerator.hasMoreElements
         win=enumerator.getNext
@@ -389,6 +408,37 @@ module Watir
       end
       nil
     end
+    def self.browser_window_objects
+      window_objects=[]
+      each_browser_window_object do |window_object|
+        window_objects << window_object
+      end
+      window_objects
+    end
+    def self.each_window_object
+      mediator=components.classes["@mozilla.org/appshell/window-mediator;1"].getService(components.interfaces.nsIWindowMediator)
+      enumerator=mediator.getEnumerator(nil)
+      while enumerator.hasMoreElements
+        win=enumerator.getNext
+        yield win
+      end
+      nil
+    end
+    def self.window_objects
+      window_objects=[]
+      each_window_object do |window_object|
+        window_objects << window_object
+      end
+      window_objects
+    end
+    
+    def self.components
+      jssh_socket.Components
+    end
+    def components
+      jssh_socket.Components
+    end
+    private :components
     # return the window jssh object for the browser window with the given title or url.
     #   how - :url or :title
     #   what - string or regexp
@@ -398,8 +448,8 @@ module Watir
       hows=[:title, :URL]
       how=hows.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
       raise ArgumentError, "how should be one of: #{hows.inspect} (was #{orig_how.inspect})" unless how
-      self.class.each_window_object do |win|
-        return win if Watir::Specifer.fuzzy_match(win.getBrowser.contentDocument[how],what)
+      self.class.each_browser_window_object do |win|
+        return win if Watir::Specifier.fuzzy_match(win.getBrowser.contentDocument[how],what)
       end
     end
     private :find_window
@@ -428,6 +478,22 @@ module Watir
       end
     end
 
+    def modal_dialog
+      candidates=[]
+      self.class.each_window_object do |win|
+        if [self.browser_window_object, self.content_window_object].include?(win.opener) # TODO/FIX: check class or whatever to see if it's actually modal?
+          candidates << win 
+        end
+      end
+      if candidates.size==0
+        return nil
+      elsif candidates.size==1
+        return *candidates
+      else
+        raise
+      end
+    end
+    
     # Returns the url of the page currently loaded in the browser.
     def url
       @url = document_object.location.href

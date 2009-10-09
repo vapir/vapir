@@ -111,7 +111,7 @@ module Watir
       highlight(:set)
       
       value_chars=value.split(//) # split on blank regexp for multibyte chars
-      if self.type.downcase=='text' && maxlength && value_chars.length > maxlength
+      if self.type.downcase=='text' && maxlength && maxlength >= 0 && value_chars.length > maxlength
         value_chars=value_chars[0...maxlength]
         value=value_chars.join('')
       end
@@ -129,9 +129,6 @@ module Watir
           fire_event :onKeyUp, :highlight => false
           fire_event :onKeyPress, :highlight => false
         end
-        #doKeyPress(value)
-        fire_event :onkeyup, :highlight => false
-        fire_event("onKeyPress", :highlight => false)
         fire_event("onChange", :highlight => false)
         fire_event('onBlur', :highlight => false)
       else
@@ -182,7 +179,7 @@ module Watir
       assert_exists
       highlight(:set)
       wait = false
-      element_object.options.each do |option|
+      options.each do |option|
         option.selected=false
         wait=true
       end

@@ -1,19 +1,38 @@
 require 'json/pure'
 require 'socket'
-require 'logger'
+#require 'logger'
 
-class Logger
-  class TimeElapsedFormatter < Formatter
-    def initialize
-      super
-      @time_started=Time.now
-    end
-    def format_datetime(time)
-      "%10.3f"%(time.to_f-@time_started.to_f)
-    end
-
-  end
-end
+#class Logger
+#  class TimeElapsedFormatter < Formatter
+#    def initialize
+#      super
+#      @time_started=Time.now
+#    end
+#    def format_datetime(time)
+#      "%10.3f"%(time.to_f-@time_started.to_f)
+#    end
+#
+#  end
+#  def add(severity, message = nil, progname = nil, &block)
+#    severity ||= UNKNOWN
+#    if @logdev.nil? or severity < @level
+#      return true
+#    end
+#    progname ||= @progname
+#    if message.nil?
+#      if block_given?
+#	message = yield
+#      else
+#	message = progname
+#	progname = @progname
+#      end
+#    end
+#    message=message.to_s+" FROM: "+caller.map{|c|"\t\t#{c}\n"}.join("")
+#    @logdev.write(
+#      format_message(format_severity(severity), Time.now, progname, message))
+#    true
+#  end
+#end
 
 class JsshError < StandardError
   attr_accessor :source, :lineNumber, :stack, :fileName
@@ -24,17 +43,17 @@ class JsshUnableToStart < JsshError; end
 class JsshUndefinedValueError < JsshError; end
 
 class JsshSocket
-  def self.logger
-    @@logger||=begin
-      logger=Logger.new(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::TRUNC|File::CREAT))
-      logger.level = Logger::INFO#-1#Logger::DEBUG
-      logger.formatter=Logger::TimeElapsedFormatter.new
-      logger
-    end
-  end
-  def logger
-    self.class.logger
-  end
+#  def self.logger
+#    @@logger||=begin
+#      logger=Logger.new nil#(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::TRUNC|File::CREAT))
+#      logger.level = -1#Logger::DEBUG#Logger::INFO
+#      logger.formatter=Logger::TimeElapsedFormatter.new
+#      logger
+#    end
+#  end
+#  def logger
+#    self.class.logger
+#  end
   
   PROMPT="\n> "
   
@@ -45,7 +64,7 @@ class JsshSocket
 
   DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
-  SHORT_SOCKET_TIMEOUT=0#(2**-16).to_f
+  SHORT_SOCKET_TIMEOUT=0.0#(2**-16).to_f
 
   attr_reader :ip, :port, :prototype
   
@@ -103,16 +122,16 @@ class JsshSocket
   def recv_socket(timeout=DEFAULT_SOCKET_TIMEOUT)
     received_data = []
     data = ""
-    logger.add(-1) { "RECV_SOCKET is starting. timeout=#{timeout}" }
+#    logger.add(-1) { "RECV_SOCKET is starting. timeout=#{timeout}" }
     while(s= Kernel.select([@socket] , nil , nil, timeout))
       data = @socket.recv(1024)
       unless data==PROMPT && received_data.empty? # if we recv PROMPT here (first thing recv'd), then switch to short timeout, then the value will probably get left on the socket 
         timeout=SHORT_SOCKET_TIMEOUT
       end
       received_data << data
-      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
+#      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end
-    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}" }
+#    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}" }
     received_data.pop if received_data.last==PROMPT
     received_data.shift if received_data.first==PROMPT
     received_data.empty? ? nil : received_data.join('')
@@ -161,15 +180,15 @@ class JsshSocket
 
   def send_and_read(js_expr, options={})
     options={:timeout=>DEFAULT_SOCKET_TIMEOUT}.merge(options)
-    logger.add(-1) { "SEND_AND_READ is starting. options=#{options.inspect}" }
-    logger.add(-1) { "SEND_AND_READ is checking for leftovers" }
+#    logger.add(-1) { "SEND_AND_READ is starting. options=#{options.inspect}" }
+#    logger.add(-1) { "SEND_AND_READ is checking for leftovers" }
     if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != PROMPT
       STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
-      logger.warn { "SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}" }
+#      logger.warn { "SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}" }
     end
     @last_expression=js_expr
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
-    logger.debug { "SEND_AND_READ sending #{js_expr.inspect}" }
+#    logger.debug { "SEND_AND_READ sending #{js_expr.inspect}" }
     @socket.send(js_expr, 0)
     return read_value(options[:timeout])
   end
@@ -423,9 +442,9 @@ end
 class JsshObject
   attr_reader :ref, :jssh_socket
   attr_reader :type, :function_result, :debug_name
-  def logger
-    jssh_socket.logger
-  end
+#  def logger
+#    jssh_socket.logger
+#  end
 
   public
   # initializes a JsshObject with a string of javascript containing a reference to
@@ -440,15 +459,15 @@ class JsshObject
     @debug_name=other[:debug_name]
     @function_result=other[:function_result]
     @cache={}
-    logger.info { "#{self.class} initialized: #{debug_name} (type #{type})" }
+#    logger.info { "#{self.class} initialized: #{debug_name} (type #{type})" }
   end
   private
   def cache_object(key, ref, other)
     if @cache.key?(key)
-      logger.add(-1) { "hit object cache for #{[key, ref, other].inspect}" }
+#      logger.add(-1) { "hit object cache for #{[key, ref, other].inspect}" }
       @cache[key]
     else
-      logger.add(-1) { "added object cache for #{[key, ref, other].inspect}" }
+#      logger.add(-1) { "adding object cache for #{[key, ref, other].inspect}" }
       @cache[key]=JsshObject.new(ref, jssh_socket, other)
     end
   end
@@ -474,10 +493,10 @@ class JsshObject
     if function_result # don't get type for function results, causes function evaluations when you probably didn't want that. 
       nil
     elsif @cache[:type]
-      logger.add(-1) { "hit type cache for #{debug_name}" }
+#      logger.add(-1) { "hit type cache for #{debug_name}" }
       @cache[:type]
     else
-      logger.add(-1) { "added type cache for #{debug_name}" }
+#      logger.add(-1) { "adding type cache for #{debug_name}" }
       @cache[:type]= jssh_socket.typeof(ref)
     end
   end
@@ -573,7 +592,7 @@ class JsshObject
   def assign(val)
     @debug_name="(#{debug_name}=#{val.is_a?(JsshObject) ? val.debug_name : val.to_json})"
     result=assign_expr val.to_json
-    logger.info { "#{self.class} assigned: #{debug_name} (type #{type})" }
+#    logger.info { "#{self.class} assigned: #{debug_name} (type #{type})" }
     result
   end
   # assigns the given javascript expression (string) to the reference for this object 

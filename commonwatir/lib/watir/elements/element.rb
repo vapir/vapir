@@ -2,7 +2,7 @@ require 'active_support/inflector'
 class Module
   def alias_deprecated(to, from)
     define_method to do |*args|
-      STDERR.puts "WARNING: #{self.class.name}\##{to} is deprecated. Please use #{self.class.name}\##{from}"
+      STDERR.puts "DEPRECATION WARNING: #{self.class.name}\##{to} is deprecated. Please use #{self.class.name}\##{from}\n(called from #{caller.map{|c|"\n"+c}})"
       send(from, *args)
     end
   end
@@ -78,8 +78,7 @@ module Watir
             assert_exists
             if element_object.respond_to?(dom_method_name)
               element_object.method_missing(dom_method_name, *args)
-              # note: using method_missing (not get) so that attribute= methods can be used. 
-              # then again, attribute= methods don't work with method_missing on WIN32OLE. damn. 
+              # note: using method_missing (not invoke) so that attribute= methods can be used. 
             elsif args.length==0
               element_object.getAttribute(dom_method_name.to_s)
             else
@@ -92,7 +91,7 @@ module Watir
     #TODO fix duplication with dom_wrap
     def dom_wrap_deprecated(ruby_method_name, dom_method_name, new_method_name)
       define_method ruby_method_name do |*args|
-        STDERR.puts "DEPRECATION WARNING: #{self.class.name}\##{ruby_method_name} is deprecated, please use #{self.class.name}\##{new_method_name}"
+        STDERR.puts "DEPRECATION WARNING: #{self.class.name}\##{ruby_method_name} is deprecated, please use #{self.class.name}\##{new_method_name}\n(called from #{caller.map{|c|"\n"+c}}})"
         assert_exists
         if element_object.respond_to?(dom_method_name)
           element_object.method_missing(dom_method_name, *args)

@@ -139,17 +139,24 @@ class JsshSocket
     return value
   end
 
+  # DEPRECATED
+  # all js_eval did was send_and_read, but attempted unreliably to catch errors. use send_and_read if you
+  # want that, or, more preferably probably, use value_json if you want errors caught (which you probably should)
+  # also if you want actual data types (that json can handle anyway), which is nicer too. 
+  #
+  # (used to:
   # Evaluate javascript and return result. Raise an exception if an error occurred.
   # Takes one expression and strips out newlines so that only one value will be returned, so you're going to have to
-  # use semicolons, and no // style comments. 
+  # use semicolons, and no // style comments.)
   def js_eval(str, timeout=DEFAULT_SOCKET_TIMEOUT)
-    value= send_and_read(str.gsub("\n",""), :timeout => timeout)
-    if md = /\A(\w+Error):(.*)/m.match(value)
-      js_error(md[1], md[2], str)
-    elsif md = /\Auncaught exception: (.*)/m.match(value)
-      js_error(nil, md[1], str)
-    end
-    value
+    raise NotImplementedError, "js_eval is gone"
+#    value= send_and_read(str.gsub("\n",""), :timeout => timeout)
+#    if md = /\A(\w+Error):(.*)/m.match(value)
+#      js_error(md[1], md[2], str)
+#    elsif md = /\Auncaught exception: (.*)/m.match(value)
+#      js_error(nil, md[1], str)
+#    end
+#    value
   end
 
   def send_and_read(js_expr, options={})
@@ -185,6 +192,7 @@ class JsshSocket
     end
     raise err
   end
+  private :js_error
 
   # returns the value of the given javascript expression, as reported by JSSH. 
   # This will be a string, the given expression's toString. 

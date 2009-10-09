@@ -10,37 +10,37 @@ module Watir
     #   * container  - an instance of a container
     #   * how         - symbol - how we access the link
     #   * what         - what we use to access the link, text, url, index etc
-    def initialize(container, how, what)
-      set_container container
-      @how = how
-      @what = what
-      super(nil)
-    end
+#    def initialize(container, how, what)
+#      set_container container
+#      @how = how
+#      @what = what
+#      super(nil)
+#    end
     
-    def locate
-      if @how == :xpath
-        @o = @container.element_by_xpath(@what)
-      else
-        begin
-          @o = @container.locate_tagged_element('A', @how, @what)
-        rescue UnknownObjectException
-          @o = nil
-        end
-      end
-    end
+#    def locate
+#      if @how == :xpath
+#        @o = @container.element_by_xpath(@what)
+#      else
+#        begin
+#          @o = @container.locate_tagged_element('A', @how, @what)
+#        rescue UnknownObjectException
+#          @o = nil
+#        end
+#      end
+#    end
     
     # if an image is used as part of the link, this will return true
     def link_has_image
       assert_exists
-      return true if @o.getElementsByTagName("IMG").length > 0
+      return true if element_object.getElementsByTagName("IMG").length > 0
       return false
     end
     
     # this method returns the src of an image, if an image is used as part of the link
     def src # BUG?
       assert_exists
-      if @o.getElementsByTagName("IMG").length > 0
-        return @o.getElementsByTagName("IMG")[0.to_s].src
+      if element_object.getElementsByTagName("IMG").length > 0
+        return element_object.getElementsByTagName("IMG")[0.to_s].src
       else
         return ""
       end

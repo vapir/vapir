@@ -19,6 +19,10 @@ module Watir
     include Container
     include Watir::Exception
     
+    def extra
+      {:container => self, :browser => self.browser}
+    end
+
     # Note: @container is the container of this object, i.e. the container
     # of this container.
     # In other words, for ie.table().this_thing().text_field().set,
@@ -65,20 +69,20 @@ module Watir
     end
         
     private
-    def self.def_creator(method_name, klass_name=nil)
-      klass_name ||= method_name.to_s.capitalize
-      class_eval "def #{method_name}(how, what=nil)
-                          #{klass_name}.new(self, how, what)
-                        end"
-    end
+#    def self.def_creator(method_name, klass_name=nil)
+#      klass_name ||= method_name.to_s.capitalize
+#      class_eval "def #{method_name}(how, what=nil)
+#                          #{klass_name}.new(self, how, what)
+#                        end"
+#    end
     
-    def self.def_creator_with_default(method_name, default_symbol)
-      klass_name = method_name.to_s.capitalize
-      class_eval "def #{method_name}(how, what=nil)
-                          how, what = process_default :#{default_symbol}, how, what
-                          #{klass_name}.new(self, how, what)
-                        end"
-    end
+#    def self.def_creator_with_default(method_name, default_symbol)
+#      klass_name = method_name.to_s.capitalize
+#      class_eval "def #{method_name}(how, what=nil)
+#                          how, what = process_default :#{default_symbol}, how, what
+#                          #{klass_name}.new(self, how, what)
+#                        end"
+#    end
     
     #
     #           Factory Methods
@@ -98,11 +102,22 @@ module Watir
     #   ie.frame(:name, 'main_frame')
     #   ie.frame('main_frame')        # in this case, just a name is supplied
     public
-    def frame(how, what=nil)
-      how, what = process_default :name, how, what
-      IEFrame.new(self, how, what)
-    end
+#    def frame(how, what=nil)
+#      how, what = process_default :name, how, what
+#      IEFrame.new(self, how, what)
+#    end
         
+    def frames
+      unless self.is_a?(Browser) || self.is_a?(Frame)
+        raise NotImplementedError, "frames called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::IE and Watir::IEFrame"
+      end
+      frames=[]
+      for index in 0...(document.frames.length)
+        frames << IEFrame.new(self, :index, index+1)
+      end
+      frames
+    end
+=begin
     # this method is used to access a form.
     # available ways of accessing it are, :index, :name, :id, :method, :action, :xpath
     #  * how    - symbol - What mecahnism we use to find the form, one of 
@@ -787,30 +802,30 @@ module Watir
     #   * what  - string that we are looking for, ex. the name, or id tag attribute or index of the object we are looking for.
     #   * types - what object types we will look at.
     #   * value - used for objects that have one name, but many values. ex. radio lists and checkboxes
-    def locate_input_element(how, what, types, value=nil)
-      case how
-      when :xpath
-        return element_by_xpath(what)
-      when :ole_object
-        return what
-      end
-      # else:
-      
-      locator = InputElementLocator.new self, types
-      locator.specifier = [how, what, value]
-      locator.document = document
-      return locator.element if locator.fast_locate
-      # todo: restrict search to elements.getElementsByTag('INPUT'); faster
-      locator.elements = ole_inner_elements if locator.elements.nil?
-      locator.locate
-    end
-    
-    # returns the ole object for the specified element
-    def locate_tagged_element(tag, how, what)
-      locator = TaggedElementLocator.new(self, tag)
-      locator.set_specifier(how, what)
-      locator.locate
-    end
-
+#    def locate_input_element(how, what, types, value=nil)
+#      case how
+#      when :xpath
+#        return element_by_xpath(what)
+#      when :ole_object, :element_object
+#        return what
+#      end
+#      # else:
+#      
+#      locator = InputElementLocator.new self, types
+#      locator.specifier = [how, what, value]
+#      locator.document = document
+#      return locator.element if locator.fast_locate
+#      # todo: restrict search to elements.getElementsByTag('INPUT'); faster
+#      locator.elements = ole_inner_elements if locator.elements.nil?
+#      locator.locate
+#    end
+#    
+#    # returns the ole object for the specified element
+#    def locate_tagged_element(tag, how, what)
+#      locator = TaggedElementLocator.new(self, tag)
+#      locator.set_specifier(how, what)
+#      locator.locate
+#    end
+=end
   end # module
 end

@@ -2,15 +2,15 @@ module Watir
   
   class IEInputElement < IEElement
     include InputElement
-    def locate
-      @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES)
-    end
-    def initialize(container, how, what)
-      set_container container
-      @how = how
-      @what = what
-      super(nil)
-    end
+#    def locate
+#      @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES)
+#    end
+#    def initialize(container, how, what)
+#      set_container container
+#      @how = how
+#      @what = what
+#      super(nil)
+#    end
   end
 
   #
@@ -30,7 +30,7 @@ module Watir
       assert_exists
       highlight(:set)
       wait = false
-      @o.each do |selectBoxItem|
+      element_object.each do |selectBoxItem|
         if selectBoxItem.selected
           selectBoxItem.selected = false
           wait = true
@@ -67,15 +67,15 @@ module Watir
 
       value = value.to_s unless [Regexp, String].any? { |e| value.kind_of? e }
 
-      @container.log "Setting box #{@o.name} to #{attribute.inspect} => #{value.inspect}"
-      @o.each do |option| # items in the list
+      @container.log "Setting box #{element_object.name} to #{attribute.inspect} => #{value.inspect}"
+      element_object.each do |option| # items in the list
         if value.matches(option.invoke(attribute.to_s))
           if option.selected
             found = true
             break
           else
             option.selected = true
-            @o.fireEvent("onChange")
+            element_object.fireEvent("onChange")
             @container.wait
             found = true
             break
@@ -94,9 +94,9 @@ module Watir
     # Raises UnknownObjectException if the select box is not found
     def options 
       assert_exists
-      @container.log "There are #{@o.length} items"
+      @container.log "There are #{element_object.length} items"
       returnArray = []
-      @o.each { |thisItem| returnArray << thisItem.text }
+      element_object.each { |thisItem| returnArray << thisItem.text }
       return returnArray
     end
     
@@ -105,8 +105,8 @@ module Watir
     def selected_options
       assert_exists
       returnArray = []
-      @container.log "There are #{@o.length} items"
-      @o.each do |thisItem|
+      @container.log "There are #{element_object.length} items"
+      element_object.each do |thisItem|
         if thisItem.selected
           @container.log "Item (#{thisItem.text}) is selected"
           returnArray << thisItem.text
@@ -135,55 +135,55 @@ module Watir
     end
   end
   
-  module IEOptionAccess
-    def text
-      @option.text
-    end
-    def value
-      @option.value
-    end
-    def selected
-      @option.selected
-    end
-  end
-  
-  class IEOptionWrapper
-    include IEOptionAccess
-    def initialize(option)
-      @option = option
-    end
-  end
+#  module IEOptionAccess
+#    def text
+#      @option.text
+#    end
+#    def value
+#      @option.value
+#    end
+#    def selected
+#      @option.selected
+#    end
+#  end
+#  
+#  class IEOptionWrapper
+#    include IEOptionAccess
+#    def initialize(option)
+#      @option = option
+#    end
+#  end
   
   # An item in a select list
   class IEOption
     include Option
-    include IEOptionAccess
+#    include IEOptionAccess
     include Watir::Exception
-    def initialize(select_list, attribute, value)
-      @select_list = select_list
-      @how = attribute
-      @what = value
-      @option = nil
-      
-      unless [:text, :value, :label].include? attribute
-        raise MissingWayOfFindingObjectException,
-                    "Option does not support attribute #{@how}"
-      end
-      @select_list.o.each do |option| # items in the list
-        if value.matches(option.invoke(attribute.to_s))
-          @option = option
-          break
-        end
-      end
-      
-    end
-    def assert_exists
-      unless @option
-        raise UnknownObjectException,
-                    "Unable to locate an option using #{@how} and #{@what}"
-      end
-    end
-    private :assert_exists
+#    def initialize(select_list, attribute, value)
+#      @select_list = select_list
+#      @how = attribute
+#      @what = value
+#      @option = nil
+#      
+#      unless [:text, :value, :label].include? attribute
+#        raise MissingWayOfFindingObjectException,
+#                    "Option does not support attribute #{@how}"
+#      end
+#      @select_list.o.each do |option| # items in the list
+#        if value.matches(option.invoke(attribute.to_s))
+#          @option = option
+#          break
+#        end
+#      end
+#      
+#    end
+#    def assert_exists
+#      unless @option
+#        raise UnknownObjectException,
+#                    "Unable to locate an option using #{@how} and #{@what}"
+#      end
+#    end
+#    private :assert_exists
     def select
       assert_exists
       @select_list.select_item_in_select_list(@how, @what)
@@ -210,7 +210,7 @@ module Watir
     include TextField
     INPUT_TYPES = ["text", "password", "textarea"]
     
-    def_wrap_guard :size
+#    def_wrap_guard :size
     
     def maxlength
       assert_exists
@@ -223,7 +223,7 @@ module Watir
         
     # Returns true or false if the text field is read only.
     #   Raises UnknownObjectException if the object can't be found.
-    def_wrap :readonly?, :readOnly
+#    def_wrap :readonly?, :readOnly
     
     def text_string_creator
       n = []
@@ -272,18 +272,18 @@ module Watir
         raise UnknownObjectException, "Unable to locate destination using #{destination_how } and #{destination_what } "
       end
       
-      @o.focus
-      @o.select
+      element_object.focus
+      element_object.select
       value = self.value
       
-      @o.fireEvent("onSelect")
-      @o.fireEvent("ondragstart")
-      @o.fireEvent("ondrag")
+      element_object.fireEvent("onSelect")
+      element_object.fireEvent("ondragstart")
+      element_object.fireEvent("ondrag")
       destination.fireEvent("onDragEnter")
       destination.fireEvent("onDragOver")
       destination.fireEvent("ondrop")
       
-      @o.fireEvent("ondragend")
+      element_object.fireEvent("ondragend")
       destination.value = destination.value + value.to_s
       self.value = ""
     end
@@ -298,13 +298,13 @@ module Watir
       
       highlight(:set)
       
-      @o.scrollIntoView
-      @o.focus
-      @o.select
-      @o.fireEvent("onSelect")
-      @o.value = ""
-      @o.fireEvent("onKeyPress")
-      @o.fireEvent("onChange")
+      element_object.scrollIntoView
+      element_object.focus
+      element_object.select
+      element_object.fireEvent("onSelect")
+      element_object.value = ""
+      element_object.fireEvent("onKeyPress")
+      element_object.fireEvent("onChange")
       @container.wait
       highlight(:clear)
     end
@@ -318,8 +318,8 @@ module Watir
       assert_not_readonly
       
       highlight(:set)
-      @o.scrollIntoView
-      @o.focus
+      element_object.scrollIntoView
+      element_object.focus
       type_by_character(value)
       highlight(:clear)
     end
@@ -333,18 +333,18 @@ module Watir
       assert_not_readonly
       
       highlight(:set)
-      @o.scrollIntoView
+      element_object.scrollIntoView
       if type_keys
-	      @o.focus
-	      @o.select
-	      @o.fireEvent("onSelect")
-	      @o.fireEvent("onKeyPress")
-	      @o.value = ""
+	      element_object.focus
+	      element_object.select
+	      element_object.fireEvent("onSelect")
+	      element_object.fireEvent("onKeyPress")
+	      element_object.value = ""
 	      type_by_character(value)
-	      @o.fireEvent("onChange")
-	      @o.fireEvent("onBlur")
+	      element_object.fireEvent("onChange")
+	      element_object.fireEvent("onBlur")
 	    else
-				@o.value = limit_to_maxlength(value)
+				element_object.value = limit_to_maxlength(value)
 	    end
       highlight(:clear)
     end
@@ -355,7 +355,7 @@ module Watir
     # It is preffered to use the set method.
     def value=(v)
       assert_exists
-      @o.value = v.to_s
+      element_object.value = v.to_s
     end
     
     def requires_typing
@@ -376,10 +376,10 @@ module Watir
       value = limit_to_maxlength(value)
       characters_in(value) do |c|
         sleep @container.typingspeed
-        @o.value = @o.value.to_s + c   
-        @o.fireEvent("onKeyDown")
-        @o.fireEvent("onKeyPress")
-        @o.fireEvent("onKeyUp")
+        element_object.value = element_object.value.to_s + c   
+        element_object.fireEvent("onKeyDown")
+        element_object.fireEvent("onKeyPress")
+        element_object.fireEvent("onKeyUp")
       end
     end
     
@@ -399,7 +399,7 @@ module Watir
     
     # Return the value (a string), limited to the maxlength of the element.
     def limit_to_maxlength(value)
-      return value if @o.invoke('type') =~ /textarea/i # text areas don't have maxlength
+      return value if element_object.invoke('type') =~ /textarea/i # text areas don't have maxlength
       if value.length > maxlength
         value = value[0 .. maxlength - 1]
         @container.log " Supplied string is #{value.length} chars, which exceeds the max length (#{maxlength}) of the field. Using value: #{value}"
@@ -489,14 +489,14 @@ module Watir
   #
   # most of the methods available to this element are inherited from the Element class
   #
-  class IERadioCheckCommon < IEInputElement
-    def locate
-      @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES, @value)
-    end
-    def initialize(container, how, what, value=nil)
-      super container, how, what
-      @value = value
-    end
+  module IERadioCheckCommon
+#    def locate
+#      @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES, @value)
+#    end
+#    def initialize(container, how, what, value=nil)
+#      super container, how, what
+#      @value = value
+#    end
     
     def inspect
       '#<%s:0x%x located=%s how=%s what=%s value=%s>' % [self.class, hash*2, !!ole_object, @how.inspect, @what.inspect, @value.inspect]
@@ -507,14 +507,14 @@ module Watir
     # Raises UnknownObjectException if its unable to locate an object.
     def set? # could be just "checked?"
       assert_exists
-      return @o.checked
+      return element_object.checked
     end
     alias checked? set?
     
     # This method is the common code for setting or clearing checkboxes and radio.
     def set_clear_item(set)
-      @o.checked = set
-      @o.fireEvent("onClick")
+      element_object.checked = set
+      element_object.fireEvent("onClick")
       @container.wait
     end
     private :set_clear_item
@@ -525,7 +525,8 @@ module Watir
   #  this class makes the docs better
   #++
   # This class is the watir representation of a radio button.
-  class IERadio < IERadioCheckCommon
+  class IERadio < IEElement
+    include IERadioCheckCommon
     include Radio
     INPUT_TYPES = ["radio"]
     # This method clears a radio button. One of them will almost always be set.
@@ -545,7 +546,7 @@ module Watir
     def set
       assert_enabled
       highlight(:set)
-      @o.scrollIntoView
+      element_object.scrollIntoView
       set_clear_item(true)
       highlight(:clear)
     end
@@ -553,7 +554,8 @@ module Watir
   end
   
   # This class is the watir representation of a check box.
-  class IECheckBox < IERadioCheckCommon
+  class IECheckBox < IEElement
+    include IERadioCheckCommon
     include CheckBox
     INPUT_TYPES = ["checkbox"]
     # With no arguments supplied, sets the check box.
@@ -564,7 +566,7 @@ module Watir
     def set(value=true)
       assert_enabled
       highlight :set
-      unless @o.checked == value
+      unless element_object.checked == value
         set_clear_item value
       end
       highlight :clear

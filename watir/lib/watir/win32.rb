@@ -1,3 +1,6 @@
+require 'dl/import'
+require 'dl/struct'
+
 module Watir
   module Win32
     # this will find the IEDialog.dll file in its build location
@@ -33,4 +36,4 @@ module Watir
       rtn == 1
     end
   end
-end  
+end

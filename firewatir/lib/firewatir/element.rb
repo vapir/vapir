@@ -1,5 +1,3 @@
-require 'firewatir/specifier'
-
 module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
@@ -32,24 +30,6 @@ module Watir
         curr_klass.new(:element_object, element_object, extra)
       end
     
-      # look for constants to define specifiers - either class::Specifier, or
-      # the simpler class::TAG
-      def specifiers
-        if self.const_defined?('Specifiers') # note that though constants are inherited, this checks if Specifiers is defined on the class itself 
-                                              # (although the class itself may not define them, these are mostly defined for classes by element classes in commonwatir)
-          #self.const_get('Specifiers')
-          self::Specifiers
-        elsif self.const_defined?('TAG')
-          [{:tagName => self::TAG}]
-        else
-          raise "No way found to specify #{self}."
-        end
-      end
-      
-      def default_how
-        self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
-      end
-      
     end
 
     #
@@ -87,119 +67,11 @@ module Watir
 #    alias ole_object element_object
 
     private
-    def container_candidates(specifiers)
-      raise unless @container
-      attributes_in_specifiers=proc do |attr|
-        specifiers.inject([]) do |arr, spec|
-          spec.each_pair do |spec_attr, spec_val|
-            if (spec_attr==attr || Watir::Specifier::LocateAliases[spec_attr].include?(attr)) && !arr.include?(spec_val)
-              arr << spec_val
-            end
-          end
-          arr
-        end
-      end
-      ids=attributes_in_specifiers.call(:id)
-      tags=attributes_in_specifiers.call(:tagName)
-      names=attributes_in_specifiers.call(:name)
-      classNames=attributes_in_specifiers.call(:className)
-#      ids=specifiers.inject([]) do |arr,s|
-#        arr << s[:id] if s.key?(:id)
-#        arr
-#      end.uniq
-#      tags=specifiers.map{|s| s[:tagName] }.compact.uniq
-#      names=specifiers.map{|s| s[:name] }.compact.uniq
-#      classNames=specifiers.inject([]) do |arr,s| 
-#        arr+[s[:class]]+Watir::Specifier::LocateAliases.map do |(_alias, attr)| 
-#          attr==:class ? 
-#        end
-#      end.compact.uniq
-
-      # we can only use getElementById if:
-      # - id is a string, as getElementById doesn't do regexp
-      # - index is 1 or nil; otherwise even though it's not really valid, other identical ids won't get searched
-      # - id is the _only_ specifier, otherwise if the same id is used multiple times but the first one doesn't match 
-      #   the given specifiers, the element won't be found
-      # - @container has getElementById defined (that is, it's a Browser or a Frame), otherwise if we called 
-      #   document_object.getElementById we wouldn't know if what's returned is below @container in the DOM heirarchy or not
-      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && @container.containing_object.respond_to?(:getElementById)
-        candidates= if by_id=document_object.getElementById(ids.first)
-          [by_id]
-        else
-          []
-        end
-      elsif tags.size==1 && tags.first.is_a?(String)
-        candidates=@container.containing_object.getElementsByTagName(tags.first).to_array
-      elsif names.size==1 && names.first.is_a?(String) && @container.containing_object.respond_to?(:getElementsByName)
-        candidates=@container.containing_object.getElementsByName(names.first).to_array
-      elsif classNames.size==1 && classNames.first.is_a?(String) && @container.containing_object.respond_to?(:getElementsByClassName)
-        candidates=@container.containing_object.getElementsByClassName(classNames.first).to_array
-      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=@container.containing_object.getElementsByTagName('*').to_array
-      end
-      candidates
+    def base_element_klass
+      FFElement
     end
-
-    public
-    # locates a javascript reference for this element
-    def locate(options={})
-      default_options={}
-      if @browser && @updated_at && @browser.updated_at > @updated_at
-        default_options[:relocate]=:recursive
-      end
-      options=default_options.merge(options)
-      if options[:relocate]
-        @element_object=nil
-      end
-      element_object_existed=!!@element_object
-      @element_object||= begin
-        case @how
-        when :jssh_object, :element_object
-          raise if options[:relocate]
-          @what
-        when :jssh_name
-          raise if options[:relocate]
-          JsshObject.new(@what, jssh_socket)
-        when :xpath
-          by_xpath=element_object_by_xpath(@container.containing_object, @what)
-          matched_by_xpath=nil
-          Watir::Specifier.match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers) do |match|
-            matched_by_xpath=match
-          end
-          matched_by_xpath
-        when :attributes
-          #if options[:relocate]==:recursive && !@container.is_a?(Browser) # don't try to locate a browser 
-          #  raise unless @container
-          #  @container.locate(options)
-          #end
-          if !@container
-            raise
-          end
-          @container.locate!(options)
-          specified_attributes=@what
-          specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
-          
-          matched_candidate=nil
-          matched_count=0
-          Watir::Specifier.match_candidates(container_candidates(specifiers), specifiers) do |match|
-          matched_count+=1
-            if !@index || @index==matched_count
-              matched_candidate=match.store_rand_prefix("firewatir_elements")
-              break
-            end
-          end
-          matched_candidate
-        else
-          raise Watir::Exception::MissingWayOfFindingObjectException
-        end
-      end
-      if !element_object_existed && @element_object
-        @updated_at=Time.now
-      end
-      @element_object
-    end
-    def locate!(options={})
-      locate(options) || raise(self.class==FFFrame ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException, Watir::Exception.message_for_unable_to_locate(@how, @what))
+    def browser_klass
+      Firefox
     end
 
     private
@@ -754,17 +626,6 @@ module Watir
     def assign(property, value)
       locate
       element_object.attr(property).assign(value)
-    end
-    
-    def document_object
-      @container.document_object
-    end
-    
-    def content_window_object
-      @container.content_window_object
-    end
-    def browser_window_object
-      @container.browser_window_object
     end
     
   end # Element

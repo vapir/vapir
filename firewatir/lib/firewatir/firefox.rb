@@ -80,7 +80,6 @@
    http://www.xulplanet.com/references/objref/
 
 =end
-require 'firewatir/specifier'
 
 module Watir # TODO/FIX: move this somewhere appropriate
   module FFHasDocument
@@ -256,15 +255,6 @@ module Watir
       end
     end
     
-    # locate is used by stuff that uses container. this doesn't actually locate the browser
-    # but checks if it (still) exists. 
-    def locate(options={})
-      exists?
-    end
-    def locate!(options={})
-      locate(options) || raise(Watir::Exception::NoMatchingWindowFoundException, "The browser window seems to be gone")
-    end
-
     # Launches firebox browser
     # options as .new
 
@@ -939,31 +929,31 @@ module Watir
     #
     def show_frames
       raise NotImplementedError
-      jssh_command = "var frameset = #{window_var}.frames;
-                            var elements_frames = new Array();
-                            for(var i = 0; i < frameset.length; i++)
-                            {
-                                var frames = frameset[i].frames;
-                                for(var j = 0; j < frames.length; j++)
-                                {
-                                    elements_frames.push(frames[j].frameElement);
-                                }
-                            }
-                            elements_frames.length;"
-
-      length = jssh_socket.js_eval(jssh_command).to_i
-
-      puts "There are #{length} frames"
-
-      frames = Array.new(length)
-      for i in 0..length - 1 do
-        frames[i] = FFFrame.new(self, :jssh_name, "elements_frames[#{i}]")
-      end
-
-      for i in 0..length - 1 do
-        puts "frame: name: #{frames[i].name}"
-        puts "      index: #{i+1}"
-      end
+#      jssh_command = "var frameset = #{window_var}.frames;
+#                            var elements_frames = new Array();
+#                            for(var i = 0; i < frameset.length; i++)
+#                            {
+#                                var frames = frameset[i].frames;
+#                                for(var j = 0; j < frames.length; j++)
+#                                {
+#                                    elements_frames.push(frames[j].frameElement);    
+#                                }
+#                            }
+#                            elements_frames.length;"
+#      
+#      length = jssh_socket.js_eval(jssh_command).to_i
+#      
+#      puts "There are #{length} frames"
+#      
+#      frames = Array.new(length)
+#      for i in 0..length - 1 do
+#        frames[i] = FFFrame.new(self, :jssh_name, "elements_frames[#{i}]")
+#      end
+#      
+#      for i in 0..length - 1 do
+#        puts "frame: name: #{frames[i].name}"
+#        puts "      index: #{i+1}"
+#      end
     end
     alias showFrames show_frames
 
@@ -985,18 +975,19 @@ module Watir
     end
 
     def current_os
-      return @current_os if defined?(@current_os)
-
-      platform = RUBY_PLATFORM =~ /java/ ? java.lang.System.getProperty("os.name") : RUBY_PLATFORM
-
-      @current_os = case platform
-                    when /mingw32|mswin|windows/i
-                      :windows
-                    when /darwin|mac os/i
-                      :macosx
-                    when /linux/i
-                      :linux
-                    end
+      @current_os ||= begin
+        platform= RUBY_PLATFORM =~ /java/ ? java.lang.System.getProperty("os.name") : RUBY_PLATFORM
+        case platform
+        when /mswin|windows/i
+          :windows
+        when /darwin|mac os/i
+          :macosx
+        when /linux/i
+          :linux
+        else
+          raise
+        end
+      end
     end
 
     def path_from_registry

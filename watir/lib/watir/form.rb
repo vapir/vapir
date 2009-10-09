@@ -4,16 +4,16 @@ module Watir
   
   module IEFormAccess
     def name
-      @ole_object.getAttributeNode('name').value
+      @element_object.getAttributeNode('name').value
     end
     def action
-      @ole_object.action
+      @element_object.action
     end
     def method
-      @ole_object.invoke('method')
+      @element_object.invoke('method')
     end
     def id
-      @ole_object.invoke('id')
+      @element_object.invoke('id')
     end
   end
   
@@ -21,7 +21,7 @@ module Watir
   class IEFormWrapper
     include IEFormAccess
     def initialize ole_object
-      @ole_object = ole_object
+      @element_object = ole_object
     end
   end
   
@@ -36,42 +36,42 @@ module Watir
     #   * container   - the containing object, normally an instance of IE
     #   * how         - symbol - how we access the form (:name, :id, :index, :action, :method)
     #   * what        - what we use to access the form
-    def initialize(container, how, what)
-      set_container container
-      @how = how
-      @what = what
-      
-      log "Get form how is #{@how}  what is #{@what} "
-      
-      # Get form using xpath.
-      if @how == :xpath
-        @ole_object = @container.element_by_xpath(@what)
-      else
-        count = 1
-        doc = @container.document
-        doc.forms.each do |thisForm|
-          next unless @ole_object == nil
-          
-          wrapped = IEFormWrapper.new(thisForm)
-          @ole_object =
-          case @how
-          when :name, :id, :method, :action
-            @what.matches(wrapped.send(@how)) ? thisForm : nil
-          when :index
-            count == @what ? thisForm : nil
-          else
-            raise MissingWayOfFindingObjectException, "#{how} is an unknown way of finding a form (#{what})"
-          end
-          count += 1
-        end
-      end
-      super(@ole_object)
-      
-      copy_test_config container
-    end
+#    def initialize(container, how, what)
+#      set_container container
+#      @how = how
+#      @what = what
+#      
+#      log "Get form how is #{@how}  what is #{@what} "
+#      
+#      # Get form using xpath.
+#      if @how == :xpath
+#        @element_object = @container.element_by_xpath(@what)
+#      else
+#        count = 1
+#        doc = @container.document
+#        doc.forms.each do |thisForm|
+#          next unless @element_object == nil
+#          
+#          wrapped = IEFormWrapper.new(thisForm)
+#          @element_object =
+#          case @how
+#          when :name, :id, :method, :action
+#            @what.matches(wrapped.send(@how)) ? thisForm : nil
+#          when :index
+#            count == @what ? thisForm : nil
+#          else
+#            raise MissingWayOfFindingObjectException, "#{how} is an unknown way of finding a form (#{what})"
+#          end
+#          count += 1
+#        end
+#      end
+#      super(@element_object)
+#      
+#      copy_test_config container
+#    end
     
     def exists?
-      @ole_object ? true : false
+      @element_object ? true : false
     end
     alias :exist? :exists?
     
@@ -85,18 +85,18 @@ module Watir
     # Submit the data -- equivalent to pressing Enter or Return to submit a form.
     def submit 
       assert_exists
-      @ole_object.invoke('submit')
+      @element_object.invoke('submit')
       @container.wait
     end
     
     def ole_inner_elements
       assert_exists
-      @ole_object.elements
+      @element_object.elements
     end
     private :ole_inner_elements
     
     def document
-      return @ole_object
+      return @element_object
     end
     
     def wait(no_sleep=false)
@@ -137,13 +137,13 @@ module Watir
       @original_styles = {}
       number.times do
         count = 0
-        @ole_object.elements.each do |element|
+        @element_object.elements.each do |element|
           highlight(:set, element, count)
           count += 1
         end
         sleep 0.05
         count = 0
-        @ole_object.elements.each do |element|
+        @element_object.elements.each do |element|
           highlight(:clear, element, count)
           count += 1
         end

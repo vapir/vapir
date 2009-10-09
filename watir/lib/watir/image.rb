@@ -6,20 +6,21 @@ module Watir
   # many of the methods available to this object are inherited from the Element class
   #
   class IEImage < IEElement
-    def initialize(container, how, what)
-      set_container container
-      @how = how
-      @what = what
-      super nil
-    end
+    include Image
+#    def initialize(container, how, what)
+#      set_container container
+#      @how = how
+#      @what = what
+#      super nil
+#    end
     
-    def locate
-      if @how == :xpath
-        @o = @container.element_by_xpath(@what)
-      else
-        @o = @container.locate_tagged_element('IMG', @how, @what)
-      end
-    end
+#    def locate
+#      if @how == :xpath
+#        @o = @container.element_by_xpath(@what)
+#      else
+#        @o = @container.locate_tagged_element('IMG', @how, @what)
+#      end
+#    end
     
     # this method produces the properties for an image as an array
     def image_string_creator
@@ -45,25 +46,25 @@ module Watir
     # this method returns the file created date of the image
     def file_created_date
       assert_exists
-      return @o.invoke("fileCreatedDate")
+      return @element_object.invoke("fileCreatedDate")
     end
     
     # this method returns the filesize of the image
     def file_size
       assert_exists
-      return @o.invoke("fileSize").to_s
+      return @element_object.invoke("fileSize").to_s
     end
     
     # returns the width in pixels of the image, as a string
     def width
       assert_exists
-      return @o.invoke("width").to_s
+      return @element_object.invoke("width").to_s
     end
     
     # returns the height in pixels of the image, as a string
     def height
       assert_exists
-      return @o.invoke("height").to_s
+      return @element_object.invoke("height").to_s
     end
     
     # This method attempts to find out if the image was actually loaded by the web browser.
@@ -72,8 +73,8 @@ module Watir
     # If the Disk cache is full (tools menu -> Internet options -> Temporary Internet Files), it may produce incorrect responses.
     def loaded?
       locate
-      raise UnknownObjectException, "Unable to locate image using #{@how} and #{@what}" if @o == nil
-      return false if @o.fileCreatedDate == "" and @o.fileSize.to_i == -1
+      raise UnknownObjectException, "Unable to locate image using #{@how} and #{@what}" if @element_object == nil
+      return false if @element_object.fileCreatedDate == "" and @element_object.fileSize.to_i == -1
       return true
     end
     
@@ -82,14 +83,14 @@ module Watir
     def highlight(set_or_clear)
       if set_or_clear == :set
         begin
-          @original_border = @o.border
-          @o.border = 1
+          @original_border = element_object.border
+          element_object.border = 1
         rescue
           @original_border = nil
         end
       else
         begin
-          @o.border = @original_border
+          element_object.border = @original_border
           @original_border = nil
         rescue
           # we could be here for a number of reasons...

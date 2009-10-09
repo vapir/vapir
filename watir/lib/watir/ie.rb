@@ -37,6 +37,26 @@
 
 require 'watir/win32ole'
 
+# necessary extension of win32ole 
+class WIN32OLE
+  def respond_to?(method)
+    super || ole_respond_to?(method)
+  end
+  def ole_respond_to?(method)
+    #!!ole_methods.detect{|ole_method| ole_method.to_s == method.to_s}
+    # the above is ridiculously slow.
+    @respond_to_cache||=Hash.new do |hash, key|
+      hash[key]=begin
+        !!self[key.to_s]
+      rescue WIN32OLERuntimeError
+        false
+      end
+    end
+    
+    @respond_to_cache[method]
+  end
+end
+
 require 'logger'
 require 'watir/common_elements'
 require 'watir/winClicker'
@@ -128,6 +148,7 @@ end
 
 # why won't this work when placed in the module (where it properly belongs)
 def _code_that_copies_readonly_array(array, name)
+  raise NotImplementedError
     "temp = Array.new(#{array.inspect}); #{name}.clear; temp.each {|element| #{name} << element}"
 end
 

@@ -50,13 +50,6 @@ module Watir
       #   r=r + label_string_creator
     end
     
-    def for
-      if for_object=document_object.getElementById(element_object.htmlFor)
-        FFElement.factory(for_object.store_rand_prefix('firewatir_elements'), extra)
-      else
-        raise "no element found that this is for!"
-      end
-    end
   end
 
   class FFUl < FFElement

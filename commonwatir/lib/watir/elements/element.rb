@@ -73,11 +73,25 @@ module Watir
               element_object.method_missing(dom_method_name, *args)
               # note: using method_missing (not get) so that attribute= methods can be used 
             elsif args.length==0
-              element_object.getAttribute(dom_method_name)
+              element_object.getAttribute(dom_method_name.to_s)
             else
               raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
             end
           end
+        end
+      end
+    end
+    #TODO fix duplication with dom_wrap
+    def dom_wrap_deprecated(ruby_method_name, dom_method_name, new_method_name)
+      define_method ruby_method_name do |*args|
+        STDERR.puts "DEPRECATION WARNING: #{ruby_method_name} is deprecated, please use #{new_method_name}"
+        assert_exists
+        if element_object.respond_to?(dom_method_name)
+          element_object.method_missing(dom_method_name, *args)
+        elsif args.length==0
+          element_object.getAttribute(dom_method_name.to_s)
+        else
+          raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
         end
       end
     end
@@ -159,18 +173,157 @@ module Watir
     end
   end
 
+  # this is included by every Element. it relies on the including class implementing a 
+  # #element_object method 
+  # some stuff assumes the element has a defined @container. 
   module Element
     include ContainerMethodsFromName
     Specifiers=[{}] # one specifier with no criteria - note that an empty specifiers list
                      # would match no elements; a non-empty list with no criteria matches any
                      # element.
+    def self.included(element_klass)
+      # look for constants to define specifiers - either class::Specifier, or
+      # the simpler class::TAG
+      def element_klass.specifiers
+        if self.const_defined?('Specifiers') # note that though constants are inherited, this checks if Specifiers is defined on the class itself 
+                                              # (although the class itself may not define them, these are mostly defined for classes by element classes in commonwatir)
+          #self.const_get('Specifiers')
+          self::Specifiers
+        elsif self.const_defined?('TAG')
+          [{:tagName => self::TAG}]
+        else
+          raise "No way found to specify #{self}."
+        end
+      end
+      
+      def element_klass.default_how
+        self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
+      end
+      
+    end
     include ElementModule
     
-    dom_wrap :tagName, :id, :title, :tag_name => :tagName, :text => :textContent, :inner_html => :innerHTML, :html => :innerHTML
-    dom_wrap :class_name => :className
+    dom_wrap :tagName, :className, :innerHTML, :id, :title, :tag_name => :tagName, :text => :textContent, :inner_html => :innerHTML, :class_name => :className
+    #TODO/FIX: this was is outerhtml in IE. maybe just deprecate this and go with the html names?
+    dom_wrap :html => :innerHTML
+    dom_wrap :style
     dom_wrap :scrollIntoView
     dom_wrap :get_attribute_value => :getAttribute, :attribute_value => :getAttribute
     
+
+    private
+    def container_candidates(specifiers)
+      raise unless @container
+      attributes_in_specifiers=proc do |attr|
+        specifiers.inject([]) do |arr, spec|
+          spec.each_pair do |spec_attr, spec_val|
+            if (spec_attr==attr || Watir::Specifier::LocateAliases[spec_attr].include?(attr)) && !arr.include?(spec_val)
+              arr << spec_val
+            end
+          end
+          arr
+        end
+      end
+      ids=attributes_in_specifiers.call(:id)
+      tags=attributes_in_specifiers.call(:tagName)
+      names=attributes_in_specifiers.call(:name)
+      classNames=attributes_in_specifiers.call(:className)
+
+      # we can only use getElementById if:
+      # - id is a string, as getElementById doesn't do regexp
+      # - index is 1 or nil; otherwise even though it's not really valid, other identical ids won't get searched
+      # - id is the _only_ specifier, otherwise if the same id is used multiple times but the first one doesn't match 
+      #   the given specifiers, the element won't be found
+      # - @container has getElementById defined (that is, it's a Browser or a Frame), otherwise if we called 
+      #   document_object.getElementById we wouldn't know if what's returned is below @container in the DOM heirarchy or not
+      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && @container.containing_object.respond_to?(:getElementById)
+        candidates= if by_id=document_object.getElementById(ids.first)
+          [by_id]
+        else
+          []
+        end
+      elsif tags.size==1 && tags.first.is_a?(String)
+        candidates=@container.containing_object.getElementsByTagName(tags.first)#.to_array
+      elsif names.size==1 && names.first.is_a?(String) && @container.containing_object.respond_to?(:getElementsByName)
+        candidates=@container.containing_object.getElementsByName(names.first)#.to_array
+      elsif classNames.size==1 && classNames.first.is_a?(String) && @container.containing_object.respond_to?(:getElementsByClassName)
+        candidates=@container.containing_object.getElementsByClassName(classNames.first)#.to_array
+      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
+        candidates=@container.containing_object.getElementsByTagName('*')#.to_array
+      end
+      if candidates.is_a?(Array)
+        candidates
+      elsif Object.const_defined?('JsshObject') && candidates.is_a?(JsshObject)
+        candidates.to_array
+      elsif Object.const_defined?('WIN32OLE') && candidates.is_a?(WIN32OLE)
+        candidates.send :extend, Enumerable
+      else
+        raise RuntimeError # this shouldn't happen
+      end
+    end
+
+    public
+    # locates a javascript reference for this element
+    def locate(options={})
+      default_options={}
+      if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at
+        default_options[:relocate]=:recursive
+      end
+      options=default_options.merge(options)
+      if options[:relocate]
+        @element_object=nil
+      end
+      element_object_existed=!!@element_object
+      @element_object||= begin
+        case @how
+        when :element_object
+          raise if options[:relocate]
+          @what
+        when :xpath
+          by_xpath=element_object_by_xpath(@container.containing_object, @what)
+          matched_by_xpath=nil
+          Watir::Specifier.match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers) do |match|
+            matched_by_xpath=match
+          end
+          matched_by_xpath
+        when :attributes
+          if !@container
+            raise
+          end
+          @container.locate!(options)
+          specified_attributes=@what
+          specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
+          
+          matched_candidate=nil
+          matched_count=0
+          Watir::Specifier.match_candidates(container_candidates(specifiers), specifiers) do |match|
+          matched_count+=1
+            if !@index || @index==matched_count
+              matched_candidate=match
+              break
+            end
+          end
+          matched_candidate
+        else
+          raise Watir::Exception::MissingWayOfFindingObjectException
+        end
+      end
+      if !element_object_existed && @element_object
+        @updated_at=Time.now
+      end
+      @element_object
+    end
+    def locate!(options={})
+      locate(options) || raise(self.class==FFFrame ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException, Watir::Exception.message_for_unable_to_locate(@how, @what))
+    end
+
+    # Returns whether this element actually exists.
+    def exists?
+      !!locate
+    end
+    alias :exist? :exists?
+
+
     # Flash the element the specified number of times.
     # Defaults to 10 flashes.
     def flash number=10
@@ -182,6 +335,19 @@ module Watir
         sleep 0.05
       end
       nil
+    end
+
+    def browser
+      @container.browser
+    end
+    def document_object
+      @container.document_object
+    end
+    def content_window_object
+      @container.content_window_object
+    end
+    def browser_window_object
+      @container.browser_window_object
     end
   end
 end

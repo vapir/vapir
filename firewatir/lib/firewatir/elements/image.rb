@@ -87,7 +87,7 @@ module Watir
     def highlight( set_or_clear )
       if set_or_clear == :set
         begin
-          @original_border = @o.border
+          @original_border = @element_object.border
           self.border = 1
         rescue
           @original_border = nil

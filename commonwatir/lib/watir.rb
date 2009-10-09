@@ -2,5 +2,6 @@
 # implementations. The 'watir/browser' library will autoload the actual
 # implementations.
 
+require 'watir/specifier'
 require 'watir/waiter'
 require 'watir/browser'

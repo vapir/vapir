@@ -48,6 +48,7 @@ module Watir
     end
 
     def eval_in_spawned_process(command)
+      raise NotImplementedError
       command.strip!
       load_path_code = _code_that_copies_readonly_array($LOAD_PATH, '$LOAD_PATH')
       ruby_code = "require 'watir/ie'; "

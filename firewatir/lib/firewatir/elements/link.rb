@@ -5,38 +5,6 @@ module Watir
   #
   class FFLink < FFElement
     include Link
-    #
-    # Description:
-    #   Initializes the instance of link element.
-    #
-    # Input:
-    #   - how - Attribute to identify the link element.
-    #   - what - Value of that attribute.
-    #
-#    def initialize(container, how, what)
-#      @how = how
-#      @what = what
-#      @container = container
-#    end
-
-#    def self.tagName
-#      'a'
-#    end
-    #
-    # Description:
-    #   Locate the link element on the page.
-    #
-#    def locate
-#      case @how
-#      when :jssh_name
-#        @element_name = @what
-#      when :xpath
-#        @element_name = element_by_xpath(@container, @what)
-#      else
-#        @element_name = locate_tagged_element('A', @how, @what)
-#      end
-#      @o = self
-#    end
 
     #TODO: if an image is used as part of the link, this will return true
     #def link_has_image

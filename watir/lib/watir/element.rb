@@ -10,42 +10,71 @@ module Watir
     # number of spaces that separate the property from the value in the to_s method
     TO_S_SIZE = 14
     
-    # ole_object - the ole object for the element being wrapped
-    def initialize(ole_object)
-      @o = ole_object
-      @original_color = nil
+    def initialize(how, what, extra={})
+      @how, @what=how, what
+      raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
+      @extra=extra
+      @index=extra[:index] && Integer(extra[:index])
+      @container=extra[:container]
+      @browser=extra[:browser]
+      locate! unless extra.key?(:locate) && !extra[:locate]
     end
     
     # Return the ole object, allowing any methods of the DOM that Watir doesn't support to be used.
-    def ole_object # BUG: should use an attribute reader and rename the instance variable
-      return @o
+    #def ole_object # BUG: should use an attribute reader and rename the instance variable
+    #  return @o
+    #end
+
+    class << self
+      def factory(element_object, extra={})
+        curr_klass=self
+        ObjectSpace.each_object(Class) do |klass|
+          if klass < curr_klass
+            Watir::Specifier.match_candidates([element_object], klass.specifiers) do |match|
+              curr_klass=klass
+            end
+          end
+        end
+        curr_klass.new(:element_object, element_object, extra)
+      end
     end
-    def ole_object=(o)
-      @o = o
-    end
+    
+    attr_reader :element_object
+    alias ole_object element_object 
+    alias containing_object element_object
+    #def ole_object=(o)
+    #  @element_object = o
+    #end
     
     def inspect
       '#<%s:0x%x located=%s how=%s what=%s>' % [self.class, hash*2, !!ole_object, @how.inspect, @what.inspect]
     end
     
     private
-    def self.def_wrap(ruby_method_name, ole_method_name=nil)
-      ole_method_name = ruby_method_name unless ole_method_name
-      class_eval "def #{ruby_method_name}
-                          assert_exists
-                          ole_object.invoke('#{ole_method_name}')
-                        end"
+    def base_element_klass
+      IEElement
     end
-    def self.def_wrap_guard(method_name)
-      class_eval "def #{method_name}
-                          assert_exists
-                          begin
-                            ole_object.invoke('#{method_name}')
-                          rescue
-                            ''
-                          end
-                        end"
+    def browser_klass
+      IE
     end
+    private
+#    def self.def_wrap(ruby_method_name, ole_method_name=nil)
+#      ole_method_name = ruby_method_name unless ole_method_name
+#      class_eval "def #{ruby_method_name}
+#                          assert_exists
+#                          ole_object.invoke('#{ole_method_name}')
+#                        end"
+#    end
+#    def self.def_wrap_guard(method_name)
+#      class_eval "def #{method_name}
+#                          assert_exists
+#                          begin
+#                            ole_object.invoke('#{method_name}')
+#                          rescue
+#                            ''
+#                          end
+#                        end"
+#    end
 
 
 
@@ -63,36 +92,36 @@ module Watir
       end
     end
     
-    # return the name of the element (as defined in html)
-    def_wrap_guard :name
-    # return the id of the element
-    def_wrap_guard :id
-    # return whether the element is disabled
-    def_wrap :disabled
-    alias disabled? disabled
-    # return the value of the element
-    def_wrap_guard :value
-    # return the title of the element
-    def_wrap_guard :title
-    # return the style of the element
-    def_wrap_guard :style
-    
-    def_wrap_guard :alt
-    def_wrap_guard :src
-    
-    # return the type of the element
-    def_wrap_guard :type # input elements only
-    # return the url the link points to
-    def_wrap :href # link only
-    # return the ID of the control that this label is associated with
-    def_wrap :for, :htmlFor # label only
-    # return the class name of the element
-    # raise an ObjectNotFound exception if the object cannot be found
-    def_wrap :class_name, :className
-    # return the unique COM number for the element
-    def_wrap :unique_number, :uniqueNumber
-    # Return the outer html of the object - see http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/outerhtml.asp?frame=true
-    def_wrap :html, :outerHTML
+#    # return the name of the element (as defined in html)
+#    def_wrap_guard :name
+#    # return the id of the element
+#    def_wrap_guard :id
+#    # return whether the element is disabled
+#    def_wrap :disabled
+#    alias disabled? disabled
+#    # return the value of the element
+#    def_wrap_guard :value
+#    # return the title of the element
+#    def_wrap_guard :title
+#    # return the style of the element
+#    def_wrap_guard :style
+#    
+#    def_wrap_guard :alt
+#    def_wrap_guard :src
+#    
+#    # return the type of the element
+#    def_wrap_guard :type # input elements only
+#    # return the url the link points to
+#    def_wrap :href # link only
+#    # return the ID of the control that this label is associated with
+#    #def_wrap :for, :htmlFor # label only
+#    # return the class name of the element
+#    # raise an ObjectNotFound exception if the object cannot be found
+#    def_wrap :class_name, :className
+#    # return the unique COM number for the element
+#    def_wrap :unique_number, :uniqueNumber
+#    # Return the outer html of the object - see http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/outerhtml.asp?frame=true
+#    def_wrap :html, :outerHTML
 
     # return the text before the element
     def before_text # label only
@@ -134,6 +163,7 @@ module Watir
 
     # Return the element immediately containing self. 
     def parent
+      raise NotImplementedError
       assert_exists
       result = IEElement.new(ole_object.parentelement)
       result.set_container self
@@ -166,10 +196,10 @@ module Watir
     # Return an array with many of the properties, in a format to be used by the to_s method
     def string_creator
       n = []
-      n <<   "type:".ljust(TO_S_SIZE) + self.type
+#      n <<   "type:".ljust(TO_S_SIZE) + self.type.to_s
       n <<   "id:".ljust(TO_S_SIZE) +         self.id.to_s
-      n <<   "name:".ljust(TO_S_SIZE) +       self.name.to_s
-      n <<   "value:".ljust(TO_S_SIZE) +      self.value.to_s
+#      n <<   "name:".ljust(TO_S_SIZE) +       self.name.to_s
+#      n <<   "value:".ljust(TO_S_SIZE) +      self.value.to_s
       n <<   "disabled:".ljust(TO_S_SIZE) +   self.disabled.to_s
       return n
     end
@@ -226,6 +256,7 @@ module Watir
       
       highlight(:set)
       object = "#{self.class}.new(self, :unique_number, #{self.unique_number})"
+      raise NotImplementedError
       @page_container.eval_in_spawned_process(object + ".click!")
       highlight(:clear)
     end
@@ -259,24 +290,18 @@ module Watir
       ole_object.focus
     end
     
-    # Returns whether this element actually exists.
-    def exists?
-      begin
-        locate if defined?(locate)
-      rescue WIN32OLERuntimeError
-        @o = nil
-      end
-      @o ? true: false
-    end
-    alias :exist? :exists?
-    
     # Returns true if the element is enabled, false if it isn't.
     #   raises: UnknownObjectException  if the object is not found
     def enabled?
-      assert_exists
-      return ! disabled
+      !disabled
     end
 
+    # Returns whether the element is disabled
+    def disabled
+      assert_exists
+      element_object.respond_to?(:disabled) && element_object.disabled
+    end
+    alias disabled? disabled
     # If any parent element isn't visible then we cannot write to the
     # element. The only realiable way to determine this is to iterate
     # up the DOM element tree checking every element to make sure it's
@@ -285,7 +310,7 @@ module Watir
       # Now iterate up the DOM element tree and return false if any
       # parent element isn't visible or is disabled.
       assert_exists
-      object = @o
+      object = @element_object
       while object
         begin
           if object.currentstyle.invoke('visibility') =~ /^hidden$/i
@@ -325,7 +350,7 @@ module Watir
     
     def method_missing method, *args
       locate
-      @wrapper_class.new(@o).send(method, *args)
+      @wrapper_class.new(@element_object).send(method, *args)
     end
   end
 end  

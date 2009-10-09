@@ -175,7 +175,7 @@ module Watir
       self.visible = IE.visible
       self.speed = IE.speed
 
-      @ole_object = nil
+      @element_object = nil
       @page_container = self
       @error_checkers = []
       @activeObjectHighLightColor = HIGHLIGHT_COLOR
@@ -390,8 +390,8 @@ module Watir
     # Execute the given JavaScript string
     def execute_script(source)
       document.parentWindow.eval(source.to_s)
-    rescue WIN32OLERuntimeError
-      document.parentWindow.execScript(source.to_s)
+#    rescue WIN32OLERuntimeError
+#      document.parentWindow.execScript(source.to_s)
     end
     
     # clear the list of urls that we have visited
@@ -464,6 +464,13 @@ module Watir
     # Return the current document
     def document
       return @ie.document
+    end
+    alias document_object document
+    
+    alias containing_object document_object
+    
+    def browser
+      self
     end
     
     # returns the current url, as displayed in the address bar of the browser

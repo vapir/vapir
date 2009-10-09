@@ -29,7 +29,7 @@ module Watir
     #   Gets the array of rows in the table.
     #
     # Output:
-    #   Array of rows.
+    #   ElementCollection of rows.
     #
     def rows
       assert_exists

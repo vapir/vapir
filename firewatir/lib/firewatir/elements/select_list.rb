@@ -23,10 +23,6 @@ module Watir
 
 #    def each
 #      raise NotImplementedError
-#      assert_exists
-#      js_options.each do |option|
-#        yield FFOption.new(self, :jssh_name, option.ref)
-#      end
 #    end
 
     #

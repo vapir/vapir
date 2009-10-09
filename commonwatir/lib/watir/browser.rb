@@ -162,6 +162,14 @@ before you invoke Browser.new.
         self.set_options specified_options
       end
     end
+    # locate is used by stuff that uses container. this doesn't actually locate the browser
+    # but checks if it (still) exists. 
+    def locate(options={})
+      exists?
+    end
+    def locate!(options={})
+      locate(options) || raise(Watir::Exception::NoMatchingWindowFoundException, "The browser window seems to be gone")
+    end
   end
 
 end

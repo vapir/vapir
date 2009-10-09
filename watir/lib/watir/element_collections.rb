@@ -71,6 +71,7 @@ module Watir
         s += index.to_s.ljust(6)
         @show_attributes.each do |attribute_length_pair|
           begin
+            raise NotImplementedError #what the 
             s += eval('o.ole_object.invoke("#{attribute_length_pair.attribute}")').to_s.ljust(attribute_length_pair.length)
           rescue => e
             s += " ".ljust(attribute_length_pair.length)
@@ -92,6 +93,7 @@ module Watir
     # this method creates an object of the correct type that the iterators use
     private
     def iterator_object(i)
+      raise NotImplementedError
       element_class.new(@container, :index, i + 1)
     end
   end

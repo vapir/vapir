@@ -2,6 +2,7 @@ module Watir
 
   # Base class containing items that are common between the span, div, label, p and pre classes.
   class FFNonControlElement < FFElement
+    Specifiers=[]
     include NonControlElement
     def self.inherited subclass
       method_names=subclass.respond_to?(:method_names) ? subclass.method_names : []

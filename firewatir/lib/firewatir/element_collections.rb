@@ -310,7 +310,7 @@ module Watir
 
   #   Class for accessing all the body elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#bodies method
-  class FFBodies < FFElementCollections; end
+  class FFTBodies < FFElementCollections; end
 
   #   Class for accessing all the dd elements in the document.
   #   It would normally only be accessed by the FireWatir::Container#maps method

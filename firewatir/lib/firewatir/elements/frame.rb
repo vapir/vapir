@@ -17,8 +17,7 @@ module Watir
     end
 
     def html
-      assert_exists
-      get_frame_html
+      raise NotImplementedError
     end
     
     def document_object

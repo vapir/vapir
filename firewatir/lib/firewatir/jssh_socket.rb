@@ -359,8 +359,9 @@ class JsshSocket
     begin
       return *JSON.parse("["+json+"]")
     rescue JSON::ParserError
-      $!.message += "\nParsing: #{json.inspect}"
-      raise
+      err=$!.class.new($!.message+"\nParsing: #{json.inspect}")
+      err.set_backtrace($!.backtrace)
+      raise err
     end
   end
 
@@ -668,7 +669,8 @@ class JsshObject
       method = $1
       special = $2
     else # don't deal with any special character crap 
-      Object.instance_method(:method_missing).bind(self).call(method, *args) # let Object#method_missing raise its usual error 
+      #Object.instance_method(:method_missing).bind(self).call(method, *args) # let Object#method_missing raise its usual error 
+      return super
     end
     case special
     when nil
@@ -687,6 +689,33 @@ class JsshObject
       jssh_socket.assign_json("#{ref}.#{method}", *args)
     else
       Object.instance_method(:method_missing).bind(self).call(method, *args) # this shouldn't happen 
+    end
+  end
+  
+  def respond_to?(method)
+    if super_r=super
+      return super_r
+    end
+    method=method.to_s
+    if method =~ /^([a-z_][a-z0-9_]*)([=?!])?$/i
+      method = $1
+      special = $2
+    else # don't deal with any special character crap 
+      #return Object.instance_method(:respond_to?).bind(self).call(method) # let Object#respond_to? answer
+      return super
+    end
+
+    if self.type=='undefined'
+      return false
+    elsif special=='='
+      if self.type=='object'
+        return true # yeah, you can generally assign attributes to objects
+      else
+        return false # no, you can't generally assign attributes to (boolean, number, string, null)
+      end
+    else
+      attr=attr(method)
+      return attr.type!='undefined'
     end
   end
   

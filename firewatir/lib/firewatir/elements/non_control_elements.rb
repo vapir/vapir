@@ -1,35 +1,41 @@
 module Watir
   class FFPre < FFNonControlElement
+    include Pre
     TAG = 'PRE'
     ContainerMethods=:pre
     ContainerCollectionMethods=:pres
   end
 
   class FFP < FFNonControlElement
+    include P
     TAG = 'P'
     ContainerMethods=:p
     ContainerCollectionMethods=:ps
   end
 
   class FFDiv < FFNonControlElement
+    include Div
     TAG = 'DIV'
     ContainerMethods=:div
     ContainerCollectionMethods=:divs
   end
 
   class FFSpan < FFNonControlElement
+    include Span
     TAG = 'SPAN'
     ContainerMethods=:span
     ContainerCollectionMethods=:spans
   end
 
   class FFStrong < FFNonControlElement
+    include Strong
     TAG = 'STRONG'
     ContainerMethods=:strong
     ContainerCollectionMethods=:strongs
   end
 
   class FFLabel < FFNonControlElement
+    include Label
     TAG = 'LABEL'
     ContainerMethods=:label
     ContainerCollectionMethods=:labels
@@ -66,62 +72,77 @@ module Watir
   end
 
   class FFUl < FFNonControlElement
+    include Ul
     TAG = 'UL'
   end
 
   class FFLi < FFNonControlElement
+    include Li
     TAG = 'LI'
   end
 
   class FFDl < FFNonControlElement
+    include Dl
     TAG = 'DL'
   end
 
   class FFDt < FFNonControlElement
+    include Dt
     TAG = 'DT'
   end
 
   class FFDd < FFNonControlElement
+    include Dd
     TAG = 'DD'
   end
 
   class FFH1 < FFNonControlElement
+    include H1
     TAG = 'H1'
   end
 
   class FFH2 < FFNonControlElement
+    include H2
     TAG = 'H2'
   end
 
   class FFH3 < FFNonControlElement
+    include H3
     TAG = 'H3'
   end
 
   class FFH4 < FFNonControlElement
+    include H4
     TAG = 'H4'
   end
 
   class FFH5 < FFNonControlElement
+    include H5
     TAG = 'H5'
   end
 
   class FFH6 < FFNonControlElement
+    include H6
     TAG = 'H6'
   end
 
   class FFMap < FFNonControlElement
+    include Map
     TAG = 'MAP'
   end
 
   class FFArea < FFNonControlElement
+    include Area
     TAG = 'AREA'
   end
 
-  class FFBody < FFNonControlElement
+  class FFTBody < FFNonControlElement
+    include TBody
     TAG = 'TBODY'
   end
   
   class FFEm < FFNonControlElement
+    include Em
     TAG = 'EM'
   end
 

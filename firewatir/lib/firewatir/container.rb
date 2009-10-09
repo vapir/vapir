@@ -90,7 +90,7 @@ module Watir
         what==nil ? [:attributes, how, index] : raise
       when String, Symbol
         if Watir::Specifier::HowList.include?(how)
-          [how, what,nil]
+          [how, what, nil]
         else
           if what.nil?
             if default_how

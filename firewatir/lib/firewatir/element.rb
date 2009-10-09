@@ -67,7 +67,7 @@ module Watir
       @how, @what=how, what
       raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
       @extra=extra
-      @index=extra[:index]
+      @index=extra[:index] && Integer(extra[:index])
       @container=extra[:container]
       @browser=extra[:browser]
       @jssh_socket=extra[:jssh_socket] || (@container ? @container.jssh_socket : @browser ? @browser.jssh_socket : nil)
@@ -105,14 +105,18 @@ module Watir
       candidates
     end
 
+    public
     # locates a javascript reference for this element
     def locate(options={})
       default_options={}
-      default_options[:relocate]=(@browser && @updated_at && @browser.updated_at > @updated_at ? :recursive : false)
+      if @browser && @updated_at && @browser.updated_at > @updated_at
+        default_options[:relocate]=:recursive
+      end
       options=default_options.merge(options)
       if options[:relocate]
         @element_object=nil
       end
+      element_object_existed=!!@element_object
       @element_object||= begin
         case @how
         when :jssh_object, :dom_object
@@ -123,10 +127,16 @@ module Watir
           JsshObject.new(@what, jssh_socket)
         when :xpath
           raise NotImplementedError
+          @updated_at=Time.now
           element_by_xpath(@container, @what)
         when :attributes
-          if options[:relocate]==:recursive
-            raise unless @container
+          #if options[:relocate]==:recursive && !@container.is_a?(Browser) # don't try to locate a browser 
+          #  raise unless @container
+          #  @container.locate(options)
+          #end
+          if !@container
+            raise
+          elsif !@container.is_a?(Browser)
             @container.locate(options)
           end
           specified_attributes=@what
@@ -146,17 +156,22 @@ module Watir
           raise Watir::Exception::MissingWayOfFindingObjectException
         end
       end
-      @updated_at=Time.now
+      if !element_object_existed && @element_object
+        @updated_at=Time.now
+      end
       @element_object
     end
     def locate!(options={})
       locate(options) || raise(Watir::Exception::UnknownObjectException)
     end
 
+    private
     def self.def_wrap(ruby_method_name, ole_method_name = nil)
       ole_method_name = ruby_method_name unless ole_method_name
       define_method ruby_method_name do
-        dom_object.get(ole_method_name)
+        locate
+        attr=dom_object.attr(ole_method_name)
+        attr.type=='undefined' ? nil : dom_object.get(ole_method_name)
       end
     end
   
@@ -308,6 +323,18 @@ module Watir
     end
     #private :element_type
 
+    def parent(options={})
+      @parent=nil if options[:reload]
+      @parent||=begin
+        parentNode=element_object.parentNode
+        if parentNode
+          FFElement.factory(parentNode.store_rand_prefix('firewatir_elements'), extra)
+        else
+          nil
+        end
+      end
+    end
+    
     #
     # Description:
     #   Fires the provided event for an element and by default waits for the action to get completed.

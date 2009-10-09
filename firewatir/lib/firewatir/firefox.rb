@@ -80,6 +80,7 @@
    http://www.xulplanet.com/references/objref/
 
 =end
+require 'firewatir/specifier'
 
 module Watir
   include Watir::Exception
@@ -88,13 +89,18 @@ module Watir
     include Watir::FFContainer
                     
     @@jssh_socket=nil
-    def self.jssh_socket
-      @@jssh_socket
+    def self.jssh_socket(options={})
+      @@jssh_socket=nil if options[:reset]
+      @@jssh_socket||=begin
+        j=JsshSocket.new
+        @@firewatir_jssh_objects=j.object("FireWatir").assign({})
+        j
+      end
     end
     def jssh_socket
       @jssh_socket
     end
-    
+
     # Description: 
     #   Starts the firefox browser. 
     #   On windows this starts the first version listed in the registry.
@@ -107,26 +113,18 @@ module Watir
     #     :profile  - The Firefox profile to use. If none is specified, Firefox will use
     #                 the last used profile.
     #     :suppress_launch_process - do not create a new firefox process. Connect to an existing one.
-
     # TODO: Start the firefox version given by user.
-
     def initialize(options = {})
       if(options.kind_of?(Integer))
         options = {:waitTime => options}
       end
 
-      firefox_is_running = true #TODO/FIX: implement this. 
-
+      initialize_jssh_socket
       # check for jssh not running, firefox may be open but not with -jssh
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
       retried=false
       begin
-        @@jssh_socket||=begin
-          j=JsshSocket.new
-          @@firewatir_jssh_objects=j.object('{}').store("FireWatir")
-          j
-        end
         @jssh_socket=@@jssh_socket
       rescue Errno::ECONNRESET
         if !retried
@@ -140,7 +138,7 @@ module Watir
 #        raise "Firefox is running without -jssh" if jssh_down
         open_window unless options[:suppress_launch_process]
       elsif not options[:suppress_launch_process]
-        if firefox_is_running
+        if firefox_is_running?
           open_window
         else
           launch_browser(options)
@@ -148,6 +146,24 @@ module Watir
         set_browser_document
       end
       set_defaults
+    end
+    
+    def initialize_jssh_socket
+      class_socket=self.class.jssh_socket
+      begin # check that the class's socket is still all connected and good by passing a value over it
+        class_socket.value_json('3')==3 || raise
+        @jssh_socket=class_socket
+      rescue Exception # if not, initialize one just for this instance 
+        @jssh_socket=JsshSocket.new
+      end
+    end
+    
+    def self.firefox_is_running?
+      # TODO/FIX: implement!
+      true
+    end
+    def firefox_is_running?
+      self.class.firefox_is_running?
     end
 
     def dom_object
@@ -255,7 +271,7 @@ module Watir
       # or browser loads on its own after some time. Useful when you are searching for flight results etc and
       # page goes to search page after that it goes automatically to results page.
       # Details : http://zenit.senecac.on.ca/wiki/index.php/Mozilla.dev.tech.xul#What_is_an_example_of_addProgressListener.3F
-      listener_object=@browser_jssh_objects[:listener_object].assign({})
+      listener_object=@browser_jssh_objects.attr(:listener_object).assign({})
       listener_object[:QueryInterface]=jssh_socket.object(
         "function(aIID)
          { if(aIID.equals(Components.interfaces.nsIWebProgressListener) || aIID.equals(Components.interfaces.nsISupportsWeakReference) || aIID.equals(Components.interfaces.nsISupports))
@@ -265,7 +281,7 @@ module Watir
          }")
       listener_object[:onStateChange]= jssh_socket.object(
         "function(aWebProgress, aRequest, aStateFlags, aStatus)
-         { if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)
+         { if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP && aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)
            { #{@updated_at_epoch_ms.ref}=new Date().getTime();
              #{browser_object.ref}=#{browser_window_object.ref}.getBrowser();
            }
@@ -313,9 +329,13 @@ module Watir
     # Output:
     #   Instance of newly attached window.
     def attach(how, what)
-
-      @browser_window_object = find_window(how, what)
-
+      @browser_window_object = case how
+      when :jssh_object
+        what
+      else
+        find_window(how, what)
+      end
+      
       unless @browser_window_object
         raise Exception::NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")
       end
@@ -347,11 +367,28 @@ module Watir
       # then we create the reference (with #attr and #pass so it's not evaluated) and store it (at which point it is evaluated) in @browser_jssh_objects
       
       opener_obj=watcher.attr(:openWindow).pass(nil, 'chrome://browser/content/browser.xul', @browser_window_name, '', nil)
-      @browser_window_object=@browser_jssh_objects[:browser_window].assign(opener_obj)
+      @browser_window_object=@browser_jssh_objects.attr(:browser_window).assign(opener_obj)
       return @browser_window_object
     end
     private :open_window
 
+    def self.each
+      if firefox_is_running?
+        each_window_object do |win|
+          yield self.attach(:jssh_object, win)
+        end
+      end
+    end
+
+    def self.each_window_object
+      mediator=jssh_socket.object('Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator)').store_rand_object_key(@@firewatir_jssh_objects)
+      enumerator=mediator.getEnumerator("navigator:browser")
+      while enumerator.hasMoreElements
+        win=enumerator.getNext
+        yield win
+      end
+      nil
+    end
     # return the window jssh object for the browser window with the given title or url.
     #   how - :url or :title
     #   what - string or regexp
@@ -361,13 +398,9 @@ module Watir
       hows=[:title, :URL]
       how=hows.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
       raise ArgumentError, "how should be one of: #{hows.inspect} (was #{orig_how.inspect})" unless how
-      mediator=jssh_socket.object('Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator)').store_rand_object_key(@@firewatir_jssh_objects)
-      enumerator=mediator.getEnumerator("navigator:browser")
-      while enumerator.hasMoreElements
-        win=enumerator.getNext
-        break if Watir.fuzzy_match(win.getBrowser.contentDocument[how],what)
+      self.class.each_window_object do |win|
+        return win if Watir::Specifer.fuzzy_match(win.getBrowser.contentDocument[how],what)
       end
-      win
     end
     private :find_window
 

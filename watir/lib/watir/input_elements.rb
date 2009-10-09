@@ -279,83 +279,83 @@ module Watir
   #
   # most of the methods available to this element are inherited from the Element class
   #
-  module IERadioCheckCommon
-    # This method determines if a radio button or check box is set.
-    # Returns true is set/checked or false if not set/checked.
-    # Raises UnknownObjectException if its unable to locate an object.
-    def set? # could be just "checked?"
-      assert_exists
-      return element_object.checked
-    end
-    alias checked? set?
+#  module IERadioCheckCommon
+#    # This method determines if a radio button or check box is set.
+#    # Returns true is set/checked or false if not set/checked.
+#    # Raises UnknownObjectException if its unable to locate an object.
+#    def set? # could be just "checked?"
+#      assert_exists
+#      return element_object.checked
+#    end
+#    alias checked? set?
     
     # This method is the common code for setting or clearing checkboxes and radio.
-    def set_clear_item(set)
-      element_object.checked = set
-      element_object.fireEvent("onClick")
-      @container.wait
-    end
-    private :set_clear_item
+#    def set_clear_item(set)
+#      element_object.checked = set
+#      element_object.fireEvent("onClick")
+#      @container.wait
+#    end
+#    private :set_clear_item
     
-  end
+#  end
   
   #--
   #  this class makes the docs better
   #++
   # This class is the watir representation of a radio button.
-  class IERadio < IEElement
-    include IERadioCheckCommon
+  class IERadio < IEInputElement
+#    include IERadioCheckCommon
     include Radio
-    INPUT_TYPES = ["radio"]
+#    INPUT_TYPES = ["radio"]
     # This method clears a radio button. One of them will almost always be set.
     # Returns true if set or false if not set.
     #   Raises UnknownObjectException if its unable to locate an object
     #         ObjectDisabledException IF THE OBJECT IS DISABLED
-    def clear
-      assert_enabled
-      highlight(:set)
-      set_clear_item(false)
-      highlight(:clear)
-    end
-    
-    # This method sets the radio list item.
-    #   Raises UnknownObjectException  if it's unable to locate an object
-    #         ObjectDisabledException  if the object is disabled
-    def set
-      assert_enabled
-      highlight(:set)
-      element_object.scrollIntoView
-      set_clear_item(true)
-      highlight(:clear)
-    end
+#    def clear
+#      assert_enabled
+#      highlight(:set)
+#      set_clear_item(false)
+#      highlight(:clear)
+#    end
+#    
+#    # This method sets the radio list item.
+#    #   Raises UnknownObjectException  if it's unable to locate an object
+#    #         ObjectDisabledException  if the object is disabled
+#    def set
+#      assert_enabled
+#      highlight(:set)
+#      element_object.scrollIntoView
+#      set_clear_item(true)
+#      highlight(:clear)
+#    end
     
   end
   
   # This class is the watir representation of a check box.
-  class IECheckBox < IEElement
-    include IERadioCheckCommon
+  class IECheckBox < IEInputElement
+#    include IERadioCheckCommon
     include CheckBox
-    INPUT_TYPES = ["checkbox"]
+#    INPUT_TYPES = ["checkbox"]
     # With no arguments supplied, sets the check box.
     # If the optional value is supplied, the checkbox is set, when its true and 
     # cleared when its false
     #   Raises UnknownObjectException if it's unable to locate an object
     #         ObjectDisabledException if the object is disabled
-    def set(value=true)
-      assert_enabled
-      highlight :set
-      unless element_object.checked == value
-        set_clear_item value
-      end
-      highlight :clear
-    end
-    
-    # Clears a check box.
-    #   Raises UnknownObjectException if its unable to locate an object
-    #         ObjectDisabledException if the object is disabled
-    def clear
-      set false
-    end
+#    def set(value=true)
+#      assert_enabled
+#      highlight :set
+#      unless element_object.checked == value
+#        set_clear_item value
+#      end
+#      highlight :clear
+#    end
+#    
+#    # Clears a check box.
+#    #   Raises UnknownObjectException if its unable to locate an object
+#    #         ObjectDisabledException if the object is disabled
+#    def clear
+#      set false
+#    end
         
   end
   

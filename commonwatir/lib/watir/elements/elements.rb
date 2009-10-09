@@ -288,8 +288,13 @@ module Watir
       assert_exists
       assert_enabled
       with_highlight do
-        element_object.checked=state
-        fire_event :onclick, :highlight => false
+        if checked!=state || self.is_a?(Radio) # don't click if it's already checked. but do anyway if it's a radio. 
+          fire_event :onclick, :highlight => false
+        end
+        if checked!=state # firing the click event doesn't change the checked state in IE. check and change if needed. 
+          element_object.checked=state
+        end
+        fire_event :onchange, :highlight => false
         wait
       end
     end

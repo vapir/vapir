@@ -18,28 +18,55 @@ module Watir
     FIRST_ORDERED_NODE_TYPE = 9
     # This stores the level to which we have gone finding element inside another element.
     # This is just to make sure that every element has unique name in JSSH.
-    @@current_level = 0
-    # This stores the name of the element that is about to trigger an Javascript pop up.
-    #@@current_js_object = nil
+
+    class << self
+      def factory(dom_object, extra={})
+        curr_klass=self
+        ObjectSpace.each_object(Class) do |klass|
+          if klass < curr_klass
+            Watir::Specifier.match_candidates([dom_object], klass.specifiers) do |match|
+              curr_klass=klass
+            end
+          end
+        end
+        curr_klass.new(:dom_object, dom_object, extra)
+      end
+    
+      # look for constants to define specifiers - either class::Specifier, or
+      # the simpler class::TAG
+      def specifiers
+        if self.const_defined?('Specifiers')
+          #self.const_get('Specifiers')
+          self::Specifiers
+        elsif self.const_defined?('TAG')
+          [{:tagName => self::TAG}]
+        else
+          raise StandardError, "No way found to specify #{self}."
+        end
+      end
+      
+      def default_how
+        self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
+      end
+      
+      def container_methods
+        self.const_defined?('ContainerMethods') ? self.const_get('ContainerMethods') : []
+      end
+    end
+
     #
     # Description:
-    #    Creates new instance of element. If argument is not nil and is of type string this
-    #    sets the element_name and element_type property of the object. These properties can
-    #    be accessed using element_object and element_type methods respectively.
+    #    Creates new instance of element. 
     #
     #    Used internally by FireWatir.
     #
     # Input:
-    #   element - Name of the variable with which the element is referenced in JSSh.
+    #   
     #
-
     def initialize(how, what, extra={})
       @how, @what=how, what
-#      @specifier=specifier
-#      raise ArgumentError, "first argument should be a specifier hash, not: #{specifier.inspect}" unless specifier.is_a?(Hash)
+      raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
       @extra=extra
-#      @how=extra[:how]
-#      @what=extra[:what]
       @index=extra[:index]
       @container=extra[:container]
       @browser=extra[:browser]
@@ -51,18 +78,12 @@ module Watir
     attr_reader :container
     attr_reader :jssh_socket
     attr_reader :how, :what, :index
-    attr_reader :dom_object
-#    alias ole_object dom_object
+    attr_reader :element_object
+    alias dom_object element_object
+    alias element_name element_object
+#    alias ole_object element_object
 
-#    LocateAliases=Hash.new{|hash,key| key}.merge!(:text => :textContent)
-#    def howwhat_to_specifier(how, what)
-#      if how.is_a?(Hash) && what.nil?
-#        how.dup
-#      else
-#        {LocateAliases[how.to_sym] => what}
-#      end
-#    end
-
+    private
     def container_candidates(specifiers)
       raise unless @container
       ids=specifiers.map{|s| s[:id] }.compact.uniq
@@ -87,25 +108,26 @@ module Watir
     # locates a javascript reference for this element
     def locate(options={})
       default_options={}
-      default_options[:reload]=@browser && @updated_at && @browser.updated_at > @updated_at
+      default_options[:relocate]=(@browser && @updated_at && @browser.updated_at > @updated_at ? :recursive : false)
       options=default_options.merge(options)
-      if options[:reload]
-        @dom_object=nil
+      if options[:relocate]
+        @element_object=nil
       end
-      @dom_object||= begin
+      @element_object||= begin
         case @how
         when :jssh_object, :dom_object
-          raise if options[:reload]
+          raise if options[:relocate]
           @what
         when :jssh_name
-          raise if options[:reload]
+          raise if options[:relocate]
           JsshObject.new(@what, jssh_socket)
         when :xpath
           raise NotImplementedError
+          element_by_xpath(@container, @what)
         when :attributes
-          if options[:reload]
+          if options[:relocate]==:recursive
             raise unless @container
-            @container.locate(:reload => options[:reload])
+            @container.locate(options)
           end
           specified_attributes=@what
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
@@ -125,139 +147,12 @@ module Watir
         end
       end
       @updated_at=Time.now
-      @dom_object
-=begin
-      ||= case @how
-      when :jssh_object, :dom_object
-        what
-      when :jssh_name
-        JsshObject.new(@what, jssh_socket)
-      when :xpath
-        element_by_xpath(@container, @what)
-      else
-        current_specifier=howwhat_to_specifier(@how, @what)
-        index=current_specifier.delete(:index)
-        
-        specifiers=self.class.specifiers.map{|spec| spec.merge(current_specifier)}
-        locate_specified_element(specifiers, index)
-      end
-=end
+      @element_object
     end
     def locate!(options={})
       locate(options) || raise(Watir::Exception::UnknownObjectException)
     end
 
-    # locates the element specified. 
-    # specifiers_list is a list of specifiers, where a specifier is a hash of the javascript object to match. 
-    # For example, the specifier_list
-    #   [ {:tagName => 'textarea'},
-    #     {:tagName => 'input', :types => ['text', 'textarea','password']},
-    #   ]
-    # (used by FFTextField) will match all text input fields. 
-    # if ANY of the specifiers in the list match (not ALL), a given element is considered a match. 
-    # but ALL of the attributes specified must match. 
-    # regexps can be used to match attributes to regexp; if both are strings, then the match is 
-    # case-insensitive. 
-    # The only specifier attribute that doesn't match directly to an element attribute is 
-    # :types, which will match any of a list of types. 
-#    def locate_specified_element(specifiers_list, index=nil)
-#      STDERR.puts specifiers_list.inspect#+caller.map{|c|"\n\t#{c}"}.join('')
-##debugger
-#      ids=specifiers_list.map{|s| s[:id] }.compact.uniq
-#      tags=specifiers_list.map{|s| s[:tagName] }.compact.uniq
-#
-#      #FIX: @container should always have a dom_object, can return document_object if that's the container. 
-#      container_object = if @container.is_a?(Firefox) || @container.is_a?(FFFrame)
-#        document_object
-#      else
-#        @container.dom_object
-#      end
-#
-#      if ids.size==1 && ids.first.is_a?(String) && (!index || index==1) # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
-#        candidates= if by_id=document_object.getElementById(ids.first)
-#          [by_id]
-#        else
-#          []
-#        end
-#      elsif tags.size==1 && tags.first.is_a?(String)
-#        candidates=container_object.getElementsByTagName(tags.first).to_array
-#      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-#        candidates=container_object.getElementsByTagName('*').to_array
-#      end
-#      
-#      if match=match_candidates(candidates, specifiers_list,index)
-#        return match.store_rand_prefix("firewatir_elements")
-#      end
-#      return nil
-#    end
-#    def match_candidates(candidates, specifiers_list, index)
-#      matched=0
-#      candidates.each_with_index do |candidate,i|
-#        match=true
-#        match&&= specifiers_list.any? do |specifier|
-#          specifier.all? do |(how, what)|
-#            if how==:types
-#              what.any? do |type|
-#                Watir.fuzzy_match(candidate[:type], type)
-#              end
-#            else
-#              Watir.fuzzy_match(candidate[how], what)
-#            end
-#          end
-#        end
-#        if match
-#          matched+=1
-#          if !index || index==matched
-#            return candidate
-#          end
-#        end
-#      end
-#      return nil
-#    end
-
-    class << self
-      def factory(dom_object, extra={})
-        curr_klass=self
-        ObjectSpace.each_object(Class) do |klass|
-          if klass < curr_klass
-            Watir::FFContainer.match_candidates([dom_object], klass.specifiers) do |match|
-              curr_klass=klass
-            end
-          end
-        end
-        curr_klass.new(dom_object, extra)
-      end
-    
-      # look for constants to define specifiers - either class::Specifier, or
-      # the simpler class::TAG
-      def specifiers
-        if self.const_defined?('Specifiers')
-          #self.const_get('Specifiers')
-          self::Specifiers
-        elsif self.const_defined?('TAG')
-          [{:tagName => self::TAG}]
-        else
-          raise StandardError, "No way found to specify #{self}."
-        end
-#        tagName=self.tagName || (raise StandardError, "No tag name defined on class #{self}.")
-#        tagName ? [{:tagName => tagName}] : []
-      end
-      
-      # tagName used to be defined in the TAG const, so check for that. tagName should be overridden. 
-#      def tagName
-#        self.const_defined?('TAG') ? self.const_get('TAG') : nil
-#      end
-      
-      def default_how
-        self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
-      end
-      
-      def container_methods
-        self.const_defined?('ContainerMethods') ? self.const_get('ContainerMethods') : []
-      end
-    end
-
-    private
     def self.def_wrap(ruby_method_name, ole_method_name = nil)
       ole_method_name = ruby_method_name unless ole_method_name
       define_method ruby_method_name do
@@ -268,8 +163,8 @@ module Watir
     def get_attribute_value(attribute_name)
       dom_object.getAttribute attribute_name
     end
-    private:get_attribute_value
   
+    public
     def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
       document_object.defaultView.getComputedStyle(dom_object, nil)
     end
@@ -356,7 +251,7 @@ module Watir
 
 
     def inspect
-      '#<%s:0x%x dom_ref=%s how=%s what=%s>' % [self.class, hash*2, @dom_object.ref, @how.inspect, @what.inspect]
+      '#<%s:0x%x dom_ref=%s how=%s what=%s>' % [self.class, hash*2, element_object ? element_object.ref : '', @how.inspect, @what.inspect]
     end
 
     #
@@ -400,19 +295,6 @@ module Watir
       document_object.evaluate(xpath, document_object, nil, FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue.store_rand_object_key(@browser_jssh_objects)
     end
 
-    #
-    # Description:
-    #   Returns the name of the element with which we can access it in JSSh.
-    #   Used internally by Firewatir to execute methods, set properties or return property value for the element.
-    #
-    # Output:
-    #   Name of the variable with which element is referenced in JSSh
-    #
-    def element_object
-      @dom_object.ref if @dom_object
-    end
-    alias element_name element_object
-    private :element_object
 
     #
     # Description:
@@ -479,7 +361,7 @@ module Watir
 
       jssh_command  = "var event = #{document_object.ref}.createEvent(\"#{dom_event_type}\"); "
       jssh_command << "event.#{dom_event_init}; "
-      jssh_command << "#{element_object}.dispatchEvent(event);"
+      jssh_command << "#{element_object.ref}.dispatchEvent(event);"
 
       #puts "JSSH COMMAND:\n#{jssh_command}\n"
       jssh_socket.send_and_read jssh_command
@@ -559,10 +441,7 @@ module Watir
     #   True if element exists, false otherwise.
     #
     def exists?
-      # TODO/FIX: this doesn't really say if it exists, just if it did when locate was first called. 
-      # should really do something to check if the object exists in the dom or something. 
-      locate
-      !!@dom_object
+      !!locate
     rescue UnknownFrameException
       false
     end
@@ -575,13 +454,8 @@ module Watir
     # Output:
     #   Text of the element.
     #
-    def text()
+    def text
       dom_object.textContent
-#      assert_exists
-#      element = (element_type == "HTMLFrameElement") ? "body" : element_object
-#      return_value = jssh_socket.js_eval("#{element}.textContent.replace(/\\xA0/g, ' ').replace(/\\s+/g, ' ')").strip
-#      @@current_level = 0
-#      return return_value
     end
     alias innerText text
 

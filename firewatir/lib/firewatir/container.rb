@@ -43,56 +43,12 @@ require 'firewatir/specifier'
 module Watir
   module FFContainer 
     include Container
-    #include FireWatir
-    #include Watir::Exception
     
     # The default color for highlighting objects as they are accessed.
     DEFAULT_HIGHLIGHT_COLOR = "yellow"
     
     private
     
-    # locates the element specified. 
-    # specifiers_list is a list of specifiers, where a specifier is a hash of the javascript object to match. 
-    # For example, the specifier_list
-    #   [ {:tagName => 'textarea'},
-    #     {:tagName => 'input', :types => ['text', 'textarea','password']},
-    #   ]
-    # (used by FFTextField) will match all text input fields. 
-    # if ANY of the specifiers in the list match (not ALL), a given element is considered a match. 
-    # but ALL of the attributes specified must match. 
-    # regexps can be used to match attributes to regexp; if both are strings, then the match is 
-    # case-insensitive. 
-    # The only specifier attribute that doesn't match directly to an element attribute is 
-    # :types, which will match any of a list of types. 
-    def locate_one_specified(specifiers_list, index=nil)
-      #STDERR.puts specifiers_list.inspect#+caller.map{|c|"\n\t#{c}"}.join('')
-#debugger
-#      ids=specifiers_list.map{|s| s[:id] }.compact.uniq
-      tags=specifiers_list.map{|s| s[:tagName] }.compact.uniq
-
-# TODO/FIX: getElementById uses document_object, not dom_object, and doesn't check that candidates are below self in the dom heirarchy. 
-#      if ids.size==1 && ids.first.is_a?(String) && (!index || index==1) # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
-#        candidates= if by_id=document_object.getElementById(ids.first)
-#          [by_id]
-#        else
-#          []
-#        end
-#      els
-      if tags.size==1 && tags.first.is_a?(String)
-        candidates=dom_object.getElementsByTagName(tags.first).to_array
-      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=dom_object.getElementsByTagName('*').to_array
-      end
-      
-      matched=0
-      Watir::Specifier.match_candidates(candidates, specifiers_list) do |match|
-        matched+=1
-        if !index || index==matched
-          return match.store_rand_prefix("firewatir_elements")
-        end
-      end
-      return nil
-    end
     def locate_all_specified(specifiers_list)
       tags=specifiers_list.map{|s| s[:tagName] }.compact.uniq
       if tags.size==1 && tags.first.is_a?(String)
@@ -114,76 +70,16 @@ module Watir
     end
 
     public
-    #
-    # Description:
-    #    Used to access a frame element. Usually an <frame> or <iframe> HTML tag.
-    #
-    # Input:
-    #   - how - The attribute used to identify the framet.
-    #   - what - The value of that attribute. 
-    #   If only one parameter is supplied, "how" is by default taken as name and the 
-    #   parameter supplied becomes the value of the name attribute.
-    #
-    # Typical usage:
-    #
-    #   ff.frame(:index, 1) 
-    #   ff.frame(:name , 'main_frame')
-    #   ff.frame('main_frame')        # in this case, just a name is supplied.
-    #
-    # Output:
-    #   Frame object or nil if the specified frame does not exist. 
-    #
-#    def frame(how, what = nil)
-#      if self.is_a?(Firefox) || self.is_a?(FFFrame)
-#        candidates=content_window_object.frames.to_array.map{|c|c.frameElement}
-#      else
-#        raise NotImplementedError, "frame called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
-#      end
-#
-#      specifiers, index=*howwhat_to_specifiers_index(how, what, :default_how => :name)
-#      matched=0
-#      Watir::Specifier.match_candidates(candidates, specifiers) do |match|
-#        matched+=1
-#        if !index || index==matched
-#          return FFFrame.new(match.store_rand_prefix('firewatir_frames'), extra.merge(:how => how, :what => what))
-#        end
-#      end
-#      return nil
-#    end
     def frames
       unless self.is_a?(Browser) || self.is_a?(Frame)
         raise NotImplementedError, "frames called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
       end
       
-      content_window_object.frames.to_array.map do |c|
-        FFFrame.new(:dom_object, c.frameElement.store_rand_prefix('firewatir_frames'), extra)
+      content_window_object.frames.to_array.map do |frame_window|
+        FFFrame.new(:dom_object, frame_window.frameElement.store_rand_prefix('firewatir_frames'), extra)
       end
     end
     
-#    def howwhat_to_specifier(how, what, default_how=nil)
-#      spec=if what.nil?
-#        case how
-#        when String, Symbol
-#          default_how ? {default_how => how} : {how.to_sym => what}
-#        when Hash
-#          how.dup
-#        when nil
-#          {}
-#        else
-#          default_how ? {default_how => how} : (raise "Invalid how: #{how.inspect}; what: #{what.inspect}")
-#        end
-#      else # what is not nil
-#        if how.is_a?(String)||how.is_a?(Symbol)
-#          {how.to_sym => what}
-#        else
-#          raise "Invalid how: #{how.inspect}; what: #{what.inspect}"
-#        end
-#      end
-##      spec.inject({}) do |hash,(how,what)|
-##        hash[LocateAliases[how.to_sym]]=what
-##        hash
-##      end
-#    end
     def normalize_howwhat_index(how, what, default_how=nil)
       case how
       when nil
@@ -212,26 +108,18 @@ module Watir
         raise
       end
     end
-#    def howwhat_to_specifiers_index(how, what, options={})
-#      default_how=options[:default_how] || options[:klass] && options[:klass].respond_to?(:default_how) && options[:klass].default_how
-#      hwspecifier=howwhat_to_specifier(how, what, default_how=nil)
-#      index=hwspecifier.delete :index
-#      if options[:klass]
-#        [options[:klass].specifiers.map{|s|s.merge(hwspecifier)}, index]
-#      else
-#        [[hwspecifier], index]
-#      end
-#    end
-#    module_function :howwhat_to_specifier, :howwhat_to_specifiers_index
-    def element_by_howwhat(klass, how, what)
-      #howwhat_specifier=howwhat_to_specifier(how, what, klass.respond_to?(:default_how) && klass.default_how)
-      #index=howwhat_specifier.delete(:index)
+
+    def element_by_howwhat(klass, how, what, other_attributes=nil)
       how, what, index=*normalize_howwhat_index(how, what, klass.respond_to?(:default_how) && klass.default_how)
+      if other_attributes
+        if how==:attributes
+          what.merge!(other_attributes)
+        else
+          raise
+        end
+      end
       element=klass.new(how, what, extra.merge(:index => index, :locate => false))
       element.exists? ? element : nil
-#      if dom_object=locate_one_specified(*howwhat_to_specifiers_index(how, what, :klass => klass))
-#        klass.new(dom_object, extra.merge(:how => how, :what => what))
-#      end
     end
     
     def element_collection(klass)
@@ -240,6 +128,29 @@ module Watir
       end
     end
     
+    #
+    # Description:
+    #    Used to access a frame element. Usually an <frame> or <iframe> HTML tag.
+    #
+    # Input:
+    #   - how - The attribute used to identify the framet.
+    #   - what - The value of that attribute. 
+    #   If only one parameter is supplied, "how" is by default taken as name and the 
+    #   parameter supplied becomes the value of the name attribute.
+    #
+    # Typical usage:
+    #
+    #   ff.frame(:index, 1) 
+    #   ff.frame(:name , 'main_frame')
+    #   ff.frame('main_frame')        # in this case, just a name is supplied.
+    #
+    # Output:
+    #   Frame object or nil if the specified frame does not exist. 
+    #
+    def frame(how, what = nil)
+      element_by_howwhat(FFFrame, how, what)
+    end
+
     #
     # Description:
     #   Used to access a form element. Usually an <form> HTML tag.
@@ -453,9 +364,7 @@ module Watir
     #   Checkbox object.
     #
     def checkbox(how, what=nil, value=nil) 
-      howwhat=howwhat_to_specifier(how, what, FFCheckBox.default_how)
-      howwhat[:value]=value unless value.nil?
-      element_by_howwhat(FFCheckBox, howwhat, nil)
+      element_by_howwhat(FFCheckBox, how, what, value ? {:value => value} : nil)
     end
     
     #
@@ -485,9 +394,7 @@ module Watir
     #   Radio button object.
     #
     def radio(how, what=nil, value=nil)
-      howwhat=howwhat_to_specifier(how, what, FFRadio.default_how)
-      howwhat[:value]=value unless value.nil?
-      element_by_howwhat(FFRadio, howwhat, nil)
+      element_by_howwhat(FFRadio, how, what, value ? {:value => value} : nil)
     end
     
     #

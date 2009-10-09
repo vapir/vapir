@@ -404,7 +404,7 @@ module Watir
       return unless exists?
       @closing = true
       @ie.stop
-      wait # why wait? 
+      #wait # why wait? 
       chwnd = @ie.hwnd
       @ie.quit
       # this doesn't work; the same hwnd can stay open if there are multiple tabs. not that it does anything anyway. 

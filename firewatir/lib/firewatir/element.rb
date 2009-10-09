@@ -249,16 +249,14 @@ module Watir
     #
     # TODO: Provide ability to specify event parameters like keycode for key events, and click screen
     #       coordinates for mouse events.
-    def fire_event(event, wait = true)
+    def fire_event(event, options={})
+      options={:wait => true, :highlight => true}.merge(options)
       assert_exists
-      event = event.to_s.downcase # in case event was given as a symbol
+      highlight(:set) if options[:highlight]
 
+      event = event.to_s.downcase # in case event was given as a symbol
       event =~ /\Aon(.*)\z/i
       event = $1 if $1
-
-      # check if we've got an old-school on-event
-      #jssh_socket.send("typeof(#{element_object}.#{event});\n", 0)
-      #is_defined = jssh_socket.read_socket
 
       # info about event types harvested from:
       #   http://www.howtocreate.co.uk/tutorials/javascript/domevents
@@ -281,8 +279,8 @@ module Watir
         dom_event_init = [:initEvent, event, true, true]
       end
       event=document_object.createEvent(dom_event_type)
-      event.get(*dom_event_init) # calls to the init*Event method
-      if wait
+      event.invoke(*dom_event_init) # calls to the init*Event method
+      if options[:wait]
         raise "need a content window on which to setTimeout if we are not waiting" unless content_window_object
         fire_event_func=jssh_socket.object("(function(dom_object, event){return function(){dom_object.dispatchEvent(event)};})").pass(element_object, event)
         content_window_object.setTimeout(fire_event_func, 0)
@@ -295,14 +293,8 @@ module Watir
       #  dom_event_init = "initEvent(\"#{event}\", true, true)"
       #end
 
-      #jssh_command  = "var event = #{document_object.ref}.createEvent(\"#{dom_event_type}\"); "
-      #jssh_command << "event.#{dom_event_init}; "
-      #jssh_command << "#{element_object.ref}.dispatchEvent(event);"
-
-      #puts "JSSH COMMAND:\n#{jssh_command}\n"
-      #jssh_socket.send_and_read jssh_command
-      wait() if wait
-
+      wait if options[:wait]
+      highlight(:clear) if options[:highlight]
     end
     alias fireEvent fire_event
 
@@ -503,10 +495,7 @@ module Watir
     #   Wait for the browser to get loaded, after the event is being fired.
     #
     def wait
-      #ff = FireWatir::Firefox.new
-      #ff.wait()
-      #puts @container
-      @container.wait()
+      @container.wait
     end
 
     #
@@ -617,7 +606,7 @@ module Watir
 
     
     def invoke(js_method)
-      element_object.get(js_method)
+      element_object.invoke(js_method)
     end
   
     def assign(property, value)

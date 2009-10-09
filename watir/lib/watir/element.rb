@@ -245,6 +245,18 @@ module Watir
     end
     private :highlight
     
+    # takes a block. sets highlight on this element; calls the block; clears the highlight.
+    # the clear is in an ensure block so that you can call return from the given block. 
+    # doesn't actually perform the highlighting if argument do_highlight is false. 
+    def with_highlight(do_highlight=true)
+      highlight(:set) if do_highlight
+      begin
+        yield
+      ensure
+        highlight(:clear) if do_highlight
+      end
+    end
+    
     #   This method clicks the active element.
     #   raises: UnknownObjectException  if the object is not found
     #   ObjectDisabledException if the object is currently disabled
@@ -283,36 +295,34 @@ module Watir
     #   usage: allows a generic way to fire javascript events on page objects such as "onMouseOver", "onClick", etc.
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
-    def fire_event(event)
-      #assert_enabled
-      
-      highlight(:set)
-      ole_object.fireEvent(event.to_s)
-      wait
-      highlight(:clear)
+    def fire_event(event, options={})
+      options={:highlight => true}.merge(options)
+      with_highlight(options[:highlight]) do
+        ole_object.fireEvent(event.to_s)
+        wait
+      end
     end
     # Executes a user defined "fireEvent" for objects with JavaScript events tied to them such as DHTML menus.
     #   usage: allows a generic way to fire javascript events on page objects such as "onMouseOver", "onClick", etc.
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
-    def fire_event_no_wait(event)
+    def fire_event_no_wait(event, options)
       assert_enabled
-      highlight(:set)
-      unique_number=element_object.uniqueNumber
-      #Thread.new { ole_object.click } # that doesn't work.
-      browser.document.parentWindow.setTimeout("
-        (function(tagName, uniqueNumber, event)
-        { var candidate_elements=document.getElementsByTagName(tagName);
-          for(var i=0;i<candidate_elements.length;++i)
-          { if(candidate_elements[i].uniqueNumber==uniqueNumber)
-            { candidate_elements[i].fireEvent(event);
+      options={:highlight => true}.merge(options)
+      with_highlight(options[:highlight]) do
+        unique_number=element_object.uniqueNumber
+        #Thread.new { ole_object.click } # that doesn't work.
+        browser.document.parentWindow.setTimeout("
+          (function(tagName, uniqueNumber, event)
+          { var candidate_elements=document.getElementsByTagName(tagName);
+            for(var i=0;i<candidate_elements.length;++i)
+            { if(candidate_elements[i].uniqueNumber==uniqueNumber)
+               { candidate_elements[i].fireEvent(event);
+              }
             }
-          }
-        })(#{self.tagName.to_json}, #{element_object.uniqueNumber.to_json}, #{event.to_s.to_json})
-      ", 0)
-      highlight(:clear)
-#      assert_enabled
-#      ole_object.fireEvent(event.to_s)
+          })(#{self.tagName.to_json}, #{element_object.uniqueNumber.to_json}, #{event.to_s.to_json})
+        ", 0)
+      end
     end
     
     # This method sets focus on the active element.

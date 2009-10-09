@@ -21,19 +21,7 @@ module Watir
         elements << klass.new(:element_object, match, extra)
       end
       ElementCollection.new(elements)
-#      ElementCollection.new(locate_all_specified(klass.specifiers).map do |element_object|
-#        klass.new(:element_object, element_object, extra)
-#      end)
     end
-#    def locate_all_specified(specifiers_list)
-#      candidates=container_candidates(specifiers_list)
-#      
-#      matched=[]
-#      Watir::Specifier.match_candidates(candidates, specifiers_list) do |match|
-#        matched << match.store_rand_prefix("firewatir_elements")
-#      end
-#      matched
-#    end
     def normalize_howwhat_index(how, what, default_how=nil)
       case how
       when nil
@@ -128,25 +116,27 @@ module Watir
         value=value_chars.join('')
       end
       element_object.scrollIntoView
+      type_keys=respond_to?(:type_keys) ? self.type_keys : true
+      typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0
       if type_keys
-	      element_object.focus
-	      element_object.select
-	      fire_event_no_wait("onSelect")
+        element_object.focus
+        element_object.select
+        fire_event("onSelect", :highlight => false)
         (0..value_chars.length).each do |i|
           sleep typingspeed
           element_object.value = value_chars[0...i].join('')
-          fire_event_no_wait :onKeyDown
-          fire_event_no_wait :onKeyUp
-          fire_event_no_wait :onKeyPress
+          fire_event :onKeyDown, :highlight => false
+          fire_event :onKeyUp, :highlight => false
+          fire_event :onKeyPress, :highlight => false
         end
         #doKeyPress(value)
-        fire_event_no_wait :onkeyup
-        fire_event_no_wait("onKeyPress")
-        fire_event_no_wait("onChange")
-        fire_event_no_wait('onBlur')
-	    else
-				element_object.value = value
-	    end
+        fire_event :onkeyup, :highlight => false
+        fire_event("onKeyPress", :highlight => false)
+        fire_event("onChange", :highlight => false)
+        fire_event('onBlur', :highlight => false)
+      else
+        element_object.value = value
+      end
       wait
       highlight(:clear)
     end
@@ -196,7 +186,7 @@ module Watir
         option.selected=false
         wait=true
       end
-      fire_event_no_wait :onchange
+      fire_event :onchange, :highlight => false
       self.wait if wait
       highlight(:clear)
     end
@@ -250,7 +240,7 @@ module Watir
         end
       end
       if any_changed
-        fire_event :onchange
+        fire_event :onchange, :highlight => false
         highlight :clear
       else
         higlight :clear
@@ -445,7 +435,7 @@ module Watir
       if for_object=document_object.getElementById(element_object.htmlFor)
         base_element_klass.factory(for_object, extra)
       else
-        raise "no element found that this is for!"
+        raise "no element found that #{self.inspect} is for!"
       end
     end
   end

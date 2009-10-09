@@ -54,7 +54,7 @@ module Watir
       "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{@array.map{|el|el.inspect}.join(', ')}>"
     end
 
-    # methods with no index arg, just pass to the array 
+    # methods to just pass to the array 
     [:empty?, :size, :length, :first, :last, :include?].each do |method|
       define_method method do |*args|
         @array.send(method, *args)
@@ -78,7 +78,8 @@ module Watir
             assert_exists
             if element_object.respond_to?(dom_method_name)
               element_object.method_missing(dom_method_name, *args)
-              # note: using method_missing (not get) so that attribute= methods can be used 
+              # note: using method_missing (not get) so that attribute= methods can be used. 
+              # then again, attribute= methods don't work with method_missing on WIN32OLE. damn. 
             elsif args.length==0
               element_object.getAttribute(dom_method_name.to_s)
             else
@@ -106,9 +107,9 @@ module Watir
   module ElementModule
     # set container methods on inherit
     def self.included(includer) # when this module gets included (by a Watir Element module)
-      __orig_included_before_SetContainerMethodsOnInherit__=includer.respond_to?(:included) ? includer.method(:included) : nil
+      __orig_included_before_ElementModule__=includer.respond_to?(:included) ? includer.method(:included) : nil
       (class << includer;self;end).send(:define_method, :included) do |subincluder| # make its .included method
-          __orig_included_before_SetContainerMethodsOnInherit__.call(subincluder) if __orig_included_before_SetContainerMethodsOnInherit__
+          __orig_included_before_ElementModule__.call(subincluder) if __orig_included_before_ElementModule__
 
           container_modules=subincluder.included_modules.select do |mod| # get Container modules that the subincluder includes (ie, Watir::FFTextField includes the Watir::FFContainer Container module)
             mod.included_modules.include?(Watir::Container)
@@ -138,7 +139,6 @@ module Watir
                           other_attributes[other_attribute_keys[i]]=arg
                         end
                       end
-                      #STDERR.puts([subincluder, how, what, {:locate => method_hash[:locate], :other_attributes => other_attributes}].inspect)
                       element_by_howwhat(subincluder, how, what, :locate => method_hash[:locate], :other_attributes => other_attributes)
                     end
                   end
@@ -174,10 +174,12 @@ module Watir
   module ContainerMethodsFromName
     def self.included(includer)
       single_meth=includer.name.demodulize.underscore
-      multiple_meth=includer.name.demodulize.underscore.pluralize
-      raise "defining container methods #{single_meth}: single is the same as multiple! specify Container*Method constants manually." if single_meth==multiple_meth
-      includer.const_set('ContainerSingleMethod', single_meth)
-      includer.const_set('ContainerMultipleMethod', multiple_meth)
+      multiple_meth=single_meth.pluralize
+      if single_meth==multiple_meth
+        raise RuntimeError, "defining container methods #{single_meth}: single is the same as multiple! specify Container*Method constants manually."
+      end
+      includer.const_set('ContainerSingleMethod', [single_meth])
+      includer.const_set('ContainerMultipleMethod', [multiple_meth])
     end
   end
 
@@ -234,10 +236,15 @@ module Watir
         default_options[:relocate]=:recursive
       end
       begin
-        if element_object && element_object.respond_to?('invoke') # if we have an element object that uses invoke (that is, a WIN32OLE)
-          element_object.invoke('id')            # try invoking a method on it 
+        if element_object && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
+          if method_to_invoke=['id', 'name', 'src'].detect{|method| element_object.ole_respond_to?(method)}
+            element_object.invoke(method_to_invoke) # try invoking a method on it 
+          else
+            # otherwise.. carry on, I suppose, and it will just error if it needed to be relocated. 
+            # there must be a better way than this to see if it still exists. 
+          end
         end
-      rescue WIN32OLERuntimeError                             # if that errors 
+      rescue WIN32OLERuntimeError                             # if invoking that method errors
         raise unless $!.message.include?("Access is denied.") # with an access denied exception
          # then the element is probably gone - probably because of a reload or something -
          # and we need to relocate recursively. 
@@ -270,8 +277,9 @@ module Watir
           
           matched_candidate=nil
           matched_count=0
-          Watir::Specifier.match_candidates(container_candidates(specifiers), specifiers) do |match|
-          matched_count+=1
+          container_candidates=container_candidates(specifiers)
+          Watir::Specifier.match_candidates(container_candidates, specifiers) do |match|
+            matched_count+=1
             if !@index || @index==matched_count
               matched_candidate=match
               break

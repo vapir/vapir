@@ -91,28 +91,25 @@ module Watir
         end
       end
       candidates.each do |candidate|
+#candidate.logger.info { "MATCH_CANDIDATES "+candidate.inspect}
         candidate_attributes=proc do |attr|
           attrs=[]
           attrs << candidate.getAttribute(attr.to_s) if has_attribute.call(candidate, attr)#candidate.respond_to?(:hasAttribute) && candidate.hasAttribute(attr.to_s)
           if Object.const_defined?('JsshObject') && candidate.is_a?(JsshObject)
             if candidate.js_respond_to?(attr)
-              attrs << candidate.get(attr)
+              attrs << candidate.invoke(attr)
             end
           elsif Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE)
             begin
               attrs << candidate.invoke(attr.to_s)
             rescue WIN32OLERuntimeError
             end
-            #if candidate.ole_respond_to?(attr)#ole_methods.detect{|meth| meth.to_s==attr.to_s}
-            #  attrs << candidate.invoke(attr.to_s)
-            #end
           else
             raise RuntimeError, "candidate type not recognized: #{candidate.inspect} (#{candidate.class.name})"
           end
           attrs
         end
-        match=true
-        match&&= specifiers_list.any? do |specifier|
+        match= specifiers_list.any? do |specifier|
           specifier.all? do |(how, what)|
             if how==:types
               what.any? do |type|

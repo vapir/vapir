@@ -6,7 +6,6 @@ module Watir
   class FFDocument
     include Document
 #    include Watir::FFContainer
-    @@current_level = 0
 
     #
     # Description:
@@ -38,54 +37,54 @@ module Watir
     #   Array of elements.
     #
     def all
-      raise NotImplementedError
-      @arr_elements = "arr_coll_#{@@current_level}"
-      jssh_command = "var arr_coll_#{@@current_level}=new Array(); "
-
-      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
-        jssh_command <<"var element_collection = null; element_collection = #{document_object.ref}.getElementsByTagName(\"*\");
-                                if(element_collection != null && typeof(element_collection) != 'undefined')
-                                {
-                                    for (var i = 0; i < element_collection.length; i++)
-                                    {
-                                        if((element_collection[i].tagName != 'BR') && (element_collection[i].tagName != 'HR') && (element_collection[i].tagName != 'DOCTYPE') && (element_collection[i].tagName != 'META') && (typeof(element_collection[i].tagName) != 'undefined'))
-                                            arr_coll_#{@@current_level}.push(element_collection[i]);
-                                    }
-                                }
-                                arr_coll_#{@@current_level}.length;"
-      else
-        jssh_command <<"var element_collection = null; element_collection = #{@container.element_name}.getElementsByTagName(\"*\");
-                                    if(element_collection!= null && typeof(element_collection) != 'undefined')
-                                    {
-                                        for (var i = 0; i < element_collection.length; i++)
-                                        {
-                                            if((element_collection[i].tagName != 'BR') && (element_collection[i].tagName != 'HR') && (element_collection[i].tagName != 'DOCTYPE') && (element_collection[i].tagName != 'META') && (typeof(element_collection[i].tagName) != 'undefined'))
-                                            arr_coll_#{@@current_level}.push(element_collection[i]);
-                                        }
-                                    }
-                                    arr_coll_#{@@current_level}.length;"
-      end
-
-      # Remove \n that are there in the string as a result of pressing enter while formatting.
-      jssh_command.gsub!(/\n/, "")
-      #puts  jssh_command
-      @length = jssh_socket.send_and_read(jssh_command).to_i;
-      #puts "elements length is in locate_tagged_elements is : #{@length}"
-
-      elements = nil
-      elements = Array.new(@length)
-      for i in 0..@length - 1 do
-        temp = FFElement.new("arr_coll_#{@@current_level}[#{i}]", @container)
-        elements[i] = temp
-      end
-      @@current_level += 1
-      return elements
-
+      @all||=@container.dom_object.getElementsByTagName('*').to_array.map{|el| FFElement.factory(el)}
+#      raise NotImplementedError
+#      @arr_elements = "arr_coll_#{@@current_level}"
+#      jssh_command = "var arr_coll_#{@@current_level}=new Array(); "
+#
+#      if(@container.is_a?(Firefox) || @container.is_a?(FFFrame))
+#        jssh_command <<"var element_collection = null; element_collection = #{document_object.ref}.getElementsByTagName(\"*\");
+#                                if(element_collection != null && typeof(element_collection) != 'undefined')
+#                                {
+#                                    for (var i = 0; i < element_collection.length; i++)
+#                                    {
+#                                        if((element_collection[i].tagName != 'BR') && (element_collection[i].tagName != 'HR') && (element_collection[i].tagName != 'DOCTYPE') && (element_collection[i].tagName != 'META') && (typeof(element_collection[i].tagName) != 'undefined'))
+#                                            arr_coll_#{@@current_level}.push(element_collection[i]);
+#                                    }
+#                                }
+#                                arr_coll_#{@@current_level}.length;"
+#      else
+#        jssh_command <<"var element_collection = null; element_collection = #{@container.element_name}.getElementsByTagName(\"*\");
+#                                    if(element_collection!= null && typeof(element_collection) != 'undefined')
+#                                    {
+#                                        for (var i = 0; i < element_collection.length; i++)
+#                                        {
+#                                            if((element_collection[i].tagName != 'BR') && (element_collection[i].tagName != 'HR') && (element_collection[i].tagName != 'DOCTYPE') && (element_collection[i].tagName != 'META') && (typeof(element_collection[i].tagName) != 'undefined'))
+#                                            arr_coll_#{@@current_level}.push(element_collection[i]);
+#                                        }
+#                                    }
+#                                    arr_coll_#{@@current_level}.length;"
+#      end
+#
+#      # Remove \n that are there in the string as a result of pressing enter while formatting.
+#      jssh_command.gsub!(/\n/, "")
+#      #puts  jssh_command
+#      @length = jssh_socket.send_and_read(jssh_command).to_i;
+#      #puts "elements length is in locate_tagged_elements is : #{@length}"
+#
+#      elements = nil
+#      elements = Array.new(@length)
+#      for i in 0..@length - 1 do
+#        temp = FFElement.new("arr_coll_#{@@current_level}[#{i}]", @container)
+#        elements[i] = temp
+#      end
+#      @@current_level += 1
+#      return elements
+#
     end
 
     def getElementById(id)
       el=document_object.getElementById(id)
-      el.type=='undefined' ? nil : el
     end
 
     #
@@ -96,8 +95,7 @@ module Watir
     #   Count of elements found in the document.
     #
     def length
-      raise NotImplementedError
-      return @length
+      all.length
     end
     alias_method :size, :length
 
@@ -106,10 +104,7 @@ module Watir
     #   Iterates over elements in the document.
     #
     def each
-      raise NotImplementedError
-      for i in 0..@length - 1
-        yield FFElement.new("#{@arr_elements}[#{i}]", @container)
-      end
+      all.each{|el| yield el}
     end
 
     #
@@ -123,8 +118,9 @@ module Watir
     #   Element at the nth index.
     #
     def [](n)
-      raise NotImplementedError
-      return FFElement.new("#{@arr_elements}[#{n-1}]", @container)
+      all[n]
+      #raise NotImplementedError
+      #return FFElement.new("#{@arr_elements}[#{n-1}]", @container)
     end
 
     #

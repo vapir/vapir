@@ -7,7 +7,9 @@ module Watir
   end
   
   module Frame
-    TAG='frame'
+    Specifiers=[ {:tagName => 'frame'},
+                 {:tagName => 'iframe'},
+               ]
     include ContainerMethodsFromName
     include ElementModule
     DefaultHow=:name
@@ -97,7 +99,7 @@ module Watir
     DefaultHow=:name
     include ElementModule
     
-    dom_wrap :alt, :src, :height, :width, :border
+    dom_wrap :alt, :src, :name, :height, :width, :border
   end
   module Table
     TAG = 'TABLE'
@@ -120,7 +122,7 @@ module Watir
     ContainerMultipleMethod=['as', 'links']
     include ElementModule
     
-    dom_wrap :href
+    dom_wrap :href, :name
   end
   module Pre
     TAG = 'PRE'

@@ -40,15 +40,15 @@ class TC_CheckBox < Test::Unit::TestCase
     end
 
     def test_onClick
-       assert_false(browser.button(:value , "foo").enabled?)
+       assert_false(browser.button!(:value , "foo").enabled?)
        browser.checkbox!(:name, "box5").set
-       assert(browser.button(:value , "foo").enabled?)
+       assert(browser.button!(:value , "foo").enabled?)
 
        browser.checkbox!(:name, "box5").clear
-       assert_false(browser.button(:value , "foo").enabled?)
+       assert_false(browser.button!(:value , "foo").enabled?)
 
        browser.checkbox!(:name, "box5").clear
-       assert_false(browser.button(:value , "foo").enabled?)
+       assert_false(browser.button!(:value , "foo").enabled?)
     end
 
     def test_CheckBox_Exists
@@ -140,7 +140,7 @@ class TC_CheckBox < Test::Unit::TestCase
     def test_checkbox_iterator
 
         assert_equal(11, browser.checkboxes.length)
-        assert_equal("box1" , browser.checkboxes[0].name )
+        assert_equal("box1" , browser.checkboxes[1].name )
 
         index=1
         browser.checkboxes.each do |c|

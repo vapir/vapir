@@ -37,43 +37,43 @@ class TC_Links_XPath < Test::Unit::TestCase
     end
     
     def test_Link_Exists
-       assert(browser.link(:xpath , "//a[contains(.,'test1')]").exists?)
-       assert(browser.link(:xpath, "//a[contains(., /TEST/i)]").exists?)   
-       assert_false(browser.link(:xpath , "//a[contains(.,'missing')]").exists?)
+       assert(browser.link!(:xpath , "//a[contains(.,'test1')]").exists?)
+       assert(browser.link!(:xpath, "//a[contains(., /TEST/i)]").exists?)   
+       assert_nil(browser.link(:xpath , "//a[contains(.,'missing')]"))
 
-       assert_false(browser.link(:xpath , "//a[@url='alsomissing.html']").exists?)
+       assert_nil(browser.link(:xpath , "//a[@url='alsomissing.html']"))
 
-       assert(browser.link(:xpath , "//a[@id='link_id']").exists?)
-       assert_false(browser.link(:xpath , "//a[@id='alsomissing']").exists?)
+       assert(browser.link!(:xpath , "//a[@id='link_id']").exists?)
+       assert_nil(browser.link(:xpath , "//a[@id='alsomissing']"))
 
-       assert(browser.link(:xpath , "//a[@name='link_name']").exists?)
-       assert_false(browser.link(:xpath , "//a[@name='alsomissing']").exists?)
-       assert(browser.link(:xpath , "//a[@title='link_title']").exists?)
+       assert(browser.link!(:xpath , "//a[@name='link_name']").exists?)
+       assert_nil(browser.link(:xpath , "//a[@name='alsomissing']"))
+       assert(browser.link!(:xpath , "//a[@title='link_title']").exists?)
 
     end
 
     def test_Link_click
-        browser.link(:xpath , "//a[contains(.,'test1')]").click
+        browser.link!(:xpath , "//a[contains(.,'test1')]").click
         assert( browser.text.include?("Links2-Pass") )
     end
     
     def test_link_properties
             
-        assert_match( /links2/ ,browser.link(:xpath , "//a[contains(.,'test1')]").href )
-        assert_equal( ""      , browser.link(:xpath , "//a[contains(.,'test1')]").value)
-        assert_equal( "test1" , browser.link(:xpath , "//a[contains(.,'test1')]").text )
-        assert_equal( ""      , browser.link(:xpath , "//a[contains(.,'test1')]").name )
-        assert_equal( ""      , browser.link(:xpath , "//a[contains(.,'test1')]").id )
-        assert_equal( false   , browser.link(:xpath , "//a[contains(.,'test1')]").disabled )  
-        assert_equal( ""      , browser.link(:xpath , "//a[contains(.,'test1')]").class_name)
-        assert_equal( "link_class_1"      , browser.link(:xpath , "//a[@class='link_class_1']").class_name)
+        assert_match( /links2/ ,browser.link!(:xpath , "//a[contains(.,'test1')]").href )
+        assert_equal( ""      , browser.link!(:xpath , "//a[contains(.,'test1')]").value)
+        assert_equal( "test1" , browser.link!(:xpath , "//a[contains(.,'test1')]").text )
+        assert_equal( ""      , browser.link!(:xpath , "//a[contains(.,'test1')]").name )
+        assert_equal( ""      , browser.link!(:xpath , "//a[contains(.,'test1')]").id )
+        assert_equal( false   , browser.link!(:xpath , "//a[contains(.,'test1')]").disabled )  
+        assert_equal( ""      , browser.link!(:xpath , "//a[contains(.,'test1')]").class_name)
+        assert_equal( "link_class_1"      , browser.link!(:xpath , "//a[@class='link_class_1']").class_name)
         
-        assert_equal( "link_id"   , browser.link(:xpath , "//a[@id='link_id']").id )
-        assert_equal( "link_name" , browser.link(:xpath , "//a[@name='link_name']").name )
+        assert_equal( "link_id"   , browser.link!(:xpath , "//a[@id='link_id']").id )
+        assert_equal( "link_name" , browser.link!(:xpath , "//a[@name='link_name']").name )
         
-        assert_equal( "" , browser.link(:xpath , "//a[@name='link_name']").title)
+        assert_equal( "" , browser.link!(:xpath , "//a[@name='link_name']").title)
         
-        assert_equal( "link_title" , browser.link(:xpath , "//a[@title='link_title']").title)
+        assert_equal( "link_title" , browser.link!(:xpath , "//a[@title='link_title']").title)
     end 
 end
 

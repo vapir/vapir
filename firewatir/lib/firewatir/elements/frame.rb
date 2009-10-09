@@ -1,7 +1,11 @@
+require 'firewatir/firefox'
+
 module Watir
   class FFFrame < FFElement
-    include Frame
     include FFContainer
+    include Frame
+    include FFHasDocument
+    #include FFDocument
 
     def container_candidates(specifiers)
       raise unless @container.is_a?(Browser) || @container.is_a?(Frame)
@@ -12,9 +16,9 @@ module Watir
       @element_object.contentDocument
     end
 
-    def html
-      raise NotImplementedError
-    end
+    #def html
+    #  raise NotImplementedError
+    #end
     
     def document_object
       @element_object.contentDocument # OR content_window_object.document

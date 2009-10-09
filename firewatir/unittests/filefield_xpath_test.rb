@@ -22,7 +22,7 @@ class TC_FileField_XPath < Test::Unit::TestCase
 	#pop one open and put something in it.
 	browser.file_field!(:xpath, "//input[@name='file3']").set($htmlRoot + "fileupload.html")	
 	#click the upload button
-	browser.button(:xpath, "//input[@name='upload']").click
+	browser.button!(:xpath, "//input[@name='upload']").click
 
 	assert(browser.text.include?("PASS"))	
     end

@@ -4,8 +4,8 @@ module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
   class FFElement
-    include Element
     include Watir::FFContainer
+    include Element
     # Number of spaces that separate the property from the value in the to_s method
     TO_S_SIZE = 14
   
@@ -173,7 +173,7 @@ module Watir
       @element_object
     end
     def locate!(options={})
-      locate(options) || raise(Watir::Exception::UnknownObjectException)
+      locate(options) || raise(self.class==FFFrame ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException)
     end
 
     private
@@ -186,9 +186,9 @@ module Watir
     #  end
     #end
   
-    def get_attribute_value(attribute_name)
-      dom_object.getAttribute attribute_name
-    end
+    #def get_attribute_value(attribute_name)
+    #  dom_object.getAttribute attribute_name
+    #end
   
     public
     def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
@@ -402,7 +402,6 @@ module Watir
       #jssh_socket.send_and_read jssh_command
       wait() if wait
 
-      #@@current_level = 0
     end
     alias fireEvent fire_event
 
@@ -410,13 +409,12 @@ module Watir
     # Description:
     #   Returns the value of the specified attribute of an element.
     #
-    def attribute_value(attribute_name)
-      #puts attribute_name
-      assert_exists()
-      return_value = get_attribute_value(attribute_name)
-      @@current_level = 0
-      return return_value
-    end
+    #def attribute_value(attribute_name)
+    #  #puts attribute_name
+    #  assert_exists()
+    #  return_value = get_attribute_value(attribute_name)
+    #  return return_value
+    #end
 
     #
     # Description:
@@ -543,7 +541,6 @@ module Watir
 #        return text()
 #      else
 #        result = string_creator(attributes).join("\n")
-#        @@current_level = 0
 #        return result
 #      end
 #    end
@@ -603,7 +600,6 @@ module Watir
       #ff.wait()
       #puts @container
       @container.wait()
-      @@current_level = 0
     end
 
     #

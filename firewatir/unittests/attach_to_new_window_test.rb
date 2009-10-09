@@ -12,7 +12,7 @@ class TC_NewWindow < Test::Unit::TestCase
     end
 
     def test_simply_attach_to_new_window_using_title
-        browser.link(:text, 'New Window').click
+        browser.link!(:text, 'New Window').click
         begin 
           ff_new = browser.class.attach(:title, 'Pass Page')
         rescue Watir::Exception::NoMatchingWindowFoundException
@@ -20,11 +20,11 @@ class TC_NewWindow < Test::Unit::TestCase
         end
         assert(ff_new.text.include?('PASS'))
         ff_new.close
-        #browser.link(:text, 'New Window').click
+        #browser.link!(:text, 'New Window').click
     end
     
     def test_simply_attach_to_new_window_using_url
-        browser.link(:text, 'New Window').click
+        browser.link!(:text, 'New Window').click
         begin
           ff_new = browser.class.attach(:url, /pass\.html/)
         rescue Watir::Exception::NoMatchingWindowFoundException
@@ -32,7 +32,7 @@ class TC_NewWindow < Test::Unit::TestCase
         end
         assert(ff_new.text.include?('PASS'))
         ff_new.close
-        #browser.link(:text, 'New Window').click
+        #browser.link!(:text, 'New Window').click
     end
 
     def test_attach_to_new_window_with_same_title_as_parent

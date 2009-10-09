@@ -29,12 +29,12 @@ class TC_FileField < Test::Unit::TestCase
   def test_iterator
     assert_equal(6, browser.file_fields.length)
     arrFileFields = browser.file_fields
-    assert_equal("file1", arrFileFields[0].name)
-    assert_equal("file2", arrFileFields[1].id)
-    assert_equal("disabled", arrFileFields[2].name)
-    assert_equal("file3", arrFileFields[3].name)
-    assert_equal("beforetest", arrFileFields[4].name)
-    assert_equal("aftertest", arrFileFields[5].name)
+    assert_equal("file1", arrFileFields[1].name)
+    assert_equal("file2", arrFileFields[2].id)
+    assert_equal("disabled", arrFileFields[3].name)
+    assert_equal("file3", arrFileFields[4].name)
+    assert_equal("beforetest", arrFileFields[5].name)
+    assert_equal("aftertest", arrFileFields[6].name)
     arrFileFields.each do |fileField|
       assert_equal("file", fileField.type)
     end

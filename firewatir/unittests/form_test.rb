@@ -107,7 +107,7 @@ class TC_Forms3 < Test::Unit::TestCase
   
   def test_index_other_element_before_it
     # test for bug reported by Scott Pack,  http://rubyforge.org/pipermail/wtr-general/2005-June/002223.html
-    assert_equal("check1" , browser.checkbox(:index,1).name )
+    assert_equal("check1" , browser.checkbox!(:index,1).name )
   end
   
   def test_reset
@@ -139,23 +139,23 @@ class TC_Forms3 < Test::Unit::TestCase
   def test_objects_with_same_name
     assert_equal('textfield' ,browser.text_field!( :name , 'g1').value )
     assert_equal('button'    ,browser.button!(     :name , 'g1').value )
-    assert_equal('1'         ,browser.checkbox(   :name , 'g1').value )
-    assert_equal('2'         ,browser.radio(      :name , 'g1').value )
+    assert_equal('1'         ,browser.checkbox!(   :name , 'g1').value )
+    assert_equal('2'         ,browser.radio!(      :name , 'g1').value )
    
     assert_equal('textfield' ,browser.text_field!( :name , /g1/).value )
     assert_equal('button'    ,browser.button!(     :name , /g1/).value )
-    assert_equal('1'         ,browser.checkbox(   :name , /g1/).value )
-    assert_equal('2'         ,browser.radio(      :name , /g1/).value )
+    assert_equal('1'         ,browser.checkbox!(   :name , /g1/).value )
+    assert_equal('2'         ,browser.radio!(      :name , /g1/).value )
     
     assert_equal('textfield_id' ,browser.text_field!( :id , 'g1').value )
     assert_equal('button_id'    ,browser.button!(     :id , 'g1').value )
-    assert_equal('1_id'         ,browser.checkbox(   :id , 'g1').value )
-    assert_equal('2_id'         ,browser.radio(      :id , 'g1').value )
+    assert_equal('1_id'         ,browser.checkbox!(   :id , 'g1').value )
+    assert_equal('2_id'         ,browser.radio!(      :id , 'g1').value )
 
     assert_equal('textfield_id' ,browser.text_field!( :id , /g1/).value )
     assert_equal('button_id'    ,browser.button!(     :id , /g1/).value )
-    assert_equal('1_id'         ,browser.checkbox(   :id , /g1/).value )
-    assert_equal('2_id'         ,browser.radio(      :id , /g1/).value )
+    assert_equal('1_id'         ,browser.checkbox!(   :id , /g1/).value )
+    assert_equal('2_id'         ,browser.radio!(      :id , /g1/).value )
   end
   
 #  def test_flash2

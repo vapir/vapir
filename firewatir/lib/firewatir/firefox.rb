@@ -82,11 +82,63 @@
 =end
 require 'firewatir/specifier'
 
+module Watir # TODO/FIX: move this somewhere appropriate
+  module FFHasDocument
+    # Returns the html of the document
+    def html
+      jssh_socket.value_json("(function(document){
+        var temp_el=document.createElement('div');
+        var orig_childs=[];
+        while(document.childNodes.length > 0)
+        { orig_childs.push(document.childNodes[0]);
+          document.removeChild(document.childNodes[0]); 
+          /* we remove each childNode here because doing appendChild on temp_el removes it 
+           * from document anyway (at least when appendChild works), so we just remove all
+           * childNodes so that adding them back in the right order is simpler (using orig_childs)
+           */
+        }
+        for(var i in orig_childs)
+        { try
+          { temp_el.appendChild(orig_childs[i]);
+          }
+          catch(e)
+          {}
+        }
+        retval=temp_el.innerHTML;
+        while(orig_childs.length > 0)
+        { document.appendChild(orig_childs.shift());
+        }
+        return retval;
+      })(#{document_object.ref})", :timeout => JsshSocket::LONG_SOCKET_TIMEOUT)
+=begin
+      temp_el=document_object.createElement('div') # make a temporary element
+      orig_childs=jssh_socket.object('[]').store_rand_object_key(@browser_jssh_objects)
+      while document_object.childNodes.length > 0
+        orig_childs.push(document_object.childNodes[0])
+        document_object.removeChild(document_object.childNodes[0])
+      end
+      orig_childs.to_array.each do |child|
+        begin
+          temp_el.appendChild(child)
+        rescue JsshError
+        end
+      end
+      result=temp_el.innerHTML
+      while orig_childs.length > 0
+        document_object.appendChild(orig_childs.shift())
+      end
+      return result
+=end      
+    end
+  end
+end
+
 module Watir
   include Watir::Exception
 
   class Firefox < Browser
     include Watir::FFContainer
+    include Watir::FFHasDocument
                     
     def self.initialize_jssh_socket
       if class_variable_defined?('@@jssh_socket') # if it already exists, then a new socket will not have any objects of the old one
@@ -399,10 +451,11 @@ module Watir
       end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@browser_window_name.to_json}}) ? true : false")
       watcher=jssh_socket.Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(jssh_socket.Components.interfaces.nsIWindowWatcher)
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
-      # then we create the reference (with #attr and #pass so it's not evaluated) and store it (at which point it is evaluated) in @browser_jssh_objects
       
-      opener_obj=watcher.attr(:openWindow).pass(nil, 'chrome://browser/content/browser.xul', @browser_window_name, '', nil)
-      @browser_window_object=@browser_jssh_objects.attr(:browser_window).assign(opener_obj)
+      #opener_obj=watcher.attr(:openWindow).pass(nil, 'chrome://browser/content/browser.xul', @browser_window_name, '', nil)
+      #@browser_window_object=@browser_jssh_objects.attr(:browser_window).assign(opener_obj)
+      
+      @browser_window_object=@browser_jssh_objects.attr(:browser_window).assign(watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'resizable', nil))
       return @browser_window_object
     end
     private :open_window
@@ -539,54 +592,6 @@ module Watir
     #
     def status
       browser_window_object.status || browser_window_object.XULBrowserWindow.statusText
-    end
-
-
-    # Returns the html of the page currently loaded in the browser.
-    def html
-      jssh_socket.value_json("(function(document){
-        var temp_el=document.createElement('div');
-        var orig_childs=[];
-        while(document.childNodes.length > 0)
-        { orig_childs.push(document.childNodes[0]);
-          document.removeChild(document.childNodes[0]); 
-          /* we remove each childNode here because doing appendChild on temp_el removes it 
-           * from document anyway (at least when appendChild works), so we just remove all
-           * childNodes so that adding them back in the right order is simpler (using orig_childs)
-           */
-        }
-        for(var i in orig_childs)
-        { try
-          { temp_el.appendChild(orig_childs[i]);
-          }
-          catch(e)
-          {}
-        }
-        retval=temp_el.innerHTML;
-        while(orig_childs.length > 0)
-        { document.appendChild(orig_childs.shift());
-        }
-        return retval;
-      })(#{document_object.ref})", :timeout => JsshSocket::LONG_SOCKET_TIMEOUT)
-=begin
-      temp_el=document_object.createElement('div') # make a temporary element
-      orig_childs=jssh_socket.object('[]').store_rand_object_key(@browser_jssh_objects)
-      while document_object.childNodes.length > 0
-        orig_childs.push(document_object.childNodes[0])
-        document_object.removeChild(document_object.childNodes[0])
-      end
-      orig_childs.to_array.each do |child|
-        begin
-          temp_el.appendChild(child)
-        rescue JsshError
-        end
-      end
-      result=temp_el.innerHTML
-      while orig_childs.length > 0
-        document_object.appendChild(orig_childs.shift())
-      end
-      return result
-=end      
     end
 
     # Returns the text of the page currently loaded in the browser.

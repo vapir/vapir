@@ -21,7 +21,7 @@ module Watir
                 #attr=candidate.hasAttribute(how_alias) ? candidate.getAttribute(how_alias) : candidate.respond_to?(how_alias) ? candidate.get(how_alias) : nil
                 candidate_attributes=[]
                 candidate_attributes << candidate.getAttribute(how_alias) if candidate.hasAttribute(how_alias)
-                candidate_attributes << candidate.get(how_alias) if candidate.respond_to?(how_alias)
+                candidate_attributes << candidate.get(how_alias) if candidate.js_respond_to?(how_alias)
                 candidate_attributes.any?{|attr| Watir::Specifier.fuzzy_match(attr, what)}
               end
             end

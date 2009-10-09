@@ -55,7 +55,7 @@ class TC_Divs < Test::Unit::TestCase
   
   def test_div_iterator
     assert_equal( 7 , browser.divs.length)
-    assert_equal( "div1" , browser.divs[0].id )
+    assert_equal( "div1" , browser.divs[1].id )
     
     index =1
     browser.divs.each do |s|
@@ -125,7 +125,7 @@ class TC_Divs < Test::Unit::TestCase
   
   def test_span_iterator
     assert_equal(7, browser.spans.length)
-    assert_equal("span1", browser.spans[0].id)
+    assert_equal("span1", browser.spans[1].id)
     
     index = 1
     browser.spans.each do |s|
@@ -178,8 +178,8 @@ class TC_Divs < Test::Unit::TestCase
   
   def test_p_iterator
     assert_equal( 3, browser.ps.length)
-    assert_equal( 'italicText', browser.ps[1].class_name)
-    assert_equal( 'number3', browser.ps[2].id)
+    assert_equal( 'italicText', browser.ps[2].class_name)
+    assert_equal( 'number3', browser.ps[3].id)
     
     count=1
     browser.ps.each do |p|

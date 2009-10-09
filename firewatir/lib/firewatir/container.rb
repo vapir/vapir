@@ -124,9 +124,9 @@ module Watir
     end
     
     def element_collection(klass)
-      locate_all_specified(klass.specifiers).map do |dom_object|
+      ElementCollection.new(locate_all_specified(klass.specifiers).map do |dom_object|
         klass.new(:dom_object, dom_object, extra)
-      end
+      end)
     end
 =begin    
     #

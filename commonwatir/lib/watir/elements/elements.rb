@@ -1,35 +1,9 @@
 module Watir
-  def self.fuzzy_match(attr, what)
-    case what
-    when String, Symbol
-      case attr
-      when String, Symbol
-        attr.to_s.downcase.strip==what.to_s.downcase.strip
-      else
-        attr==what
-      end
-    when Regexp
-      case attr
-      when Regexp
-        attr==what
-      else
-        attr =~ what
-      end
-    else
-      attr==what
-    end
-  end
-end
-module Watir
   module Container
   end
   module Document
   end
   module Frame
-  end
-  module Element
-  end
-  module NonControlElement
   end
   module InputElement
   end
@@ -60,5 +34,47 @@ module Watir
   module TableCell
   end
   module Link
+  end
+  module Pre
+  end
+  module P
+  end
+  module Div
+  end
+  module Span
+  end
+  module Strong
+  end
+  module Label
+  end
+  module Ul
+  end
+  module Li
+  end
+  module Dl
+  end
+  module Dt
+  end
+  module Dd
+  end
+  module H1
+  end
+  module H2
+  end
+  module H3
+  end
+  module H4
+  end
+  module H5
+  end
+  module H6
+  end
+  module Map
+  end
+  module Area
+  end
+  module TBody
+  end
+  module Em
   end
 end

@@ -238,19 +238,6 @@ module Watir
       highlight(:clear)
     end
     
-    # Flash the element the specified number of times.
-    # Defaults to 10 flashes.
-    def flash number=10
-      assert_exists
-      number.times do
-        highlight(:set)
-        sleep 0.05
-        highlight(:clear)
-        sleep 0.05
-      end
-      nil
-    end
-    
     # Executes a user defined "fireEvent" for objects with JavaScript events tied to them such as DHTML menus.
     #   usage: allows a generic way to fire javascript events on page objects such as "onMouseOver", "onClick", etc.
     #   raises: UnknownObjectException  if the object is not found

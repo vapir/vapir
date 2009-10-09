@@ -1,36 +1,16 @@
 module Watir
-
-  module HasRowsAndColumns
-    #
-    # Description:
-    #   Gets the table as a 2 dimensional array. Dont expect too much if there are nested tables, colspan etc.
-    #
-    # Output:
-    #   2D array with rows and column text of the table.
-    #
-    def to_a
-      rows.map{|row| row.cells.map{|cell| cell.to_s.strip}}
-    end
-
-    #
-    # Description:
-    #   Gets the array of rows in the table.
-    #
-    # Output:
-    #   ElementCollection of rows.
-    #
+  module FFHasRowsAndColumns
+    # returns an ElementCollection of rows in the table.
     def rows
       assert_exists
       ElementCollection.new(element_object.rows.to_array.map do |row|
         FFTableRow.new(:element_object, row, extra)
       end)
     end
-
   end
-  
   class FFTable < FFElement
     include Table
-    include HasRowsAndColumns
+    include FFHasRowsAndColumns
     #
     # Description:
     #   Override the highlight method, as if the tables rows are set to have a background color,
@@ -70,6 +50,6 @@ module Watir
 
   class FFTBody < FFElement
     include TBody
-    include HasRowsAndColumns
+    include FFHasRowsAndColumns
   end
 end # FireWatir

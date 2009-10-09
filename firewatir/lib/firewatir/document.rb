@@ -1,3 +1,4 @@
+=begin
 module Watir
   #
   # Description:
@@ -229,3 +230,4 @@ module Watir
     
   end # Docuemnt
 end # FireWatir
+=end

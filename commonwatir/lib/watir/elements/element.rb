@@ -153,6 +153,17 @@ module Watir
                   end
                 end
               end
+              container_module.module_eval do
+                define_method('show_'+container_multiple_method.to_s) do |*io|
+                  io=io.first||$stdout # io is a *array so that you don't have to give an arg (since procs don't do default args)
+                  element_collection=element_collection(subincluder)
+                  io.write("There are #{element_collection.length} #{container_multiple_method}\n")
+                  element_collection.each do |element|
+                    io.write(element.to_s)
+                  end
+                end
+                alias_deprecated "show#{container_multiple_method.to_s.capitalize}", "show_"+container_multiple_method.to_s
+              end
             end
           end
         
@@ -260,6 +271,10 @@ module Watir
     attr_reader :how
     attr_reader :what
     
+    def html
+      STDERR.puts "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)"
+      outer_html
+    end
 
     private
     # this is used by #locate. 

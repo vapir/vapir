@@ -242,7 +242,7 @@ module Watir
           candidates=WinWindow::All.select do |win|
             win.class_name=="MozillaUIWindowClass" && win.text==browser_window_object.document.title
           end
-          raise unless candidates.size==1
+          raise ::WinWindow::MatchError, "Found #{candidates.size} MozillaUIWindowClass windows titled #{browser_window_object.document.title}" unless candidates.size==1
           candidates.first
         ensure
           browser_window_object.document.title=orig_browser_window_title
@@ -738,9 +738,9 @@ module Watir
     alias get_popup_text modal_text
     
     # Returns the document element of the page currently loaded in the browser.
-    def document
-      FFDocument.new(self)
-    end
+    #def document
+    #  FFDocument.new(self)
+    #end
 
     # Returns the first element that matches the given xpath expression or query.
     def element_by_xpath(xpath)
@@ -766,181 +766,181 @@ module Watir
       elements
     end
 
-    #
-    # Description:
-    #   Show all the forms available on the page.
-    #
-    # Output:
-    #   Name, id, method and action of all the forms available on the page.
-    #
-    def show_forms
-      forms = FFDocument.new(self).get_forms()
-      count = forms.length
-      puts "There are #{count} forms"
-      for i in 0..count - 1 do
-        puts "Form name: " + forms[i].name
-        puts "       id: " + forms[i].id
-        puts "   method: " + forms[i].attribute_value("method")
-        puts "   action: " + forms[i].action
-      end
-    end
-    alias showForms show_forms
-
-    #
-    # Description:
-    #   Show all the images available on the page.
-    #
-    # Output:
-    #   Name, id, src and index of all the images available on the page.
-    #
-    def show_images
-      images = FFDocument.new(self).get_images
-      puts "There are #{images.length} images"
-      index = 1
-      images.each do |l|
-        puts "image: name: #{l.name}"
-        puts "         id: #{l.id}"
-        puts "        src: #{l.src}"
-        puts "      index: #{index}"
-        index += 1
-      end
-    end
-    alias showImages show_images
-
-    #
-    # Description:
-    #   Show all the links available on the page.
-    #
-    # Output:
-    #   Name, id, href and index of all the links available on the page.
-    #
-    def show_links
-      links = FFDocument.new(self).get_links
-      puts "There are #{links.length} links"
-      index = 1
-      links.each do |l|
-        puts "link:  name: #{l.name}"
-        puts "         id: #{l.id}"
-        puts "       href: #{l.href}"
-        puts "      index: #{index}"
-        index += 1
-      end
-    end
-    alias showLinks show_links
-
-    #
-    # Description:
-    #   Show all the divs available on the page.
-    #
-    # Output:
-    #   Name, id, class and index of all the divs available on the page.
-    #
-    def show_divs
-      divs = FFDocument.new(self).get_divs
-      puts "There are #{divs.length} divs"
-      index = 1
-      divs.each do |l|
-        puts "div:   name: #{l.name}"
-        puts "         id: #{l.id}"
-        puts "      class: #{l.invoke('className')}"
-        puts "      index: #{index}"
-        index += 1
-      end
-    end
-    alias showDivs show_divs
-
-    #
-    # Description:
-    #   Show all the tables available on the page.
-    #
-    # Output:
-    #   Id, row count, column count (only first row) and index of all the tables available on the page.
-    #
-    def show_tables
-      tables = FFDocument.new(self).get_tables
-      puts "There are #{tables.length} tables"
-      index = 1
-      tables.each do |l|
-        puts "table:   id: #{l.id}"
-        puts "       rows: #{l.row_count}"
-        puts "    columns: #{l.column_count}"
-        puts "      index: #{index}"
-        index += 1
-      end
-    end
-    alias showTables show_tables
-
-    #
-    # Description:
-    #   Show all the pre elements available on the page.
-    #
-    # Output:
-    #   Id, name and index of all the pre elements available on the page.
-    #
-    def show_pres
-      pres = FFDocument.new(self).get_pres
-      puts "There are #{pres.length} pres"
-      index = 1
-      pres.each do |l|
-        puts "pre:     id: #{l.id}"
-        puts "       name: #{l.name}"
-        puts "      index: #{index}"
-        index += 1
-      end
-    end
-    alias showPres show_pres
-
-    #
-    # Description:
-    #   Show all the spans available on the page.
-    #
-    # Output:
-    #   Name, id, class and index of all the spans available on the page.
-    #
-    def show_spans
-      spans = FFDocument.new(self).get_spans
-      puts "There are #{spans.length} spans"
-      index = 1
-      spans.each do |l|
-        puts "span:  name: #{l.name}"
-        puts "         id: #{l.id}"
-        puts "      class: #{l.invoke("className")}"
-        puts "      index: #{index}"
-        index += 1
-      end
-    end
-    alias showSpans show_spans
-
-    #
-    # Description:
-    #   Show all the labels available on the page.
-    #
-    # Output:
-    #   Name, id, for and index of all the labels available on the page.
-    #
-    def show_labels
-      labels = FFDocument.new(self).get_labels
-      puts "There are #{labels.length} labels"
-      index = 1
-      labels.each do |l|
-        puts "label: name: #{l.name}"
-        puts "         id: #{l.id}"
-        puts "        for: #{l.for}"
-        puts "      index: #{index}"
-        index += 1
-      end
-    end
-    alias showLabels show_labels
-
-    #
-    # Description:
-    #   Show all the frames available on the page. Doesn't show nested frames.
-    #
-    # Output:
-    #   Name, and index of all the frames available on the page.
-    #
-    def show_frames
-      raise NotImplementedError
+#    #
+#    # Description:
+#    #   Show all the forms available on the page.
+#    #
+#    # Output:
+#    #   Name, id, method and action of all the forms available on the page.
+#    #
+#    def show_forms
+#      forms = FFDocument.new(self).get_forms()
+#      count = forms.length
+#      puts "There are #{count} forms"
+#      for i in 0..count - 1 do
+#        puts "Form name: " + forms[i].name
+#        puts "       id: " + forms[i].id
+#        puts "   method: " + forms[i].attribute_value("method")
+#        puts "   action: " + forms[i].action
+#      end
+#    end
+#    alias showForms show_forms
+#
+#    #
+#    # Description:
+#    #   Show all the images available on the page.
+#    #
+#    # Output:
+#    #   Name, id, src and index of all the images available on the page.
+#    #
+#    def show_images
+#      images = FFDocument.new(self).get_images
+#      puts "There are #{images.length} images"
+#      index = 1
+#      images.each do |l|
+#        puts "image: name: #{l.name}"
+#        puts "         id: #{l.id}"
+#        puts "        src: #{l.src}"
+#        puts "      index: #{index}"
+#        index += 1
+#      end
+#    end
+#    alias showImages show_images
+#
+#    #
+#    # Description:
+#    #   Show all the links available on the page.
+#    #
+#    # Output:
+#    #   Name, id, href and index of all the links available on the page.
+#    #
+#    def show_links
+#      links = FFDocument.new(self).get_links
+#      puts "There are #{links.length} links"
+#      index = 1
+#      links.each do |l|
+#        puts "link:  name: #{l.name}"
+#        puts "         id: #{l.id}"
+#        puts "       href: #{l.href}"
+#        puts "      index: #{index}"
+#        index += 1
+#      end
+#    end
+#    alias showLinks show_links
+#
+#    #
+#    # Description:
+#    #   Show all the divs available on the page.
+#    #
+#    # Output:
+#    #   Name, id, class and index of all the divs available on the page.
+#    #
+#    def show_divs
+#      divs = FFDocument.new(self).get_divs
+#      puts "There are #{divs.length} divs"
+#      index = 1
+#      divs.each do |l|
+#        puts "div:   name: #{l.name}"
+#        puts "         id: #{l.id}"
+#        puts "      class: #{l.invoke('className')}"
+#        puts "      index: #{index}"
+#        index += 1
+#      end
+#    end
+#    alias showDivs show_divs
+#
+#    #
+#    # Description:
+#    #   Show all the tables available on the page.
+#    #
+#    # Output:
+#    #   Id, row count, column count (only first row) and index of all the tables available on the page.
+#    #
+#    def show_tables
+#      tables = FFDocument.new(self).get_tables
+#      puts "There are #{tables.length} tables"
+#      index = 1
+#      tables.each do |l|
+#        puts "table:   id: #{l.id}"
+#        puts "       rows: #{l.row_count}"
+#        puts "    columns: #{l.column_count}"
+#        puts "      index: #{index}"
+#        index += 1
+#      end
+#    end
+#    alias showTables show_tables
+#
+#    #
+#    # Description:
+#    #   Show all the pre elements available on the page.
+#    #
+#    # Output:
+#    #   Id, name and index of all the pre elements available on the page.
+#    #
+#    def show_pres
+#      pres = FFDocument.new(self).get_pres
+#      puts "There are #{pres.length} pres"
+#      index = 1
+#      pres.each do |l|
+#        puts "pre:     id: #{l.id}"
+#        puts "       name: #{l.name}"
+#        puts "      index: #{index}"
+#        index += 1
+#      end
+#    end
+#    alias showPres show_pres
+#
+#    #
+#    # Description:
+#    #   Show all the spans available on the page.
+#    #
+#    # Output:
+#    #   Name, id, class and index of all the spans available on the page.
+#    #
+#    def show_spans
+#      spans = FFDocument.new(self).get_spans
+#      puts "There are #{spans.length} spans"
+#      index = 1
+#      spans.each do |l|
+#        puts "span:  name: #{l.name}"
+#        puts "         id: #{l.id}"
+#        puts "      class: #{l.invoke("className")}"
+#        puts "      index: #{index}"
+#        index += 1
+#      end
+#    end
+#    alias showSpans show_spans
+#
+#    #
+#    # Description:
+#    #   Show all the labels available on the page.
+#    #
+#    # Output:
+#    #   Name, id, for and index of all the labels available on the page.
+#    #
+#    def show_labels
+#      labels = FFDocument.new(self).get_labels
+#      puts "There are #{labels.length} labels"
+#      index = 1
+#      labels.each do |l|
+#        puts "label: name: #{l.name}"
+#        puts "         id: #{l.id}"
+#        puts "        for: #{l.for}"
+#        puts "      index: #{index}"
+#        index += 1
+#      end
+#    end
+#    alias showLabels show_labels
+#
+#    #
+#    # Description:
+#    #   Show all the frames available on the page. Doesn't show nested frames.
+#    #
+#    # Output:
+#    #   Name, and index of all the frames available on the page.
+#    #
+#    def show_frames
+#      raise NotImplementedError
 #      jssh_command = "var frameset = #{window_var}.frames;
 #                            var elements_frames = new Array();
 #                            for(var i = 0; i < frameset.length; i++)
@@ -966,8 +966,8 @@ module Watir
 #        puts "frame: name: #{frames[i].name}"
 #        puts "      index: #{i+1}"
 #      end
-    end
-    alias showFrames show_frames
+#    end
+#    alias showFrames show_frames
 
     private
 

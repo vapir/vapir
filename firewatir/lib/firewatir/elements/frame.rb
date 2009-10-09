@@ -25,7 +25,7 @@ module Watir
     def content_window_object
       element_object.contentWindow
     end
-    attr_reader :document
+    #attr_reader :document
     def url
       content_window_object.location.href
     end

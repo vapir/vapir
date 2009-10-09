@@ -11,7 +11,7 @@ require 'firewatir/exceptions'
 require 'firewatir/jssh_socket'
 require 'firewatir/container'
 require "firewatir/element"
-require "firewatir/document"
+#require "firewatir/document"
 
 require "firewatir/elements/form"
 require "firewatir/elements/frame"

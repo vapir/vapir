@@ -667,6 +667,10 @@ class JsshObject
       object.sub(r).ref
     end
   end
+  
+  def store_rand_temp
+    store_rand_object_key(jssh_socket.temp_object)
+  end
 
   # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
   # (doesn't use to_json) 
@@ -929,7 +933,7 @@ class JsshArray < JsshObject
     length=self.length
     raise JsshError, "length #{length.inspect} is not a non-negative integer on #{self.ref}" unless length.is_a?(Integer) && length >= 0
     for i in 0...length
-      yield self[i]
+      yield self[i].store_rand_temp
     end
   end
   include Enumerable

@@ -299,9 +299,9 @@ module Watir
     # Output:
     #   Checkbox object.
     #
-    def checkbox(how, what=nil, value=nil) 
-      element_by_howwhat(FFCheckBox, how, what, {:other_attributes => value ? {:value => value} : nil})
-    end
+#    def checkbox(how, what=nil, value=nil) 
+#      element_by_howwhat(FFCheckBox, how, what, {:other_attributes => value ? {:value => value} : nil})
+#    end
     
     #
     # Description:
@@ -329,9 +329,9 @@ module Watir
     # Output:
     #   Radio button object.
     #
-    def radio(how, what=nil, value=nil)
-      element_by_howwhat(FFRadio, how, what, {:other_attributes => value ? {:value => value} : nil})
-    end
+#    def radio(how, what=nil, value=nil)
+#      element_by_howwhat(FFRadio, how, what, {:other_attributes => value ? {:value => value} : nil})
+#    end
     
     #
     # Description:
@@ -349,9 +349,9 @@ module Watir
     # Output:
     #   Link object.
     #
-    def link(how, what=nil) 
-      element_by_howwhat(FFLink, how, what)
-    end
+#    def link(how, what=nil) 
+#      element_by_howwhat(FFLink, how, what)
+#    end
     
     #
     # Description:
@@ -369,9 +369,9 @@ module Watir
     # Output:
     #   Image object.
     #
-    def image(how, what = nil)
-      element_by_howwhat(FFImage, how, what)
-    end    
+ #   def image(how, what = nil)
+ #     element_by_howwhat(FFImage, how, what)
+ #   end    
     
     
     #
@@ -390,9 +390,9 @@ module Watir
     # Returns:
     #   Dl object.
     #
-    def dl(how, what = nil)
-      element_by_howwhat(FFDl, how, what)
-    end
+#    def dl(how, what = nil)
+#      element_by_howwhat(FFDl, how, what)
+#    end
 
     #
     # Description:
@@ -410,9 +410,9 @@ module Watir
     # Returns:
     #   Dt object.
     #
-    def dt(how, what = nil)
-      element_by_howwhat(FFDt, how, what)
-    end
+#    def dt(how, what = nil)
+#      element_by_howwhat(FFDt, how, what)
+#    end
 
     #
     # Description:
@@ -430,9 +430,9 @@ module Watir
     # Returns:
     #   Dd object.
     #
-    def dd(how, what = nil)
-      element_by_howwhat(FFDd, how, what)
-    end
+#    def dd(how, what = nil)
+#      element_by_howwhat(FFDd, how, what)
+#    end
 
     # Description:
     #	Searching for Page Elements. Not for external consumption.
@@ -456,23 +456,15 @@ module Watir
     # Output:
     #   Prints all the available elements on the page.
     #
-    def show_all_objects
-      #puts "-----------Objects in the current context-------------" 
-      locate if respond_to?(:locate)
-      elements = FFDocument.new(self).all
-      #puts elements.length
-      elements.each  do |n|
-        break
-        puts n.tagName
-        puts n.to_s
-        puts "------------------------------------------" 
+    def show_all_objects(write_to=$stdout)
+      # this used to reject tagNames 'br', 'hr', 'doctype', 'meta', and elements with no tagName
+      elements=ElementCollection.new(containing_object.getElementsByTagName('*').to_array.map{|el| FFElement.factory(el)})
+      elements.each do |element|
+        write_to.write element.to_s+"\n"
+        write_to.write "------------------------------------------\n"
       end
-      #puts "Total number of objects in the current context :	#{elements.length}"
       return elements
-      # Test the index access. 
-      # puts doc[35].to_s
     end
     
   end
 end # module 
-

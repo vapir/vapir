@@ -1,59 +1,7 @@
 require 'watir/elements/element'
+require 'watir/commoncontainer'
 
 module Watir
-  module Container # TODO: move this
-    def element_by_howwhat(klass, how, what, other={})
-      other={:locate => false, :other_attributes => nil}.merge(other)
-      how, what, index=*normalize_howwhat_index(how, what, klass.respond_to?(:default_how) && klass.default_how)
-      if other[:other_attributes]
-        if how==:attributes
-          what.merge!(other[:other_attributes])
-        else
-          raise
-        end
-      end
-      element=klass.new(how, what, extra.merge(:index => index, :locate => other[:locate]))
-      element.exists? ? element : nil
-    end
-    def element_collection(klass)
-      elements=[]
-      Watir::Specifier.match_candidates(Watir::Specifier.specifier_candidates(self, klass.specifiers), klass.specifiers) do |match|
-        elements << klass.new(:element_object, match, extra)
-      end
-      ElementCollection.new(elements)
-    end
-    def normalize_howwhat_index(how, what, default_how=nil)
-      case how
-      when nil
-        raise
-      when Hash
-        how=how.dup
-        index=how.delete(:index)
-        what==nil ? [:attributes, how, index] : raise
-      when String, Symbol
-        if Watir::Specifier::HowList.include?(how)
-          [how, what, nil]
-        else
-          if what.nil?
-            if default_how
-              [:attributes, {default_how => how}, nil]
-            else
-              raise
-            end
-          elsif how==:index
-            [:attributes, {}, what]
-          else
-            [:attributes, {how.to_sym => what}, nil]
-          end
-        end
-      else
-        raise
-      end
-    end
-  end
-  module Document
-  end
-  
   module Frame
     Specifiers=[ {:tagName => 'frame'},
                  {:tagName => 'iframe'},
@@ -75,6 +23,7 @@ module Watir
     include ElementModule
     
     dom_wrap_inspect :name, :value, :type
+    dom_wrap :value=
     dom_wrap :default_value => :defaultValue
     dom_wrap :disabled
     alias disabled? disabled
@@ -153,8 +102,8 @@ module Watir
           sleep typingspeed
           element_object.value = value_chars[0...i].join('')
           fire_event :onKeyDown, :highlight => false
-          fire_event :onKeyUp, :highlight => false
           fire_event :onKeyPress, :highlight => false
+          fire_event :onKeyUp, :highlight => false
         end
         fire_event("onChange", :highlight => false)
         fire_event('onBlur', :highlight => false)
@@ -170,6 +119,27 @@ module Watir
     include ContainerMethodsFromName
     DefaultHow=:name
     include ElementModule
+    
+    # Sets the value of this hidden field. Overriden from TextField, as there is no way to set focus and type to a hidden field
+    def set(value)
+      self.value=value
+    end
+
+    # Appends the value to the value of this hidden field. 
+    def append(append_value)
+      self.value = self.value + append_value
+    end
+
+    # Clears the value of this hidden field. 
+    def clear
+      self.value = ""
+    end
+
+    # Hidden element is never visible - returns false.
+    def visible?
+      assert_exists
+      false
+    end
   end
   module Button
     Specifiers=[ {:tagName => 'input', :types => ['button', 'submit', 'image', 'reset']}, 
@@ -216,20 +186,26 @@ module Watir
     end
     alias_deprecated :clearSelection, :clear
     
-    # This method selects an item, or items in a select box, by text.
-    # Raises NoValueFoundException   if the specified value is not found.
-    #  * item   - the thing to select, string or reg exp
-    def select_text(option_text)
-      select_options_if {|option| Watir::Specifier.fuzzy_match(option.text, option_text) }
+    # selects options whose text matches the given text. 
+    # Raises NoValueFoundException if the specified value is not found.
+    #
+    # takes method_options hash (note, these are flags for the function, not to be confused with the Options of the select list)
+    # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
+    #   used for the onchange event. 
+    def select_text(option_text, method_options={})
+      select_options_if(method_options) {|option| Watir::Specifier.fuzzy_match(option.text, option_text) }
     end
     alias select select_text
     alias set select_text
 
-    # Selects an item, or items in a select box, by value.
-    # Raises NoValueFoundException   if the specified value is not found.
-    #  * item   - the value of the thing to select, string, reg exp
-    def select_value(option_value)
-      select_options_if {|option| Watir::Specifier.fuzzy_match(option.value, option_value) }
+    # selects options whose value matches the given value. 
+    # Raises NoValueFoundException if the specified value is not found.
+    #
+    # takes options hash (note, these are flags for the function, not to be confused with the Options of the select list)
+    # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
+    #   used for the onchange event. 
+    def select_value(option_value, method_options={})
+      select_options_if(method_options) {|option| Watir::Specifier.fuzzy_match(option.value, option_value) }
     end
     
     def option_texts
@@ -253,22 +229,25 @@ module Watir
     private
     # yields each option, selects the option if the given block returns true. fires onchange event if
     # any have changed. raises Watir::Exception::NoValueFoundException if none matched. 
-    def select_options_if
+    # takes options hash (note, these are flags for the function, not to be confused with the Options of the select list)
+    # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
+    #   used for the onchange event. 
+    def select_options_if(method_options={})
+      method_options={:wait => true, :highlight => true}.merge(method_options)
       raise ArgumentError, "no block given!" unless block_given?
       any_changed=false
-      highlight :set
-      options.each do |option|
-        if yield option
-          any_changed=true
-          option.selected=true
+      with_highlight(method_options[:highlight]) do
+        self.options.each do |option|
+          if yield option
+            any_changed=true
+            option.selected=true
+          end
         end
-      end
-      if any_changed
-        fire_event :onchange, :highlight => false
-        highlight :clear
-      else
-        highlight :clear
-        raise Watir::Exception::NoValueFoundException
+        if any_changed
+          fire_event(:onchange, method_options.merge(:highlight => false))
+        else
+          raise Watir::Exception::NoValueFoundException
+        end
       end
     end
   end
@@ -328,8 +307,7 @@ module Watir
     DefaultHow=:name
     include ElementModule
     
-    dom_wrap_inspect :name
-    dom_wrap :action
+    dom_wrap_inspect :name, :action
   end
   module Image
     TAG = 'IMG'
@@ -340,13 +318,12 @@ module Watir
     dom_wrap_inspect :src, :name, :width, :height, :alt
     dom_wrap :border
   end
-  module Table
-    # Table assumes the inheriting class defines a #rows method which returns 
-    # an ElementCollection
-    TAG = 'TABLE'
-    include ContainerMethodsFromName
-    include ElementModule
-    
+  module HasRowsAndColumns
+    # Returns a 2 dimensional array of text contents of each row and column of the table or tbody.
+    def to_a
+      rows.map{|row| row.cells.map{|cell| cell.text.strip}}
+    end
+
     # iterates through the rows in the table. Yields a TableRow object
     def each_row
       rows.each do |row|
@@ -401,16 +378,35 @@ module Watir
     end
     alias_deprecated :row_values, :row_texts_at
     
+    # Returns an array containing the text values in the specified column index in each row. 
+    def column_texts_at(column_index)
+      rows.map do |row|
+        row.cells[column_index].text
+      end
+    end
+    alias_deprecated :column_values, :column_texts_at
+    
     
     # I was going to define #cell_count(index=nil) here as an alternative to #column_count
     # but it seems confusing; to me #cell_count on a Table would count up all the cells in
     # all rows, so going to avoid confusion and not do it. 
+
+  end
+  module Table
+    # Table assumes the inheriting class defines a #rows method which returns 
+    # an ElementCollection
+    TAG = 'TABLE'
+    include ContainerMethodsFromName
+    include ElementModule
+    include HasRowsAndColumns
+    
   end
   module TBody
     TAG = 'TBODY'
     ContainerSingleMethod=['tbody']
     ContainerMultipleMethod=['tbodies']
     include ElementModule
+    include HasRowsAndColumns
   end
   module TableRow
     # TableRow assumes that the inheriting class defines a #cells method which

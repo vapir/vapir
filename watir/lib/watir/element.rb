@@ -80,9 +80,9 @@ module Watir
     public
     
     # return the unique COM number for the element
-    dom_wrap :unique_number, :uniqueNumber
+    dom_wrap :uniqueNumber, :unique_number => :uniqueNumber
     # Return the outer html of the object - see http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/outerhtml.asp?frame=true
-    dom_wrap :html, :outerHTML
+    dom_wrap :outerHTML, :outer_html => :outerHTML
 
     # return the text before the element
     # TODO/FIX: ?

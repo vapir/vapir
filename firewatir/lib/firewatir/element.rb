@@ -57,7 +57,35 @@ module Watir
     attr_reader :jssh_socket
     attr_reader :how, :what, :index
     
-    # the containing object is what locate uses to find stuff contained by this element
+    def outer_html
+      # in case doing appendChild of self on the temp_parent_element causes it to be removed from our parentNode, we first copy the list of parentNode's childNodes (our siblings)
+      if parentNode=element_object.parentNode
+        parentNode=parentNode.store_rand_temp
+        orig_siblings=jssh_socket.object('[]').store_rand_prefix('firewatir_elements')
+        parentNode.childNodes.to_array.each do |node|
+          orig_siblings.push node
+        end
+      end
+      
+      temp_parent_element=document_object.createElement('div')
+      temp_parent_element.appendChild(element_object)
+      self_outer_html=temp_parent_element.innerHTML
+      
+      # reinsert self in parentNode's childNodes if we have disappeared due to the appendChild on different parent
+      if parentNode && parentNode.childNodes.length != orig_siblings.length
+        while parentNode.childNodes.length > 0
+          parentNode.removeChild(parentNode.childNodes[0])
+        end
+        while orig_siblings.length > 0
+          parentNode.appendChild orig_siblings.shift
+        end
+      end
+      
+      return self_outer_html
+    end
+    alias outerHTML outer_html
+    
+    # the containing object is what #locate uses to find stuff contained by this element. 
     # this is generally the same as the dom object, but different for Browser and Frame. 
     alias containing_object element_object
 

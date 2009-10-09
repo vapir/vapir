@@ -12,11 +12,11 @@ class TC_CheckBox < Test::Unit::TestCase
     end
     
     def test_checkbox_properties
-       assert_raises(UnknownObjectException) {   browser.checkbox(:name, "noName").id   }  
-       assert_raises(UnknownObjectException) {   browser.checkbox(:name, "noName").name   }  
-       assert_raises(UnknownObjectException) {   browser.checkbox(:name, "noName").disabled   }  
-       assert_raises(UnknownObjectException) {   browser.checkbox(:name, "noName").type   }  
-       assert_raises(UnknownObjectException) {   browser.checkbox(:name, "noName").value   }  
+       assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").id   }  
+       assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").name   }  
+       assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").disabled   }  
+       assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").type   }  
+       assert_nil(browser.checkbox(:name, "noName"))
 
        assert_equal("box1"  , browser.checkbox(:index, 1).name  ) 
        assert_class(browser.checkbox(:index,1), 'Checkbox')

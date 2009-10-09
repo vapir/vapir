@@ -109,16 +109,17 @@ module Watir
       end
     end
 
-    def element_by_howwhat(klass, how, what, other_attributes=nil)
+    def element_by_howwhat(klass, how, what, other={})
+      other={:locate => false, :other_attributes => nil}.merge(other)
       how, what, index=*normalize_howwhat_index(how, what, klass.respond_to?(:default_how) && klass.default_how)
-      if other_attributes
+      if other[:other_attributes]
         if how==:attributes
-          what.merge!(other_attributes)
+          what.merge!(other[:other_attributes])
         else
           raise
         end
       end
-      element=klass.new(how, what, extra.merge(:index => index, :locate => false))
+      element=klass.new(how, what, extra.merge(:index => index, :locate => other[:locate]))
       element.exists? ? element : nil
     end
     
@@ -127,7 +128,7 @@ module Watir
         klass.new(:dom_object, dom_object, extra)
       end
     end
-    
+=begin    
     #
     # Description:
     #    Used to access a frame element. Usually an <frame> or <iframe> HTML tag.
@@ -336,7 +337,7 @@ module Watir
     def option(how, what=nil) 
       element_by_howwhat(FFOption, how, what)
     end
-    
+=end
     #
     # Description:
     #   Used to access checkbox element. Usually an <input type = checkbox> HTML tag.
@@ -364,7 +365,7 @@ module Watir
     #   Checkbox object.
     #
     def checkbox(how, what=nil, value=nil) 
-      element_by_howwhat(FFCheckBox, how, what, value ? {:value => value} : nil)
+      element_by_howwhat(FFCheckBox, how, what, {:other_attributes => value ? {:value => value} : nil})
     end
     
     #
@@ -394,7 +395,7 @@ module Watir
     #   Radio button object.
     #
     def radio(how, what=nil, value=nil)
-      element_by_howwhat(FFRadio, how, what, value ? {:value => value} : nil)
+      element_by_howwhat(FFRadio, how, what, {:other_attributes => value ? {:value => value} : nil})
     end
     
     #

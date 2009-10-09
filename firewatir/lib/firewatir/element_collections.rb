@@ -1,3 +1,4 @@
+=begin
 module Watir
 
   #
@@ -317,3 +318,4 @@ module Watir
   class FFMaps < FFElementCollections; end
 
 end # FireWatir
+=end

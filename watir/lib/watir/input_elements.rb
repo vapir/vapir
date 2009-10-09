@@ -490,7 +490,6 @@ module Watir
   # most of the methods available to this element are inherited from the Element class
   #
   class IERadioCheckCommon < IEInputElement
-    include RadioCheckCommon
     def locate
       @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES, @value)
     end

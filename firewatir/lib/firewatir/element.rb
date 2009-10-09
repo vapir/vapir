@@ -11,14 +11,14 @@ module Watir
   
 
     # How to get the nodes using XPath in mozilla.
-    ORDERED_NODE_ITERATOR_TYPE = 5
+    #ORDERED_NODE_ITERATOR_TYPE = 5
     # To get the number of nodes returned by the xpath expression
-    NUMBER_TYPE = 1
+    #NUMBER_TYPE = 1
     # To get single node value
-    FIRST_ORDERED_NODE_TYPE = 9
+    #FIRST_ORDERED_NODE_TYPE = 9
     # This stores the level to which we have gone finding element inside another element.
     # This is just to make sure that every element has unique name in JSSH.
-
+    
     class << self
       def factory(dom_object, extra={})
         curr_klass=self
@@ -35,13 +35,14 @@ module Watir
       # look for constants to define specifiers - either class::Specifier, or
       # the simpler class::TAG
       def specifiers
-        if self.const_defined?('Specifiers')
+        if self.const_defined?('Specifiers') # note that though constants are inherited, this checks if Specifiers is defined on the class itself 
+                                              # (although the class itself may not define them, these are mostly defined for classes by element classes in commonwatir)
           #self.const_get('Specifiers')
           self::Specifiers
         elsif self.const_defined?('TAG')
           [{:tagName => self::TAG}]
         else
-          raise StandardError, "No way found to specify #{self}."
+          raise "No way found to specify #{self}."
         end
       end
       
@@ -52,6 +53,7 @@ module Watir
       def container_methods
         self.const_defined?('ContainerMethods') ? self.const_get('ContainerMethods') : []
       end
+      
     end
 
     #
@@ -88,15 +90,18 @@ module Watir
       raise unless @container
       ids=specifiers.map{|s| s[:id] }.compact.uniq
       tags=specifiers.map{|s| s[:tagName] }.compact.uniq
+      names=specifiers.map{|s| s[:name] }.compact.uniq
 
       # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
       # also, only check by id on a browser or a frame since otherwise document_object.getElementById may return something above @container in the DOM 
-      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && (@container.is_a?(Browser) || @container.is_a?(Frame))
+      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && @container.dom_object.respond_to?(:getElementById)#(@container.is_a?(Browser) || @container.is_a?(Frame))
         candidates= if by_id=document_object.getElementById(ids.first)
           [by_id]
         else
           []
         end
+      elsif names.size==1 && names.first.is_a?(String) && @container.dom_object.respond_to?(:getElementsByName)#(@container.is_a?(Browser) || @container.is_a?(Frame))
+        candidates=@container.dom_object.getElementsByName(names.first).to_array
       elsif tags.size==1 && tags.first.is_a?(String)
         candidates=@container.dom_object.getElementsByTagName(tags.first).to_array
       else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
@@ -126,9 +131,12 @@ module Watir
           raise if options[:relocate]
           JsshObject.new(@what, jssh_socket)
         when :xpath
-          raise NotImplementedError
-          @updated_at=Time.now
-          element_by_xpath(@container, @what)
+          by_xpath=element_object_by_xpath(@container.dom_object, @what)
+          matched_by_xpath=nil
+          Watir::Specifier.match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers) do |match|
+            matched_by_xpath=match
+          end
+          matched_by_xpath
         when :attributes
           #if options[:relocate]==:recursive && !@container.is_a?(Browser) # don't try to locate a browser 
           #  raise unless @container
@@ -282,10 +290,9 @@ module Watir
     # Output:
     #   Array of elements that matched the xpath expression provided as parameter.
     #
-    def elements_by_xpath(container, xpath)
-      raise NotImplementedError
+    def element_objects_by_xpath(container_object, xpath)
       elements=[]
-      result=document_object.evaluate xpath, document_object, nil, ORDERED_NODE_ITERATOR_TYPE, nil
+      result=document_object.evaluate(xpath, container_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
       while element=result.iterateNext
         elements << element.store_rand_object_key(@browser_jssh_objects)
       end
@@ -305,11 +312,9 @@ module Watir
     # Output:
     #   First element in DOM that matched the XPath expression or query.
     #
-    def element_by_xpath(container, xpath)
-      raise NotImplementedError
-      document_object.evaluate(xpath, document_object, nil, FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue.store_rand_object_key(@browser_jssh_objects)
+    def element_object_by_xpath(container_object, xpath)
+      document_object.evaluate(xpath, container_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
     end
-
 
     #
     # Description:
@@ -384,7 +389,6 @@ module Watir
         dom_event_type = 'HTMLEvents'
         dom_event_init = "initEvent(\"#{event}\", true, true)"
       end
-
 
       jssh_command  = "var event = #{document_object.ref}.createEvent(\"#{dom_event_type}\"); "
       jssh_command << "event.#{dom_event_init}; "

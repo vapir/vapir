@@ -2,6 +2,7 @@ module Watir
 
   # Base class containing items that are common between the span, div, label, p and pre classes.
   module FFNonControlElement
+=begin
     def self.included subclass
       method_names=subclass.respond_to?(:method_names) ? subclass.method_names : []
       #TODO/FIX: icky, move all of these into #method_names's 
@@ -16,7 +17,7 @@ module Watir
         end
       end
     end
-
+=end
 
     # Returns a string of properties of the object.
     def to_s(attributes = nil)

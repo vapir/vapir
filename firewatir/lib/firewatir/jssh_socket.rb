@@ -2,6 +2,19 @@ require 'json/pure'
 require 'socket'
 require 'logger'
 
+class Logger
+  class TimeElapsedFormatter < Formatter
+    def initialize
+      super
+      @time_started=Time.now
+    end
+    def format_datetime(time)
+      "%10.3f"%(time.to_f-@time_started.to_f)
+    end
+
+  end
+end
+
 class JsshError < StandardError
   attr_accessor :source, :lineNumber, :stack, :fileName
 end
@@ -12,9 +25,9 @@ class JsshUndefinedValueError < JsshError; end
 class JsshSocket
   def self.logger
     @@logger||=begin
-      logger=Logger.new nil#(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::CREAT))
-      logger.level = Logger::INFO
-      logger.formatter=Logger::Formatter.new
+      logger=Logger.new(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::TRUNC|File::CREAT))
+      logger.level = Logger::DEBUG
+      logger.formatter=Logger::TimeElapsedFormatter.new
       logger
     end
   end
@@ -31,7 +44,7 @@ class JsshSocket
 
   DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
-  SHORT_SOCKET_TIMEOUT=(2**-16).to_f
+  SHORT_SOCKET_TIMEOUT=0#(2**-16).to_f
 
   attr_reader :ip, :port, :prototype
   
@@ -89,16 +102,16 @@ class JsshSocket
   def recv_socket(timeout=DEFAULT_SOCKET_TIMEOUT)
     received_data = []
     data = ""
-    logger.debug "RECV_SOCKET is starting. timeout=#{timeout}"
+    logger.add(-1) { "RECV_SOCKET is starting. timeout=#{timeout}" }
     while(s= Kernel.select([@socket] , nil , nil, timeout))
       data = @socket.recv(1024)
       unless data==PROMPT && received_data.empty? # if we recv PROMPT here (first thing recv'd), then switch to zero timeout, then the value will probably get left on the socket 
         timeout=SHORT_SOCKET_TIMEOUT
       end
       received_data << data
-      logger.debug "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}"
+      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end
-    logger.info "RECV_SOCKET is done. received_data=#{received_data.inspect}"
+    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}" }
     received_data.pop if received_data.last==PROMPT
     received_data.shift if received_data.first==PROMPT
     received_data.empty? ? nil : received_data.join('')
@@ -141,15 +154,15 @@ class JsshSocket
   end
 
   def send_and_read(js_expr, timeout=DEFAULT_SOCKET_TIMEOUT)
-    logger.debug "SEND_AND_READ is starting. timeout=#{timeout}"
-    logger.debug "SEND_AND_READ is checking for leftovers"
+    logger.add(-1) { "SEND_AND_READ is starting. timeout=#{timeout}" }
+    logger.add(-1) { "SEND_AND_READ is checking for leftovers" }
     if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != PROMPT
       STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
-      logger.warn("SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}")
+      logger.warn { "SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}" }
     end
     @last_expression=js_expr
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
-    logger.info "SEND_AND_READ sending #{js_expr.inspect}"
+    logger.debug { "SEND_AND_READ sending #{js_expr.inspect}" }
     @socket.send(js_expr, 0)
     return read_socket(timeout)
   end
@@ -370,7 +383,7 @@ class JsshSocket
   end
 
   def object(ref)
-    JsshObject.new(ref, self)
+    JsshObject.new(ref, self, :debug_name => ref)
   end
   
   def temp_object
@@ -396,8 +409,7 @@ end
 
 class JsshObject
   attr_reader :ref, :jssh_socket
-  attr_reader :function_result
-  attr_reader :type
+  attr_reader :type, :function_result, :debug_name
   protected
   def type=(type)
     @type=type
@@ -405,16 +417,26 @@ class JsshObject
   def function_result=(fr)
     @function_result=fr
   end
+  def debug_name=(name)
+    @debug_name=name
+  end
+  def logger
+    jssh_socket.logger
+  end
 
   public
   # initializes a JsshObject with a string of javascript containing a reference to
   # the object, and a  JsshSocket that the object is defined on. 
-  def initialize(ref, jssh_socket)
+  def initialize(ref, jssh_socket, other={})
+    other={:debug_name => ref, :function_result => false}.merge(other)
     raise ArgumentError, "Empty object reference!" if !ref || ref==''
     raise ArgumentError, "Reference must be a string - got #{ref.inspect}" unless ref.is_a?(String)
     raise ArgumentError, "Not given a JsshSocket, instead given #{jssh_socket.inspect}" unless jssh_socket.is_a?(JsshSocket)
     @ref=ref
     @jssh_socket=jssh_socket
+    @debug_name=other[:debug_name]
+    @function_result=other[:function_result]
+    logger.info { "#{self.class} initialized: #{debug_name} (type #{type})" }
   end
   
   # returns the value, via JsshSocket#value_json
@@ -434,7 +456,11 @@ class JsshObject
 
   # returns javascript typeof this object 
   def type
-    @type ||= jssh_socket.typeof(ref)
+    if function_result # don't get type for function results, causes function evaluations when you probably didn't want that. 
+      nil
+    else
+      @type ||= jssh_socket.typeof(ref)
+    end
   end
   
   # returns javascript instanceof operator on this and the given interface (expected to be a JsshObject)
@@ -519,13 +545,16 @@ class JsshObject
     unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
       raise JsshError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
     end
-    JsshObject.new("#{ref}.#{attribute}", jssh_socket)
+    JsshObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
   end
 
   # assigns (via JsshSocket#assign) the given ruby value (converted to_json) to the reference
   # for this object. returns self. 
   def assign(val)
-    assign_expr val.to_json
+    @debug_name="(#{debug_name}=#{val.is_a?(JsshObject) ? val.debug_name : val.to_json})"
+    result=assign_expr val.to_json
+    logger.info { "#{self.class} assigned: #{debug_name} (type #{type})" }
+    result
   end
   # assigns the given javascript expression (string) to the reference for this object 
   def assign_expr(val)
@@ -541,8 +570,7 @@ class JsshObject
   # returns a JsshObject for this object - assumes that this object is a function - passing 
   # this function the specified arguments, which are converted to_json
   def pass(*args)
-    obj=JsshObject.new("#{ref}(#{args.map{|arg| arg.to_json}.join(', ')})", jssh_socket)
-    obj.function_result=true
+    obj=JsshObject.new("#{ref}(#{args.map{|arg| arg.to_json}.join(', ')})", jssh_socket, :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JsshObject) ? arg.debug_name : arg.to_json}.join(', ')})")
     obj
   end
   
@@ -560,8 +588,8 @@ class JsshObject
   # => #<JsshObject:0x2dff870 @ref="foo" ...>
   # >> foo.tagName
   # => "DIV"
-  def store(js_variable)
-    stored=JsshObject.new(js_variable, jssh_socket)
+  def store(js_variable, somewhere_meaningful=true)
+    stored=JsshObject.new(js_variable, jssh_socket, :debug_name => somewhere_meaningful ? "(#{js_variable}=#{debug_name})" : debug_name)
     stored.assign_expr(self.ref)
     stored.function_result=false
     stored
@@ -574,7 +602,7 @@ class JsshObject
       name=name_proc.call(("%#{length}s"%rand(base**length).to_s(base)).tr(' ','0'))
     end while JsshObject.new(name,jssh_socket).type!='undefined'
     # okay, more than one iteration is ridiculously unlikely, sure, but just to be safe. 
-    store(name)
+    store(name, false)
   end
   
   def store_rand_prefix(prefix)
@@ -592,14 +620,15 @@ class JsshObject
 
   # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
   # (doesn't use to_json) 
-  def sub_expr(key_expr)
-    JsshObject.new("#{ref}[#{key_expr}]", jssh_socket)
-  end
+#  def sub_expr(key_expr)
+#    JsshObject.new("#{ref}[#{key_expr}]", jssh_socket, :debug_name => "#{debug_name}[#{}]")
+#  end
   
   # returns a JsshObject referring to a subscript of this object, specified as a ruby object converted to 
   # javascript via to_json 
   def sub(key)
-    sub_expr(key.to_json)
+    JsshObject.new("#{ref}[#{key.to_json}]", jssh_socket, :debug_name => "#{debug_name}[#{key.is_a?(JsshObject) ? key.debug_name : key.to_json}]")
+#    sub_expr(key.to_json)
   end
 
   # returns a JsshObject referring to a subscript of this object, or a value if it is simple (see #val_or_object)
@@ -615,7 +644,7 @@ class JsshObject
 
   # calls a binary operator with self and another operand 
   def binary_operator(operator, operand)
-    JsshObject.new("(#{ref}#{operator}#{operand.to_json})", jssh_socket).val_or_object
+    JsshObject.new("(#{ref}#{operator}#{operand.to_json})", jssh_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JsshObject) ? operand.debug_name : operand.to_json})").val_or_object
   end
   def +(operand)
     binary_operator('+', operand)
@@ -736,7 +765,7 @@ class JsshObject
   end
   def define_methods!
     metaclass=(class << self; self; end)
-    self.to_hash.keys.grep(/\A[a-z_][a-z0-9_]*\z/i).each do |key|
+    self.to_hash.keys.grep(/\A[a-z_][a-z0-9_]*\z/i).reject{|k| self.class.method_defined?(k)}.each do |key|
       metaclass.send(:define_method, key) do |*args|
         get(key, *args)
       end
@@ -789,13 +818,13 @@ class JsshObject
     jssh_socket.object('$_H').pass(self)
   end
   def to_array
-    JsshArray.new(self.ref, self.jssh_socket)
+    JsshArray.new(self.ref, self.jssh_socket, :debug_name => debug_name)
   end
   def to_hash
-    JsshHash.new(self.ref, self.jssh_socket)
+    JsshHash.new(self.ref, self.jssh_socket, :debug_name => debug_name)
   end
   def to_dom
-    JsshDOMNode.new(self.ref, self.jssh_socket)
+    JsshDOMNode.new(self.ref, self.jssh_socket, :debug_name => debug_name)
   end
   def to_ruby_hash(options={})
     options={:recurse => 1}.merge(options)
@@ -823,7 +852,7 @@ class JsshObject
   end
   
   def inspect
-    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :ref].map{|attr| attr.to_s+'='+send(attr).inspect}.join(', ')}>"
+    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :ref, :debug_name].map{|attr| attr.to_s+'='+send(attr).inspect}.join(', ')}>"
   end
 end
 

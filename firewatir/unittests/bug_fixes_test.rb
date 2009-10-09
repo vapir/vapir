@@ -54,7 +54,7 @@ class TC_Bugs< Test::Unit::TestCase
 
     def test_button_by_value_bug8
         goto_page("buttons1.html")
-        assert_equal("Sign In", browser.button(:value,"Sign In").value)
+        assert_equal("Sign In", browser.button(:text,"Sign In").text)
     end
        
     tag_method :test_html_bug7, :fails_on_ie

@@ -4,42 +4,7 @@ module Watir
   #   Class for Image element.
   #
   class FFImage < FFElement
-    TAG = 'IMG'
-    DefaultHow=:name
-    ContainerMethods=:image
-    ContainerCollectionMethods=:images
-    #
-    # Description:
-    #   Initializes the instance of image object.
-    #
-    # Input:
-    #   - how - Attribute to identify the image element.
-    #   - what - Value of that attribute.
-    #
-#    def initialize(container, how, what)
-#      @how = how
-#      @what = what
-#      @container = container
-#    end
-
-#    def self.tagName
-#      'img'
-#    end
-    # Description:
-    #   Locate the image element on the page.
-    #
-#    def locate
-#      case @how
-#      when :jssh_name
-#        @element_name = @what
-#      when :xpath
-#        @element_name = element_by_xpath(@container, @what)
-#      else
-#        @element_name = locate_tagged_element('IMG', @how, @what)
-#      end
-#      @o = self
-#    end
-
+    include Image
     #
     # Description:
     #   Used to populate the properties in to_s method. Not used anymore

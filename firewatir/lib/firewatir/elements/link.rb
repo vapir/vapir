@@ -5,9 +5,6 @@ module Watir
   #
   class FFLink < FFElement
     include Link
-    TAG = 'A'
-    ContainerMethods=:link
-    ContainerCollectionMethods=:links
     #
     # Description:
     #   Initializes the instance of link element.

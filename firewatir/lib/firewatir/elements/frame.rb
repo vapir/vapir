@@ -2,10 +2,6 @@ module Watir
   class FFFrame < FFElement
     include Frame
     include FFContainer
-    TAG='frame'
-    DefaultHow=:name
-    ContainerMethods=:frame
-    ContainerCollectionMethods=:frames
 
     def container_candidates(specifiers)
       raise unless @container.is_a?(Browser) || @container.is_a?(Frame)

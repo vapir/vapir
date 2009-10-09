@@ -164,17 +164,19 @@ module Watir
       win_window.hwnd
     end
     def win_window
-      orig_browser_window_title=browser_window_object.title
-      browser_window_object.title=orig_browser_window_title+(rand(36**16).to_s(36))
       @win_window||=begin
-        require 'lib/win_window'
-        candidates=WinWindow::All.select do |win|
-          win.class_name=="MozillaUIWindowClass" && win.text==browser_window_object.title
+        orig_browser_window_title=browser_window_object.document.title
+        browser_window_object.document.title=orig_browser_window_title+(rand(36**16).to_s(36))
+        begin
+          require 'lib/win_window'
+          candidates=WinWindow::All.select do |win|
+            win.class_name=="MozillaUIWindowClass" && win.text==browser_window_object.document.title
+          end
+          raise unless candidates.size==1
+          candidates.first
+        ensure
+          browser_window_object.document.title=orig_browser_window_title
         end
-        raise unless candidates.size==1
-        candidates.first
-      ensure
-        browser_window_object.title=orig_browser_window_title
       end
     end
     def bring_to_front
@@ -195,6 +197,11 @@ module Watir
 
     def exists?
       browser_window_object && jssh_socket.object('getWindows()').to_js_array.include(browser_window_object)
+    end
+    def assert_exists
+      unless exists?
+        raise Watir::Exception::NoMatchingWindowFoundException, "The window no longer exists!"
+      end
     end
 
     # Launches firebox browser
@@ -227,7 +234,8 @@ module Watir
 
     # Loads the given url in the browser. Waits for the page to get loaded.
     def goto(url)
-      set_browser_document
+      assert_exists
+      #set_browser_document
       browser_object.loadURI url
       wait
     end
@@ -318,23 +326,29 @@ module Watir
     public
     #   Closes the window.
     def close
-
-      if jssh_socket.js_eval("getWindows().length").to_i == 1
-        jssh_socket.js_eval("getWindows()[0].close()")
-
-        if current_os == :macosx
-          %x{ osascript -e 'tell application "Firefox" to quit' }
-        end
-
-        # wait for the app to close properly
-        @t.join if @t
-      else
+      if exists?
+        browser_window_object.close
+      end
+      @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
+      if false #TODO/FIX: check here if we originally launched the browser process
+        #TODO/FIX: exit firefox. check if there are any windows still open
+      end
+#      if jssh_socket.js_eval("getWindows().length").to_i == 1
+#        jssh_socket.js_eval("getWindows()[0].close()")
+#        
+#        if current_os == :macosx
+#          %x{ osascript -e 'tell application "Firefox" to quit' }
+#        end
+#
+#        # wait for the app to close properly
+#        @t.join if @t
+#      else
         # Check if window exists, because there may be the case that it has been closed by click event on some element.
         # For e.g: Close Button, Close this Window link etc.
-        if exists?
-          browser_window_object.close
-        end
-      end
+#        if exists?
+#          browser_window_object.close
+#        end
+#      end
     end
 
     #   Used for attaching pop up window to an existing Firefox window, either by url or title.
@@ -377,7 +391,7 @@ module Watir
       begin
         @browser_window_name="firewatir_window_%.16x"%rand(2**64)
       end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@browser_window_name.to_json}}) ? true : false")
-      watcher=components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(components.interfaces.nsIWindowWatcher)
+      watcher=jssh_socket.Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(jssh_socket.Components.interfaces.nsIWindowWatcher)
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
       # then we create the reference (with #attr and #pass so it's not evaluated) and store it (at which point it is evaluated) in @browser_jssh_objects
       
@@ -428,13 +442,6 @@ module Watir
       window_objects
     end
     
-    def self.components
-      jssh_socket.Components
-    end
-    def components
-      jssh_socket.Components
-    end
-    private :components
     # return the window jssh object for the browser window with the given title or url.
     #   how - :url or :title
     #   what - string or regexp
@@ -481,7 +488,7 @@ module Watir
       self.class.each_window_object do |win|
         opener=win.attr(:opener)
         next if opener.type=='undefined' || opener.type=='null'
-        if [self.browser_window_object, self.content_window_object].detect{|_w|_w==opener} #&& win.location.href=='chrome://global/content/commonDialog.xul'
+        if [self.browser_window_object, self.content_window_object].any?{|_w|_w==opener} #&& win.location.href=='chrome://global/content/commonDialog.xul'
           candidates << win 
         end
       end
@@ -494,7 +501,7 @@ module Watir
       end
     end
     
-    def click_popup_button(button_text)
+    def click_modal_button(button_text)
       modal=self.modal_dialog || raise
       anonymous_dialog_nodes=modal.document.getAnonymousNodes(modal.document.documentElement) || raise # raise if no anymous nodes are found (this is where the buttons are) 
       xul_buttons=[]
@@ -504,7 +511,9 @@ module Watir
         end
       end
       raise unless xul_buttons.size==1
-      xul_buttons.first.click
+      xul_button=xul_buttons.first
+      xul_button.disabled=false # get around firefox's stupid thing where the default button is disabled for a few seconds or something, god knows why
+      xul_button.click
     end
     
     # Returns the url of the page currently loaded in the browser.
@@ -718,40 +727,37 @@ module Watir
 
     # Returns the first element that matches the given xpath expression or query.
     def element_by_xpath(xpath)
-      raise NotImplementedError, "borken xpath"
-      temp = FFElement.new(nil, self)
-      element_name = temp.element_by_xpath(self, xpath)
-      return element_factory(element_name)
+      FFElement.factory(document_object.evaluate(xpath, document_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue.store_rand_object_key(@browser_jssh_objects))
     end
 
     # Return object of correct Element class while using XPath to get the element.
-    def element_factory(element_name)
-      raise NotImplementedError
-      jssh_type = FFElement.new(element_name,self).element_type
-      #puts "jssh type is : #{jssh_type}" # DEBUG
-      candidate_class = jssh_type =~ /HTML(.*)Element/ ? $1 : ''
-      #puts candidate_class # DEBUG
-      if candidate_class == 'Input'
-        input_type = jssh_socket.js_eval("#{element_name}.type").downcase.strip
-        firewatir_class = input_class(input_type)
-      else
-        firewatir_class = jssh2firewatir(candidate_class)
-      end
-
-      #puts firewatir_class # DEBUG
-      klass = Watir.const_get(firewatir_class)
-
-      if klass == FFElement
-        klass.new(element_name,self)
-      elsif klass == FFCheckBox
-        klass.new(self,:jssh_name,element_name,["checkbox"])
-      elsif klass == FFRadio
-        klass.new(self,:jssh_name,element_name,["radio"])
-      else
-        klass.new(self,:jssh_name,element_name)
-      end
-    end
-    private :element_factory
+#    def element_factory(element_name)
+#      raise NotImplementedError
+#      jssh_type = FFElement.new(element_name,self).element_type
+#      #puts "jssh type is : #{jssh_type}" # DEBUG
+#      candidate_class = jssh_type =~ /HTML(.*)Element/ ? $1 : ''
+#      #puts candidate_class # DEBUG
+#      if candidate_class == 'Input'
+#        input_type = jssh_socket.js_eval("#{element_name}.type").downcase.strip
+#        firewatir_class = input_class(input_type)
+#      else
+#        firewatir_class = jssh2firewatir(candidate_class)
+#      end
+#      
+#      #puts firewatir_class # DEBUG
+#      klass = Watir.const_get(firewatir_class)
+#      
+#      if klass == FFElement
+#        klass.new(element_name,self)
+#      elsif klass == FFCheckBox
+#        klass.new(self,:jssh_name,element_name,["checkbox"])
+#      elsif klass == FFRadio
+#        klass.new(self,:jssh_name,element_name,["radio"])
+#      else
+#        klass.new(self,:jssh_name,element_name)
+#      end 
+#    end
+#    private :element_factory
 
     #   Return the class name for element of input type depending upon its type like checkbox, radio etc.
     def input_class(input_type)

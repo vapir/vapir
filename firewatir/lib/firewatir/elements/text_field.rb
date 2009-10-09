@@ -5,9 +5,6 @@ module Watir
   #
   class FFTextField < FFInputElement
     include TextField
-    Specifiers= [ {:tagName => 'textarea'},
-                  {:tagName => 'input', :types => ['text', 'textarea','password','hidden']},
-                ]
 
     # Gets the size of the text field element.
     def_wrap :size

@@ -5,38 +5,6 @@ module Watir
   #
   class FFTableRow < FFElement
     include TableRow
-    TAG='tr'
-    #
-    # Description:
-    #   Locate the table row element on the page.
-    #
-#    def locate
-#      @o = nil
-#      case @how
-#      when :jssh_name
-#        @element_name = @what
-#      when :xpath
-#        @element_name = element_by_xpath(@container, @what)
-#      else
-#        @element_name = locate_tagged_element("TR", @how, @what)
-#      end
-#      @o = self
-#    end
-
-    #
-    # Description:
-    #   Initializes the instance of table row object.
-    #
-    # Input:
-    #   - how - Attribute to identify the table row element.
-    #   - what - Value of that attribute.
-    #
-#    def initialize(container, how, what)
-#      @how = how
-#      @what = what
-#      @container = container
-#      #super nil
-#    end
 
     #
     # Description:

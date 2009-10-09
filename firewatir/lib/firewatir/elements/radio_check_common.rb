@@ -4,38 +4,6 @@ module Watir
   #   Base class for checkbox and radio button elements.
   #
   module FFRadioCheckCommon
-    include RadioCheckCommon
-    #
-    # Description:
-    #   Initializes the instance of element object. Element can be checkbox or radio button.
-    #
-    # Input:
-    #   - how - Attribute to identify the element.
-    #   - what - Value of that attribute.
-    #   - value - value of the element.
-    #
-#    def initialize(container, how, what, value = nil)
-#      @how = how
-#      @what = what
-#      @value = value
-#      @container = container
-#    end
-
-    #
-    # Description:
-    #   Locate the element on the page. Element can be a checkbox or radio button.
-    #
-#    def locate
-#      case @how
-#      when :jssh_name
-#        @element_name = @what
-#      when :xpath
-#        @element_name = element_by_xpath(@container, @what)
-#      else
-#        @element_name = locate_tagged_element("input", @how, @what, @type, @value)
-#      end
-#      @o = self
-#    end
 
     #
     # Description:
@@ -97,13 +65,6 @@ module Watir
   class FFRadio < FFElement
     include FFRadioCheckCommon
     include Radio
-#    def initialize *args
-#      super
-#      @type = ["radio"]
-#    end
-
-    Specifiers=[{:tagName => 'input', :type => 'radio'}]
-    
     def clear
       assert_exists
       assert_enabled
@@ -121,12 +82,6 @@ module Watir
   class FFCheckBox < FFElement
     include FFRadioCheckCommon
     include CheckBox
-#    def initialize *args
-#      super
-#      @type = ["checkbox"]
-#    end
-
-    Specifiers=[{:tagName => 'input', :type => 'checkbox'}]
     #
     # Description:
     #   Checks or unchecks the checkbox. If no value is supplied it will check the checkbox.

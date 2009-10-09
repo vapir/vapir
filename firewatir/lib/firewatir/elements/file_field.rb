@@ -5,10 +5,6 @@ module Watir
   #
   class FFFileField < FFInputElement
     include FileField
-    Specifiers=[{:tagName => 'input', :type => 'file'}]
-    DefaultHow=:name
-    ContainerMethods=:file_field
-    ContainerCollectionMethods=:file_fields
 
     #
     # Description:

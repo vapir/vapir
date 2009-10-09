@@ -5,7 +5,6 @@ module Watir
   #
   class FFSelectList < FFInputElement
     include SelectList
-    TAG='select'
 
     #   Clears the selected items in the select box.
     def clear

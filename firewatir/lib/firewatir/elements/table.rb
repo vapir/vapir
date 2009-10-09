@@ -1,9 +1,6 @@
 module Watir
   class FFTable < FFElement
     include Table
-    TAG = 'TABLE'
-
-
     #
     # Description:
     #   Override the highlight method, as if the tables rows are set to have a background color,
@@ -77,17 +74,18 @@ module Watir
     #   2D array with rows and column text of the table.
     #
     def to_a
-      assert_exists
-      y = []
-      table_rows = rows
-      for row in table_rows
-        x = []
-        row.each do |td|
-          x << td.to_s.strip
-        end
-        y << x
-      end
-      return y
+      rows.map{|row| row.cells.map{|cell| cell.to_s.strip}}
+#      assert_exists
+#      y = []
+#      table_rows = rows
+#      for row in table_rows
+#        x = []
+#        row.each do |td|
+#          x << td.to_s.strip
+#        end
+#        y << x
+#      end
+#      return y
     end
 
     #

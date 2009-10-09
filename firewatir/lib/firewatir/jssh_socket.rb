@@ -26,7 +26,7 @@ class JsshSocket
   def self.logger
     @@logger||=begin
       logger=Logger.new(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::TRUNC|File::CREAT))
-      logger.level = Logger::DEBUG
+      logger.level = Logger::INFO
       logger.formatter=Logger::TimeElapsedFormatter.new
       logger
     end
@@ -44,7 +44,7 @@ class JsshSocket
 
   DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
-  SHORT_SOCKET_TIMEOUT=(2**-16).to_f
+  SHORT_SOCKET_TIMEOUT=0#(2**-16).to_f
 
   attr_reader :ip, :port, :prototype
   

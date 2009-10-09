@@ -109,7 +109,7 @@ module Watir
                      # element.
     include ElementModule
     
-    dom_wrap :id, :title, :text => :textContent, :inner_html => :innerHtml
+    dom_wrap :id, :title, :text => :textContent, :inner_html => :innerHTML, :html => :innerHTML
     dom_wrap :class_name => :className
     dom_wrap :scrollIntoView
     

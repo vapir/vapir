@@ -87,12 +87,13 @@ module Watir
       ids=specifiers.map{|s| s[:id] }.compact.uniq
       tags=specifiers.map{|s| s[:tagName] }.compact.uniq
       names=specifiers.map{|s| s[:name] }.compact.uniq
+      classNames=specifiers.inject([]){|arr,s| arr+[s[:class], s[:className]]}.compact.uniq # this (or, all of these) should probably look back through Watir::Specifier::LocateAliases to check for that crap, but this will do 
 
       # we can only use getElementById if:
       # - id is a string, as getElementById doesn't do regexp
       # - index is 1 or nil; otherwise even though it's not really valid, other identical ids won't get searched
       # - id is the _only_ specifier, otherwise if the same id is used multiple times but the first one doesn't match 
-      #   this specifier, the element won't be found
+      #   the given specifiers, the element won't be found
       # - @container has getElementById defined (that is, it's a Browser or a Frame), otherwise if we called 
       #   document_object.getElementById we wouldn't know if what's returned is below @container in the DOM heirarchy or not
       if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && @container.dom_object.respond_to?(:getElementById)
@@ -101,10 +102,12 @@ module Watir
         else
           []
         end
-      elsif names.size==1 && names.first.is_a?(String) && @container.dom_object.respond_to?(:getElementsByName)#(@container.is_a?(Browser) || @container.is_a?(Frame))
-        candidates=@container.dom_object.getElementsByName(names.first).to_array
       elsif tags.size==1 && tags.first.is_a?(String)
         candidates=@container.dom_object.getElementsByTagName(tags.first).to_array
+      elsif names.size==1 && names.first.is_a?(String) && @container.dom_object.respond_to?(:getElementsByName)
+        candidates=@container.dom_object.getElementsByName(names.first).to_array
+      elsif classNames.size==1 && classNames.first.is_a?(String) && @container.dom_object.respond_to?(:getElementsByClassName)
+        candidates=@container.dom_object.getElementsByClassName(classNames.first).to_array
       else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
         candidates=@container.dom_object.getElementsByTagName('*').to_array
       end
@@ -365,41 +368,41 @@ module Watir
       # info about event types harvested from:
       #   http://www.howtocreate.co.uk/tutorials/javascript/domevents
       case event
-        when 'abort', 'blur', 'change', 'error', 'focus', 'load', 'reset', 'resize',
-                      'scroll', 'select', 'submit', 'unload'
+      when 'abort', 'blur', 'change', 'error', 'focus', 'load', 'reset', 'resize', 'scroll', 'select', 'submit', 'unload'
         dom_event_type = 'HTMLEvents'
-        dom_event_init = "initEvent(\"#{event}\", true, true)"
-        when 'keydown', 'keypress', 'keyup'
+        dom_event_init = [:initEvent, event, true, true]
+      when 'keydown', 'keypress', 'keyup'
         dom_event_type = 'KeyEvents'
         # Firefox has a proprietary initializer for keydown/keypress/keyup.
         # Args are as follows:
-        #   'type', bubbles, cancelable, windowObject, ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode
-        dom_event_init = "initKeyEvent(\"#{event}\", true, true, #{content_window_object.ref}, false, false, false, false, 0, 0)"
-        when 'click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover',
-                      'mouseup'
+        #                                type,   bubbles, cancelable, windowObject,          ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode
+        dom_event_init = [:initKeyEvent, event, true,    true,      content_window_object, false,  false, false,   false,   0,      0]
+      when 'click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'
         dom_event_type = 'MouseEvents'
-        # Args are as follows:
-        #   'type', bubbles, cancelable, windowObject, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget
-        dom_event_init = "initMouseEvent(\"#{event}\", true, true, #{content_window_object.ref}, 1, 0, 0, 0, 0, false, false, false, false, 0, null)"
+        # Args are as follows:             type,   bubbles, cancelable, windowObject,          detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget
+        dom_event_init = [:initMouseEvent, event, true,    true,      content_window_object, 1,      0,       0,       0,      0,       false,  false, false,   false,   0,      nil]
       else
         dom_event_type = 'HTMLEvents'
-        dom_event_init = "initEvents(\"#{event}\", true, true)"
+        dom_event_init = [:initEvent, event, true, true]
       end
+      event=document_object.createEvent(dom_event_type)
+      event.get(*dom_event_init) # calls to the init*Event method
+      element_object.dispatchEvent(event)
 
-      if(element_type == "HTMLSelectElement")
-        dom_event_type = 'HTMLEvents'
-        dom_event_init = "initEvent(\"#{event}\", true, true)"
-      end
+      #if(element_type == "HTMLSelectElement")
+      #  dom_event_type = 'HTMLEvents'
+      #  dom_event_init = "initEvent(\"#{event}\", true, true)"
+      #end
 
-      jssh_command  = "var event = #{document_object.ref}.createEvent(\"#{dom_event_type}\"); "
-      jssh_command << "event.#{dom_event_init}; "
-      jssh_command << "#{element_object.ref}.dispatchEvent(event);"
+      #jssh_command  = "var event = #{document_object.ref}.createEvent(\"#{dom_event_type}\"); "
+      #jssh_command << "event.#{dom_event_init}; "
+      #jssh_command << "#{element_object.ref}.dispatchEvent(event);"
 
       #puts "JSSH COMMAND:\n#{jssh_command}\n"
-      jssh_socket.send_and_read jssh_command
+      #jssh_socket.send_and_read jssh_command
       wait() if wait
 
-      @@current_level = 0
+      #@@current_level = 0
     end
     alias fireEvent fire_event
 

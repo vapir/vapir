@@ -3,6 +3,7 @@ module Watir
     HowList=[:attributes, :jssh_name, :jssh_object, :dom_object, :xpath]
     LocateAliases=Hash.new{|hash,key| [key]}.merge!({ :text => [:text, :textContent],
                                                         :class => [:class, :className],
+                                                        :caption => [:value], # for some reason we call value 'caption' when it's for a button. 
                                                       })
     
     module_function
@@ -17,9 +18,11 @@ module Watir
               end
             else
               LocateAliases[how].any? do |how_alias|
-                attr=candidate.respond_to?(how_alias) ? candidate[how_alias] : candidate.getAttribute(how_alias)
-                #Watir::Specifier.fuzzy_match(candidate.getAttribute(how_alias), what)
-                Watir::Specifier.fuzzy_match(attr, what)
+                #attr=candidate.hasAttribute(how_alias) ? candidate.getAttribute(how_alias) : candidate.respond_to?(how_alias) ? candidate.get(how_alias) : nil
+                candidate_attributes=[]
+                candidate_attributes << candidate.getAttribute(how_alias) if candidate.hasAttribute(how_alias)
+                candidate_attributes << candidate.get(how_alias) if candidate.respond_to?(how_alias)
+                candidate_attributes.any?{|attr| Watir::Specifier.fuzzy_match(attr, what)}
               end
             end
           end

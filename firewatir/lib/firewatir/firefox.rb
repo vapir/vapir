@@ -549,7 +549,11 @@ module Watir
         var orig_childs=[];
         while(document.childNodes.length > 0)
         { orig_childs.push(document.childNodes[0]);
-          document.removeChild(document.childNodes[0]);
+          document.removeChild(document.childNodes[0]); 
+          /* we remove each childNode here because doing appendChild on temp_el removes it 
+           * from document anyway (at least when appendChild works), so we just remove all
+           * childNodes so that adding them back in the right order is simpler (using orig_childs)
+           */
         }
         for(var i in orig_childs)
         { try

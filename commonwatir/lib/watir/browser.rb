@@ -106,7 +106,11 @@ before you invoke Browser.new.
 
       def klass
         key = Watir.options[:browser]
-        eval(@@browser_classes[key]) # this triggers the autoload
+        #eval(@@browser_classes[key]) # this triggers the autoload
+        browser_class_name=@@browser_classes[key]
+        klass=browser_class_name.split('::').inject(Object) do |namespace, name_part|
+          namespace.const_get(name_part)
+        end
       end
       private :klass
       # Add support for the browser option, using the specified class, 

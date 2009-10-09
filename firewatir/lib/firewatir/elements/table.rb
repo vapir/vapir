@@ -65,32 +65,10 @@ module Watir
       super
     end
 =end
-    #
-    # Description:
-    #   Used to populate the properties in the to_s method.
-    #
-    #def table_string_creator
-    #    n = []
-    #    n <<   "rows:".ljust(TO_S_SIZE) + self.row_count.to_s
-    #    n <<   "cols:".ljust(TO_S_SIZE) + self.column_count.to_s
-    #    return n
-    #end
-    #private :table_string_creator
-
-    # returns the properties of the object in a string
-    # raises an ObjectNotFound exception if the object cannot be found
-    # TODO: Implement to_s method for this class.
-
-#    def to_s
-#      assert_exists
-#      r = super({"rows" => "rows.length", "cellspacing" => "cellspacing", "cellpadding" => "cellpadding", "border" => "border"})
-#      # r += self.column_count.to_s
-#    end
 
   end # Table
 
   class FFTBody < FFElement
-    include FFNonControlElement
     include TBody
     include HasRowsAndColumns
   end

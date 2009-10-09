@@ -8,34 +8,6 @@ module Watir
 
     #
     # Description:
-    #   Used to populate the properties in to_s method
-    #
-    #def text_string_creator
-    #    n = []
-    #    n <<   "length:".ljust(TO_S_SIZE) + self.size.to_s
-    #    n <<   "max length:".ljust(TO_S_SIZE) + self.maxlength.to_s
-    #    n <<   "read only:".ljust(TO_S_SIZE) + self.readonly?.to_s
-    #
-    #    return n
-    #end
-    #private :text_string_creator
-
-    # TODO: Impelement the to_s method.
-#    def to_s
-#      assert_exists
-#      super({"length" => "size","max length" => "maxlength","read only" => "readOnly" })
-#    end
-
-    #
-    # Description:
-    #   Checks if object is read-only or not.
-    #
-    def assert_not_readonly
-      raise Exception::ObjectReadOnlyException, "Textfield #{@how} and #{@what} is read only." if self.readonly?
-    end
-
-    #
-    # Description:
     #   Checks if the provided text matches with the contents of text field. Text can be a string or regular expression.
     #
     # Input:
@@ -82,72 +54,6 @@ module Watir
     # alias dragContentsTo drag_contents_to
 
 
-    #
-    # Description:
-    #   Append the provided text to the contents of the text field.
-    #   Raises ObjectDisabledException if text field is disabled.
-    #   Raises ObjectReadOnlyException if text field is read only.
-    #
-    # Input:
-    #   - setThis - Text to be appended.
-    #
-    def append( setThis)
-      assert_exists
-      assert_enabled
-      assert_not_readonly
-
-      highlight(:set)
-      element_object.scrollIntoView
-      element_object.focus
-      doKeyPress( setThis )
-      highlight(:clear)
-    end
-
-    #
-    # Description:
-    #   Sets the text of the text field withoud firing the events like onKeyPress, onKeyDown etc. This should not be used generally, but it
-    #   is useful in situations where you need to set large text to the text field and you know that you don't have any event to be
-    #   fired.
-    #
-    # Input:
-    #   - v - Text to be set.
-    #
-    #def value=(v)
-    #    assert_exists
-    #    value = v.to_s
-    #end
-
-    #
-    # Description:
-    #   Used to set the value of text box and fires the event onKeyPress, onKeyDown, onKeyUp after each character.
-    #   Shouldnot be used externally. Used internally by set and append methods.
-    #
-    # Input:
-    #   - value - The string to enter into the text field
-    #
-    def doKeyPress( value )
-      begin
-        max = maxlength
-        if (max > 0 && value.length > max)
-          original_value = value
-          value = original_value[0...max]
-          element.log " Supplied string is #{suppliedValue.length} chars, which exceeds the max length (#{max}) of the field. Using value: #{value}"
-        end
-      rescue
-        # probably a text area - so it doesnt have a max Length
-      end
-      for i in 0..value.length-1
-        #sleep element.typingspeed   # typing speed
-        c = value[i,1]
-        #element.log  " adding c.chr " + c  #.chr.to_s
-        assign('value', self.value.to_s + c)   #c.chr
-        fireEvent("onKeyDown")
-        fireEvent("onKeyPress")
-        fireEvent("onKeyUp")
-      end
-
-    end
-    private :doKeyPress
 
   end # TextField
 end # FireWatir

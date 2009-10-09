@@ -90,3 +90,43 @@ class Waiter
 end  
     
 end # module
+
+class WaiterError < StandardError; end
+class Waiter
+  # Tries for +time+ seconds to get the desired result from the given block. Stops when either:
+  # 1. The :condition option (which should be a proc) returns true (that is, not false or nil)
+  # 2. The block returns true (that is, anything but false or nil) if no :condition option is given
+  # 3. The specified amount of time has passed. By default a WaiterError is raised. 
+  #    If :exception option is given, then if it is nil, no exception is raised; otherwise it should be
+  #    an exception class or an exception instance which will be raised instead of WaiterError
+  #
+  # Examples:
+  # Waiter.try_for(30) do
+  #   Time.now.year == 2015
+  # end
+  # Raises a WaiterError unless it is called between the last 30 seconds of December 31, 2014 and the end of 2015
+  #
+  # Waiter.try_for(365.242199*24*60*60, :interval => 0.1, :exception => nil, :condition => proc{ 2+2==5 }) do
+  #   STDERR.puts "any decisecond now ..."
+  # end
+  # Complains to STDERR for one year, every tenth of a second, as long as 2+2 does not equal 5. Does not 
+  # raise an exception if 2+2 does not become equal to 5. 
+  def self.try_for(time, options={})
+    options={:interval => 0.5, :condition => proc{|_ret| _ret}, :exception => WaiterError}.merge(options)
+    started=Time.now
+    begin
+      ret=yield
+      break if options[:condition].call(ret)
+      sleep options[:interval]
+    end while Time.now < started+time && !options[:condition].call(ret)
+    if options[:exception] && !options[:condition].call(ret)
+      ex=if options[:exception].is_a?(Class)
+        options[:exception].new("Waiter waited #{time} seconds and condition was not met")
+      else
+        options[:exception]
+      end
+      raise ex
+    end
+    ret
+  end
+end

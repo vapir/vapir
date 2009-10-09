@@ -900,7 +900,7 @@ class JsshObject
   end
   
   def inspect
-    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :ref, :debug_name].map{|attr| attr.to_s+'='+send(attr).inspect}.join(', ')}>"
+    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :debug_name].map{|attr| attr.to_s+'='+send(attr).inspect}.join(', ')}>"
   end
 end
 

@@ -1,7 +1,7 @@
 require 'watir/elements/element'
 
 module Watir
-  module Container
+  module Container # TODO: move this
     def element_by_howwhat(klass, how, what, other={})
       other={:locate => false, :other_attributes => nil}.merge(other)
       how, what, index=*normalize_howwhat_index(how, what, klass.respond_to?(:default_how) && klass.default_how)
@@ -62,7 +62,7 @@ module Watir
     include ElementModule
     DefaultHow=:name
     
-    dom_wrap :name, :src
+    dom_wrap_inspect :name, :src
   end
   module InputElement
     Specifiers= [ {:tagName => 'input'},
@@ -74,7 +74,29 @@ module Watir
     ContainerMultipleMethod=['inputs', 'input_elements']
     include ElementModule
     
-    dom_wrap :name, :value, :type, :default_value => :defaultValue
+    dom_wrap_inspect :name, :value, :type
+    dom_wrap :default_value => :defaultValue
+    dom_wrap :disabled
+    alias disabled? disabled
+    dom_wrap :readonly => :readOnly, :readonly? => :readOnly, :readOnly? => :readOnly
+
+    # Checks if this element is enabled or not. Raises ObjectDisabledException if this is disabled.
+    def assert_enabled
+      if disabled
+        raise Exception::ObjectDisabledException, "object #{@how} and #{@what} is disabled"
+      end
+    end
+
+    #   Checks if object is readonly or not. Raises ObjectReadOnlyException if this is readonly
+    def assert_not_readonly
+      raise Exception::ObjectReadOnlyException, "Textfield #{@how} and #{@what} is read only." if self.readonly?
+    end
+
+    # Returns true if element is enabled, otherwise returns false.
+    def enabled?
+      !disabled
+    end
+    
   end
   module TextField
     Specifiers= [ {:tagName => 'textarea'},
@@ -83,7 +105,8 @@ module Watir
     include ContainerMethodsFromName
     include ElementModule
     
-    dom_wrap :size, :maxLength, :maxlength => :maxLength, :readonly => :readOnly, :readonly? => :readOnly, :readOnly? => :readOnly, :getContents => :value
+    dom_wrap :size, :maxLength, :maxlength => :maxLength
+    dom_wrap_deprecated :getContents, :value, :value
     
     # Clears the contents of the text box.
     #   Raises UnknownObjectException if the object can't be found
@@ -110,7 +133,7 @@ module Watir
       
       highlight(:set)
       
-      value_chars=value.split(//) # split on blank regexp for multibyte chars
+      value_chars=value.split(//) # split on blank regexp (rather than iterating over each byte) for multibyte chars
       if self.type.downcase=='text' && maxlength && maxlength >= 0 && value_chars.length > maxlength
         value_chars=value_chars[0...maxlength]
         value=value_chars.join('')
@@ -120,6 +143,7 @@ module Watir
       typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0
       if type_keys
         element_object.focus
+        fire_event('onFocus', :highlight => false)
         element_object.select
         fire_event("onSelect", :highlight => false)
         (0..value_chars.length).each do |i|
@@ -177,15 +201,15 @@ module Watir
     #   Clears the selected items in the select box.
     def clear
       assert_exists
-      highlight(:set)
-      wait = false
-      options.each do |option|
-        option.selected=false
-        wait=true
+      with_highlight do
+        wait = false
+        options.each do |option|
+          option.selected=false
+          wait=true
+        end
+        fire_event :onchange, :highlight => false
+        self.wait if wait
       end
-      fire_event :onchange, :highlight => false
-      self.wait if wait
-      highlight(:clear)
     end
     alias_deprecated :clearSelection, :clear
     
@@ -240,19 +264,45 @@ module Watir
         fire_event :onchange, :highlight => false
         highlight :clear
       else
-        higlight :clear
+        highlight :clear
         raise Watir::Exception::NoValueFoundException
       end
     end
   end
+  
+  module RadioCheckBoxCommon
+    extend DomWrap
+    dom_wrap :checked, :checked? => :checked, :set? => :checked
+    dom_wrap_deprecated :isSet?, :checked, :checked
+    dom_wrap_deprecated :getState, :checked, :checked
+
+    #   Unchecks the radio button or check box element.
+    #   Raises ObjectDisabledException exception if element is disabled.
+    def clear
+      set(false)
+    end
+    
+    #   Checks the radio button or check box element.
+    #   Raises ObjectDisabledException exception if element is disabled.
+    def set(state=true)
+      assert_exists
+      assert_enabled
+      with_highlight do
+        element_object.checked=state
+        fire_event :onclick, :highlight => false
+        wait
+      end
+    end
+  end
+  
   module Radio
     Specifiers=[{:tagName => 'input', :type => 'radio'}]
     include ContainerMethodsFromName
     ContainerMethodExtraArgs=[:value]
     include ElementModule
     
-    dom_wrap :checked
-    dom_wrap_deprecated :isSet?, :checked, :checked
+    include RadioCheckBoxCommon
+    inspect_these :checked
   end
   module CheckBox
     Specifiers=[{:tagName => 'input', :type => 'checkbox'}]
@@ -261,8 +311,8 @@ module Watir
     ContainerMethodExtraArgs=[:value]
     include ElementModule
 
-    dom_wrap :checked
-    dom_wrap_deprecated :isSet?, :checked, :checked
+    include RadioCheckBoxCommon
+    inspect_these :checked
   end
   module Form
     TAG='form'
@@ -270,6 +320,7 @@ module Watir
     DefaultHow=:name
     include ElementModule
     
+    dom_wrap_inspect :name
     dom_wrap :action
   end
   module Image
@@ -278,7 +329,8 @@ module Watir
     DefaultHow=:name
     include ElementModule
     
-    dom_wrap :alt, :src, :name, :height, :width, :border
+    dom_wrap_inspect :src, :name, :width, :height, :alt
+    dom_wrap :border
   end
   module Table
     # Table assumes the inheriting class defines a #rows method which returns 
@@ -393,7 +445,7 @@ module Watir
     ContainerMultipleMethod=['as', 'links']
     include ElementModule
     
-    dom_wrap :href, :name
+    dom_wrap_inspect :href, :name
   end
   module Pre
     TAG = 'PRE'
@@ -425,7 +477,7 @@ module Watir
     include ContainerMethodsFromName
     include ElementModule
     
-    dom_wrap :htmlFor
+    dom_wrap_inspect :htmlFor
 
     def for
       raise "document is not defined - cannot search for labeled element" unless document_object

@@ -23,24 +23,5 @@ module Watir
     #    end
     #end
 
-    #
-    # Description:
-    #   Used to populate the properties in to_s method.
-    #
-    #def link_string_creator
-    #    n = []
-    #    n <<   "href:".ljust(TO_S_SIZE) + self.href
-    #    n <<   "inner text:".ljust(TO_S_SIZE) + self.text
-    #    n <<   "img src:".ljust(TO_S_SIZE) + self.src if self.link_has_image
-    #    return n
-    #    end
-
-    # returns a textual description of the link
-
-#    def to_s
-#      assert_exists
-#      super({"href" => "href","inner text" => "text"})
-#    end
-
   end # Link
 end # FireWatir

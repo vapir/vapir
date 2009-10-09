@@ -2,106 +2,57 @@ module Watir
 
   # Forms
   
-  module IEFormAccess
-    def name
-      @element_object.getAttributeNode('name').value
-    end
-    def action
-      @element_object.action
-    end
-    def method
-      @element_object.invoke('method')
-    end
-    def id
-      @element_object.invoke('id')
-    end
-  end
+#  module IEFormAccess
+#    def name
+#      @element_object.getAttributeNode('name').value
+#    end
+#    def action
+#      @element_object.action
+#    end
+#    def method
+#      @element_object.invoke('method')
+#    end
+#    def id
+#      @element_object.invoke('id')
+#    end
+#  end
   
   # wraps around a form OLE object
-  class IEFormWrapper
-    include IEFormAccess
-    def initialize ole_object
-      @element_object = ole_object
-    end
-  end
+#  class IEFormWrapper
+#    include IEFormAccess
+#    def initialize ole_object
+#      @element_object = ole_object
+#    end
+#  end
   
   #   Form Factory object
   class IEForm < IEElement
     include Form
-    include IEFormAccess
-    include IEContainer
+#    include IEFormAccess
+#    include IEContainer
     
-    attr_accessor :form, :ole_object
-    
-    #   * container   - the containing object, normally an instance of IE
-    #   * how         - symbol - how we access the form (:name, :id, :index, :action, :method)
-    #   * what        - what we use to access the form
-#    def initialize(container, how, what)
-#      set_container container
-#      @how = how
-#      @what = what
-#      
-#      log "Get form how is #{@how}  what is #{@what} "
-#      
-#      # Get form using xpath.
-#      if @how == :xpath
-#        @element_object = @container.element_by_xpath(@what)
-#      else
-#        count = 1
-#        doc = @container.document
-#        doc.forms.each do |thisForm|
-#          next unless @element_object == nil
-#          
-#          wrapped = IEFormWrapper.new(thisForm)
-#          @element_object =
-#          case @how
-#          when :name, :id, :method, :action
-#            @what.matches(wrapped.send(@how)) ? thisForm : nil
-#          when :index
-#            count == @what ? thisForm : nil
-#          else
-#            raise MissingWayOfFindingObjectException, "#{how} is an unknown way of finding a form (#{what})"
-#          end
-#          count += 1
-#        end
-#      end
-#      super(@element_object)
-#      
-#      copy_test_config container
-#    end
-    
-    def exists?
-      @element_object ? true : false
-    end
-    alias :exist? :exists?
-    
-    def assert_exists
-      unless exists?
-        raise UnknownFormException, 
-          "Unable to locate a form using #{@how} and #{@what}" 
-      end
-    end
+#    attr_accessor :form, :ole_object
     
     # Submit the data -- equivalent to pressing Enter or Return to submit a form.
     def submit 
       assert_exists
       @element_object.invoke('submit')
-      @container.wait
+      wait
     end
     
-    def ole_inner_elements
-      assert_exists
-      @element_object.elements
-    end
-    private :ole_inner_elements
+#    def ole_inner_elements
+#      assert_exists
+#      @element_object.elements
+#    end
+#    private :ole_inner_elements
     
-    def document
-      return @element_object
-    end
+#    def document
+#      return @element_object
+#    end
     
-    def wait(no_sleep=false)
-      @container.wait(no_sleep)
-    end
+#    def wait(no_sleep=false)
+#      @container.wait(no_sleep)
+#    end
     
     # This method is responsible for setting and clearing the colored highlighting on the specified form.
     # use :set  to set the highlight
@@ -156,17 +107,17 @@ module Watir
 end
 
 module Watir
-  class IEForms < IEElementCollections
-    def element_class; Form; end
-    def element_tag; 'FORM'; end
-    def length
-      @container.document.getElementsByTagName("FORM").length
-    end
-  end
+#  class IEForms < IEElementCollections
+#    def element_class; Form; end
+#    def element_tag; 'FORM'; end
+#    def length
+#      @container.document.getElementsByTagName("FORM").length
+#    end
+#  end
 
-  module IEContainer
-    def forms
-      Forms.new(self)
-    end
-  end
+#  module IEContainer
+#    def forms
+#      Forms.new(self)
+#    end
+#  end
 end

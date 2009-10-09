@@ -5,27 +5,6 @@ module Watir
   #
   class FFImage < FFElement
     include Image
-    #
-    # Description:
-    #   Used to populate the properties in to_s method. Not used anymore
-    #
-#    def image_string_creator
-#      n = []
-#      n <<   "src:".ljust(TO_S_SIZE) + self.src.to_s
-#      n <<   "file date:".ljust(TO_S_SIZE) + self.fileCreatedDate.to_s
-#      n <<   "file size:".ljust(TO_S_SIZE) + self.fileSize.to_s
-#      n <<   "width:".ljust(TO_S_SIZE) + self.width.to_s
-#      n <<   "height:".ljust(TO_S_SIZE) + self.height.to_s
-#      n <<   "alt:".ljust(TO_S_SIZE) + self.alt.to_s
-#      return n
-#    end
-#    private :image_string_creator
-#
-#    # returns a string representation of the object
-#    def to_s
-#      assert_exists
-#      super({"src" => "src","width" => "width","height" => "height","alt" => "alt"})
-#    end
 
     # this method returns the file created date of the image
     #def file_created_date
@@ -40,30 +19,6 @@ module Watir
     #    return @o.invoke("fileSize")
     #end
     # alias fileSize file_size
-
-    #
-    # Description:
-    #   Gets the width of the image in pixels, as a string.
-    #
-    # Output:
-    #   Width of image (in pixels).
-    #
-    def width
-      assert_exists
-      return invoke("width")
-    end
-
-    #
-    # Description:
-    #   Gets the height of the image in pixels, as a string.
-    #
-    # Output:
-    #   Height of image (in pixels).
-    #
-    def height
-      assert_exists
-      return invoke("height")
-    end
 
     # This method attempts to find out if the image was actually loaded by the web browser.
     # If the image was not loaded, the browser is unable to determine some of the properties.

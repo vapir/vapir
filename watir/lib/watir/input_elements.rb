@@ -129,38 +129,7 @@ module Watir
   # Normally a user would not need to create this object as it is returned by the Watir::Container#text_field method
   class IETextField < IEInputElement
     include TextField
-    INPUT_TYPES = ["text", "password", "textarea"]
-    
 #    def_wrap_guard :size
-    
-#    def maxlength
-#      assert_exists
-#      begin
-#        ole_object.invoke('maxlength').to_i
-#      rescue WIN32OLERuntimeError
-#        0
-#      end
-#    end
-        
-    # Returns true or false if the text field is read only.
-    #   Raises UnknownObjectException if the object can't be found.
-#    def_wrap :readonly?, :readOnly
-    
-    def text_string_creator
-      n = []
-      n << "length:".ljust(TO_S_SIZE) + self.size.to_s
-      n << "max length:".ljust(TO_S_SIZE) + self.maxlength.to_s
-      n << "read only:".ljust(TO_S_SIZE) + self.readonly?.to_s
-      n
-    end
-    private :text_string_creator
-    
-#    def to_s
-#      assert_exists
-#      r = string_creator
-#      r += text_string_creator
-#      r.join("\n")
-#    end
     
     def assert_not_readonly
       if self.readonly?
@@ -311,18 +280,6 @@ module Watir
   # most of the methods available to this element are inherited from the Element class
   #
   module IERadioCheckCommon
-#    def locate
-#      @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES, @value)
-#    end
-#    def initialize(container, how, what, value=nil)
-#      super container, how, what
-#      @value = value
-#    end
-    
-    def inspect
-      '#<%s:0x%x located=%s how=%s what=%s value=%s>' % [self.class, hash*2, !!ole_object, @how.inspect, @what.inspect, @value.inspect]
-    end
-    
     # This method determines if a radio button or check box is set.
     # Returns true is set/checked or false if not set/checked.
     # Raises UnknownObjectException if its unable to locate an object.

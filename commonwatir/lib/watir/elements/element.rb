@@ -107,7 +107,8 @@ module Watir
     # set container methods on inherit
     def self.included(includer) # when this module gets included (by a Watir Element module)
       __orig_included_before_ElementModule__=includer.respond_to?(:included) ? includer.method(:included) : nil
-      (class << includer;self;end).send(:define_method, :included) do |subincluder| # make its .included method
+      includer_metaclass=(class << includer;self;end)
+      includer_metaclass.send(:define_method, :included) do |subincluder| # make its .included method
           __orig_included_before_ElementModule__.call(subincluder) if __orig_included_before_ElementModule__
 
           container_modules=subincluder.included_modules.select do |mod| # get Container modules that the subincluder includes (ie, Watir::FFTextField includes the Watir::FFContainer Container module)
@@ -156,16 +157,51 @@ module Watir
           end
         
         # copy constants (like Specifiers) onto classes when inherited
-  # CopyConstants is here to set the constants of the Element modules below onto the actual classes
-  # that instantiate per-browser (Watir::IETextField, Watir::FFTextField, etc) so that calling #const_defined?
-  # on those returns true, and so that the constants defined here clobber any inherited stuff from superclasses
-  # which is unwanted. 
+        # this is here to set the constants of the Element modules below onto the actual classes that instantiate 
+        # per-browser (Watir::IETextField, Watir::FFTextField, etc) so that calling #const_defined? on those 
+        # returns true, and so that the constants defined here clobber any inherited stuff from superclasses
+        # which is unwanted. 
         includer.constants.each do |const| # copy all of its constants onto wherever it was included
           subincluder.const_set(const, includer.const_get(const))
         end
+        
+        class << subincluder
+          def attributes_to_inspect
+            super_attrs=superclass.respond_to?(:attributes_to_inspect) ? superclass.attributes_to_inspect : []
+            super_attrs + (const_defined?('AttributesToInspect') ? const_get('AttributesToInspect') : [])
+          end
+        end
       end
       
-      includer.send(:extend, DomWrap)
+      includer.send :extend, DomWrap
+      includer_metaclass.send(:define_method, :dom_wrap_inspect) do |*args|
+        dom_wrap *args
+        inspect_these *args
+      end
+      includer_metaclass.send(:define_method, :inspect_these) do |*args|
+        # set default inspect variables. This constant gets copied onto the Element classes by constant-copying code above.
+        unless includer.const_defined?('AttributesToInspect')
+          includer.const_set('AttributesToInspect', [])
+        end
+        attributes_to_inspect=includer.const_get('AttributesToInspect')
+        args.each do |arg|
+          attributes_to_inspect << case arg
+          when Hash
+            arg
+          when Symbol
+            {:label => arg, :value => arg}
+          else
+            raise RuntimeError, "unrecognized thing to inspect: #{arg} (#{arg.class})"
+          end
+        end
+      end
+      includer_metaclass.send(:define_method, :inspect_this_if) do |arg, *ifproc|
+        ifproc=ifproc.first
+        to_inspect={:label => arg, :value => proc{ send(arg).inspect }}
+        to_inspect[:if] = ifproc || proc{ send(arg) }
+        inspect_these(to_inspect)
+      end
+#      includer.inspect_these(:how, :what, {:label => :index, :value => proc{ @index }, :if => proc{ @index }}, :tag_name, :id)  # set defaults to inspect
     end
   end
   # this is to define common constants from the class name rather than repeating slight variations
@@ -212,9 +248,11 @@ module Watir
     end
     include ElementModule
     
-    dom_wrap :tagName, :className, :innerHTML, :id, :title, :tag_name => :tagName, :text => :textContent, :inner_html => :innerHTML, :class_name => :className
-    #TODO/FIX: this was is outerhtml in IE. maybe just deprecate this and go with the html names?
-    dom_wrap :html => :innerHTML
+    inspect_these(:how, :what, {:label => :index, :value => proc{ @index }, :if => proc{ @index }})
+    dom_wrap_inspect :tagName, :id
+    dom_wrap :className, :title, :innerHTML, :tag_name => :tagName, :text => :textContent, :inner_html => :innerHTML, :class_name => :className
+    #TODO/FIX: this was is outerhtml in IE; innerHTML in FF. maybe just deprecate this and go with the html names?
+    #dom_wrap :html => :innerHTML
     dom_wrap :style
     dom_wrap :scrollIntoView
     dom_wrap :get_attribute_value => :getAttribute, :attribute_value => :getAttribute
@@ -298,8 +336,9 @@ module Watir
       @element_object
     end
     def locate!(options={})
-      locate(options) || raise(self.class==FFFrame ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException, Watir::Exception.message_for_unable_to_locate(@how, @what))
+      locate(options) || raise(self.class==FFFrame ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException, Watir::Exception.message_for_unable_to_locate(@how, @what, @index))
     end
+    alias assert_exists locate!
 
     # Returns whether this element actually exists.
     def exists?
@@ -307,6 +346,17 @@ module Watir
     end
     alias :exist? :exists?
 
+    # takes a block. sets highlight on this element; calls the block; clears the highlight.
+    # the clear is in an ensure block so that you can call return from the given block. 
+    # doesn't actually perform the highlighting if argument do_highlight is false. 
+    def with_highlight(do_highlight=true)
+      highlight(:set) if do_highlight
+      begin
+        yield
+      ensure
+        highlight(:clear) if do_highlight
+      end
+    end
 
     # Flash the element the specified number of times.
     # Defaults to 10 flashes.
@@ -339,6 +389,36 @@ module Watir
     end
     def browser_window_object
       @container.browser_window_object
+    end
+    
+    def attributes_for_stringifying
+      self.class.attributes_to_inspect.map do |inspect_hash|
+        if !inspect_hash[:if] || inspect_hash[:if].call
+          value=case inspect_hash[:value]
+          when /\A@/ # starts with @, look for instance variable
+            instance_variable_get(inspect_hash[:value]).inspect
+          when Symbol
+            send(inspect_hash[:value]).inspect
+          when Proc
+            inspect_hash[:value].call(self)
+          else
+            inspect_hash[:value]
+          end
+          [inspect_hash[:label].to_s, value]
+        end
+      end.compact
+    end
+    def inspect
+      "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)}"+attributes_for_stringifying.map do |attr|
+        " "+attr.first+'='+attr.last
+      end.join('') + ">"
+    end
+    def to_s
+      attrs=attributes_for_stringifying
+      longest_label=attrs.inject(0) {|max, attr| [max, attr.first.size].max }
+      "#{self.class.name}:0x#{"%.8x"%(self.hash*2)}\n"+attrs.map do |attr|
+        (attr.first+": ").ljust(longest_label+2)+attr.last+"\n"
+      end.join('')
     end
   end
 end

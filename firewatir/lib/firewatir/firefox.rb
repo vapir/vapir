@@ -81,7 +81,7 @@
 
 =end
 
-require 'lib/waiter'
+require 'watir/waiter'
 
 module Watir # TODO/FIX: move this somewhere appropriate
   module FFHasDocument
@@ -619,7 +619,7 @@ module Watir
     def wait(last_url = nil)
       started=Time.now
       while browser_object.webProgress.isLoadingDocument
-        sleep 1
+        sleep 0.5
         if Time.now - started > ARBITRARY_TIMEOUT
           raise "Page Load Timeout"
         end

@@ -6,28 +6,6 @@ module Watir
   #
   class IELink < IEElement
     include Link
-    # Returns an initialized instance of a link object
-    #   * container  - an instance of a container
-    #   * how         - symbol - how we access the link
-    #   * what         - what we use to access the link, text, url, index etc
-#    def initialize(container, how, what)
-#      set_container container
-#      @how = how
-#      @what = what
-#      super(nil)
-#    end
-    
-#    def locate
-#      if @how == :xpath
-#        @o = @container.element_by_xpath(@what)
-#      else
-#        begin
-#          @o = @container.locate_tagged_element('A', @how, @what)
-#        rescue UnknownObjectException
-#          @o = nil
-#        end
-#      end
-#    end
     
     # if an image is used as part of the link, this will return true
     def link_has_image
@@ -45,22 +23,6 @@ module Watir
         return ""
       end
     end
-    
-    def link_string_creator
-      n = []
-      n <<   "href:".ljust(TO_S_SIZE) + self.href
-      n <<   "inner text:".ljust(TO_S_SIZE) + self.text
-      n <<   "img src:".ljust(TO_S_SIZE) + self.src if self.link_has_image
-      return n
-    end
-    
-    # returns a textual description of the link
-#    def to_s
-#      assert_exists
-#      r = string_creator
-#      r = r + link_string_creator
-#      return r.join("\n")
-#    end
   end
   
 end

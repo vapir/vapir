@@ -46,24 +46,6 @@ module Watir
       super
     end
     
-    # this method is used to populate the properties in the to_s method
-    def table_string_creator
-      n = []
-      n << "rows:".ljust(TO_S_SIZE) + self.row_count.to_s
-      n << "cols:".ljust(TO_S_SIZE) + self.column_count.to_s
-      return n
-    end
-    private :table_string_creator
-    
-    # returns the properties of the object in a string
-    # raises an ObjectNotFound exception if the object cannot be found
-#    def to_s
-#      assert_exists
-#      r = string_creator
-#      r += table_string_creator
-#      return r.join("\n")
-#    end
-    
     def rows
       assert_exists
       rows=[]

@@ -3,6 +3,7 @@ module Watir
   # This is not a class that users would normally access.
   class IEElement # Wrapper
     include Element
+    #extend DomWrap
     include Watir::Exception
     include IEContainer # presumes @container is defined
     attr_accessor :container
@@ -48,10 +49,6 @@ module Watir
     extend DomWrap
     dom_wrap :currentStyle
     
-    def inspect
-      '#<%s:0x%x located=%s how=%s what=%s>' % [self.class, hash*2, !!ole_object, @how.inspect, @what.inspect]
-    end
-    
     private
     def base_element_klass
       IEElement
@@ -81,143 +78,78 @@ module Watir
 
 
     public
-    def assert_exists
-      locate if respond_to?(:locate)
-      unless ole_object
-        raise UnknownObjectException.new(
-          Watir::Exception.message_for_unable_to_locate(@how, @what))
-      end
-    end
-    def assert_enabled
-      unless enabled?
-        raise ObjectDisabledException, "object #{@how} and #{@what} is disabled"
-      end
-    end
     
-#    # return the name of the element (as defined in html)
-#    def_wrap_guard :name
-#    # return the id of the element
-#    def_wrap_guard :id
-#    # return whether the element is disabled
-#    def_wrap :disabled
-#    alias disabled? disabled
-#    # return the value of the element
-#    def_wrap_guard :value
-#    # return the title of the element
-#    def_wrap_guard :title
-#    # return the style of the element
-#    def_wrap_guard :style
-#    
-#    def_wrap_guard :alt
-#    def_wrap_guard :src
-#    
-#    # return the type of the element
-#    def_wrap_guard :type # input elements only
-#    # return the url the link points to
-#    def_wrap :href # link only
-#    # return the ID of the control that this label is associated with
-#    #def_wrap :for, :htmlFor # label only
-#    # return the class name of the element
-#    # raise an ObjectNotFound exception if the object cannot be found
-#    def_wrap :class_name, :className
-#    # return the unique COM number for the element
-#    def_wrap :unique_number, :uniqueNumber
-#    # Return the outer html of the object - see http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/outerhtml.asp?frame=true
-#    def_wrap :html, :outerHTML
+    # return the unique COM number for the element
+    dom_wrap :unique_number, :uniqueNumber
+    # Return the outer html of the object - see http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/outerhtml.asp?frame=true
+    dom_wrap :html, :outerHTML
 
     # return the text before the element
+    # TODO/FIX: ?
     def before_text # label only
       assert_exists
-      begin
-        ole_object.getAdjacentText("afterEnd").strip
-      rescue
-                ''
-      end
+      ole_object.getAdjacentText("afterEnd").strip
     end
     
     # return the text after the element
     def after_text # label only
       assert_exists
-      begin
-        ole_object.getAdjacentText("beforeBegin").strip
-      rescue
-                ''
-      end
+      ole_object.getAdjacentText("beforeBegin").strip
     end
     
     # Return the innerText of the object
     # Raise an ObjectNotFound exception if the object cannot be found
     def text
       assert_exists
-      return ole_object.innerText.strip
+      return ole_object.innerText
     end
     
-    def ole_inner_elements
-      assert_exists
-      return ole_object.all
-    end
-    private :ole_inner_elements
+#    def ole_inner_elements
+#      assert_exists
+#      return ole_object.all
+#    end
+#    private :ole_inner_elements
     
-    def document
-      assert_exists
-      return ole_object
-    end
+#    def document
+#      assert_exists
+#      return ole_object
+#    end
 
     # Return the element immediately containing self. 
-    def parent
-      raise NotImplementedError
-      assert_exists
-      result = IEElement.new(ole_object.parentelement)
-      result.set_container self
-      result
+    def parent(options={})
+      @parent=nil if options[:reload]
+      @parent||=begin
+        parentNode=element_object.parentNode # TODO/FIX: should this use parentElement? 
+        if parentNode && parentNode != document_object # don't ascend up to the document
+          IEElement.factory(parentNode, extra)
+        else
+          nil
+        end
+      end
     end
     
-    include Comparable
-    def <=> other
-      assert_exists
-      other.assert_exists
-      ole_object.sourceindex <=> other.ole_object.sourceindex
-    end
+#    include Comparable
+#    def <=> other
+#      assert_exists
+#      other.assert_exists
+#      ole_object.sourceindex <=> other.ole_object.sourceindex
+#    end
+    dom_wrap :sourceindex => :sourceIndex
 
-    # Return true if self is contained earlier in the html than other. 
-    alias :before? :< 
-    # Return true if self is contained later in the html than other. 
-    alias :after? :> 
+#    # Return true if self is contained earlier in the html than other. 
+#    alias :before? :< 
+#    # Return true if self is contained later in the html than other. 
+#    alias :after? :> 
       
     def typingspeed
       @container.typingspeed
     end
-		def type_keys
-			return @container.type_keys if @type_keys.nil? 
-			@type_keys
-		end
+    def type_keys
+      @type_keys || @container.type_keys
+    end
     def activeObjectHighLightColor
       @container.activeObjectHighLightColor
     end
-    
-    # Return an array with many of the properties, in a format to be used by the to_s method
-#    def string_creator
-#      n = []
-##      n <<   "type:".ljust(TO_S_SIZE) + self.type.to_s
-#      n <<   "id:".ljust(TO_S_SIZE) +         self.id.to_s
-##      n <<   "name:".ljust(TO_S_SIZE) +       self.name.to_s
-##      n <<   "value:".ljust(TO_S_SIZE) +      self.value.to_s
-#      n <<   "disabled:".ljust(TO_S_SIZE) +   self.disabled.to_s
-#      return n
-#    end
-#    private :string_creator
-#    
-#    # Display basic details about the object. Sample output for a button is shown.
-#    # Raises UnknownObjectException if the object is not found.
-#    #      name      b4
-#    #      type      button
-#    #      id         b5
-#    #      value      Disabled Button
-#    #      disabled   true
-#    def to_s
-#      assert_exists
-#      return string_creator.join("\n")
-#    end
     
     # This method is responsible for setting and clearing the colored highlighting on the currently active element.
     # use :set   to set the highlight
@@ -244,18 +176,6 @@ module Watir
       end
     end
     private :highlight
-    
-    # takes a block. sets highlight on this element; calls the block; clears the highlight.
-    # the clear is in an ensure block so that you can call return from the given block. 
-    # doesn't actually perform the highlighting if argument do_highlight is false. 
-    def with_highlight(do_highlight=true)
-      highlight(:set) if do_highlight
-      begin
-        yield
-      ensure
-        highlight(:clear) if do_highlight
-      end
-    end
     
     #   This method clicks the active element.
     #   raises: UnknownObjectException  if the object is not found

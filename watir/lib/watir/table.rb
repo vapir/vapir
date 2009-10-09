@@ -19,27 +19,6 @@ module Watir
       new container, :ole_object, o 
     end
     
-    # Returns an initialized instance of a table object
-    #   * container      - the container
-    #   * how         - symbol - how we access the table
-    #   * what         - what we use to access the table - id, name index etc
-#    def initialize(container, how, what)
-#      set_container container
-#      @how = how
-#      @what = what
-#      super nil
-#    end
-#    
-#    def locate
-#      if @how == :xpath
-#        @o = @container.element_by_xpath(@what)
-#      elsif @how == :ole_object
-#        @o = @what
-#      else
-#        @o = @container.locate_tagged_element('TABLE', @how, @what)
-#      end
-#    end
-    
     # override the highlight method, as if the tables rows are set to have a background color,
     # this will override the table background color, and the normal flash method won't work
     def highlight(set_or_clear)
@@ -78,12 +57,12 @@ module Watir
     
     # returns the properties of the object in a string
     # raises an ObjectNotFound exception if the object cannot be found
-    def to_s
-      assert_exists
-      r = string_creator
-      r += table_string_creator
-      return r.join("\n")
-    end
+#    def to_s
+#      assert_exists
+#      r = string_creator
+#      r += table_string_creator
+#      return r.join("\n")
+#    end
     
     def rows
       assert_exists
@@ -91,38 +70,7 @@ module Watir
       element_object.rows.each do |row|
         rows << IETableRow.new(:element_object, row, extra)
       end
-      
       ElementCollection.new(rows)
-    end
-
-    # iterates through the rows in the table. Yields a TableRow object
-    def each
-      assert_exists
-      rows.each do |row|
-        yield row
-      end
-    end
-    
-    # Returns a row in the table
-    #   * index         - the index of the row
-    def [](index)
-      assert_exists
-      rows[index]
-    end
-    
-    # Returns the number of rows inside the table. does not recurse through
-    # nested tables. 
-    def row_count
-      assert_exists
-      element_object.rows.length
-    end
-
-    # This method returns the number of columns in a row of the table.
-    # Raises an UnknownObjectException if the table doesn't exist.
-    #   * index         - the index of the row
-    def column_count(index=1)
-      assert_exists
-      _row(index).cells.length
     end
     
     # This method returns the table as a 2 dimensional array. 
@@ -144,47 +92,47 @@ module Watir
       return y
     end
     
-    def table_body(index=1)
-      raise NotImplementedError # wrong
+#    def table_body(index=1)
+#      raise NotImplementedError # wrong
 #      return element_object.getElementsByTagName('TBODY')[index]
-    end
-    private :table_body
+#    end
+#    private :table_body
     
     # returns a watir object
-    def tbody(how, what)
-      raise NotImplementedError
+#    def tbody(how, what)
+#      raise NotImplementedError
 #      return IETableBody.new(@container, how, what, self)
-    end
+#    end
     
     # returns a watir object
-    def bodies
-      raise NotImplementedError
+#    def bodies
+#      raise NotImplementedError
 #      assert_exists
 #      return IETableBodies.new(@container, element_object)
-    end
+#    end
     
     # returns an ole object
-    def _row(index)
-      raise NotImplementedError
+#    def _row(index)
+#      raise NotImplementedError
 #      return element_object.invoke("rows")[(index - 1).to_s]
-    end
-    private :_row
+#    end
+#    private :_row
     
     # Returns an array containing all the text values in the specified column
     # Raises an UnknownCellException if the specified column does not exist in every
     # Raises an UnknownObjectException if the table doesn't exist.
     # row of the table
     #   * columnnumber  - column index to extract values from
-    def column_values(columnnumber)
-      return (1..row_count).collect {|i| self[i][columnnumber].text}
-    end
+#    def column_values(columnnumber)
+#      return (1..row_count).collect {|i| self[i][columnnumber].text}
+#    end
     
     # Returns an array containing all the text values in the specified row
     # Raises an UnknownObjectException if the table doesn't exist.
     #   * rownumber  - row index to extract values from
-    def row_values(rownumber)
-      return (1..column_count(rownumber)).collect {|i| self[rownumber][i].text}
-    end
+#    def row_values(rownumber)
+#      return (1..column_count(rownumber)).collect {|i| self[rownumber][i].text}
+#    end
     
   end
   
@@ -271,107 +219,19 @@ module Watir
   class IETableRow < IEElement
     include TableRow
     
-#    def locate
-#      @o = nil
-#      if @how == :ole_object
-#        @o = @what
-#      elsif @how == :xpath
-#        @o = @container.element_by_xpath(@what)
-#      else
-#        @o = @container.locate_tagged_element("TR", @how, @what)
-#      end
-#      if @o # cant call the assert_exists here, as an exists? method call will fail
-#        @cells = []
-#        @o.cells.each do |oo|
-#          @cells << IETableCell.new(@container, :ole_object, oo)
-#        end
-#      end
-#    end
-#    
-#    # Returns an initialized instance of a table row
-#    #   * o  - the object contained in the row
-#    #   * container  - an instance of an IE object
-#    #   * how          - symbol - how we access the row
-#    #   * what         - what we use to access the row - id, index etc. If how is :ole_object then what is a Internet Explorer Raw Row
-#    def initialize(container, how, what)
-#      set_container container
-#      @how = how
-#      @what = what
-#      super nil
-#    end
-    
-    # this method iterates through each of the cells in the row. Yields a TableCell object
-    def each
-      locate
-      0.upto(@cells.length-1) { |i| yield @cells[i] }
-    end
-    
-    # Returns an element from the row as a TableCell object
-    def [](index)
+    def cells
       assert_exists
-      if @cells.length < index
-        raise UnknownCellException, "Unable to locate a cell at index #{index}" 
+      cells=[]
+      element_object.cells.each do |cell|
+        cells << IETableCell.new(:element_object, cell, extra)
       end
-      return @cells[(index - 1)]
-    end
-    
-    # defaults all missing methods to the array of elements, to be able to
-    # use the row as an array
-    #        def method_missing(aSymbol, *args)
-    #            return @o.send(aSymbol, *args)
-    #        end
-    def column_count
-      locate
-      @cells.length
+      ElementCollection.new(cells)
     end
   end
   
   # this class is a table cell - when called via the Table object
   class IETableCell < IEElement
     include TableCell
-    include Watir::Exception
-    include IEContainer
-    
-#    def locate
-#      if @how == :xpath
-#        @o = @container.element_by_xpath(@what)
-#      elsif @how == :ole_object
-#        @o = @what
-#      else
-#        @o = @container.locate_tagged_element("TD", @how, @what)
-#      end
-#    end
-#    
-#    # Returns an initialized instance of a table cell
-#    #   * container  - an  IE object
-#    #   * how        - symbol - how we access the cell
-#    #   * what       - what we use to access the cell - id, name index etc
-#    def initialize(container, how, what)
-#      set_container container
-#      @how = how
-#      @what = what
-#      super nil
-#    end
-    
-#    def ole_inner_elements
-#      locate
-#      return element_object.all
-#    end
-#    private :ole_inner_elements
-
-# ???     
-#    def document
-#      locate
-#      return element_object
-#    end
-    
-    alias to_s text
-    
-    def colspan
-      locate
-      element_object.colSpan
-    end
-    
   end
   
 end

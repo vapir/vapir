@@ -21,10 +21,10 @@ module Watir
     #private :text_string_creator
 
     # TODO: Impelement the to_s method.
-    def to_s
-      assert_exists
-      super({"length" => "size","max length" => "maxlength","read only" => "readOnly" })
-    end
+#    def to_s
+#      assert_exists
+#      super({"length" => "size","max length" => "maxlength","read only" => "readOnly" })
+#    end
 
     #
     # Description:
@@ -81,29 +81,6 @@ module Watir
     #end
     # alias dragContentsTo drag_contents_to
 
-    #
-    # Description:
-    #   Clears the contents of the text field.
-    #   Raises ObjectDisabledException if text field is disabled.
-    #   Raises ObjectReadOnlyException if text field is read only.
-    #
-    def clear
-      assert_exists
-      assert_enabled
-      assert_not_readonly
-
-      highlight(:set)
-
-      element_object.scrollIntoView
-      element_object.focus
-      element_object.select
-      fireEvent("onSelect")
-      element_object.value=""
-      fireEvent("onKeyPress")
-      fireEvent("onChange")
-      @container.wait()
-      highlight(:clear)
-    end
 
     #
     # Description:
@@ -126,38 +103,6 @@ module Watir
       highlight(:clear)
     end
 
-    #
-    # Description:
-    #   Sets the contents of the text field to the provided text. Overwrite the existing contents.
-    #   Raises ObjectDisabledException if text field is disabled.
-    #   Raises ObjectReadOnlyException if text field is read only.
-    #
-    # Input:
-    #   - setThis - Text to be set.
-    #
-    def set( setThis )
-      assert_exists
-      assert_enabled
-      assert_not_readonly
-
-      highlight(:set)
-      element_object.scrollIntoView
-      element_object.focus
-      element_object.select
-      fireEvent("onSelect")
-      assign('value', "")
-      fireEvent("onKeyPress")
-      doKeyPress( setThis )
-      highlight(:clear)
-      fireEvent("onChange")
-      fireEvent("onBlur")
-    end
-
-    def value=(value)
-      assert_exists
-      assign('value', value)
-    end
-    
     #
     # Description:
     #   Sets the text of the text field withoud firing the events like onKeyPress, onKeyDown etc. This should not be used generally, but it

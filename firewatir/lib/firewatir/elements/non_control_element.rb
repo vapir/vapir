@@ -20,15 +20,15 @@ module Watir
 =end
 
     # Returns a string of properties of the object.
-    def to_s(attributes = nil)
-      assert_exists
-      hash_properties = {"text"=>"innerHTML"}
-      hash_properties.update(attributes) if attributes != nil
-      r = super(hash_properties)
-      #r = string_creator
-      #r += span_div_string_creator
-      return r#.join("\n")
-    end
+#    def to_s(attributes = nil)
+#      assert_exists
+#      hash_properties = {"text"=>"innerHTML"}
+#      hash_properties.update(attributes) if attributes != nil
+#      r = super(hash_properties)
+#      #r = string_creator
+#      #r += span_div_string_creator
+#      return r#.join("\n")
+#    end
 
   end # NonControlElement
 end # FireWatir

@@ -8,8 +8,11 @@ module Watir
     #include FFDocument
 
     def container_candidates(specifiers)
-      raise unless @container.is_a?(Browser) || @container.is_a?(Frame)
-      candidates=@container.content_window_object.frames.to_array.map{|c|c.frameElement}
+      if @container.is_a?(Browser) || @container.is_a?(Frame)
+        candidates=@container.content_window_object.frames.to_array.map{|c|c.frameElement}
+      else
+        Watir::Specifier.specifier_candidates(@container, specifiers)
+      end
     end
 
     def containing_object

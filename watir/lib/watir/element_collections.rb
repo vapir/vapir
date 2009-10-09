@@ -82,9 +82,9 @@ module Watir
       puts s
     end
     
-    def to_s
-      map { |e| e.to_s }.join("\n")
-    end
+#    def to_s
+#      map { |e| e.to_s }.join("\n")
+#    end
 
     def inspect
       '#<%s:0x%x length=%s container=%s>' % [self.class, hash*2, @length.inspect, @container.inspect]

@@ -15,6 +15,25 @@ module Watir
       element=klass.new(how, what, extra.merge(:index => index, :locate => other[:locate]))
       element.exists? ? element : nil
     end
+    def element_collection(klass)
+      elements=[]
+      Watir::Specifier.match_candidates(Watir::Specifier.specifier_candidates(self, klass.specifiers), klass.specifiers) do |match|
+        elements << klass.new(:element_object, match, extra)
+      end
+      ElementCollection.new(elements)
+#      ElementCollection.new(locate_all_specified(klass.specifiers).map do |element_object|
+#        klass.new(:element_object, element_object, extra)
+#      end)
+    end
+#    def locate_all_specified(specifiers_list)
+#      candidates=container_candidates(specifiers_list)
+#      
+#      matched=[]
+#      Watir::Specifier.match_candidates(candidates, specifiers_list) do |match|
+#        matched << match.store_rand_prefix("firewatir_elements")
+#      end
+#      matched
+#    end
     def normalize_howwhat_index(how, what, default_how=nil)
       case how
       when nil
@@ -77,6 +96,60 @@ module Watir
     include ElementModule
     
     dom_wrap :size, :maxLength, :maxlength => :maxLength, :readonly => :readOnly, :readonly? => :readOnly, :readOnly? => :readOnly, :getContents => :value
+    
+    # Clears the contents of the text box.
+    #   Raises UnknownObjectException if the object can't be found
+    #   Raises ObjectDisabledException if the object is disabled
+    #   Raises ObjectReadOnlyException if the object is read only
+    def clear
+      set ''
+    end
+    # Appends the specified string value to the contents of the text box.
+    #   Raises UnknownObjectException if the object cant be found
+    #   Raises ObjectDisabledException if the object is disabled
+    #   Raises ObjectReadOnlyException if the object is read only
+    def append(text)
+      set value+text
+    end
+    # Sets the contents of the text box to the specified text value
+    #   Raises UnknownObjectException if the object cant be found
+    #   Raises ObjectDisabledException if the object is disabled
+    #   Raises ObjectReadOnlyException if the object is read only
+    # todo/fix: type_keys and typingspeed
+    def set(value)
+      assert_enabled
+      assert_not_readonly
+      
+      highlight(:set)
+      
+      value_chars=value.split(//) # split on blank regexp for multibyte chars
+      if self.type.downcase=='text' && maxlength && value_chars.length > maxlength
+        value_chars=value_chars[0...maxlength]
+        value=value_chars.join('')
+      end
+      element_object.scrollIntoView
+      if type_keys
+	      element_object.focus
+	      element_object.select
+	      fire_event_no_wait("onSelect")
+        (0..value_chars.length).each do |i|
+          sleep typingspeed
+          element_object.value = value_chars[0...i].join('')
+          fire_event_no_wait :onKeyDown
+          fire_event_no_wait :onKeyUp
+          fire_event_no_wait :onKeyPress
+        end
+        #doKeyPress(value)
+        fire_event_no_wait :onkeyup
+        fire_event_no_wait("onKeyPress")
+        fire_event_no_wait("onChange")
+        fire_event_no_wait('onBlur')
+	    else
+				element_object.value = value
+	    end
+      wait
+      highlight(:clear)
+    end
   end
   module Hidden
     Specifiers=[{:tagName => 'input', :type => 'hidden'}]
@@ -109,6 +182,81 @@ module Watir
     TAG='select'
     include ContainerMethodsFromName
     include ElementModule
+
+    def [](index)
+      options[index]
+    end
+
+    #   Clears the selected items in the select box.
+    def clear
+      assert_exists
+      highlight(:set)
+      wait = false
+      element_object.options.each do |option|
+        option.selected=false
+        wait=true
+      end
+      fire_event_no_wait :onchange
+      self.wait if wait
+      highlight(:clear)
+    end
+    alias_deprecated :clearSelection, :clear
+    
+    # This method selects an item, or items in a select box, by text.
+    # Raises NoValueFoundException   if the specified value is not found.
+    #  * item   - the thing to select, string or reg exp
+    def select_text(option_text)
+      select_options_if {|option| Watir::Specifier.fuzzy_match(option.text, option_text) }
+    end
+    alias select select_text
+    alias set select_text
+
+    # Selects an item, or items in a select box, by value.
+    # Raises NoValueFoundException   if the specified value is not found.
+    #  * item   - the value of the thing to select, string, reg exp
+    def select_value(option_value)
+      select_options_if {|option| Watir::Specifier.fuzzy_match(option.value, option_value) }
+    end
+    
+    def option_texts
+      options.map{|o| o.text }
+    end
+    alias_deprecated :getAllContents, :option_texts
+    
+    #   Returns an array of selected option Elements in this select list.
+    #   An empty array is returned if the select box has no selected item.
+    def selected_options
+      assert_exists
+      options.select{|o|o.selected}
+    end
+
+    def selected_option_texts
+      selected_options.map{|o| o.text }
+    end
+    
+    alias_deprecated :getSelectedItems, :selected_option_texts
+
+    private
+    # yields each option, selects the option if the given block returns true. fires onchange event if
+    # any have changed. raises Watir::Exception::NoValueFoundException if none matched. 
+    def select_options_if
+      raise ArgumentError, "no block given!" unless block_given?
+      any_changed=false
+      highlight :set
+      options.each do |option|
+        if yield option
+          any_changed=true
+          option.selected=true
+        end
+      end
+      if any_changed
+        fire_event :onchange
+        highlight :clear
+      else
+        higlight :clear
+        raise Watir::Exception::NoValueFoundException
+      end
+    end
   end
   module Radio
     Specifiers=[{:tagName => 'input', :type => 'radio'}]
@@ -117,6 +265,7 @@ module Watir
     include ElementModule
     
     dom_wrap :checked
+    dom_wrap_deprecated :isSet?, :checked, :checked
   end
   module CheckBox
     Specifiers=[{:tagName => 'input', :type => 'checkbox'}]
@@ -145,9 +294,70 @@ module Watir
     dom_wrap :alt, :src, :name, :height, :width, :border
   end
   module Table
+    # Table assumes the inheriting class defines a #rows method which returns 
+    # an ElementCollection
     TAG = 'TABLE'
     include ContainerMethodsFromName
     include ElementModule
+    
+    # iterates through the rows in the table. Yields a TableRow object
+    def each_row
+      rows.each do |row|
+        yield row
+      end
+    end
+    alias each each_row
+
+    # Returns the TableRow at the given index. 
+    # indices start at 1.
+    def [](index)
+      rows[index]
+    end
+    
+    # Returns the number of rows inside the table. does not recurse through
+    # nested tables. 
+    def row_count
+      element_object.rows.length
+    end
+    
+    # returns the number of columns of the table, either on the row at the given index
+    # or (by default) on the first row.
+    # takes into account any defined colSpans.
+    # returns nil if the table has no rows. 
+    # (if you want the number of cells - not taking into account colspans - use #cell_count
+    # on the row in question)
+    def column_count(index=nil)
+      if index
+        rows[index].column_count
+      elsif row=rows.first
+        row.column_count
+      else
+        nil
+      end
+    end
+    
+    #
+    # Description:
+    #   Get the text of each column in the specified row.
+    #
+    # Input:
+    #   Row index (starting at 1)
+    #
+    # Output:
+    #   Value of all columns present in the row.
+    #
+    # is this method really useful?
+    def row_texts_at(row_index)
+      rows[row_index].cells.map do |cell|
+        cell.text
+      end
+    end
+    alias_deprecated :row_values, :row_texts_at
+    
+    
+    # I was going to define #cell_count(index=nil) here as an alternative to #column_count
+    # but it seems confusing; to me #cell_count on a Table would count up all the cells in
+    # all rows, so going to avoid confusion and not do it. 
   end
   module TBody
     TAG = 'TBODY'
@@ -156,9 +366,33 @@ module Watir
     include ElementModule
   end
   module TableRow
+    # TableRow assumes that the inheriting class defines a #cells method which
+    # returns an ElementCollection
     TAG='tr'
     include ContainerMethodsFromName
     include ElementModule
+    
+    #   Iterate over each cell in the row.
+    def each_cell
+      cells.each do |cell|
+        yield cell
+      end
+    end
+    alias each each_cell
+    
+    # returns the TableCell at the specified index
+    def [](index)
+      cells[index]
+    end
+    
+    def column_count
+      cells.inject(0) do |count, cell|
+        count+ cell.colSpan || 1
+      end
+    end
+    def cell_count
+      cells.length
+    end
   end
   module TableCell
     TAG='td'

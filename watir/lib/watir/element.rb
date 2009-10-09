@@ -39,12 +39,14 @@ module Watir
       end
     end
     
-    attr_reader :element_object
     alias ole_object element_object 
     alias containing_object element_object
     #def ole_object=(o)
     #  @element_object = o
     #end
+    
+    extend DomWrap
+    dom_wrap :currentStyle
     
     def inspect
       '#<%s:0x%x located=%s how=%s what=%s>' % [self.class, hash*2, !!ole_object, @how.inspect, @what.inspect]
@@ -194,28 +196,28 @@ module Watir
     end
     
     # Return an array with many of the properties, in a format to be used by the to_s method
-    def string_creator
-      n = []
-#      n <<   "type:".ljust(TO_S_SIZE) + self.type.to_s
-      n <<   "id:".ljust(TO_S_SIZE) +         self.id.to_s
-#      n <<   "name:".ljust(TO_S_SIZE) +       self.name.to_s
-#      n <<   "value:".ljust(TO_S_SIZE) +      self.value.to_s
-      n <<   "disabled:".ljust(TO_S_SIZE) +   self.disabled.to_s
-      return n
-    end
-    private :string_creator
-    
-    # Display basic details about the object. Sample output for a button is shown.
-    # Raises UnknownObjectException if the object is not found.
-    #      name      b4
-    #      type      button
-    #      id         b5
-    #      value      Disabled Button
-    #      disabled   true
-    def to_s
-      assert_exists
-      return string_creator.join("\n")
-    end
+#    def string_creator
+#      n = []
+##      n <<   "type:".ljust(TO_S_SIZE) + self.type.to_s
+#      n <<   "id:".ljust(TO_S_SIZE) +         self.id.to_s
+##      n <<   "name:".ljust(TO_S_SIZE) +       self.name.to_s
+##      n <<   "value:".ljust(TO_S_SIZE) +      self.value.to_s
+#      n <<   "disabled:".ljust(TO_S_SIZE) +   self.disabled.to_s
+#      return n
+#    end
+#    private :string_creator
+#    
+#    # Display basic details about the object. Sample output for a button is shown.
+#    # Raises UnknownObjectException if the object is not found.
+#    #      name      b4
+#    #      type      button
+#    #      id         b5
+#    #      value      Disabled Button
+#    #      disabled   true
+#    def to_s
+#      assert_exists
+#      return string_creator.join("\n")
+#    end
     
     # This method is responsible for setting and clearing the colored highlighting on the currently active element.
     # use :set   to set the highlight
@@ -253,11 +255,19 @@ module Watir
     
     def click_no_wait
       assert_enabled
-      
       highlight(:set)
-      object = "#{self.class}.new(self, :unique_number, #{self.unique_number})"
-      raise NotImplementedError
-      @page_container.eval_in_spawned_process(object + ".click!")
+      unique_number=element_object.uniqueNumber
+      #Thread.new { ole_object.click } # that doesn't work.
+      browser.document.parentWindow.setTimeout("
+        (function(tagName, uniqueNumber)
+        { var candidate_elements=document.getElementsByTagName(tagName);
+          for(var i=0;i<candidate_elements.length;++i)
+          { if(candidate_elements[i].uniqueNumber==uniqueNumber)
+            { candidate_elements[i].click();
+            }
+          }
+        })(#{self.tagName.to_json}, #{element_object.uniqueNumber.to_json})
+      ", 0)
       highlight(:clear)
     end
 
@@ -274,12 +284,35 @@ module Watir
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
     def fire_event(event)
-      assert_enabled
+      #assert_enabled
       
       highlight(:set)
-      ole_object.fireEvent(event)
-      @container.wait
+      ole_object.fireEvent(event.to_s)
+      wait
       highlight(:clear)
+    end
+    # Executes a user defined "fireEvent" for objects with JavaScript events tied to them such as DHTML menus.
+    #   usage: allows a generic way to fire javascript events on page objects such as "onMouseOver", "onClick", etc.
+    #   raises: UnknownObjectException  if the object is not found
+    #           ObjectDisabledException if the object is currently disabled
+    def fire_event_no_wait(event)
+      assert_enabled
+      highlight(:set)
+      unique_number=element_object.uniqueNumber
+      #Thread.new { ole_object.click } # that doesn't work.
+      browser.document.parentWindow.setTimeout("
+        (function(tagName, uniqueNumber, event)
+        { var candidate_elements=document.getElementsByTagName(tagName);
+          for(var i=0;i<candidate_elements.length;++i)
+          { if(candidate_elements[i].uniqueNumber==uniqueNumber)
+            { candidate_elements[i].fireEvent(event);
+            }
+          }
+        })(#{self.tagName.to_json}, #{element_object.uniqueNumber.to_json}, #{event.to_s.to_json})
+      ", 0)
+      highlight(:clear)
+#      assert_enabled
+#      ole_object.fireEvent(event.to_s)
     end
     
     # This method sets focus on the active element.

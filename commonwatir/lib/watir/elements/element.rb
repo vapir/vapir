@@ -1,5 +1,12 @@
 require 'active_support/inflector'
-
+class Module
+  def alias_deprecated(to, from)
+    define_method to do |*args|
+      STDERR.puts "WARNING: #{self.class.name}\##{to} is deprecated. Please use #{self.class.name}\##{from}"
+      send(from, *args)
+    end
+  end
+end
 module Watir
   class ElementCollection # TODO/FIX: move this somewhere more appropriate
     include Enumerable
@@ -84,7 +91,7 @@ module Watir
     #TODO fix duplication with dom_wrap
     def dom_wrap_deprecated(ruby_method_name, dom_method_name, new_method_name)
       define_method ruby_method_name do |*args|
-        STDERR.puts "DEPRECATION WARNING: #{ruby_method_name} is deprecated, please use #{new_method_name}"
+        STDERR.puts "DEPRECATION WARNING: #{self.class.name}\##{ruby_method_name} is deprecated, please use #{self.class.name}\##{new_method_name}"
         assert_exists
         if element_object.respond_to?(dom_method_name)
           element_object.method_missing(dom_method_name, *args)
@@ -119,6 +126,7 @@ module Watir
                 unless container_module.method_defined?(method_hash[:method_name])
                   container_module.module_eval do
                     define_method(method_hash[:method_name]) do |how, *what_args| # can't take how, what as args because blocks don't do default values so it will want 2 args
+                      locate! # make sure self is located before trying contained stuff 
                       what=what_args.shift # what is the first what_arg
                       other_attribute_keys=subincluder.const_defined?('ContainerMethodExtraArgs') ? subincluder::ContainerMethodExtraArgs : []
                       raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}" if what_args.size>other_attribute_keys.length
@@ -212,54 +220,10 @@ module Watir
     
 
     private
+    # this is used by #locate. 
+    # it may be overridden, as it is by Frame classes
     def container_candidates(specifiers)
-      raise unless @container
-      attributes_in_specifiers=proc do |attr|
-        specifiers.inject([]) do |arr, spec|
-          spec.each_pair do |spec_attr, spec_val|
-            if (spec_attr==attr || Watir::Specifier::LocateAliases[spec_attr].include?(attr)) && !arr.include?(spec_val)
-              arr << spec_val
-            end
-          end
-          arr
-        end
-      end
-      ids=attributes_in_specifiers.call(:id)
-      tags=attributes_in_specifiers.call(:tagName)
-      names=attributes_in_specifiers.call(:name)
-      classNames=attributes_in_specifiers.call(:className)
-
-      # we can only use getElementById if:
-      # - id is a string, as getElementById doesn't do regexp
-      # - index is 1 or nil; otherwise even though it's not really valid, other identical ids won't get searched
-      # - id is the _only_ specifier, otherwise if the same id is used multiple times but the first one doesn't match 
-      #   the given specifiers, the element won't be found
-      # - @container has getElementById defined (that is, it's a Browser or a Frame), otherwise if we called 
-      #   document_object.getElementById we wouldn't know if what's returned is below @container in the DOM heirarchy or not
-      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && @container.containing_object.respond_to?(:getElementById)
-        candidates= if by_id=document_object.getElementById(ids.first)
-          [by_id]
-        else
-          []
-        end
-      elsif tags.size==1 && tags.first.is_a?(String)
-        candidates=@container.containing_object.getElementsByTagName(tags.first)#.to_array
-      elsif names.size==1 && names.first.is_a?(String) && @container.containing_object.respond_to?(:getElementsByName)
-        candidates=@container.containing_object.getElementsByName(names.first)#.to_array
-      elsif classNames.size==1 && classNames.first.is_a?(String) && @container.containing_object.respond_to?(:getElementsByClassName)
-        candidates=@container.containing_object.getElementsByClassName(classNames.first)#.to_array
-      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=@container.containing_object.getElementsByTagName('*')#.to_array
-      end
-      if candidates.is_a?(Array)
-        candidates
-      elsif Object.const_defined?('JsshObject') && candidates.is_a?(JsshObject)
-        candidates.to_array
-      elsif Object.const_defined?('WIN32OLE') && candidates.is_a?(WIN32OLE)
-        candidates.send :extend, Enumerable
-      else
-        raise RuntimeError # this shouldn't happen
-      end
+      Watir::Specifier.specifier_candidates(@container, specifiers)
     end
 
     public
@@ -267,6 +231,16 @@ module Watir
     def locate(options={})
       default_options={}
       if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at
+        default_options[:relocate]=:recursive
+      end
+      begin
+        if element_object && element_object.respond_to?('invoke') # if we have an element object that uses invoke (that is, a WIN32OLE)
+          element_object.invoke('id')            # try invoking a method on it 
+        end
+      rescue WIN32OLERuntimeError                             # if that errors 
+        raise unless $!.message.include?("Access is denied.") # with an access denied exception
+         # then the element is probably gone - probably because of a reload or something -
+         # and we need to relocate recursively. 
         default_options[:relocate]=:recursive
       end
       options=default_options.merge(options)
@@ -337,6 +311,13 @@ module Watir
       nil
     end
 
+    # accesses the object representing this Element in the DOM. 
+    # will error if this Element does not exist. 
+    def element_object
+      #locate!
+      @element_object
+    end
+    
     def browser
       @container.browser
     end

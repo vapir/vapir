@@ -112,10 +112,11 @@ module Watir
         raise NotImplementedError, "frames called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::IE and Watir::IEFrame"
       end
       frames=[]
-      for index in 0...(document.frames.length)
-        frames << IEFrame.new(self, :index, index+1)
+      document_frames=document.frames
+      for i in 0...(document_frames.length)
+        frames << IEFrame.new(:element_object, document_frames.item(i), extra)
       end
-      frames
+      ElementCollection.new(frames)
     end
 =begin
     # this method is used to access a form.

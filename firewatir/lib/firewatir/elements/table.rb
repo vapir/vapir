@@ -3,18 +3,6 @@ module Watir
   module HasRowsAndColumns
     #
     # Description:
-    #   Gets the number of rows in the table.
-    #
-    # Output:
-    #   Number of rows.
-    #
-    def row_count
-      assert_exists
-      return rows.length
-    end
-
-    #
-    # Description:
     #   Gets the table as a 2 dimensional array. Dont expect too much if there are nested tables, colspan etc.
     #
     # Output:
@@ -37,66 +25,6 @@ module Watir
         FFTableRow.new(:element_object, row, extra)
       end)
     end
-
-    # Gets a row at the given in this table.
-    # Returns a TableRow element
-    def [](index)
-      rows[index]
-    end
-
-    #
-    # Desription:
-    #   Iterate over each table row element.
-    #
-    def each
-      rows.each do |row|
-        yield row
-      end
-    end
-
-    # Returns the column count of first row in the table, taking into account any defined colSpans.  
-    # Returns nil if the table has no rows.
-    def column_count
-      first_row=rows.first || (return nil)
-      first_row.cells.inject(0) do |count, cell|
-        count+ cell.colSpan || 1
-      end
-    end
-
-    #
-    # Description:
-    #   Get the text of the column at the given index of each row. 
-    #
-    # Input:
-    #   Column index (starting at 1)
-    #
-    # Output:
-    #   Texts of column in each row
-    #
-    def column_texts_at(column_index)
-      assert_exists
-      rows.map do |row|
-        row[column_index].text
-      end
-    end
-    alias column_values column_texts_at
-
-    #
-    # Description:
-    #   Get the text of each column in the specified row.
-    #
-    # Input:
-    #   Row index (starting at 1)
-    #
-    # Output:
-    #   Value of all columns present in the row.
-    #
-    def row_texts_at(row_index)
-      rows[row_index].cells.map do |cell|
-        cell.text
-      end
-    end
-    alias row_values row_texts_at
 
   end
   
@@ -153,11 +81,11 @@ module Watir
     # raises an ObjectNotFound exception if the object cannot be found
     # TODO: Implement to_s method for this class.
 
-    def to_s
-      assert_exists
-      r = super({"rows" => "rows.length", "cellspacing" => "cellspacing", "cellpadding" => "cellpadding", "border" => "border"})
-      # r += self.column_count.to_s
-    end
+#    def to_s
+#      assert_exists
+#      r = super({"rows" => "rows.length", "cellspacing" => "cellspacing", "cellpadding" => "cellpadding", "border" => "border"})
+#      # r += self.column_count.to_s
+#    end
 
   end # Table
 

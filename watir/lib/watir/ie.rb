@@ -47,7 +47,7 @@ class WIN32OLE
     # the above is ridiculously slow.
     @respond_to_cache||=Hash.new do |hash, key|
       hash[key]=begin
-        !!self[key.to_s]
+        !!self.ole_method(key.to_s)
       rescue WIN32OLERuntimeError
         false
       end

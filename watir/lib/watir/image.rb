@@ -23,25 +23,25 @@ module Watir
 #    end
     
     # this method produces the properties for an image as an array
-    def image_string_creator
-      n = []
-      n <<   "src:".ljust(TO_S_SIZE) + self.src.to_s
-      n <<   "file date:".ljust(TO_S_SIZE) + self.fileCreatedDate.to_s
-      n <<   "file size:".ljust(TO_S_SIZE) + self.fileSize.to_s
-      n <<   "width:".ljust(TO_S_SIZE) + self.width.to_s
-      n <<   "height:".ljust(TO_S_SIZE) + self.height.to_s
-      n <<   "alt:".ljust(TO_S_SIZE) + self.alt.to_s
-      return n
-    end
-    private :image_string_creator
-    
-    # returns a string representation of the object
-    def to_s
-      assert_exists
-      r = string_creator
-      r += image_string_creator
-      return r.join("\n")
-    end
+#    def image_string_creator
+#      n = []
+#      n <<   "src:".ljust(TO_S_SIZE) + self.src.to_s
+#      n <<   "file date:".ljust(TO_S_SIZE) + self.fileCreatedDate.to_s
+#      n <<   "file size:".ljust(TO_S_SIZE) + self.fileSize.to_s
+#      n <<   "width:".ljust(TO_S_SIZE) + self.width.to_s
+#      n <<   "height:".ljust(TO_S_SIZE) + self.height.to_s
+#      n <<   "alt:".ljust(TO_S_SIZE) + self.alt.to_s
+#      return n
+#    end
+#    private :image_string_creator
+#    
+#    # returns a string representation of the object
+#    def to_s
+#      assert_exists
+#      r = string_creator
+#      r += image_string_creator
+#      return r.join("\n")
+#    end
     
     # this method returns the file created date of the image
     def file_created_date

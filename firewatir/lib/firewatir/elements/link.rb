@@ -37,10 +37,10 @@ module Watir
 
     # returns a textual description of the link
 
-    def to_s
-      assert_exists
-      super({"href" => "href","inner text" => "text"})
-    end
+#    def to_s
+#      assert_exists
+#      super({"href" => "href","inner text" => "text"})
+#    end
 
   end # Link
 end # FireWatir

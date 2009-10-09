@@ -49,8 +49,12 @@ module Watir
 #      copy_test_config container
 #    end
     
-    def document
-      @element_object.document
+    def document_object
+      element_object.document
+    end
+    alias document document_object
+    def containing_object
+      element_object.document
     end
 
     def attach_command

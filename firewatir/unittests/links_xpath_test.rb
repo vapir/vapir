@@ -11,7 +11,6 @@ class TC_Links_XPath < Test::Unit::TestCase
     end
     
     def xtest_new_link_exists
-    debugger
         assert(exists?{browser.link(:xpath , "//a[contains(.,'test1')]")})
         assert(exists?{browser.link(:xpath, "//a[contains(., /TEST/i)]")})   
         assert_false(exists?{browser.link(:xpath , "//a[contains(.,'missing')]")})

@@ -423,16 +423,6 @@ end
 class JsshObject
   attr_reader :ref, :jssh_socket
   attr_reader :type, :function_result, :debug_name
-#  protected
-#  def type=(type)
-#    @type=type
-#  end
-#  def function_result=(fr)
-#    @function_result=fr
-#  end
-#  def debug_name=(name)
-#    @debug_name=name
-#  end
   def logger
     jssh_socket.logger
   end
@@ -443,8 +433,8 @@ class JsshObject
   def initialize(ref, jssh_socket, other={})
     other={:debug_name => ref, :function_result => false}.merge(other)
     raise ArgumentError, "Empty object reference!" if !ref || ref==''
-    raise ArgumentError, "Reference must be a string - got #{ref.inspect}" unless ref.is_a?(String)
-    raise ArgumentError, "Not given a JsshSocket, instead given #{jssh_socket.inspect}" unless jssh_socket.is_a?(JsshSocket)
+    raise ArgumentError, "Reference must be a string - got #{ref.inspect} (#{ref.class.name})" unless ref.is_a?(String)
+    raise ArgumentError, "Not given a JsshSocket, instead given #{jssh_socket.inspect} (#{jssh_socket.class.name})" unless jssh_socket.is_a?(JsshSocket)
     @ref=ref
     @jssh_socket=jssh_socket
     @debug_name=other[:debug_name]
@@ -552,9 +542,10 @@ class JsshObject
   
   # returns a JsshObject representing the given attribute. Checks the type, and if 
   # it is a function, references the _return value_ of the function (with the given
-  # arguments, if any, which are in ruby, converted to_json). If undefined, raises an 
-  # error (if you want an attribute even if it's undefined, use #attr). 
-  def get(attribute, *args)
+  # arguments, if any, which are in ruby, converted to_json). If the type of the 
+  # expression is undefined, raises an error (if you want an attribute even if it's 
+  # undefined, use #attr). 
+  def invoke(attribute, *args)
     attr_obj=attr(attribute)
     type=attr_obj.type
     case type
@@ -718,17 +709,17 @@ class JsshObject
   # If the method ends with a bang (!), then it will attempt to get the value (using json) of the
   # reference, using JsonObject#val. For simple types (null, string, boolean, number), this is what 
   # happens by default anyway, but if you have an object or an array that you know you can json-ize, 
-  # you can use ! to force that. See #get documentation  for more information. 
+  # you can use ! to force that. See #invoke documentation  for more information. 
   #
   # If the method ends with a question mark (?), then it will attempt to get a string representing the
   # value, using JsonObject#val_str. This is safer than ! because the javascript conversion to json 
   # can error. This also catches the JsshUndefinedValueError that can occur, and just returns nil
   # for undefined stuff. 
   #
-  # otherwise, method_missing calls to #get, and returns a JsshObject, a string, a boolean, a number, or
-  # null - see documentation for #get. 
+  # otherwise, method_missing calls to #invoke, and returns a JsshObject, a string, a boolean, a number, or
+  # null - see documentation for #invoke. 
   #
-  # Since #get returns a JsshObject for javascript objects, this means that you can string together 
+  # Since #invoke returns a JsshObject for javascript objects, this means that you can string together 
   # method_missings and the result looks rather like javascript.
   #
   # this lets you do things like:
@@ -774,13 +765,13 @@ class JsshObject
     end
     case special
     when nil
-      get(method, *args)
+      invoke(method, *args)
     when '!'
-      got=get(method, *args)
+      got=invoke(method, *args)
       got.is_a?(JsshObject) ? got.val : got
     when '?'
       begin
-        got=get(method, *args)
+        got=invoke(method, *args)
         got.is_a?(JsshObject) ? got.val_str : got
       rescue JsshUndefinedValueError
         nil
@@ -795,7 +786,7 @@ class JsshObject
     metaclass=(class << self; self; end)
     self.to_hash.keys.grep(/\A[a-z_][a-z0-9_]*\z/i).reject{|k| self.class.method_defined?(k)}.each do |key|
       metaclass.send(:define_method, key) do |*args|
-        get(key, *args)
+        invoke(key, *args)
       end
     end
   end

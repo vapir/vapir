@@ -48,21 +48,6 @@ module Watir
     
     private
     
-    def locate_all_specified(specifiers_list)
-      tags=specifiers_list.map{|s| s[:tagName] }.compact.uniq
-      if tags.size==1 && tags.first.is_a?(String)
-        candidates=containing_object.getElementsByTagName(tags.first).to_array
-      else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=containing_object.getElementsByTagName('*').to_array
-      end
-      
-      matched=[]
-      Watir::Specifier.match_candidates(candidates, specifiers_list) do |match|
-        matched << match.store_rand_prefix("firewatir_elements")
-      end
-      matched
-    end
-    
     def extra
       {:container => self, :browser => self.browser, :jssh_socket => self.jssh_socket}
     end
@@ -78,11 +63,6 @@ module Watir
       end)
     end
     
-    def element_collection(klass)
-      ElementCollection.new(locate_all_specified(klass.specifiers).map do |dom_object|
-        klass.new(:dom_object, dom_object, extra)
-      end)
-    end
 =begin    
     #
     # Description:

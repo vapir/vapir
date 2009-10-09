@@ -44,11 +44,11 @@ module Watir
     # Description:
     #   Creates string of properties of the object.
     #
-    def to_s
-      assert_exists
-      super({"for" => "htmlFor","text" => "innerHTML"})
+#    def to_s
+#      assert_exists
+#      super({"for" => "htmlFor","text" => "innerHTML"})
       #   r=r + label_string_creator
-    end
+#    end
     
   end
 

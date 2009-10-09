@@ -57,9 +57,6 @@ module Watir
     attr_reader :jssh_socket
     attr_reader :how, :what, :index
     
-    # the object that represents this element in the dom 
-    attr_reader :element_object 
-    
     # the containing object is what locate uses to find stuff contained by this element
     # this is generally the same as the dom object, but different for Browser and Frame. 
     alias containing_object element_object
@@ -104,23 +101,23 @@ module Watir
     #   Array with values of the following properties:
     #   name, type, id, value disabled and the supplied attribues list.
     #
-    def string_creator(attributes = nil)
-      n = []
-      n << "name:".ljust(TO_S_SIZE) + get_attribute_value("name").inspect
-      n << "type:".ljust(TO_S_SIZE) + get_attribute_value("type").inspect
-      n << "id:".ljust(TO_S_SIZE) + get_attribute_value("id").inspect
-      n << "value:".ljust(TO_S_SIZE) + get_attribute_value("value").inspect
-      n << "disabled:".ljust(TO_S_SIZE) + get_attribute_value("disabled").inspect
-      #n << "style:".ljust(TO_S_SIZE) + get_attribute_value("style")
-      #n << "class:".ljust(TO_S_SIZE) + get_attribute_value("className")
-    
-      if(attributes != nil)
-        attributes.each do |key,value|
-          n << "#{key}:".ljust(TO_S_SIZE) + get_attribute_value(value).inspect
-        end
-      end
-      return n
-    end
+#    def string_creator(attributes = nil)
+#      n = []
+#      n << "name:".ljust(TO_S_SIZE) + get_attribute_value("name").inspect
+#      n << "type:".ljust(TO_S_SIZE) + get_attribute_value("type").inspect
+#      n << "id:".ljust(TO_S_SIZE) + get_attribute_value("id").inspect
+#      n << "value:".ljust(TO_S_SIZE) + get_attribute_value("value").inspect
+#      n << "disabled:".ljust(TO_S_SIZE) + get_attribute_value("disabled").inspect
+#      #n << "style:".ljust(TO_S_SIZE) + get_attribute_value("style")
+#      #n << "class:".ljust(TO_S_SIZE) + get_attribute_value("className")
+#    
+#      if(attributes != nil)
+#        attributes.each do |key,value|
+#          n << "#{key}:".ljust(TO_S_SIZE) + get_attribute_value(value).inspect
+#        end
+#      end
+#      return n
+#    end
   
     #
     # Description:
@@ -455,9 +452,9 @@ module Watir
 #        return result
 #      end
 #    end
-    def to_s(*args)
-      inspect
-    end
+#    def to_s(*args)
+#      inspect
+#    end
 
     def internal_click(options={})
       options={:wait => true}.merge(options)

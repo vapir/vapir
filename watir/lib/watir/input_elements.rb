@@ -21,118 +21,38 @@ module Watir
   # Normally a user would not need to create this object as it is returned by the Watir::Container#select_list method
   class IESelectList < IEInputElement
     include SelectList
-    INPUT_TYPES = ["select-one", "select-multiple"]
-    
-    attr_accessor :o
-    
-    # This method clears the selected items in the select box
-    def clear
-      assert_exists
-      highlight(:set)
-      wait = false
-      element_object.each do |selectBoxItem|
-        if selectBoxItem.selected
-          selectBoxItem.selected = false
-          wait = true
-        end
-      end
-      @container.wait if wait
-      highlight(:clear)
-    end
+#    INPUT_TYPES = ["select-one", "select-multiple"]
 
-    
-    # This method selects an item, or items in a select box, by text.
-    # Raises NoValueFoundException   if the specified value is not found.
-    #  * item   - the thing to select, string or reg exp
-    def select(item)
-      select_item_in_select_list(:text, item)
-    end
-    alias :set :select 
-       
-    # Selects an item, or items in a select box, by value.
-    # Raises NoValueFoundException   if the specified value is not found.
-    #  * item   - the value of the thing to select, string, reg exp
-    def select_value(item)
-      select_item_in_select_list(:value, item)
-    end
-    
-    # BUG: Should be private
-    # Selects something from the select box
-    #  * name  - symbol  :value or :text - how we find an item in the select box
-    #  * item  - string or reg exp - what we are looking for
-    def select_item_in_select_list(attribute, value)
-      assert_exists
-      highlight(:set)
-      found = false
-
-      value = value.to_s unless [Regexp, String].any? { |e| value.kind_of? e }
-
-      @container.log "Setting box #{element_object.name} to #{attribute.inspect} => #{value.inspect}"
-      element_object.each do |option| # items in the list
-        if value.matches(option.invoke(attribute.to_s))
-          if option.selected
-            found = true
-            break
-          else
-            option.selected = true
-            element_object.fireEvent("onChange")
-            @container.wait
-            found = true
-            break
-          end
-        end
-      end
-
-      unless found
-        raise NoValueFoundException, "No option with #{attribute.inspect} of #{value.inspect} in this select element"
-      end
-      highlight(:clear)
-    end
     
     # Returns all the items in the select list as an array.
     # An empty array is returned if the select box has no contents.
     # Raises UnknownObjectException if the select box is not found
-    def options 
-      assert_exists
-      @container.log "There are #{element_object.length} items"
-      returnArray = []
-      element_object.each { |thisItem| returnArray << thisItem.text }
-      return returnArray
+    def options
+      options_list=[]
+      element_object.options.each do |option_object|
+        options_list << IEOption.new(:element_object, option_object, extra)
+      end
+      ElementCollection.new(options_list)
     end
     
-    # Returns the selected items as an array.
-    # Raises UnknownObjectException if the select box is not found.
-    def selected_options
-      assert_exists
-      returnArray = []
-      @container.log "There are #{element_object.length} items"
-      element_object.each do |thisItem|
-        if thisItem.selected
-          @container.log "Item (#{thisItem.text}) is selected"
-          returnArray << thisItem.text
-        end
-      end
-      return returnArray
-    end
-
     # Does the SelectList include the specified option (text)?
-    def include? text_or_regexp
-      getAllContents.grep(text_or_regexp).size > 0
-    end
+#    def include? text_or_regexp
+#      getAllContents.grep(text_or_regexp).size > 0
+#    end
 
     # Is the specified option (text) selected? Raises exception of option does not exist.
-    def selected? text_or_regexp
-      unless includes? text_or_regexp
-        raise UnknownObjectException, "Option #{text_or_regexp.inspect} not found."
-      end
+#    def selected? text_or_regexp
+#      unless includes? text_or_regexp
+#        raise UnknownObjectException, "Option #{text_or_regexp.inspect} not found."
+#      end
 
-      getSelectedItems.grep(text_or_regexp).size > 0
-    end
+#      getSelectedItems.grep(text_or_regexp).size > 0
+#    end
 
-    def option(attribute, value)
-      assert_exists
-      IEOption.new(self, attribute, value)
-    end
+#    def option(attribute, value)
+#      assert_exists
+#      IEOption.new(self, attribute, value)
+#    end
   end
   
 #  module IEOptionAccess
@@ -155,7 +75,7 @@ module Watir
 #  end
   
   # An item in a select list
-  class IEOption
+  class IEOption < IEElement
     include Option
 #    include IEOptionAccess
     include Watir::Exception
@@ -186,7 +106,8 @@ module Watir
 #    private :assert_exists
     def select
       assert_exists
-      @select_list.select_item_in_select_list(@how, @what)
+      element_object.selected=true
+      #@select_list.select_item_in_select_list(@how, @what)
     end
   end
   
@@ -212,14 +133,14 @@ module Watir
     
 #    def_wrap_guard :size
     
-    def maxlength
-      assert_exists
-      begin
-        ole_object.invoke('maxlength').to_i
-      rescue WIN32OLERuntimeError
-        0
-      end
-    end
+#    def maxlength
+#      assert_exists
+#      begin
+#        ole_object.invoke('maxlength').to_i
+#      rescue WIN32OLERuntimeError
+#        0
+#      end
+#    end
         
     # Returns true or false if the text field is read only.
     #   Raises UnknownObjectException if the object can't be found.
@@ -234,12 +155,12 @@ module Watir
     end
     private :text_string_creator
     
-    def to_s
-      assert_exists
-      r = string_creator
-      r += text_string_creator
-      r.join("\n")
-    end
+#    def to_s
+#      assert_exists
+#      r = string_creator
+#      r += text_string_creator
+#      r.join("\n")
+#    end
     
     def assert_not_readonly
       if self.readonly?
@@ -288,66 +209,6 @@ module Watir
       self.value = ""
     end
     
-    # Clears the contents of the text box.
-    #   Raises UnknownObjectException if the object can't be found
-    #   Raises ObjectDisabledException if the object is disabled
-    #   Raises ObjectReadOnlyException if the object is read only
-    def clear
-      assert_enabled
-      assert_not_readonly
-      
-      highlight(:set)
-      
-      element_object.scrollIntoView
-      element_object.focus
-      element_object.select
-      element_object.fireEvent("onSelect")
-      element_object.value = ""
-      element_object.fireEvent("onKeyPress")
-      element_object.fireEvent("onChange")
-      @container.wait
-      highlight(:clear)
-    end
-    
-    # Appends the specified string value to the contents of the text box.
-    #   Raises UnknownObjectException if the object cant be found
-    #   Raises ObjectDisabledException if the object is disabled
-    #   Raises ObjectReadOnlyException if the object is read only
-    def append(value)
-      assert_enabled
-      assert_not_readonly
-      
-      highlight(:set)
-      element_object.scrollIntoView
-      element_object.focus
-      type_by_character(value)
-      highlight(:clear)
-    end
-    
-    # Sets the contents of the text box to the specified text value
-    #   Raises UnknownObjectException if the object cant be found
-    #   Raises ObjectDisabledException if the object is disabled
-    #   Raises ObjectReadOnlyException if the object is read only
-    def set(value)
-      assert_enabled
-      assert_not_readonly
-      
-      highlight(:set)
-      element_object.scrollIntoView
-      if type_keys
-	      element_object.focus
-	      element_object.select
-	      element_object.fireEvent("onSelect")
-	      element_object.fireEvent("onKeyPress")
-	      element_object.value = ""
-	      type_by_character(value)
-	      element_object.fireEvent("onChange")
-	      element_object.fireEvent("onBlur")
-	    else
-				element_object.value = limit_to_maxlength(value)
-	    end
-      highlight(:clear)
-    end
     
     # Sets the value of the text field directly. 
     # It causes no events to be fired or exceptions to be raised, 
@@ -365,46 +226,6 @@ module Watir
     def abhors_typing
     	@type_keys = false
     	self
-    end
-
-    private
-    
-    # Type the characters in the specified string (value) one by one.
-    # It should not be used externally.
-    #   * value - string - The string to enter into the text field
-    def type_by_character(value)
-      value = limit_to_maxlength(value)
-      characters_in(value) do |c|
-        sleep @container.typingspeed
-        element_object.value = element_object.value.to_s + c   
-        element_object.fireEvent("onKeyDown")
-        element_object.fireEvent("onKeyPress")
-        element_object.fireEvent("onKeyUp")
-      end
-    end
-    
-    # Supports double-byte characters
-    def characters_in(value, &blk) 
-      if RUBY_VERSION =~ /^1\.8/
-        index = 0
-        while index < value.length 
-          len = value[index] > 128 ? 2 : 1
-          yield value[index, len]
-          index += len
-        end 
-      else
-        value.each_char(&blk)
-      end
-    end
-    
-    # Return the value (a string), limited to the maxlength of the element.
-    def limit_to_maxlength(value)
-      return value if element_object.invoke('type') =~ /textarea/i # text areas don't have maxlength
-      if value.length > maxlength
-        value = value[0 .. maxlength - 1]
-        @container.log " Supplied string is #{value.length} chars, which exceeds the max length (#{maxlength}) of the field. Using value: #{value}"
-      end
-      value
     end
   end
   

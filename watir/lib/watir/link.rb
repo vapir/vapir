@@ -55,12 +55,12 @@ module Watir
     end
     
     # returns a textual description of the link
-    def to_s
-      assert_exists
-      r = string_creator
-      r = r + link_string_creator
-      return r.join("\n")
-    end
+#    def to_s
+#      assert_exists
+#      r = string_creator
+#      r = r + link_string_creator
+#      return r.join("\n")
+#    end
   end
   
 end

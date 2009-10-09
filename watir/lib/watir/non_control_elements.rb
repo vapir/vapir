@@ -31,22 +31,22 @@ module Watir
 #    end
 
     # this method is used to populate the properties in the to_s method
-    def span_div_string_creator
-      n = []
-      n <<   "class:".ljust(TO_S_SIZE) + self.class_name
-      n <<   "text:".ljust(TO_S_SIZE) + self.text
-      return n
-    end
-    private :span_div_string_creator
-
-    # returns the properties of the object in a string
-    # raises an ObjectNotFound exception if the object cannot be found
-    def to_s
-      assert_exists
-      r = string_creator
-      r += span_div_string_creator
-      return r.join("\n")
-    end
+#    def span_div_string_creator
+#      n = []
+#      n <<   "class:".ljust(TO_S_SIZE) + self.class_name
+#      n <<   "text:".ljust(TO_S_SIZE) + self.text
+#      return n
+#    end
+#    private :span_div_string_creator
+#
+#    # returns the properties of the object in a string
+#    # raises an ObjectNotFound exception if the object cannot be found
+#    def to_s
+#      assert_exists
+#      r = string_creator
+#      r += span_div_string_creator
+#      return r.join("\n")
+#    end
   end
 
 
@@ -99,12 +99,12 @@ module Watir
 
     # returns the properties of the object in a string
     # raises an ObjectNotFound exception if the object cannot be found
-    def to_s
-      assert_exists
-      r = string_creator
-      r += label_string_creator
-      return r.join("\n")
-    end
+#    def to_s
+#      assert_exists
+#      r = string_creator
+#      r += label_string_creator
+#      return r.join("\n")
+#    end
   end
 
   class IELi < IEElement

@@ -404,11 +404,12 @@ module Watir
       return unless exists?
       @closing = true
       @ie.stop
-      wait
-      chwnd = @ie.hwnd.to_i
+      wait # why wait? 
+      chwnd = @ie.hwnd
       @ie.quit
-      while Win32API.new("user32","IsWindow", 'L', 'L').Call(chwnd) == 1
-        sleep 0.3
+      # this doesn't work; the same hwnd can stay open if there are multiple tabs. not that it does anything anyway. 
+      ::Waiter.try_for(32) do
+        Win32API.new("user32","IsWindow", 'L', 'L').Call(chwnd) == 0
       end
     end
     

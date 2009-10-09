@@ -20,11 +20,11 @@ class TC_Tables < Test::Unit::TestCase
     assert browser.table!(:id, 't1').exists?
     assert browser.table!(:id, /t/).exists?
     
-    assert !browser.table!(:id, 'missingTable').exists?
-    assert !browser.table!(:id, /missing_table/).exists?
+    assert !browser.table(:id, 'missingTable')
+    assert !browser.table(:id, /missing_table/)
     
     assert browser.table!(:index, 1).exists?
-    assert !browser.table!(:index, 33).exists?
+    assert !browser.table(:index, 33)
   end
   
   tag_method :test_row_count_exceptions, :fails_on_firefox

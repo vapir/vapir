@@ -18,7 +18,7 @@ class TC_Dt < Test::Unit::TestCase
   end
   
   def test_does_not_exist
-    assert !browser.dt!(:id, 'no_such_id').exists?, "Found non-existing <dt>"
+    assert !browser.dt(:id, 'no_such_id'), "Found non-existing <dt>"
   end
   
   def test_attribute_class_name

@@ -53,7 +53,7 @@ class TC_ExistingWindow < Test::Unit::TestCase
     uses_page "whitespace.html"
     assert_equal 'Test page for whitespace', browser.title
     assert_match /whitespace.html/, browser.url
-    browser.link!(:text, 'Login').click
+    browser.link!(:text, /Login/).click
     assert_equal 'Pass Page', browser.title
     assert_match /pass.html/, browser.url
   end

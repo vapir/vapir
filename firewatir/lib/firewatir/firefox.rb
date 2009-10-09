@@ -594,7 +594,7 @@ module Watir
     #   Status of the page.
     #
     def status
-      browser_window_object.status || browser_window_object.XULBrowserWindow.statusText
+      content_window_object.status #|| browser_window_object.XULBrowserWindow.statusText
     end
 
     # Returns the text of the page currently loaded in the browser.
@@ -649,6 +649,15 @@ module Watir
       end
       run_error_checks
       return self
+    end
+
+    # returns nil or raises an error if the given javascript errors. 
+    def execute_script(javascript)
+      jssh_socket.value_json("(function()
+      { with(#{content_window_object.ref})
+        { #{javascript} }
+        return null;
+      })()")
     end
 
     # Add an error checker that gets called on every page load.

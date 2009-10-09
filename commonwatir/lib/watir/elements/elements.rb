@@ -50,6 +50,7 @@ module Watir
     include ContainerMethodsFromName
     DefaultHow=:value
     include ElementModule
+    dom_wrap :src, :height, :width # these are used on <input type=image>
   end
   module FileField
     Specifiers=[{:tagName => 'input', :type => 'file'}]

@@ -84,10 +84,31 @@ module Watir
     private
     def container_candidates(specifiers)
       raise unless @container
-      ids=specifiers.map{|s| s[:id] }.compact.uniq
-      tags=specifiers.map{|s| s[:tagName] }.compact.uniq
-      names=specifiers.map{|s| s[:name] }.compact.uniq
-      classNames=specifiers.inject([]){|arr,s| arr+[s[:class], s[:className]]}.compact.uniq # this (or, all of these) should probably look back through Watir::Specifier::LocateAliases to check for that crap, but this will do 
+      attributes_in_specifiers=proc do |attr|
+        specifiers.inject([]) do |arr, spec|
+          spec.each_pair do |spec_attr, spec_val|
+            if (spec_attr==attr || Watir::Specifier::LocateAliases[spec_attr].include?(attr)) && !arr.include?(spec_val)
+              arr << spec_val
+            end
+          end
+          arr
+        end
+      end
+      ids=attributes_in_specifiers.call(:id)
+      tags=attributes_in_specifiers.call(:tagName)
+      names=attributes_in_specifiers.call(:name)
+      classNames=attributes_in_specifiers.call(:className)
+#      ids=specifiers.inject([]) do |arr,s|
+#        arr << s[:id] if s.key?(:id)
+#        arr
+#      end.uniq
+#      tags=specifiers.map{|s| s[:tagName] }.compact.uniq
+#      names=specifiers.map{|s| s[:name] }.compact.uniq
+#      classNames=specifiers.inject([]) do |arr,s| 
+#        arr+[s[:class]]+Watir::Specifier::LocateAliases.map do |(_alias, attr)| 
+#          attr==:class ? 
+#        end
+#      end.compact.uniq
 
       # we can only use getElementById if:
       # - id is a string, as getElementById doesn't do regexp
@@ -336,7 +357,7 @@ module Watir
       @parent=nil if options[:reload]
       @parent||=begin
         parentNode=element_object.parentNode
-        if parentNode
+        if parentNode && parentNode != document_object # don't ascend up to the document
           FFElement.factory(parentNode.store_rand_prefix('firewatir_elements'), extra)
         else
           nil
@@ -465,11 +486,20 @@ module Watir
     # Description:
     #   Checks element for display: none or visibility: hidden, these are
     #   the most common methods to hide an html element
-  
     def visible? 
       assert_exists 
-      currentStyle.visibility!='hidden' && currentStyle[:display]!='none' # note: don't use #display as it is defined on Object. http://www.ruby-doc.org/core/classes/Object.html#M000340
-    end 
+      #(currentStyle.visibility!='hidden' && currentStyle[:display]!='none') && (!parent || parent.visible?) # note: don't use #display as it is defined on Object. http://www.ruby-doc.org/core/classes/Object.html#M000340
+      # move this out to javascript - don't need to instantiate Element objects for all ancestors just to check visibility (slow!)
+      element_to_check=element_object
+      while element_to_check && !element_to_check.instanceof(jssh_socket.Components.interfaces.nsIDOMDocument)
+        style=document_object.defaultView.getComputedStyle(element_to_check, nil)
+        if style.visibility=='hidden' || style[:display]=='none'
+          return false
+        end
+        element_to_check=element_to_check.parentNode
+      end
+      return true
+    end
 
     #
     # Description:

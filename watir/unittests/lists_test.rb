@@ -17,7 +17,7 @@ class Lists_Tests < Watir::TestCase
 
   def test_list_item_exists_by_name
     assert(browser.li!(:name, 'x1').exists?)
-    assert ! (browser.li!(:name, 'maptest02').exists?)
+    assert ! (browser.li(:name, 'maptest02'))
   end  
   
   def test_li_length

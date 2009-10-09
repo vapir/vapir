@@ -18,7 +18,7 @@ class TC_Dl < Test::Unit::TestCase
   end
   
   def test_does_not_exist
-    assert !browser.dl!(:id, 'no_such_id').exists?, "Found non-existing <dl>"
+    assert !browser.dl(:id, 'no_such_id'), "Found non-existing <dl>"
   end
   
   def test_attribute_class_name
@@ -47,7 +47,7 @@ class TC_Dl < Test::Unit::TestCase
   
   def test_attribute_text
     assert_match /11 years/, browser.dl!(:id, "experience-list").text
-    assert_equal "", browser.dl!(:id, 'noop').text
+    assert_match /\A\s*\z/, browser.dl!(:id, 'noop').text # check this contains only whitespace
     assert_raises(UnknownObjectException) do
       browser.dl!(:id, 'no_such_id').text
     end

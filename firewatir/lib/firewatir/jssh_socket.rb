@@ -17,6 +17,7 @@ end
 
 class JsshError < StandardError
   attr_accessor :source, :lineNumber, :stack, :fileName
+  class JsshSyntaxError < JsshError; end
 end
 # This exception is thrown if we are unable to connect to JSSh.
 class JsshUnableToStart < JsshError; end
@@ -251,10 +252,13 @@ class JsshSocket
        { Object.toJSON([true, e]);
        }"
     val=send_and_read(wrapped_js, options)
-    error_or_val(val, js)
+    error_or_val_json(val, js)
   end
-  def error_or_val(val, js)
+  def error_or_val_json(val, js)
     raise JsshError, "received no value! may have timed out waiting for a value that was not coming." if !val
+    if val=="SyntaxError: syntax error"
+      raise JsshSyntaxError, val
+    end
     errord_and_val=*parse_json(val)
     unless errord_and_val.is_a?(Array) && errord_and_val.length==2
       raise RuntimeError, "unexpected result: \n\t#{errord_and_val.inspect} \nencountered parsing value: \n\t#{val.inspect} \nreturned from expression: \n\t#{js.inspect}"
@@ -353,7 +357,7 @@ class JsshSocket
   { Object.toJSON([true, e]);
   }
 }"
-    error_or_val(send_and_read(js),js)
+    error_or_val_json(send_and_read(js),js)
   end
   
   def instanceof(js_expression, js_interface)
@@ -797,8 +801,7 @@ class JsshObject
       method = $1
       special = $2
     else # don't deal with any special character crap 
-      #return Object.instance_method(:respond_to?).bind(self).call(method) # let Object#respond_to? answer
-      return super
+      return false
     end
 
     if self.type=='undefined'

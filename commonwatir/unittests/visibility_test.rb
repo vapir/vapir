@@ -35,7 +35,7 @@ class TC_Visibility < Test::Unit::TestCase
 
   # Check if the second div becomes visible (inline Display block test)
   def test_make_display_third_div
-    browser. :id, "div3blk").click
+    browser.link!(:id, "div3blk").click
     #wait_until { browser.div!(:id, "div3").visible? }
     assert_equal(true, browser.div!(:id, "div3").visible? )
     assert_equal(true, browser.text_field!(:id, "lgnId3").visible? )  

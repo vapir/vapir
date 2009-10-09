@@ -149,7 +149,7 @@ module Watir
           if !@container
             raise
           end
-          @container.locate(options)
+          @container.locate!(options)
           specified_attributes=@what
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
           
@@ -173,7 +173,7 @@ module Watir
       @element_object
     end
     def locate!(options={})
-      locate(options) || raise(self.class==FFFrame ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException)
+      locate(options) || raise(self.class==FFFrame ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException, Watir::Exception.message_for_unable_to_locate(@how, @what))
     end
 
     private
@@ -387,7 +387,13 @@ module Watir
       end
       event=document_object.createEvent(dom_event_type)
       event.get(*dom_event_init) # calls to the init*Event method
-      element_object.dispatchEvent(event)
+      if wait
+        raise "need a content window on which to setTimeout if we are not waiting" unless content_window_object
+        fire_event_func=jssh_socket.object("(function(dom_object, event){return function(){dom_object.dispatchEvent(event)};})").pass(dom_object, event)
+        content_window_object.setTimeout(fire_event_func, 0)
+      else
+        element_object.dispatchEvent(event)
+      end
 
       #if(element_type == "HTMLSelectElement")
       #  dom_event_type = 'HTMLEvents'
@@ -563,16 +569,15 @@ module Watir
         event.initMouseEvent('click',true,true,nil,1,0,0,0,0,false,false,false,false,0,nil)
         dom_object.dispatchEvent(event)
       else
-        if dom_object.attr(:click).type=='undefined'
-          fire_event('onclick')
-        else
+        if dom_object.respond_to?(:click)
           if options[:wait]
             dom_object.click
           else
-            #click_func=jssh_socket.object("(function(dom_object){return function(){dom_object.click()};})").pass(dom_object)
-            click_func=dom_object.attr(:click)
+            click_func=jssh_socket.object("(function(dom_object){return function(){dom_object.click()};})").pass(dom_object)
             content_window_object.setTimeout(click_func, 0)
           end
+        else
+          fire_event('onclick') #todo/fix: respect wait? does this need to? 
         end
       end
       highlight(:clear)

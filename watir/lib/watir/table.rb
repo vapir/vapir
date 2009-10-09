@@ -145,7 +145,7 @@ module Watir
     private :table_body
     
     # returns a watir object
-    def body(how, what)
+    def tbody(how, what)
       return IETableBody.new(@container, how, what, self)
     end
     

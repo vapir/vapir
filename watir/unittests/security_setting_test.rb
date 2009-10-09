@@ -17,8 +17,8 @@ Tools -> Internet Options -> Advanced -> Security ->
 'Allow active content to run in files on My Computer'"
 
   def test_active_content
-    browser.span(:id, "span3").click
-    value = browser.text_field(:name, "text2").value
+    browser.span!(:id, "span3").click
+    value = browser.text_field!(:name, "text2").value
     fail(@@security_instructions) if value == '0' 
   end
 end

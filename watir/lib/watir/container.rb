@@ -150,10 +150,10 @@ module Watir
     #    :xpath    - find the table cell using xpath query.
     #
     # returns a TableCell Object
-    def cell(how, what=nil)
+    def table_cell(how, what=nil)
       IETableCell.new(self, how, what)
     end
-    def cells
+    def table_cells
       IETableCells.new(self)
     end
     
@@ -163,10 +163,10 @@ module Watir
     #    :xpath    - find the table row using xpath query.
     #
     # returns a TableRow object
-    def row(how, what=nil)
+    def table_row(how, what=nil)
       IETableRow.new(self, how, what)
     end
-    def rows
+    def table_rows
       IETableRows.new(self)
     end
     

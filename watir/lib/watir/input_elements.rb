@@ -267,7 +267,7 @@ module Watir
     #   * destination_what  - string or regular expression, the name, id, etc of the text field that will be the drop target
     def drag_contents_to(destination_how, destination_what)
       assert_exists
-      destination = @container.text_field(destination_how, destination_what)
+      destination = @container.text_field!(destination_how, destination_what)
       unless destination.exists?
         raise UnknownObjectException, "Unable to locate destination using #{destination_how } and #{destination_what } "
       end

@@ -124,11 +124,6 @@ module Watir
     include Area
   end
 
-  class FFTBody < FFElement
-    include FFNonControlElement
-    include TBody
-  end
-  
   class FFEm < FFElement
     include FFNonControlElement
     include Em

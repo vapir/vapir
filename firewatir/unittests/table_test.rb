@@ -63,7 +63,7 @@ class TC_Tables < Test::Unit::TestCase
     assert_raises(UnknownObjectException  ){ browser.table!(:id, 'missingTable').column_count }
     assert_raises(UnknownObjectException  ){ browser.table!(:index, 77).column_count }
     assert_equal(2, browser.table!(:index, 1).column_count)
-    assert_equal(1, browser.table!(:id, 't1').column_count)   # row one has 1 cell with a colspan of 2
+    assert_equal(2, browser.table!(:id, 't1').column_count)   # row one has 1 cell with a colspan of 2
   end
   
   def test_to_a
@@ -74,27 +74,27 @@ class TC_Tables < Test::Unit::TestCase
   def test_links_and_images_in_table
     table = browser.table!(:id, 'pic_table')
     image = table[1][2].image!(:index,1)
-    assert_equal("106", image.width)
+    assert_equal(106, image.width)
     
     link = table[2][2].link!(:index,1)
     assert_equal("Google", link.innerText)
   end
   
   def test_cell_directly
-    assert( browser.cell(:id, 'cell1').exists? )
-    assert_nil( browser.cell(:id, 'no_exist'))
-    assert_equal( "Row 1 Col1",  browser.cell(:id, 'cell1').to_s.strip )
+    assert( browser.table_cell!(:id, 'cell1').exists? )
+    assert_nil( browser.table_cell(:id, 'no_exist'))
+    assert_equal( "Row 1 Col1",  browser.table_cell!(:id, 'cell1').to_s.strip )
     
     # not really cell directly, but just to show another way of geting the cell
     assert_equal( "Row 1 Col1",  browser.table!(:index,1)[1][1].to_s.strip )
-    assert_equal(2, browser.cell(:id, "cell_with_colspan").colspan)
+    assert_equal(2, browser.table_cell!(:id, "cell_with_colspan").colspan)
   end
   
   def test_row_directly
-    assert( browser.row(:id, 'row1').exists? )  
-    assert_nil( browser.row(:id, 'no_exist'))
+    assert( browser.table_row!(:id, 'row1').exists? )  
+    assert_nil( browser.table_row(:id, 'no_exist'))
     
-    assert_equal('Row 2 Col1' ,  browser.row(:id, 'row1')[1].to_s.strip )
+    assert_equal('Row 2 Col1' ,  browser.table_row!(:id, 'row1')[1].to_s.strip )
   end
   
   def test_row_iterator
@@ -127,45 +127,21 @@ class TC_Tables < Test::Unit::TestCase
     end
   end 
   
-  #def test_table_body
-  #  assert_equal( 1, browser.table!(:index,1).bodies.length )
-  #  assert_equal( 3, browser.table!(:id, 'body_test' ).bodies.length )
-  #  
-  #  count = 1
-  #  browser.table!(:id, 'body_test').bodies.each do |n|
-  #    
-  #    # do something better here!
-      # n.flash # this line commented out to speed up the test
-      
-  #    case count 
-  #    when 1 
-  #      compare_text = "This text is in the FRST TBODY."
-  #    when 2 
-  #      compare_text = "This text is in the SECOND TBODY."
-  #    when 3 
-  #      compare_text = "This text is in the THIRD TBODY."
-  #    end
-  #    
-  #    assert_equal(compare_text, n[1][1].to_s.strip )   # this is the 1st cell of the first row of this particular body
-  #    
-  #    count += 1
-  #  end
-  #  assert_equal( count - 1, browser.table!(:id, 'body_test').bodies.length )
-  #  
-  #  assert_equal( "This text is in the THIRD TBODY." ,browser.table!(:id, 'body_test' ).body(:index,3)[1][1].to_s.strip ) 
-  #  
-  #  # iterate through all the rows in a table body
-  #  count = 1
-  #  browser.table!(:id, 'body_test').body(:index, 2).each do | row |
-  #    # row.flash    # this line commented out, to speed up the tests
-  #    if count == 1
-  #      assert_equal('This text is in the SECOND TBODY.', row[1].text.strip )
-  #    elsif count == 1 # BUG: Huh?
-  #      assert_equal('This text is also in the SECOND TBODY.', row[1].text.strip )
-  #    end
-  #    count+=1
-  #  end
-  #end
+  def test_table_body
+    assert_equal( 1, browser.table!(:index,1).tbodies.length )
+    assert_equal( 3, browser.table!(:id, 'body_test' ).tbodies.length )
+    
+    tbodies=browser.table!(:id, 'body_test').tbodies
+    assert_equal("This text is in the FRST TBODY.", tbodies[1][1][1].text.strip)
+    assert_equal("This text is in the SECOND TBODY.", tbodies[2][1][1].text.strip)
+    assert_equal("This text is in the THIRD TBODY.", tbodies[3][1][1].text.strip)
+    assert_equal( "This text is in the THIRD TBODY.",browser.table!(:id, 'body_test' ).tbody(:index,3)[1][1].text.strip ) 
+    row_texts=[]
+    browser.table!(:id, 'body_test').tbody(:index, 2).each do |row|
+      row_texts << row.text.strip
+    end
+    assert_equal(['This text is in the SECOND TBODY.', 'This text is also in the SECOND TBODY.'], row_texts)
+  end
   
   def test_table_container
     assert_nothing_raised { browser.table!(:id, 't1').html }
@@ -255,13 +231,13 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     
     # expand the table
     t.each do |r|
-      r[1].image(:src, /plus/).click if r[1].image(:src, /plus/)
+      r[1].image!(:src, /plus/).click if r[1].image(:src, /plus/)
     end
     
     # shrink rows 1,2,3
     count=1
     t.each do |r|
-      r[1].image(:src, /minus/).click if r[1].image(:src, /minus/) and (1..3) === count 
+      r[1].image!(:src, /minus/).click if r[1].image(:src, /minus/) and (1..3) === count 
       count=2
     end
   end

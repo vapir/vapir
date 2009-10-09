@@ -8,7 +8,7 @@ class TC_Form_Entertainment < Test::Unit::TestCase
   end
   def test_bare_button
     assert_nothing_raised do
-      browser.button(:src, Regexp.new('/images/button_continue.gif')).click 
+      browser.button!(:src, Regexp.new('/images/button_continue.gif')).click 
     end
   end
 
@@ -16,7 +16,7 @@ class TC_Form_Entertainment < Test::Unit::TestCase
   tag_method :test_button_in_form, :fails_on_ie
   def test_button_in_form
     assert_nothing_raised do
-      browser.form(:name, 'shipaddress').button(:src, Regexp.new('/images/button_continue.gif')).click 
+      browser.form!(:name, 'shipaddress').button!(:src, Regexp.new('/images/button_continue.gif')).click 
     end
   end
 end 

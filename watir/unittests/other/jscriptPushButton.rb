@@ -3,4 +3,4 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..', '..', 'commonwa
 require 'watir'
 
 ie = Watir::IE.attach(:title, 'Alert Test')
-ie.button(:id, 'btnAlert').click
+ie.button!(:id, 'btnAlert').click

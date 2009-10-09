@@ -70,11 +70,12 @@ module Watir
           define_method ruby_method_name do |*args|
             assert_exists
             if element_object.respond_to?(dom_method_name)
-              element_object.get(dom_method_name, *args)
+              element_object.method_missing(dom_method_name, *args)
+              # note: using method_missing (not get) so that attribute= methods can be used 
             elsif args.length==0
               element_object.getAttribute(dom_method_name)
             else
-              raise
+              raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
             end
           end
         end

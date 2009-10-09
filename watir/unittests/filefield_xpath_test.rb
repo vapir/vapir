@@ -13,15 +13,15 @@ class TC_FileField_XPath < Test::Unit::TestCase
   
   def test_file_field_Exists
     #test for existance of 4 file area
-    assert(browser.file_field(:xpath, "//input[@name='file1']/").exists?)
-    assert(browser.file_field(:xpath, "//input[@id='file2']/").exists?)
+    assert(browser.file_field!(:xpath, "//input[@name='file1']/").exists?)
+    assert(browser.file_field!(:xpath, "//input[@id='file2']/").exists?)
     #test for missing 
-    assert_false(browser.file_field(:xpath, "//input[@name='missing']/").exists?)   
-    assert_false(browser.file_field(:xpath, "//input[@name='totallybogus']/").exists?)
+    assert_nil(browser.file_field(:xpath, "//input[@name='missing']/"))   
+    assert_nil(browser.file_field(:xpath, "//input[@name='totallybogus']/"))
     #pop one open and put something in it.
-    browser.file_field(:xpath, "//input[@name='file1']/").set($htmlRoot + "fileupload.html")	
+    browser.file_field!(:xpath, "//input[@name='file1']/").set($htmlRoot + "fileupload.html")	
     #click the upload button
-    browser.button(:xpath, "//input[@name='upload']/").click
+    browser.button!(:xpath, "//input[@name='upload']/").click
     
     assert(browser.text.include?("PASS"))	
   end

@@ -11,7 +11,7 @@ class TC_Utf8 < Test::Unit::TestCase
   end 
 
   def test_is_correct_encoding
-    txt = browser.div(:id, 'utf8_string').text
+    txt = browser.div!(:id, 'utf8_string').text
     if RUBY_VERSION =~ /^1\.8/
       assert_equal("\303\246\303\270\303\245", txt)
     else

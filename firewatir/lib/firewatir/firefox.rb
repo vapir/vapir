@@ -261,6 +261,9 @@ module Watir
     def locate(options={})
       exists?
     end
+    def locate!(options={})
+      locate(options) || raise(Watir::Exception::NoMatchingWindowFoundException, "The browser window seems to be gone")
+    end
 
     # Launches firebox browser
     # options as .new
@@ -701,60 +704,9 @@ module Watir
     #   userInput   - Not used just for compatibility with Watir
     #   text        - Text that should appear on pop up.
     #
-    def startClicker(button, waitTime = 1, userInput = nil, text = nil)
-      jssh_command = "var win = #{browser_var}.contentWindow;"
-      if(button =~ /ok/i)
-        jssh_command << "var popuptext = '';
-                                 var old_alert = win.alert;
-                                 var old_confirm = win.confirm;
-                                 win.alert = function(param) {"
-        if(text != nil)
-          jssh_command <<          "if(param == \"#{text}\") {
-                                                popuptext = param;
-                                                return true;
-                                              }
-                                              else {
-                                                popuptext = param;
-                                                win.alert = old_alert;
-                                                win.alert(param);
-                                              }"
-        else
-          jssh_command <<          "popuptext = param; return true;"
-        end
-        jssh_command << "};
-                                 win.confirm = function(param) {"
-        if(text != nil)
-          jssh_command <<          "if(param == \"#{text}\") {
-                                                popuptext = param;
-                                                return true;
-                                              }
-                                              else {
-                                                win.confirm = old_confirm;
-                                                win.confirm(param);
-                                              }"
-        else
-          jssh_command <<          "popuptext = param; return true;"
-        end
-        jssh_command << "};"
 
-      elsif(button =~ /cancel/i)
-        jssh_command = "var old_confirm = win.confirm;
-                                              win.confirm = function(param) {"
-        if(text != nil)
-          jssh_command <<          "if(param == \"#{text}\") {
-                                                popuptext = param;
-                                                return false;
-                                              }
-                                              else {
-                                                win.confirm = old_confirm;
-                                                win.confirm(param);
-                                              }"
-        else
-          jssh_command <<          "popuptext = param; return false;"
-        end
-        jssh_command << "};"
-      end
-      jssh_socket.js_eval jssh_command
+    def startClicker(*args)
+      raise NotImplementedError, "startClicker is gone. Use Firefox#click_modal_button (generally preceded by a Element#click_no_wait)"
     end
 
     #
@@ -764,13 +716,12 @@ module Watir
     # Output:
     #   Text shown in javascript pop up.
     #
-    def get_popup_text()
-      return_value = jssh_socket.js_eval "popuptext"
-      # reset the variable
-      jssh_socket.js_eval "popuptext = ''"
-      return return_value
+    def modal_text
+      modal=self.modal_dialog || raise
+      modal.document.documentElement.textContent
     end
-
+    alias get_popup_text modal_text
+    
     # Returns the document element of the page currently loaded in the browser.
     def document
       FFDocument.new(self)

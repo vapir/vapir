@@ -25,10 +25,10 @@ class TC_CSS < Test::Unit::TestCase
   end
   
   def test_SuccessMessage
-    browser.button( :caption , "Success").click
+    browser.button!( :caption , "Success").click
     assert( isMessageDisplayed("Success") )
     
-    browser.button(:caption, "Failure").click
+    browser.button!(:caption, "Failure").click
     assert_false(isMessageDisplayed("Success") )
   end
 end

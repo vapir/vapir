@@ -22,22 +22,22 @@ class TC_PopUps < Test::Unit::TestCase
   
   def test_simple
     startClicker("OK")
-    browser.button("Alert").click
+    browser.button!("Alert").click
   end
   
   def test_confirm
     startClicker("OK")
-    browser.button("Confirm").click
-    assert( browser.text_field(:name , "confirmtext").verify_contains("OK") )
+    browser.button!("Confirm").click
+    assert( browser.text_field!(:name , "confirmtext").verify_contains("OK") )
     
     startClicker("Cancel")
-    browser.button("Confirm").click
-    assert( browser.text_field(:name , "confirmtext").verify_contains("Cancel") )
+    browser.button!("Confirm").click
+    assert( browser.text_field!(:name , "confirmtext").verify_contains("Cancel") )
   end
   
   def xtest_Prompt
     startClicker("OK")
-    browser.button("Prompt").click
+    browser.button!("Prompt").click
   end
 end
 

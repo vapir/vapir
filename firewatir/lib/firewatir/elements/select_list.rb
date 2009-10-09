@@ -15,12 +15,7 @@ module Watir
         option.selected=false
         wait=true
       end
-#      each do |selectBoxItem|
-#        if selectBoxItem.selected
-#          selectBoxItem.assign('selected', false)
-#          wait = true
-#        end
-#      end
+      fire_event :change
       self.wait if wait
       #highlight(:clear)
     end
@@ -39,17 +34,14 @@ module Watir
     #   Get option element at specified index in select list.
     #
     # Input:
-    #   key - option index
+    #   index (starting at 1)
     #
     # Output:
     #   Option element at specified index
     #
-#    def [] (key)
-#      raise NotImplementedError
-#      assert_exists
-#      arr_options = js_options
-#      return FFOption.new(self, :jssh_name, arr_options[key - 1].ref)
-#    end
+    def [](index)
+      options[index]
+    end
 
     #
     # Description:
@@ -58,11 +50,13 @@ module Watir
     # Input:
     #   - item - Text of item to be selected.
     #
-    def select(option)
-      raise NotImplementedError
-      select_items_in_select_list(:text, item)
+    def select_text(option_text)
+      option=options.detect{|option| Watir::Specifier.fuzzy_match(option.text, option_text)} || (raise Watir::Exception::NoValueFoundException)
+      option.selected=true
+      fire_event :change
     end
-    alias :set :select
+    alias select select_text
+    alias set select_text
 
     #
     # Description:
@@ -71,9 +65,10 @@ module Watir
     # Input:
     # - item - Value of the item to be selected.
     #
-    def select_value( item )
-      raise NotImplementedError
-      select_items_in_select_list(:value, item)
+    def select_value(option_value)
+      option=options.detect{|option| Watir::Specifier.fuzzy_match(option.value, option_value)} || (raise Watir::Exception::NoValueFoundException)
+      option.selected=true
+      fire_event :change
     end
 
     #
@@ -85,15 +80,9 @@ module Watir
     #   Array containing the items of the select list.
     #
     def options
-      dom_object.options.to_array.map do |option_object|
+      ElementCollection.new(dom_object.options.to_array.map do |option_object|
         FFOption.new(:dom_object, option_object, extra)
-      end
-#      raise NotImplementedError
-#      assert_exists
-      #element.log "There are #{@o.length} items"
-#      returnArray = []
-#      each { |thisItem| returnArray << thisItem.text }
-#      return returnArray
+      end)
     end
 
     def option_texts
@@ -143,33 +132,33 @@ module Watir
     #   - name  - :value or :text - how we find an item in the select box
     #   - item  - value of either item text or item value.
     #
-    def select_items_in_select_list(attribute, value)
-      raise NotImplementedError
-      assert_exists
+#    def select_items_in_select_list(attribute, value)
+#      raise NotImplementedError
+#      assert_exists
       
-      attribute = attribute.to_s
-      found     = false
+#      attribute = attribute.to_s
+#      found     = false
       
-      value = value.to_s unless [Regexp, String].any? { |e| value.kind_of? e }
+#      value = value.to_s unless [Regexp, String].any? { |e| value.kind_of? e }
 
-      highlight( :set )
-      each do |option|
-        next unless value.matches(option.invoke(attribute))
-        found = true  
-        next if option.selected
-        
-        option.assign('selected', true)
-        fireEvent("onChange")
-        wait
-      end
-      highlight( :clear )
+#      highlight( :set )
+#      each do |option|
+#        next unless value.matches(option.invoke(attribute))
+#        found = true  
+#        next if option.selected
+#        
+#        option.assign('selected', true)
+#        fireEvent("onChange")
+#        wait
+#      end
+#      highlight( :clear )
 
-      unless found
-        raise Exception::NoValueFoundException, "No option with #{attribute} of #{value.inspect} in this select element"
-      end
+#      unless found
+#        raise Exception::NoValueFoundException, "No option with #{attribute} of #{value.inspect} in this select element"
+#      end
       
-      value
-    end
+#      value
+#    end
 
     #
     # Description:

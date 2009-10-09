@@ -15,36 +15,36 @@ class TC_Dialog_Test < Test::Unit::TestCase
   def teardown
     begin 
       sleep 0.4 # XXX 
-      dialog.button('OK').click
+      dialog.button!('OK').click
     rescue
     end
   end
   
   def test_alert_without_bonus_script
-    browser.button(:id, 'btnAlert').click_no_wait
+    browser.button!(:id, 'btnAlert').click_no_wait
     sleep 0.4 # FIXME: need to be able to poll for window to exist
-    dialog.button("OK").click
-    assert_match(/Alert button!/, browser.text_field(:id, "testResult").value)  
+    dialog.button!("OK").click
+    assert_match(/Alert button!/, browser.text_field!(:id, "testResult").value)  
   end
   
   def test_button_name_not_found
-    browser.button(:id, 'btnAlert').click_no_wait
+    browser.button!(:id, 'btnAlert').click_no_wait
     sleep 0.4 # FIXME replace with dialog.exists?
-    assert_raises(UnknownObjectException) { dialog.button("Yes").click }
-    dialog.button("OK").click
+    assert_raises(UnknownObjectException) { dialog.button!("Yes").click }
+    dialog.button!("OK").click
   end
   
   def xtest_exists
     assert_false( dialog.exists?) # known bug: finds main window instead of dialog!
-    browser.button(:id, 'btnAlert').click_no_wait
+    browser.button!(:id, 'btnAlert').click_no_wait
     sleep 0.4 # FIXME: need to add polling
     assert dialog.exists?
-    dialog.button('OK').click
+    dialog.button!('OK').click
   end
   
   def test_leaves_dialog_open
     # should be closed in teardown
-    browser.button(:id, 'btnAlert').click_no_wait
+    browser.button!(:id, 'btnAlert').click_no_wait
   end
   
   def test_copy_array_elements
@@ -57,17 +57,17 @@ class TC_Dialog_Test < Test::Unit::TestCase
   end
   
   def test_confirm_ok
-    browser.button(:value, 'confirm').click_no_wait
+    browser.button!(:value, 'confirm').click_no_wait
     assert dialog.exists?
-    dialog.button('OK').click
-    assert_equal "You pressed the Confirm and OK button!", browser.text_field(:id, 'testResult').value
+    dialog.button!('OK').click
+    assert_equal "You pressed the Confirm and OK button!", browser.text_field!(:id, 'testResult').value
   end
   
   def xtest_confirm_cancel
-    browser.button(:value, 'confirm').click_no_wait
+    browser.button!(:value, 'confirm').click_no_wait
     assert dialog.exists?
-    dialog.button('Cancel').click
-    assert_equal "You pressed the Confirm and Cancel button!", browser.text_field(:id, 'testResult').value
+    dialog.button!('Cancel').click
+    assert_equal "You pressed the Confirm and Cancel button!", browser.text_field!(:id, 'testResult').value
   end
   
   def test_dialog_close

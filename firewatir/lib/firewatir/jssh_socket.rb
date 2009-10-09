@@ -129,14 +129,13 @@ class JsshSocket
   # >> jssh_socket.read_socket
   # => "3\n> 4\n> 5"
   def read_value(timeout=DEFAULT_SOCKET_TIMEOUT)
-    if(value=recv_socket(timeout))
+    value=recv_socket(timeout)
+    if value
       # Remove the command prompt. results returned from recv_socket may have a prompt at the beginning or the end.
       value.sub!(/\A#{Regexp.escape(PROMPT)}/, '')
       value.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
-      return value
-    else
-      return nil
     end
+    return value
   end
 
   # Evaluate javascript and return result. Raise an exception if an error occurred.
@@ -255,6 +254,7 @@ class JsshSocket
     error_or_val(val, js)
   end
   def error_or_val(val, js)
+    raise JsshError, "received no value! may have timed out waiting for a value that was not coming." if !val
     errord_and_val=*parse_json(val)
     unless errord_and_val.is_a?(Array) && errord_and_val.length==2
       raise RuntimeError, "unexpected result: \n\t#{errord_and_val.inspect} \nencountered parsing value: \n\t#{val.inspect} \nreturned from expression: \n\t#{js.inspect}"

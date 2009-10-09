@@ -29,8 +29,8 @@ class TC_Navigate < Test::Unit::TestCase
     
     browser.forward
     assert_equal("Test page for Check Boxes", browser.title)   
-    browser.checkbox(:name, "box1").set
-    assert(browser.checkbox(:name, "box1").isSet?)   
+    browser.checkbox!(:name, "box1").set
+    assert(browser.checkbox!(:name, "box1").isSet?)   
     
     browser.refresh
     # Not sure how we test this. Text fields and checkboxes dont get reset if you click the browser refresh button

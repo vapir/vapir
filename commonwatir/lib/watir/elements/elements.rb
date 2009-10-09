@@ -61,11 +61,11 @@ module Watir
     TAG='option'
     include ContainerMethodsFromName
     include ElementModule
+    dom_wrap :text, :value, :selected, :selected=
   end
   module SelectList
     TAG='select'
-    ContainerSingleMethod=['select_list', 'select']
-    ContainerMultipleMethod=['select_lists', 'selects']
+    include ContainerMethodsFromName
     include ElementModule
   end
   module Radio
@@ -106,6 +106,12 @@ module Watir
     include ContainerMethodsFromName
     include ElementModule
   end
+  module TBody
+    TAG = 'TBODY'
+    ContainerSingleMethod=['tbody']
+    ContainerMultipleMethod=['tbodies']
+    include ElementModule
+  end
   module TableRow
     TAG='tr'
     include ContainerMethodsFromName
@@ -115,6 +121,7 @@ module Watir
     TAG='td'
     include ContainerMethodsFromName
     include ElementModule
+    dom_wrap :colSpan, :rowSpan, :colspan => :colSpan, :rowspan => :rowSpan
   end
   module Link
     TAG = 'A'
@@ -218,11 +225,6 @@ module Watir
   end
   module Area
     TAG = 'AREA'
-    include ContainerMethodsFromName
-    include ElementModule
-  end
-  module TBody
-    TAG = 'TBODY'
     include ContainerMethodsFromName
     include ElementModule
   end

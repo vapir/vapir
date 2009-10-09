@@ -40,8 +40,8 @@ class TC_Hidden_Fields_XPath < Test::Unit::TestCase
         # test using a form
         #assert( browser.form!(:name , "has_a_hidden").hidden!(:name ,"hid1").exists? )
         #assert( browser.form!(:name , "has_a_hidden").hidden!(:id,"hidden_1").exists? )
-        #assert_nil( browser.form(:name , "has_a_hidden").hidden(:name,"hidden_44"))
-        #assert_nil( browser.form(:name , "has_a_hidden").hidden(:id,"hidden_55"))
+        #assert_nil( browser.form!(:name , "has_a_hidden").hidden(:name,"hidden_44"))
+        #assert_nil( browser.form!(:name , "has_a_hidden").hidden(:id,"hidden_55"))
         
         #browser.form!(:name , "has_a_hidden").hidden!(:name ,"hid1").value = 222
         #browser.form!(:name , "has_a_hidden").hidden!(:id,"hidden_1").value = 333

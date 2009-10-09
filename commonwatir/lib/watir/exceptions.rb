@@ -40,9 +40,7 @@ module Watir
 
     # Return an error message for when unable to locate the element
     def self.message_for_unable_to_locate(how, what)
-      result = "using #{how.inspect}"
-      result << ", #{what.inspect}" if what
-      "Unable to locate element, #{result}"
+      "Unable to locate element, using #{how}"+(what ? ", "+what.inspect : '')
     end    
   end
 end

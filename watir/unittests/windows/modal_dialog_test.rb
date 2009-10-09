@@ -34,27 +34,27 @@ class TC_ModalDialog < Watir::TestCase
   end 
      
   def test_modal_simple_use_case
-    browser.button(:value, 'Launch Dialog').click_no_wait
+    browser.button!(:value, 'Launch Dialog').click_no_wait
     modal = browser.modal_dialog(:title, 'Modal Dialog')
 
     assert(modal.text.include?('Enter some text:'))
-    modal.text_field(:name, 'modal_text').set('hello')
-    modal.button(:value, 'Close').click
-    assert_equal('hello', browser.text_field(:name, 'modaloutput').value)
+    modal.text_field!(:name, 'modal_text').set('hello')
+    modal.button!(:value, 'Close').click
+    assert_equal('hello', browser.text_field!(:name, 'modaloutput').value)
   end
 
   def test_wait_should_not_block
-    browser.button(:value, 'Launch Dialog').click_no_wait
+    browser.button!(:value, 'Launch Dialog').click_no_wait
     modal = browser.modal_dialog(:title, 'Modal Dialog')
 
-    modal.text_field(:name, 'modal_text').set('hello')
+    modal.text_field!(:name, 'modal_text').set('hello')
     modal.wait
 
-    modal.button(:value, 'Close').click
+    modal.button!(:value, 'Close').click
   end
 
   def test_modal_dialog_use_case_default
-    browser.button(:value, 'Launch Dialog').click_no_wait
+    browser.button!(:value, 'Launch Dialog').click_no_wait
 
     modal = browser.modal_dialog
     assert_not_nil modal
@@ -66,16 +66,16 @@ class TC_ModalDialog < Watir::TestCase
     # Once attached just treat the modal_dialog like any IE or Frame
     # object.
     assert(modal.text.include?('Enter some text:'))
-    modal.text_field(:name, 'modal_text').set('hello')
-    modal.button(:value, 'Close').click
+    modal.text_field!(:name, 'modal_text').set('hello')
+    modal.button!(:value, 'Close').click
 
     assert_no_modals
-    assert_equal('hello', browser.text_field(:name, 'modaloutput').value)
+    assert_equal('hello', browser.text_field!(:name, 'modaloutput').value)
   end
 
   # Now explicitly supply the :title parameter.
   def test_modal_dialog_use_case_title
-    browser.button(:value, 'Launch Dialog').click_no_wait
+    browser.button!(:value, 'Launch Dialog').click_no_wait
 
     modal = browser.modal_dialog(:title, 'Modal Dialog')
     assert_not_equal(browser.hwnd, modal.hwnd)
@@ -83,7 +83,7 @@ class TC_ModalDialog < Watir::TestCase
     assert_equal('Modal Dialog', modal.title)
 
     assert(modal.text.include?('Enter some text:'))
-    modal.button(:value, 'Close').click
+    modal.button!(:value, 'Close').click
   end
 
   # Now explicitly supply the :title parameter with regexp match
@@ -97,9 +97,9 @@ class TC_ModalDialog < Watir::TestCase
   end
 
   def test_double_modal
-    browser.button(:value, 'Launch Dialog').click_no_wait
+    browser.button!(:value, 'Launch Dialog').click_no_wait
     modal1 = browser.modal_dialog
-    modal1.button(:text, 'Another Modal').click_no_wait
+    modal1.button!(:text, 'Another Modal').click_no_wait
     modal2 = modal1.modal_dialog
     assert_equal modal2.title, 'Pass Page'
     modal2.close
@@ -107,21 +107,21 @@ class TC_ModalDialog < Watir::TestCase
   end
   
   def xtest_modal_with_frames
-    browser.button(:value, 'Launch Dialog').click_no_wait
+    browser.button!(:value, 'Launch Dialog').click_no_wait
     modal1 = browser.modal_dialog
-    modal1.button(:value, 'Modal with Frames').click_no_wait
+    modal1.button!(:value, 'Modal with Frames').click_no_wait
     modal2 = browser.modal_dialog
-    modal2.frame('buttonFrame').button(:value, 'Click Me').click
-    assert(modal2.frame('buttonFrame').text.include?('PASS'))    
-    modal2.frame('buttonFrame').button(:value, 'Close Window').click
+    modal2.frame!('buttonFrame').button!(:value, 'Click Me').click
+    assert(modal2.frame!('buttonFrame').text.include?('PASS'))    
+    modal2.frame!('buttonFrame').button!(:value, 'Close Window').click
     modal1.close
   end
   
   def test_modal_exists
-    browser.button(:value, 'Launch Dialog').click_no_wait
+    browser.button!(:value, 'Launch Dialog').click_no_wait
     modal = browser.modal_dialog(:title, 'Modal Dialog')
     assert(modal.exists?)
-    modal.button(:value, 'Close').click
+    modal.button!(:value, 'Close').click
     assert_false(modal.exists?)
   end
         

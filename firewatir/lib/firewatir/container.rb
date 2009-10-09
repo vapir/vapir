@@ -204,13 +204,13 @@ module Watir
     #   - what - The value of that attribute. 
     # 
     # Typical Usage:
-    #   ff.cell(:id, 'tb_cell')
-    #   ff.cell(:index, 1)
+    #   ff.table_cell(:id, 'tb_cell')
+    #   ff.table_cell(:index, 1)
     #
     # Output:
     #    TableCell Object
     #
-    def cell(how, what=nil)
+    def table_cell(how, what=nil)
       element_by_howwhat(FFTableCell, how, what)
     end
     
@@ -229,7 +229,7 @@ module Watir
     # Output: 
     #   TableRow object
     #
-    def row(how, what=nil)
+    def table_row(how, what=nil)
       element_by_howwhat(FFTableRow, how, what)
     end
     

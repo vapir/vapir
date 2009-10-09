@@ -127,34 +127,34 @@ module Watir
   # or:
   #   click_link_with_url /goo*/
 	def click_link_with_url(url)
-    wait_before_and_after { @@browser.link(:url, url).click }
+    wait_before_and_after { @@browser.link!(:url, url).click }
 	end
 
 
   # Tell the browser to click on the first link with the specified id attribute
   # (the preferred method.)
 	def click_link_with_id(id)
-    wait_before_and_after { @@browser.link(:id, id).click }
+    wait_before_and_after { @@browser.link!(:id, id).click }
 	end
 
 
   # Tell the browser to click on the first link with the specified name attribute
 	def click_link_with_name(name)
-    wait_before_and_after { @@browser.link(:name, name).click }
+    wait_before_and_after { @@browser.link!(:name, name).click }
 	end
 
 
   # Tell the browser to click on the specified link as determined by the
   # sequential ordering of links on the document.
 	def click_link_with_index(index)
-    wait_before_and_after { @@browser.link(:index, index).click }
+    wait_before_and_after { @@browser.link!(:index, index).click }
 	end
 
 
   # Tell the browser to click on the first link with the specified text in the
   # link body.
 	def click_link_with_text(text)
-    wait_before_and_after { @@browser.link(:text, text).click }
+    wait_before_and_after { @@browser.link!(:text, text).click }
 	end
 
 

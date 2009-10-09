@@ -6,14 +6,6 @@ module Watir
   class FFTextField < FFInputElement
     include TextField
 
-    # Gets the size of the text field element.
-    #def_wrap :size
-    def maxlength
-      dom_object.maxlength
-    end
-    # Returns true if the text field is read only, false otherwise.
-    #def_wrap :readonly?, :readOnly
-
     #
     # Description:
     #   Used to populate the properties in to_s method
@@ -102,11 +94,11 @@ module Watir
 
       highlight(:set)
 
-      dom_object.scrollIntoView
-      dom_object.focus
-      dom_object.select
+      element_object.scrollIntoView
+      element_object.focus
+      element_object.select
       fireEvent("onSelect")
-      dom_object.value=""
+      element_object.value=""
       fireEvent("onKeyPress")
       fireEvent("onChange")
       @container.wait()
@@ -128,8 +120,8 @@ module Watir
       assert_not_readonly
 
       highlight(:set)
-      dom_object.scrollIntoView
-      dom_object.focus
+      element_object.scrollIntoView
+      element_object.focus
       doKeyPress( setThis )
       highlight(:clear)
     end
@@ -149,9 +141,9 @@ module Watir
       assert_not_readonly
 
       highlight(:set)
-      dom_object.scrollIntoView
-      dom_object.focus
-      dom_object.select
+      element_object.scrollIntoView
+      element_object.focus
+      element_object.select
       fireEvent("onSelect")
       assign('value', "")
       fireEvent("onKeyPress")
@@ -211,10 +203,6 @@ module Watir
 
     end
     private :doKeyPress
-
-    alias readOnly? :readonly?
-    alias getContents value
-    alias maxLength maxlength
 
   end # TextField
 end # FireWatir

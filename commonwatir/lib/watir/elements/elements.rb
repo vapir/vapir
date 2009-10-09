@@ -35,7 +35,7 @@ module Watir
     include ContainerMethodsFromName
     include ElementModule
     
-    dom_wrap :size, :readonly => :readOnly, :readonly? => :readOnly
+    dom_wrap :size, :maxLength, :maxlength => :maxLength, :readonly => :readOnly, :readonly? => :readOnly, :readOnly? => :readOnly, :getContents => :value
   end
   module Hidden
     Specifiers=[{:tagName => 'input', :type => 'hidden'}]

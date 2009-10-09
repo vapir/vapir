@@ -56,8 +56,8 @@ module Watir
     #
     def cells
       assert_exists
-      dom_object.cells.to_array.map do |cell|
-        FFTableCell.new(:dom_object, cell, extra)
+      element_object.cells.to_array.map do |cell|
+        FFTableCell.new(:element_object, cell, extra)
       end
     end
 

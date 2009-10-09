@@ -80,8 +80,8 @@ module Watir
     #   Array containing the items of the select list.
     #
     def options
-      ElementCollection.new(dom_object.options.to_array.map do |option_object|
-        FFOption.new(:dom_object, option_object, extra)
+      ElementCollection.new(element_object.options.to_array.map do |option_object|
+        FFOption.new(:element_object, option_object, extra)
       end)
     end
 
@@ -161,16 +161,6 @@ module Watir
 #    end
 
     #
-    # Description:
-    #   Gets all the options of the select list element.
-    #
-    # Output:
-    #   Array of option elements.
-    #
-#    def js_options
-#      raise NotImplementedError
-#      dom_object.options.to_array
-#    end
-  
+
   end # Selects
 end # FireWatir

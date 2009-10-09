@@ -235,7 +235,7 @@ module Watir
       win_window.set_foreground!
     end
     
-    def dom_object
+    def containing_object
       document_object
     end
     
@@ -658,6 +658,10 @@ module Watir
         { #{javascript} }
         return null;
       })()")
+      #sandbox=jssh_socket.Components.utils.Sandbox(content_window_object)
+      #sandbox.window=content_window_object
+      #sandbox.document=content_window_object.document
+      #return jssh_socket.Components.utils.evalInSandbox(javascript, sandbox)
     end
 
     # Add an error checker that gets called on every page load.

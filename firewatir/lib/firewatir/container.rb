@@ -52,9 +52,9 @@ module Watir
     def locate_all_specified(specifiers_list)
       tags=specifiers_list.map{|s| s[:tagName] }.compact.uniq
       if tags.size==1 && tags.first.is_a?(String)
-        candidates=dom_object.getElementsByTagName(tags.first).to_array
+        candidates=containing_object.getElementsByTagName(tags.first).to_array
       else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=dom_object.getElementsByTagName('*').to_array
+        candidates=containing_object.getElementsByTagName('*').to_array
       end
       
       matched=[]
@@ -76,7 +76,7 @@ module Watir
       end
       
       content_window_object.frames.to_array.map do |frame_window|
-        FFFrame.new(:dom_object, frame_window.frameElement.store_rand_prefix('firewatir_frames'), extra)
+        FFFrame.new(:containing_object, frame_window.frameElement.store_rand_prefix('firewatir_frames'), extra)
       end
     end
     

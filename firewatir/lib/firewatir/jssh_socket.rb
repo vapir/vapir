@@ -778,7 +778,7 @@ class JsshObject
         nil
       end
     when '='
-      jssh_socket.assign_json("#{ref}.#{method}", *args)
+      attr(method).assign(*args)
     else
       Object.instance_method(:method_missing).bind(self).call(method, *args) # this shouldn't happen 
     end

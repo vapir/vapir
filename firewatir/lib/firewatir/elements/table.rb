@@ -33,8 +33,8 @@ module Watir
     #
     def rows
       assert_exists
-      ElementCollection.new(dom_object.rows.to_array.map do |row|
-        FFTableRow.new(:dom_object, row, extra)
+      ElementCollection.new(element_object.rows.to_array.map do |row|
+        FFTableRow.new(:element_object, row, extra)
       end)
     end
 

@@ -1,6 +1,6 @@
 module Watir
   module Specifier
-    HowList=[:attributes, :jssh_name, :jssh_object, :dom_object, :xpath]
+    HowList=[:attributes, :jssh_name, :jssh_object, :element_object, :xpath]
     LocateAliases=Hash.new{|hash,key| [] }.merge(
                   { :text => [:textContent],
                     :class => [:className],

@@ -166,7 +166,7 @@ module Watir
                      # element.
     include ElementModule
     
-    dom_wrap :id, :title, :text => :textContent, :inner_html => :innerHTML, :html => :innerHTML
+    dom_wrap :tagName, :id, :title, :tag_name => :tagName, :text => :textContent, :inner_html => :innerHTML, :html => :innerHTML
     dom_wrap :class_name => :className
     dom_wrap :scrollIntoView
     dom_wrap :get_attribute_value => :getAttribute, :attribute_value => :getAttribute

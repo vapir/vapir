@@ -20,16 +20,16 @@ module Watir
     # This is just to make sure that every element has unique name in JSSH.
     
     class << self
-      def factory(dom_object, extra={})
+      def factory(element_object, extra={})
         curr_klass=self
         ObjectSpace.each_object(Class) do |klass|
           if klass < curr_klass
-            Watir::Specifier.match_candidates([dom_object], klass.specifiers) do |match|
+            Watir::Specifier.match_candidates([element_object], klass.specifiers) do |match|
               curr_klass=klass
             end
           end
         end
-        curr_klass.new(:dom_object, dom_object, extra)
+        curr_klass.new(:element_object, element_object, extra)
       end
     
       # look for constants to define specifiers - either class::Specifier, or
@@ -76,9 +76,14 @@ module Watir
     attr_reader :container
     attr_reader :jssh_socket
     attr_reader :how, :what, :index
-    attr_reader :element_object
-    alias dom_object element_object
-    alias element_name element_object
+    
+    # the object that represents this element in the dom 
+    attr_reader :element_object 
+    
+    # the containing object is what locate uses to find stuff contained by this element
+    # this is generally the same as the dom object, but different for Browser and Frame. 
+    alias containing_object element_object
+
 #    alias ole_object element_object
 
     private
@@ -117,20 +122,20 @@ module Watir
       #   the given specifiers, the element won't be found
       # - @container has getElementById defined (that is, it's a Browser or a Frame), otherwise if we called 
       #   document_object.getElementById we wouldn't know if what's returned is below @container in the DOM heirarchy or not
-      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && @container.dom_object.respond_to?(:getElementById)
+      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && @container.containing_object.respond_to?(:getElementById)
         candidates= if by_id=document_object.getElementById(ids.first)
           [by_id]
         else
           []
         end
       elsif tags.size==1 && tags.first.is_a?(String)
-        candidates=@container.dom_object.getElementsByTagName(tags.first).to_array
-      elsif names.size==1 && names.first.is_a?(String) && @container.dom_object.respond_to?(:getElementsByName)
-        candidates=@container.dom_object.getElementsByName(names.first).to_array
-      elsif classNames.size==1 && classNames.first.is_a?(String) && @container.dom_object.respond_to?(:getElementsByClassName)
-        candidates=@container.dom_object.getElementsByClassName(classNames.first).to_array
+        candidates=@container.containing_object.getElementsByTagName(tags.first).to_array
+      elsif names.size==1 && names.first.is_a?(String) && @container.containing_object.respond_to?(:getElementsByName)
+        candidates=@container.containing_object.getElementsByName(names.first).to_array
+      elsif classNames.size==1 && classNames.first.is_a?(String) && @container.containing_object.respond_to?(:getElementsByClassName)
+        candidates=@container.containing_object.getElementsByClassName(classNames.first).to_array
       else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=@container.dom_object.getElementsByTagName('*').to_array
+        candidates=@container.containing_object.getElementsByTagName('*').to_array
       end
       candidates
     end
@@ -149,14 +154,14 @@ module Watir
       element_object_existed=!!@element_object
       @element_object||= begin
         case @how
-        when :jssh_object, :dom_object
+        when :jssh_object, :element_object
           raise if options[:relocate]
           @what
         when :jssh_name
           raise if options[:relocate]
           JsshObject.new(@what, jssh_socket)
         when :xpath
-          by_xpath=element_object_by_xpath(@container.dom_object, @what)
+          by_xpath=element_object_by_xpath(@container.containing_object, @what)
           matched_by_xpath=nil
           Watir::Specifier.match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers) do |match|
             matched_by_xpath=match
@@ -202,18 +207,18 @@ module Watir
     #  ole_method_name = ruby_method_name unless ole_method_name
     #  define_method ruby_method_name do
     #    locate
-    #    attr=dom_object.attr(ole_method_name)
-    #    attr.type=='undefined' ? nil : dom_object.get(ole_method_name)
+    #    attr=element_object.attr(ole_method_name)
+    #    attr.type=='undefined' ? nil : element_object.get(ole_method_name)
     #  end
     #end
   
     #def get_attribute_value(attribute_name)
-    #  dom_object.getAttribute attribute_name
+    #  element_object.getAttribute attribute_name
     #end
   
     public
     def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
-      document_object.defaultView.getComputedStyle(dom_object, nil)
+      document_object.defaultView.getComputedStyle(element_object, nil)
     end
     
     #
@@ -256,11 +261,11 @@ module Watir
     #
     def highlight(set_or_clear)
       if set_or_clear == :set
-        @original_color=dom_object.style.background
-        dom_object.style.background=DEFAULT_HIGHLIGHT_COLOR
+        @original_color=element_object.style.background
+        element_object.style.background=DEFAULT_HIGHLIGHT_COLOR
       elsif set_or_clear==:clear
         begin
-          dom_object.style.background=@original_color
+          element_object.style.background=@original_color
         ensure
           @original_color=nil
         end
@@ -349,7 +354,7 @@ module Watir
     #   Type of the element.
     #
     def element_type
-      dom_object.object_type
+      element_object.object_type
     end
     #private :element_type
 
@@ -410,7 +415,7 @@ module Watir
       event.get(*dom_event_init) # calls to the init*Event method
       if wait
         raise "need a content window on which to setTimeout if we are not waiting" unless content_window_object
-        fire_event_func=jssh_socket.object("(function(dom_object, event){return function(){dom_object.dispatchEvent(event)};})").pass(dom_object, event)
+        fire_event_func=jssh_socket.object("(function(dom_object, event){return function(){dom_object.dispatchEvent(event)};})").pass(element_object, event)
         content_window_object.setTimeout(fire_event_func, 0)
       else
         element_object.dispatchEvent(event)
@@ -478,7 +483,7 @@ module Watir
     # Returns whether the element is disabled
     def disabled
       assert_exists
-      dom_object.respond_to?(:disabled) && dom_object.disabled
+      element_object.respond_to?(:disabled) && element_object.disabled
     end
     alias disabled? disabled
     
@@ -488,8 +493,6 @@ module Watir
     #   the most common methods to hide an html element
     def visible? 
       assert_exists 
-      #(currentStyle.visibility!='hidden' && currentStyle[:display]!='none') && (!parent || parent.visible?) # note: don't use #display as it is defined on Object. http://www.ruby-doc.org/core/classes/Object.html#M000340
-      # move this out to javascript - don't need to instantiate Element objects for all ancestors just to check visibility (slow!)
       element_to_check=element_object
       while element_to_check && !element_to_check.instanceof(jssh_socket.Components.interfaces.nsIDOMDocument)
         style=document_object.defaultView.getComputedStyle(element_to_check, nil)
@@ -523,7 +526,7 @@ module Watir
     #   Text of the element.
     #
     def text
-      dom_object.textContent
+      element_object.textContent
     end
     alias innerText text
 
@@ -597,13 +600,13 @@ module Watir
 
         event=document_object.createEvent('MouseEvents').store_rand_prefix('events')
         event.initMouseEvent('click',true,true,nil,1,0,0,0,0,false,false,false,false,0,nil)
-        dom_object.dispatchEvent(event)
+        element_object.dispatchEvent(event)
       else
-        if dom_object.respond_to?(:click)
+        if element_object.respond_to?(:click)
           if options[:wait]
-            dom_object.click
+            element_object.click
           else
-            click_func=jssh_socket.object("(function(dom_object){return function(){dom_object.click()};})").pass(dom_object)
+            click_func=jssh_socket.object("(function(dom_object){return function(){dom_object.click()};})").pass(element_object)
             content_window_object.setTimeout(click_func, 0)
           end
         else
@@ -745,12 +748,12 @@ module Watir
 
     
     def invoke(js_method)
-      dom_object.get(js_method)
+      element_object.get(js_method)
     end
   
     def assign(property, value)
       locate
-      dom_object.attr(property).assign(value)
+      element_object.attr(property).assign(value)
     end
     
     def document_object

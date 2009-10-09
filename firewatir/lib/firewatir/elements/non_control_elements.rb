@@ -51,7 +51,7 @@ module Watir
     end
     
     def for
-      if for_object=document_object.getElementById(dom_object.htmlFor)
+      if for_object=document_object.getElementById(element_object.htmlFor)
         FFElement.factory(for_object.store_rand_prefix('firewatir_elements'), extra)
       else
         raise "no element found that this is for!"

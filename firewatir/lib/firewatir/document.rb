@@ -37,7 +37,7 @@ module Watir
     #   Array of elements.
     #
     def all
-      @all||=@container.dom_object.getElementsByTagName('*').to_array.map{|el| FFElement.factory(el)}
+      @all||=@container.containing_object.getElementsByTagName('*').to_array.map{|el| FFElement.factory(el)}
 #      raise NotImplementedError
 #      @arr_elements = "arr_coll_#{@@current_level}"
 #      jssh_command = "var arr_coll_#{@@current_level}=new Array(); "

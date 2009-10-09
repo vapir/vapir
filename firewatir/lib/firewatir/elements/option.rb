@@ -7,7 +7,7 @@ module Watir
     include Option
     def select
       assert_exists
-      dom_object.selected=true
+      element_object.selected=true
     end
     
   end # Option

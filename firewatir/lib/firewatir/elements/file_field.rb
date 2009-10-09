@@ -15,7 +15,7 @@ module Watir
     #
     def set(path)
       assert_exists
-      dom_object.value=path
+      element_object.value=path
       fireEvent("onChange")
     end
 

@@ -181,45 +181,44 @@ module Watir
     #   raises: UnknownObjectException  if the object is not found
     #   ObjectDisabledException if the object is currently disabled
     def click
-      click!
-      @container.wait
+      assert_exists
+      assert_enabled if respond_to?(:assert_enabled)
+      
+      with_highlight do
+        ole_object.click
+      end
+      wait
     end
     
     def click_no_wait
-      assert_enabled
-      highlight(:set)
-      unique_number=element_object.uniqueNumber
-      #Thread.new { ole_object.click } # that doesn't work.
-      browser.document.parentWindow.setTimeout("
-        (function(tagName, uniqueNumber)
-        { var candidate_elements=document.getElementsByTagName(tagName);
-          for(var i=0;i<candidate_elements.length;++i)
-          { if(candidate_elements[i].uniqueNumber==uniqueNumber)
-            { candidate_elements[i].click();
+      assert_exists
+      assert_enabled if respond_to?(:assert_enabled)
+      with_highlight do
+        unique_number=element_object.uniqueNumber
+        #Thread.new { ole_object.click } # that doesn't work.
+         browser.document.parentWindow.setTimeout("
+          (function(tagName, uniqueNumber)
+          { var candidate_elements=document.getElementsByTagName(tagName);
+            for(var i=0;i<candidate_elements.length;++i)
+            { if(candidate_elements[i].uniqueNumber==uniqueNumber)
+              { candidate_elements[i].click();
+              }
             }
-          }
-        })(#{self.tagName.to_json}, #{element_object.uniqueNumber.to_json})
-      ", 0)
-      highlight(:clear)
+          })(#{self.tagName.to_json}, #{element_object.uniqueNumber.to_json})
+        ", 0)
+      end
     end
 
-    def click!
-      assert_enabled
-      
-      highlight(:set)
-      ole_object.click
-      highlight(:clear)
-    end
-    
     # Executes a user defined "fireEvent" for objects with JavaScript events tied to them such as DHTML menus.
     #   usage: allows a generic way to fire javascript events on page objects such as "onMouseOver", "onClick", etc.
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
     def fire_event(event, options={})
-      options={:highlight => true}.merge(options)
+      options={:highlight => !options[:just_fire], :just_fire => false}.merge(options)
+      assert_enabled if !options[:just_fire] && respond_to?(:assert_enabled)
       with_highlight(options[:highlight]) do
         ole_object.fireEvent(event.to_s)
-        wait
+        wait(true)
       end
     end
     # Executes a user defined "fireEvent" for objects with JavaScript events tied to them such as DHTML menus.
@@ -227,7 +226,7 @@ module Watir
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
     def fire_event_no_wait(event, options)
-      assert_enabled
+      assert_enabled if respond_to?(:assert_enabled)
       options={:highlight => true}.merge(options)
       with_highlight(options[:highlight]) do
         unique_number=element_object.uniqueNumber
@@ -244,27 +243,7 @@ module Watir
         ", 0)
       end
     end
-    
-    # This method sets focus on the active element.
-    #   raises: UnknownObjectException  if the object is not found
-    #           ObjectDisabledException if the object is currently disabled
-    def focus
-      assert_enabled
-      ole_object.focus
-    end
-    
-    # Returns true if the element is enabled, false if it isn't.
-    #   raises: UnknownObjectException  if the object is not found
-    def enabled?
-      !disabled
-    end
 
-    # Returns whether the element is disabled
-    def disabled
-      assert_exists
-      element_object.respond_to?(:disabled) && element_object.disabled
-    end
-    alias disabled? disabled
     # If any parent element isn't visible then we cannot write to the
     # element. The only realiable way to determine this is to iterate
     # up the DOM element tree checking every element to make sure it's

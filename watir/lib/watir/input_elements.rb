@@ -131,13 +131,6 @@ module Watir
     include TextField
 #    def_wrap_guard :size
     
-    def assert_not_readonly
-      if self.readonly?
-        raise ObjectReadOnlyException, 
-          "Textfield #{@how} and #{@what} is read only."
-      end
-    end
-    
     # Returns true if the text field contents is matches the specified target,
     # which can be either a string or a regular expression.
     #   Raises UnknownObjectException if the object can't be found

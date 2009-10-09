@@ -79,17 +79,20 @@ module Watir
     dom_wrap :disabled
     alias disabled? disabled
     dom_wrap :readonly => :readOnly, :readonly? => :readOnly, :readOnly? => :readOnly
+    dom_wrap :focus
 
     # Checks if this element is enabled or not. Raises ObjectDisabledException if this is disabled.
     def assert_enabled
       if disabled
-        raise Exception::ObjectDisabledException, "object #{@how} and #{@what} is disabled"
+        raise Exception::ObjectDisabledException, "#{self.inspect} is disabled"
       end
     end
 
     #   Checks if object is readonly or not. Raises ObjectReadOnlyException if this is readonly
     def assert_not_readonly
-      raise Exception::ObjectReadOnlyException, "Textfield #{@how} and #{@what} is read only." if self.readonly?
+      if readonly
+        raise Exception::ObjectReadOnlyException, "#{self.inspect} is readonly"
+      end
     end
 
     # Returns true if element is enabled, otherwise returns false.

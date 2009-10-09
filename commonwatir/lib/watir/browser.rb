@@ -56,17 +56,23 @@ before you invoke Browser.new.
     @@sub_options = {}
     @@default = nil
     class << self
+      alias __new__ new
+      def inherited(subclass)
+        class << subclass
+          alias new __new__
+        end
+      end
+
       # Create a new instance of a browser driver, as determined by the
       # configuration settings. (Don't be fooled: this is not actually 
       # an instance of Browser class.)
       def new *args, &block
         #set_sub_options
-        #klass.new *args, &block
-        browser=klass.allocate
-        browser.send :initialize, *args, &block
+        browser=klass.new *args, &block
+        #browser=klass.allocate
+        #browser.send :initialize, *args, &block
         browser
       end
-
       # makes sure that the class methods of Browser that call to the class methods of klass 
       # are overridden so that Browser class methods aren't inherited causing infinite loop. 
       def ensure_overridden

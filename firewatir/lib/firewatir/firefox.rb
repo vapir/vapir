@@ -88,17 +88,29 @@ module Watir
   class Firefox < Browser
     include Watir::FFContainer
                     
-    @@jssh_socket=nil
-    def self.jssh_socket(options={})
-      @@jssh_socket=nil if options[:reset]
-      @@jssh_socket||=begin
-        j=JsshSocket.new
-        @@firewatir_jssh_objects=j.object("FireWatir").assign({})
-        j
+    def self.initialize_jssh_socket
+      if class_variable_defined?('@@jssh_socket') # if it already exists, then a new socket will not have any objects of the old one
+        STDERR.puts "WARNING: JSSH_SOCKET RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
       end
+      @@jssh_socket=JsshSocket.new
+      @@firewatir_jssh_objects=@@jssh_socket.object("FireWatir").assign({})
+      @@jssh_socket
     end
-    def jssh_socket
-      @jssh_socket
+    def self.jssh_socket(options={})
+      if options[:reset] || !class_variable_defined?('@@jssh_socket')
+        initialize_jssh_socket
+      end
+      if options[:reset_if_dead]
+        begin
+          @@jssh_socket.test_socket
+        rescue
+          initialize_jssh_socket
+        end
+      end
+      @@jssh_socket
+    end
+    def jssh_socket(options=nil)
+      options ? self.class.jssh_socket(options) : @@jssh_socket
     end
 
     # Description: 
@@ -119,19 +131,10 @@ module Watir
         options = {:waitTime => options}
       end
 
-      initialize_jssh_socket
       # check for jssh not running, firefox may be open but not with -jssh
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
-      retried=false
-      begin
-        @jssh_socket=@@jssh_socket
-      rescue Errno::ECONNRESET
-        if !retried
-          retried=true
-          retry
-        end
-      end
+      jssh_socket(:reset_if_dead => true).test_socket
       @browser_jssh_objects = jssh_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
       
       if current_os == :macosx && !%x{ps x | grep firefox-bin | grep -v grep}.empty?
@@ -148,16 +151,6 @@ module Watir
       set_defaults
     end
     
-    def initialize_jssh_socket
-      class_socket=self.class.jssh_socket
-      begin # check that the class's socket is still all connected and good by passing a value over it
-        class_socket.value_json('3')==3 || raise
-        @jssh_socket=class_socket
-      rescue Exception # if not, initialize one just for this instance 
-        @jssh_socket=JsshSocket.new
-      end
-    end
-    
     def self.firefox_is_running?
       # TODO/FIX: implement!
       true
@@ -171,7 +164,8 @@ module Watir
       win_window.hwnd
     end
     def win_window
-      #TODO/FIX: this will break if two windows have the same title. 
+      orig_browser_window_title=browser_window_object.title
+      browser_window_object.title=orig_browser_window_title+(rand(36**16).to_s(36))
       @win_window||=begin
         require 'lib/win_window'
         candidates=WinWindow::All.select do |win|
@@ -179,6 +173,8 @@ module Watir
         end
         raise unless candidates.size==1
         candidates.first
+      ensure
+        browser_window_object.title=orig_browser_window_title
       end
     end
     def bring_to_front
@@ -400,7 +396,7 @@ module Watir
     end
 
     def self.each_browser_window_object
-      mediator=components.classes["@mozilla.org/appshell/window-mediator;1"].getService(components.interfaces.nsIWindowMediator)
+      mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
       enumerator=mediator.getEnumerator("navigator:browser")
       while enumerator.hasMoreElements
         win=enumerator.getNext
@@ -416,7 +412,7 @@ module Watir
       window_objects
     end
     def self.each_window_object
-      mediator=components.classes["@mozilla.org/appshell/window-mediator;1"].getService(components.interfaces.nsIWindowMediator)
+      mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
       enumerator=mediator.getEnumerator(nil)
       while enumerator.hasMoreElements
         win=enumerator.getNext
@@ -445,11 +441,13 @@ module Watir
     # Start searching windows in reverse order so that we attach/find the latest opened window.
     def find_window(how, what)
       orig_how=how
-      hows=[:title, :URL]
-      how=hows.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
-      raise ArgumentError, "how should be one of: #{hows.inspect} (was #{orig_how.inspect})" unless how
+      hows={ :title => proc{|content_window| content_window.title },
+             :URL => proc{|content_window| content_window.location.href },
+           }
+      how=hows.keys.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
+      raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how
       self.class.each_browser_window_object do |win|
-        return win if Watir::Specifier.fuzzy_match(win.getBrowser.contentDocument[how],what)
+        return win if Watir::Specifier.fuzzy_match(hows[how].call(win.getBrowser.contentDocument),what)
       end
     end
     private :find_window
@@ -481,7 +479,9 @@ module Watir
     def modal_dialog
       candidates=[]
       self.class.each_window_object do |win|
-        if [self.browser_window_object, self.content_window_object].include?(win.opener) # TODO/FIX: check class or whatever to see if it's actually modal?
+        opener=win.attr(:opener)
+        next if opener.type=='undefined' || opener.type=='null'
+        if [self.browser_window_object, self.content_window_object].detect{|_w|_w==opener} #&& win.location.href=='chrome://global/content/commonDialog.xul'
           candidates << win 
         end
       end
@@ -492,6 +492,19 @@ module Watir
       else
         raise
       end
+    end
+    
+    def click_popup_button(button_text)
+      modal=self.modal_dialog || raise
+      anonymous_dialog_nodes=modal.document.getAnonymousNodes(modal.document.documentElement) || raise # raise if no anymous nodes are found (this is where the buttons are) 
+      xul_buttons=[]
+      anonymous_dialog_nodes.to_array.each do |node|
+        xul_buttons+=node.getElementsByTagName('xul:button').to_array.select do |button|
+          Watir::Specifier.fuzzy_match(button.label, button_text)
+        end
+      end
+      raise unless xul_buttons.size==1
+      xul_buttons.first.click
     end
     
     # Returns the url of the page currently loaded in the browser.

@@ -383,6 +383,12 @@ class JsshSocket
     @getwindows ||= object('getWindows()')
   end
   
+  def test_socket
+    good=prototype ? value_json('[3]')==[3] : value('"foo"')=="foo"
+    raise JsshError, "The socket seems to have a problem" unless good
+    good
+  end
+  
   def inspect
     "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:ip, :port, :prototype].map{|attr| aa="@#{attr}";aa+'='+instance_variable_get(aa).inspect}.join(', ')}>"
   end
@@ -435,14 +441,14 @@ class JsshObject
   # note that this is javascript, not to be confused with ruby's #instance_of? method. 
   # 
   # example:
-  # window.instanceof(window.jssh_socket.components.interfaces.nsIDOMChromeWindow)
+  # window.instanceof(window.jssh_socket.Components.interfaces.nsIDOMChromeWindow)
   # => true
   def instanceof(interface)
     jssh_socket.instanceof(self.ref, interface.ref)
   end
   def implemented_interfaces
-    jssh_socket.components.interfaces.to_hash.inject([]) do |list, (key, interface)|
-      list << interface if instanceof?(interface)
+    jssh_socket.Components.interfaces.to_hash.inject([]) do |list, (key, interface)|
+      list << interface if instanceof(interface)
       list
     end
   end
@@ -728,6 +734,14 @@ class JsshObject
       Object.instance_method(:method_missing).bind(self).call(method, *args) # this shouldn't happen 
     end
   end
+  def define_methods!
+    metaclass=(class << self; self; end)
+    self.to_hash.keys.grep(/\A[a-z_][a-z0-9_]*\z/i).each do |key|
+      metaclass.send(:define_method, key) do |*args|
+        get(key, *args)
+      end
+    end
+  end
   
   def respond_to?(method)
     if super_r=super
@@ -754,6 +768,9 @@ class JsshObject
       attr=attr(method)
       return attr.type!='undefined'
     end
+  end
+  def id(*args)
+    method_missing :id, *args
   end
   
   # okay, so it's not actually json, but it makes it so that when #to_json is called, it gets the reference

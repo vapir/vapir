@@ -129,6 +129,12 @@ class JsshSocket
         timeout=SHORT_SOCKET_TIMEOUT
       end
       received_data << data
+      
+      # Kernel.select seems to indicate that a dead socket is ready to read, and returns endless blank strings to recv. rather irritating. 
+      if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd.blank?}
+        raise JsshError, "Socket seems to no longer be connected"
+      end
+      #STDERR.puts "recv_socket has received #{received_data.size} recv's (s=#{s.inspect}): "+data
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end
 #    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}" }
@@ -429,9 +435,14 @@ class JsshSocket
   end
   
   def test_socket
-    good=prototype ? value_json('[3]')==[3] : value('"foo"')=="foo"
-    raise JsshError, "The socket seems to have a problem" unless good
-    good
+    actual, expected=if prototype
+      [value_json('["foo"]'), ["foo"]]
+    else
+      [value('"foo"'), "foo"]
+    end
+    unless expected==actual
+      raise JsshError, "The socket seems to have a problem: sent #{expected.inspect} but got back #{actual.inspect}"
+    end
   end
   
   def inspect

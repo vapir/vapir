@@ -81,6 +81,8 @@
 
 =end
 
+require 'lib/waiter'
+
 module Watir # TODO/FIX: move this somewhere appropriate
   module FFHasDocument
     # Returns the html of the document
@@ -180,35 +182,52 @@ module Watir
     def initialize(options = {})
       if(options.kind_of?(Integer))
         options = {:waitTime => options}
+      else
+        options={:waitTime => 20}.merge(options)
       end
-
+      if options[:binary_path]
+        @binary_path=options[:binary_path]
+      end
+      
       # check for jssh not running, firefox may be open but not with -jssh
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
-      jssh_socket(:reset_if_dead => true).test_socket
+      begin
+        jssh_socket(:reset_if_dead => true).test_socket
+      rescue
+        launch_browser
+        ::Waiter.try_for(options[:waitTime], :exception => Watir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:waitTime]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
+          begin
+            jssh_socket(:reset_if_dead => true).test_socket
+            true
+          rescue
+            false
+          end
+        end
+      end
       @browser_jssh_objects = jssh_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
       
       if current_os == :macosx && !%x{ps x | grep firefox-bin | grep -v grep}.empty?
 #        raise "Firefox is running without -jssh" if jssh_down
         open_window unless options[:suppress_launch_process]
       elsif not options[:suppress_launch_process]
-        if firefox_is_running?
+#        if firefox_is_running?
           open_window
-        else
-          launch_browser(options)
-        end
+#        else
+#          launch_browser
+#        end
         set_browser_document
       end
       set_defaults
     end
     
-    def self.firefox_is_running?
+#    def self.firefox_is_running?
       # TODO/FIX: implement!
-      true
-    end
-    def firefox_is_running?
-      self.class.firefox_is_running?
-    end
+#      true
+#    end
+#    def firefox_is_running?
+#      self.class.firefox_is_running?
+#    end
 
     
     def hwnd
@@ -259,7 +278,6 @@ module Watir
     # options as .new
 
     def launch_browser(options = {})
-
       if(options[:profile])
         profile_opt = "-no-remote -P #{options[:profile]}"
       else
@@ -268,8 +286,6 @@ module Watir
 
       bin = path_to_bin()
       @t = Thread.new { system("#{bin} -jssh #{profile_opt}") }
-      sleep options[:waitTime] || 2
-
     end
     private :launch_browser
 
@@ -454,10 +470,8 @@ module Watir
     private :open_window
 
     def self.each
-      if firefox_is_running?
-        each_browser_window_object do |win|
-          yield self.attach(:jssh_object, win)
-        end
+      each_browser_window_object do |win|
+        yield self.attach(:jssh_object, win)
       end
     end
 
@@ -523,12 +537,10 @@ module Watir
     #   Returns matchdata object if the specified regexp was found.
     #
     def contains_text(target)
-      #puts "Text to match is : #{match_text}"
-      #puts "Html is : #{self.text}"
       case target
-        when Regexp
+      when Regexp
         self.text.match(target)
-        when String
+      when String
         self.text.index(target)
       else
         raise TypeError, "Argument #{target} should be a string or regexp."
@@ -960,17 +972,17 @@ module Watir
     private
 
     def path_to_bin
-      path = case current_os()
-             when :windows
-               path_from_registry
-             when :macosx
-               path_from_spotlight
-             when :linux
-               `which firefox`.strip
-             end
-
+      path = @binary_path || begin
+        case current_os
+        when :windows
+          path_from_registry
+        when :macosx
+          path_from_spotlight
+        when :linux
+          `which firefox`.strip
+        end
+      end
       raise "unable to locate Firefox executable" if path.nil? || path.empty?
-
       path
     end
 

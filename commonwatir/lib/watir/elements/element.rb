@@ -219,6 +219,9 @@ module Watir
     dom_wrap :scrollIntoView
     dom_wrap :get_attribute_value => :getAttribute, :attribute_value => :getAttribute
     
+    attr_reader :how
+    attr_reader :what
+    
 
     private
     # this is used by #locate. 
@@ -234,20 +237,20 @@ module Watir
       if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at
         default_options[:relocate]=:recursive
       end
-      begin
-        if element_object && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
+      if element_object && Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
+        begin
           if method_to_invoke=['id', 'name', 'src'].detect{|method| element_object.ole_respond_to?(method)}
             element_object.invoke(method_to_invoke) # try invoking a method on it 
-          else
-            # otherwise.. carry on, I suppose, and it will just error if it needed to be relocated. 
+          else # if we can't find a method that it responds to 
+            # then.. carry on, I suppose, and it will just error if it needed to be relocated. 
             # there must be a better way than this to see if it still exists. 
           end
+        rescue WIN32OLERuntimeError                             # if invoking that method errors
+          raise unless $!.message.include?("Access is denied.") # with an access denied exception
+           # then the element is probably gone - probably because of a reload or something -
+           # and we need to relocate recursively. 
+          default_options[:relocate]=:recursive
         end
-      rescue WIN32OLERuntimeError                             # if invoking that method errors
-        raise unless $!.message.include?("Access is denied.") # with an access denied exception
-         # then the element is probably gone - probably because of a reload or something -
-         # and we need to relocate recursively. 
-        default_options[:relocate]=:recursive
       end
       options=default_options.merge(options)
       if options[:relocate]

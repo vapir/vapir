@@ -8,6 +8,7 @@ module Watir
         end
     end
     
+    class NoBrowserException < WatirException; end
     # This exception is thrown if an attempt is made to access an object that doesn't exist
     class UnknownObjectException < WatirException; end
     # This exception is thrown if an attempt is made to access an object that is in a disabled state

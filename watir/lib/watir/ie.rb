@@ -45,15 +45,22 @@ class WIN32OLE
   def ole_respond_to?(method)
     #!!ole_methods.detect{|ole_method| ole_method.to_s == method.to_s}
     # the above is ridiculously slow.
+    method=method.to_s
+    # strip assignment = from methods. going to assume that if it has a getter method, it will take assignment, too. this may not be correct, but will have to do. 
+    if method =~ /=\z/
+      method=$`
+    end
+    respond_to_cache[method]
+  end
+  
+  def respond_to_cache
     @respond_to_cache||=Hash.new do |hash, key|
       hash[key]=begin
-        !!self.ole_method(key.to_s)
+        !!self.ole_method(key)
       rescue WIN32OLERuntimeError
         false
       end
     end
-    
-    @respond_to_cache[method]
   end
 end
 

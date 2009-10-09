@@ -26,5 +26,9 @@ module Watir
     def url
       content_window_object.location.href
     end
+    def text
+      document_object.body.textContent
+    end
+    alias textContent text
   end # Frame
 end # FireWatir

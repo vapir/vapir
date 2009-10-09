@@ -203,6 +203,12 @@ module Watir
         raise Watir::Exception::NoMatchingWindowFoundException, "The window no longer exists!"
       end
     end
+    
+    # locate is used by stuff that uses container. this doesn't actually locate the browser
+    # but checks if it (still) exists. 
+    def locate(options={})
+      exists?
+    end
 
     # Launches firebox browser
     # options as .new
@@ -538,9 +544,45 @@ module Watir
 
     # Returns the html of the page currently loaded in the browser.
     def html
-      raise NotImplementedError
-#      result = jssh_socket.js_eval("var htmlelem = #{document_var}.getElementsByTagName('html')[0]; htmlelem.innerHTML")
-#      return "<html>" + result + "</html>"
+      jssh_socket.value_json("(function(document){
+        var temp_el=document.createElement('div');
+        var orig_childs=[];
+        while(document.childNodes.length > 0)
+        { orig_childs.push(document.childNodes[0]);
+          document.removeChild(document.childNodes[0]);
+        }
+        for(var i in orig_childs)
+        { try
+          { temp_el.appendChild(orig_childs[i]);
+          }
+          catch(e)
+          {}
+        }
+        retval=temp_el.innerHTML;
+        while(orig_childs.length > 0)
+        { document.appendChild(orig_childs.shift());
+        }
+        return retval;
+      })(#{document_object.ref})", :timeout => JsshSocket::LONG_SOCKET_TIMEOUT)
+=begin
+      temp_el=document_object.createElement('div') # make a temporary element
+      orig_childs=jssh_socket.object('[]').store_rand_object_key(@browser_jssh_objects)
+      while document_object.childNodes.length > 0
+        orig_childs.push(document_object.childNodes[0])
+        document_object.removeChild(document_object.childNodes[0])
+      end
+      orig_childs.to_array.each do |child|
+        begin
+          temp_el.appendChild(child)
+        rescue JsshError
+        end
+      end
+      result=temp_el.innerHTML
+      while orig_childs.length > 0
+        document_object.appendChild(orig_childs.shift())
+      end
+      return result
+=end      
     end
 
     # Returns the text of the page currently loaded in the browser.
@@ -730,83 +772,6 @@ module Watir
       FFElement.factory(document_object.evaluate(xpath, document_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue.store_rand_object_key(@browser_jssh_objects))
     end
 
-    # Return object of correct Element class while using XPath to get the element.
-#    def element_factory(element_name)
-#      raise NotImplementedError
-#      jssh_type = FFElement.new(element_name,self).element_type
-#      #puts "jssh type is : #{jssh_type}" # DEBUG
-#      candidate_class = jssh_type =~ /HTML(.*)Element/ ? $1 : ''
-#      #puts candidate_class # DEBUG
-#      if candidate_class == 'Input'
-#        input_type = jssh_socket.js_eval("#{element_name}.type").downcase.strip
-#        firewatir_class = input_class(input_type)
-#      else
-#        firewatir_class = jssh2firewatir(candidate_class)
-#      end
-#      
-#      #puts firewatir_class # DEBUG
-#      klass = Watir.const_get(firewatir_class)
-#      
-#      if klass == FFElement
-#        klass.new(element_name,self)
-#      elsif klass == FFCheckBox
-#        klass.new(self,:jssh_name,element_name,["checkbox"])
-#      elsif klass == FFRadio
-#        klass.new(self,:jssh_name,element_name,["radio"])
-#      else
-#        klass.new(self,:jssh_name,element_name)
-#      end 
-#    end
-#    private :element_factory
-
-    #   Return the class name for element of input type depending upon its type like checkbox, radio etc.
-    def input_class(input_type)
-      hash = {
-                'select-one' => 'FFSelectList',
-                'select-multiple' => 'FFSelectList',
-                'text' => 'FFTextField',
-                'password' => 'FFTextField',
-                'textarea' => 'FFTextField',
-        # TODO when there's no type, it's a TextField
-                'file' => 'FFFileField',
-                'checkbox' => 'FFCheckBox',
-                'radio' => 'FFRadio',
-                'reset' => 'FFButton',
-                'button' => 'FFButton',
-                'submit' => 'FFButton',
-                'image' => 'FFButton'
-      }
-      hash.default = 'FFElement'
-
-      hash[input_type]
-    end
-    private :input_class
-
-    # For a provided element type returned by JSSh like HTMLDivElement,
-    # returns its corresponding class in Firewatir.
-    def jssh2firewatir(candidate_class)
-      hash = {
-                'Div' => 'FFDiv',
-                'Button' => 'FFButton',
-                'Frame' => 'FFFrame',
-                'Span' => 'FFSpan',
-                'Paragraph' => 'FFP',
-                'Label' => 'FFLabel',
-                'Form' => 'FFForm',
-                'Image' => 'FFImage',
-                'Table' => 'FFTable',
-                'TableCell' => 'FFTableCell',
-                'TableRow' => 'FFTableRow',
-                'Select' => 'FFSelectList',
-                'Link' => 'FFLink',
-                'Anchor' => 'FFLink' # FIXME is this right?
-        #'Option' => 'FFOption' #Option uses a different constructor
-      }
-      hash.default = 'FFElement'
-      hash[candidate_class]
-    end
-    private :jssh2firewatir
-
     #
     # Description:
     #   Returns the array of elements that matches the xpath query.
@@ -818,10 +783,12 @@ module Watir
     #   Array of elements matching xpath query.
     #
     def elements_by_xpath(xpath)
-      raise NotImplementedError
-      element = FFElement.new(nil, self)
-      elem_names = element.elements_by_xpath(self, xpath)
-      elem_names.inject([]) {|elements,name| elements << element_factory(name)}
+      elements=[]
+      result=document_object.evaluate(xpath, document_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
+      while element=result.iterateNext
+        elements << FFElement.factory(element.store_rand_object_key(@browser_jssh_objects))
+      end
+      elements
     end
 
     #

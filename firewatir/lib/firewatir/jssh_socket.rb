@@ -44,7 +44,7 @@ class JsshSocket
 
   DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
-  SHORT_SOCKET_TIMEOUT=0#(2**-16).to_f
+  SHORT_SOCKET_TIMEOUT=(2**-16).to_f
 
   attr_reader :ip, :port, :prototype
   
@@ -69,7 +69,7 @@ class JsshSocket
     eaten=""
     initial_timeout=LONG_SOCKET_TIMEOUT
     while eat!=eaten
-      ret=read_socket(initial_timeout).chomp
+      ret=read_value(initial_timeout).chomp
       expect=eat[eaten.length...ret.length]
       if !ret
         raise JsshError, "Something went wrong initializing - no response (already received #{eaten.inspect})" 
@@ -79,7 +79,7 @@ class JsshSocket
       eaten+=ret
     end
     if @prototype
-      ret=send_and_read(File.read(PrototypeFile), LONG_SOCKET_TIMEOUT)
+      ret=send_and_read(File.read(PrototypeFile), :timeout => LONG_SOCKET_TIMEOUT)
       raise JsshError, "Something went wrong loading Prototype - message #{ret.inspect}" if ret != "done!"
     end
     temp_object.assign({})
@@ -138,13 +138,12 @@ class JsshSocket
       return nil
     end
   end
-  alias read_socket read_value # really this shouldn't be called read_socket, but it is for backward compatibility 
 
   # Evaluate javascript and return result. Raise an exception if an error occurred.
   # Takes one expression and strips out newlines so that only one value will be returned, so you're going to have to
   # use semicolons, and no // style comments. 
   def js_eval(str, timeout=DEFAULT_SOCKET_TIMEOUT)
-    value= send_and_read(str.gsub("\n",""), timeout)
+    value= send_and_read(str.gsub("\n",""), :timeout => timeout)
     if md = /\A(\w+Error):(.*)/m.match(value)
       js_error(md[1], md[2], str)
     elsif md = /\Auncaught exception: (.*)/m.match(value)
@@ -153,8 +152,9 @@ class JsshSocket
     value
   end
 
-  def send_and_read(js_expr, timeout=DEFAULT_SOCKET_TIMEOUT)
-    logger.add(-1) { "SEND_AND_READ is starting. timeout=#{timeout}" }
+  def send_and_read(js_expr, options={})
+    options={:timeout=>DEFAULT_SOCKET_TIMEOUT}.merge(options)
+    logger.add(-1) { "SEND_AND_READ is starting. options=#{options.inspect}" }
     logger.add(-1) { "SEND_AND_READ is checking for leftovers" }
     if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != PROMPT
       STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
@@ -164,7 +164,7 @@ class JsshSocket
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
     logger.debug { "SEND_AND_READ sending #{js_expr.inspect}" }
     @socket.send(js_expr, 0)
-    return read_socket(timeout)
+    return read_value(options[:timeout])
   end
   
   def js_error(errclassname, message, source, stuff={})
@@ -189,6 +189,8 @@ class JsshSocket
   # returns the value of the given javascript expression, as reported by JSSH. 
   # This will be a string, the given expression's toString. 
   def value(js)
+    # this is wrapped in a function so that ...
+    # dang, now I can't remember. I'm sure I had a good reason at the time. 
     send_and_read("(function(){return #{js}})()")
   end
   
@@ -249,7 +251,7 @@ class JsshSocket
        }catch(e)
        { Object.toJSON([true, e]);
        }"
-    val=send_and_read(wrapped_js)
+    val=send_and_read(wrapped_js, options)
     errord_and_val=*parse_json(val)
     unless errord_and_val.length==2
       raise RuntimeError, "unexpected result: \n\t#{errord_and_val.inspect} \nencountered parsing value: \n\t#{val.inspect} \nreturned from expression: \n\t#{js.inspect}"

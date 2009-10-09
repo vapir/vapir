@@ -7,12 +7,12 @@ module Watir
     include TextField
 
     # Gets the size of the text field element.
-    def_wrap :size
+    #def_wrap :size
     def maxlength
       dom_object.maxlength
     end
     # Returns true if the text field is read only, false otherwise.
-    def_wrap :readonly?, :readOnly
+    #def_wrap :readonly?, :readOnly
 
     #
     # Description:

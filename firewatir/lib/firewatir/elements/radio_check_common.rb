@@ -4,7 +4,9 @@ module Watir
   #   Base class for checkbox and radio button elements.
   #
   module FFRadioCheckCommon
-
+    extend DomWrap
+    
+    dom_wrap :set? => :checked, :getState => :checked, :checked? => :checked, :isSet? => :checked
     #
     # Description:
     #   Checks if element i.e. radio button or check box is checked or not.
@@ -12,13 +14,13 @@ module Watir
     # Output:
     #   True if element is checked, false otherwise.
     #
-    def set?
-      assert_exists
-      return checked
-    end
-    alias getState set?
-    alias checked? set?
-    alias isSet?   set?
+#    def set?
+#      assert_exists
+#      return checked
+#    end
+#    alias getState set?
+#    alias checked? set?
+#    alias isSet?   set?
 
     #
     # Description:
@@ -50,6 +52,7 @@ module Watir
     # Description:
     #   Used by clear and set method to uncheck and check radio button and checkbox element respectively.
     #
+    # TODO/FIX: check value so that set/clear is actually respected
     def set_clear_item(set)
       fire_event("onclick")
       @container.wait
@@ -62,7 +65,7 @@ module Watir
   # Description:
   #   Class for RadioButton element.
   #
-  class FFRadio < FFElement
+  class FFRadio < FFInputElement
     include FFRadioCheckCommon
     include Radio
     def clear
@@ -79,7 +82,7 @@ module Watir
   # Description:
   # Class for Checkbox element.
   #
-  class FFCheckBox < FFElement
+  class FFCheckBox < FFInputElement
     include FFRadioCheckCommon
     include CheckBox
     #

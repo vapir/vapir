@@ -1,7 +1,9 @@
 module Watir
   module Specifier
     HowList=[:attributes, :jssh_name, :jssh_object, :dom_object, :xpath]
-    LocateAliases=Hash.new{|hash,key| [key]}.merge!(:text => [:text, :textContent])
+    LocateAliases=Hash.new{|hash,key| [key]}.merge!({ :text => [:text, :textContent],
+                                                        :class => [:class, :className],
+                                                      })
     
     module_function
     def match_candidates(candidates, specifiers_list)
@@ -11,11 +13,13 @@ module Watir
           specifier.all? do |(how, what)|
             if how==:types
               what.any? do |type|
-                Watir::Specifier.fuzzy_match(candidate[:type], type)
+                Watir::Specifier.fuzzy_match(candidate.getAttribute(:type), type)
               end
             else
               LocateAliases[how].any? do |how_alias|
-                Watir::Specifier.fuzzy_match(candidate[how_alias], what)
+                attr=candidate.respond_to?(how_alias) ? candidate[how_alias] : candidate.getAttribute(how_alias)
+                #Watir::Specifier.fuzzy_match(candidate.getAttribute(how_alias), what)
+                Watir::Specifier.fuzzy_match(attr, what)
               end
             end
           end

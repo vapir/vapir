@@ -13,15 +13,15 @@ class TC_FileField < Test::Unit::TestCase
 
   def test_fileField_Exists
     #test for existance of 4 file area
-    assert(browser.file_field(:name,"file1").exists?)
-    assert(browser.file_field(:id,"file2").exists?)
+    assert(browser.file_field!(:name,"file1").exists?)
+    assert(browser.file_field!(:id,"file2").exists?)
     #test for missing
-    assert_false(browser.file_field(:name, "missing").exists?)
-    assert_false(browser.file_field(:name,"totallybogus").exists?)
+    assert_nil(browser.file_field(:name, "missing"))
+    assert_nil(browser.file_field(:name,"totallybogus"))
     #pop one open and put something in it.
-    browser.file_field(:name,"file3").set($htmlRoot + "fileupload.html")
+    browser.file_field!(:name,"file3").set($htmlRoot + "fileupload.html")
     #click the upload button
-    browser.button(:name,"upload").click
+    browser.button!(:name,"upload").click
 
     assert(browser.text.include?("PASS"))
   end
@@ -29,21 +29,21 @@ class TC_FileField < Test::Unit::TestCase
   def test_iterator
     assert_equal(6, browser.file_fields.length)
     arrFileFields = browser.file_fields
-    assert_equal("file1", arrFileFields[1].name)
-    assert_equal("file2", arrFileFields[2].id)
-    assert_equal("disabled", arrFileFields[3].name)
-    assert_equal("file3", arrFileFields[4].name)
-    assert_equal("beforetest", arrFileFields[5].name)
-    assert_equal("aftertest", arrFileFields[6].name)
+    assert_equal("file1", arrFileFields[0].name)
+    assert_equal("file2", arrFileFields[1].id)
+    assert_equal("disabled", arrFileFields[2].name)
+    assert_equal("file3", arrFileFields[3].name)
+    assert_equal("beforetest", arrFileFields[4].name)
+    assert_equal("aftertest", arrFileFields[5].name)
     arrFileFields.each do |fileField|
       assert_equal("file", fileField.type)
     end
   end
   
   def test_file_field_onchange
-    assert_equal("", browser.file_field(:name, 'file3').alt)
-    browser.file_field(:name,"file3").set($htmlRoot + "fileupload.html")
-    assert_equal("changed", browser.file_field(:name, 'file3').alt)
+    assert_equal("", browser.file_field!(:name, 'file3').title)
+    browser.file_field!(:name,"file3").set($htmlRoot + "fileupload.html")
+    assert_equal("changed", browser.file_field!(:name, 'file3').title)
   end
 
 end

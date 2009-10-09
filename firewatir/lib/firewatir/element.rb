@@ -50,10 +50,6 @@ module Watir
         self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
       end
       
-      def container_methods
-        self.const_defined?('ContainerMethods') ? self.const_get('ContainerMethods') : []
-      end
-      
     end
 
     #
@@ -92,9 +88,14 @@ module Watir
       tags=specifiers.map{|s| s[:tagName] }.compact.uniq
       names=specifiers.map{|s| s[:name] }.compact.uniq
 
-      # if index is > 1, then even though it's not really valid, we should search beyond the one result returned by getElementById
-      # also, only check by id on a browser or a frame since otherwise document_object.getElementById may return something above @container in the DOM 
-      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && @container.dom_object.respond_to?(:getElementById)#(@container.is_a?(Browser) || @container.is_a?(Frame))
+      # we can only use getElementById if:
+      # - id is a string, as getElementById doesn't do regexp
+      # - index is 1 or nil; otherwise even though it's not really valid, other identical ids won't get searched
+      # - id is the _only_ specifier, otherwise if the same id is used multiple times but the first one doesn't match 
+      #   this specifier, the element won't be found
+      # - @container has getElementById defined (that is, it's a Browser or a Frame), otherwise if we called 
+      #   document_object.getElementById we wouldn't know if what's returned is below @container in the DOM heirarchy or not
+      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && @container.dom_object.respond_to?(:getElementById)
         candidates= if by_id=document_object.getElementById(ids.first)
           [by_id]
         else
@@ -144,9 +145,8 @@ module Watir
           #end
           if !@container
             raise
-          elsif !@container.is_a?(Browser)
-            @container.locate(options)
           end
+          @container.locate(options)
           specified_attributes=@what
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
           
@@ -174,14 +174,14 @@ module Watir
     end
 
     private
-    def self.def_wrap(ruby_method_name, ole_method_name = nil)
-      ole_method_name = ruby_method_name unless ole_method_name
-      define_method ruby_method_name do
-        locate
-        attr=dom_object.attr(ole_method_name)
-        attr.type=='undefined' ? nil : dom_object.get(ole_method_name)
-      end
-    end
+    #def self.def_wrap(ruby_method_name, ole_method_name = nil)
+    #  ole_method_name = ruby_method_name unless ole_method_name
+    #  define_method ruby_method_name do
+    #    locate
+    #    attr=dom_object.attr(ole_method_name)
+    #    attr.type=='undefined' ? nil : dom_object.get(ole_method_name)
+    #  end
+    #end
   
     def get_attribute_value(attribute_name)
       dom_object.getAttribute attribute_name
@@ -260,17 +260,18 @@ module Watir
     #   Returns the index if the specified text was found.
     #   Returns matchdata object if the specified regexp was found.
     #
-    def contains_text(target)
-      #puts "Text to match is : #{match_text}"
-      #puts "Html is : #{self.text}"
+    def contains_text?(target)
+      self_text=self.text
       if target.kind_of? Regexp
-        self.text.match(target)
+        !!self_text =~ target
       elsif target.kind_of? String
-        self.text.index(target)
+        self_text.include?(target)
       else
-        raise TypeError, "Argument #{target} should be a string or regexp."
+        raise TypeError, "Expected String or Regexp, got #{target.inspect} (#{target.class.name})"
       end
     end
+    alias contains_text contains_text?
+    
 
 
     def inspect
@@ -449,8 +450,7 @@ module Watir
     # Returns whether the element is disabled
     def disabled
       assert_exists
-      disabled=dom_object.attr :disabled
-      disabled.type=='undefined' ? false : disabled.val
+      dom_object.respond_to?(:disabled) && dom_object.disabled
     end
     alias disabled? disabled
     
@@ -491,33 +491,33 @@ module Watir
     alias innerText text
 
     # Returns the name of the element (as defined in html)
-    def_wrap :name
+    #def_wrap :name
     # Returns the id of the element
-    def_wrap :id
+    #def_wrap :id
     # Returns the state of the element
-    def_wrap :checked
+    #def_wrap :checked
     # Returns the value of the element
-    def_wrap :value
+    #def_wrap :value
     # Returns the title of the element
-    def_wrap :title
+    #def_wrap :title
     # Returns the value of 'alt' attribute in case of Image element.
-    def_wrap :alt
+    #def_wrap :alt
     # Returns the value of 'href' attribute in case of Anchor element.
-    def_wrap :src
+    #def_wrap :src
     # Returns the type of the element. Use in case of Input element only.
-    def_wrap :type
+    #def_wrap :type
     # Returns the url the Anchor element points to.
-    def_wrap :href
+    #def_wrap :href
     # Return the ID of the control that this label is associated with
-    def_wrap :for, :htmlFor
+    #def_wrap :for, :htmlFor
     # Returns the class name of the element
-    def_wrap :class_name, :className
+    #def_wrap :class_name, :className
     # Return the html of the object
-    def_wrap :html, :innerHTML
+    #def_wrap :html, :innerHTML
     # Return the action of form
-    def_wrap :action
-    def_wrap :style
-    def_wrap :scrollIntoView
+    #def_wrap :action
+    #def_wrap :style
+    #def_wrap :scrollIntoView
 
     #
     # Description:
@@ -569,7 +569,8 @@ module Watir
           if options[:wait]
             dom_object.click
           else
-            click_func=jssh_socket.object("(function(dom_object){return function(){dom_object.click()};})").pass(dom_object)
+            #click_func=jssh_socket.object("(function(dom_object){return function(){dom_object.click()};})").pass(dom_object)
+            click_func=dom_object.attr(:click)
             content_window_object.setTimeout(click_func, 0)
           end
         end

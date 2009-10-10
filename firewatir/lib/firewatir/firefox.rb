@@ -345,7 +345,11 @@ module Watir
       unless browser_window_object
         raise "Window must be set (using open_window or attach) before the browser document can be set!"
       end
-      @browser_object=@browser_jssh_objects.attr(:browser).assign(browser_window_object.getBrowser)
+      @browser_object=@browser_jssh_objects[:browser]= ::Waiter.try_for(2, :exception => Watir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
+        if browser_window_object.respond_to?(:getBrowser)
+          browser_window_object.getBrowser
+        end
+      end
       
       # the following are not stored elsewhere; the ref will just be to attributes of the browser, so that updating the 
       # browser (in javascript) will cause all of these refs to reflect that as well 
@@ -464,7 +468,7 @@ module Watir
       #opener_obj=watcher.attr(:openWindow).pass(nil, 'chrome://browser/content/browser.xul', @browser_window_name, '', nil)
       #@browser_window_object=@browser_jssh_objects.attr(:browser_window).assign(opener_obj)
       
-      @browser_window_object=@browser_jssh_objects.attr(:browser_window).assign(watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'resizable', nil))
+      @browser_window_object=@browser_jssh_objects[:browser_window]=watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'resizable', nil)
       return @browser_window_object
     end
     private :open_window

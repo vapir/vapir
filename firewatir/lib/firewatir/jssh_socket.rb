@@ -2,7 +2,7 @@ require 'json/pure'
 require 'socket'
 #require 'logger'
 
-#class Logger
+#class LoggerWithCallstack < Logger
 #  class TimeElapsedFormatter < Formatter
 #    def initialize
 #      super
@@ -21,10 +21,10 @@ require 'socket'
 #    progname ||= @progname
 #    if message.nil?
 #      if block_given?
-#	message = yield
+#        message = yield
 #      else
-#	message = progname
-#	progname = @progname
+#        message = progname
+#        progname = @progname
 #      end
 #    end
 #    message=message.to_s+" FROM: "+caller.map{|c|"\t\t#{c}\n"}.join("")
@@ -45,9 +45,9 @@ class JsshUndefinedValueError < JsshError; end
 class JsshSocket
 #  def self.logger
 #    @@logger||=begin
-#      logger=Logger.new nil#(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::TRUNC|File::CREAT))
+#      logger=LoggerWithCallstack.new(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::TRUNC|File::CREAT))
 #      logger.level = -1#Logger::DEBUG#Logger::INFO
-#      logger.formatter=Logger::TimeElapsedFormatter.new
+#      logger.formatter=LoggerWithCallstack::TimeElapsedFormatter.new
 #      logger
 #    end
 #  end
@@ -852,7 +852,7 @@ class JsshObject
   end
   
   def id(*args)
-    method_missing :id, *args
+    invoke :id, *args
   end
   
   # okay, so it's not actually json, but it makes it so that when #to_json is called, it gets the reference

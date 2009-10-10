@@ -27,6 +27,7 @@ module Watir
     #end
 
     class << self
+      #TODO/FIX: repeated on both Element base classes; move to common 
       def factory(element_object, extra={})
         curr_klass=self
         ObjectSpace.each_object(Class) do |klass|

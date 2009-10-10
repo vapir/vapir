@@ -25,13 +25,21 @@ module Watir
         yield i
       end
     end
+    def each_with_index
+      #@array.each_with_index do |element, array_index|
+      #  yield element, array_index+1
+      #end
+      each_index do |i|
+        yield at(i), i
+      end
+    end
     
     def [](index)
       at(index)
     end
     def at(index)
       unless index.is_a?(Integer) && (1..size).include?(index)
-        raise IndexError, "Expected an integer between 1 and #{size}"
+        raise IndexError, "Expected an integer between 1 and #{size}; got #{index.inspect} (#{index.class})"
       end
       array_index=index-1
       @array.at(array_index)

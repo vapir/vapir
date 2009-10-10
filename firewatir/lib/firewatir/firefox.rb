@@ -156,7 +156,7 @@ module Watir
       if options[:reset_if_dead]
         begin
           @@jssh_socket.test_socket
-        rescue
+        rescue JsshError
           initialize_jssh_socket
         end
       end
@@ -194,13 +194,13 @@ module Watir
       # error if running without jssh, we don't want to kill their current window (mac only)
       begin
         jssh_socket(:reset_if_dead => true).test_socket
-      rescue
+      rescue JsshError
         launch_browser
         ::Waiter.try_for(options[:waitTime], :exception => Watir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:waitTime]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
           begin
             jssh_socket(:reset_if_dead => true).test_socket
             true
-          rescue
+          rescue JsshError
             false
           end
         end

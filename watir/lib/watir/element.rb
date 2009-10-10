@@ -242,6 +242,10 @@ module Watir
         ", 0)
       end
     end
+    
+    def wait(options={})
+      @container.wait(options)
+    end
 
     # If any parent element isn't visible then we cannot write to the
     # element. The only realiable way to determine this is to iterate

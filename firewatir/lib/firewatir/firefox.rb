@@ -345,11 +345,11 @@ module Watir
       unless browser_window_object
         raise "Window must be set (using open_window or attach) before the browser document can be set!"
       end
-      @browser_object=@browser_jssh_objects[:browser]= ::Waiter.try_for(2, :exception => nil) do# Watir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
+      @browser_object=@browser_jssh_objects[:browser]= ::Waiter.try_for(2, :exception => Watir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
         if browser_window_object.respond_to?(:getBrowser)
           browser_window_object.getBrowser
         end
-      end || debugger # TODO take out debug code
+      end
       
       # the following are not stored elsewhere; the ref will just be to attributes of the browser, so that updating the 
       # browser (in javascript) will cause all of these refs to reflect that as well 

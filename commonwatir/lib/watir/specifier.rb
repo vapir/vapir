@@ -44,12 +44,12 @@ module Watir
         else
           []
         end
-      elsif tags.size==1 && tags.first.is_a?(String)
-        candidates=container.containing_object.getElementsByTagName(tags.first)#.to_array
       elsif names.size==1 && names.first.is_a?(String) && container.containing_object.respond_to?(:getElementsByName)
         candidates=container.containing_object.getElementsByName(names.first)#.to_array
       elsif classNames.size==1 && classNames.first.is_a?(String) && container.containing_object.respond_to?(:getElementsByClassName)
         candidates=container.containing_object.getElementsByClassName(classNames.first)#.to_array
+      elsif tags.size==1 && tags.first.is_a?(String)
+        candidates=container.containing_object.getElementsByTagName(tags.first)#.to_array
       else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
         candidates=container.containing_object.getElementsByTagName('*')#.to_array
       end
@@ -69,44 +69,34 @@ module Watir
       # this proc works around hasAttribute not existing in IE 
       has_attribute = proc do |element, attr|
         if Object.const_defined?('WIN32OLE') && element.is_a?(WIN32OLE)
-          #found_attribute=false
-          #element_attributes= element.respond_to?('attributes') ? (element.attributes || []) : []
-          #element_attributes=element.attributes || []
-          #element_attributes.each do |ole_attribute|
-          #  if ole_attribute.nodeName.downcase==attr.to_s.downcase
-          #    found_attribute=true
-          #    break
-          #  end
-          #end
-          #found_attribute
-          # the above is really slow. the below is incorrect if an attribute is actually defined as nil, but I don't think that matters. 
-          # actually I think getattribute is always supposed to be a string, as defined by the html source, and empty if not defined, but IE doesn't really do that.
           begin
-            !element.getAttribute(attr.to_s).nil?
+            !element.getAttributeNode(attr.to_s).nil?
           rescue WIN32OLERuntimeError
             false
           end
         else
-          element.respond_to?(:hasAttribute) && element.hasAttribute(attr)
+          element.object_respond_to?(:hasAttribute) && element.hasAttribute(attr)
         end
       end
       candidates.each do |candidate|
-#candidate.logger.info { "MATCH_CANDIDATES "+candidate.inspect}
         candidate_attributes=proc do |attr|
           attrs=[]
-          attrs << candidate.getAttribute(attr.to_s) if has_attribute.call(candidate, attr)#candidate.respond_to?(:hasAttribute) && candidate.hasAttribute(attr.to_s)
-          if Object.const_defined?('JsshObject') && candidate.is_a?(JsshObject)
-            if candidate.js_respond_to?(attr)
-              attrs << candidate.invoke(attr)
-            end
-          elsif Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE)
-            begin
-              attrs << candidate.invoke(attr.to_s)
-            rescue WIN32OLERuntimeError
-            end
-          else
-            raise RuntimeError, "candidate type not recognized: #{candidate.inspect} (#{candidate.class.name})"
+          attrs << candidate.getAttributeNode(attr.to_s).value if has_attribute.call(candidate, attr)
+          if candidate.object_respond_to?(attr)
+            attrs << candidate.invoke(attr.to_s)
           end
+#          if Object.const_defined?('JsshObject') && candidate.is_a?(JsshObject)
+#            if candidate.js_respond_to?(attr)
+#              attrs << candidate.invoke(attr)
+#            end
+#          elsif Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE)
+#            begin
+#              attrs << candidate.invoke(attr.to_s)
+#            rescue WIN32OLERuntimeError
+#            end
+#          else
+#            raise RuntimeError, "candidate type not recognized: #{candidate.inspect} (#{candidate.class.name})"
+#          end
           attrs
         end
         match= specifiers_list.any? do |specifier|

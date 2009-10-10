@@ -1,5 +1,5 @@
 require 'watir/elements/element'
-require 'watir/commoncontainer'
+require 'watir/common_container'
 
 module Watir
   module Frame
@@ -52,7 +52,7 @@ module Watir
   end
   module TextField
     Specifiers= [ {:tagName => 'textarea'},
-                  {:tagName => 'input', :types => ['text', 'textarea','password','hidden']},
+                  {:tagName => 'input', :types => ['text', 'password', 'hidden']},
                 ]
     include ContainerMethodsFromName
     include ElementModule
@@ -175,16 +175,20 @@ module Watir
     def clear
       assert_exists
       with_highlight do
-        wait = false
+        changed=false
         options.each do |option|
-          option.selected=false
-          wait=true
+          if option.selected
+            option.selected=false
+            changed=true
+          end
         end
-        fire_event :onchange, :highlight => false
-        self.wait if wait
+        if changed
+          fire_event :onchange, :highlight => false
+          self.wait
+        end
       end
     end
-    alias_deprecated :clearSelection, :clear
+    alias :clearSelection :clear
     
     # selects options whose text matches the given text. 
     # Raises NoValueFoundException if the specified value is not found.
@@ -207,6 +211,22 @@ module Watir
     def select_value(option_value, method_options={})
       select_options_if(method_options) {|option| Watir::Specifier.fuzzy_match(option.value, option_value) }
     end
+
+    # Does the SelectList have an option whose text matches the given text or regexp? 
+    def option_texts_include?(text_or_regexp)
+      option_texts.grep(text_or_regexp).size > 0
+    end
+    alias include? option_texts_include?
+    alias includes? option_texts_include?
+
+    # Is the specified option (text) selected? Raises exception of option does not exist.
+    def selected_option_texts_include?(text_or_regexp)
+      unless includes? text_or_regexp
+        raise Watir::Exception::UnknownObjectException, "Option #{text_or_regexp.inspect} not found."
+      end
+      selected_option_texts.grep(text_or_regexp).size > 0
+    end
+    alias selected? selected_option_texts_include?
     
     def option_texts
       options.map{|o| o.text }
@@ -236,16 +256,21 @@ module Watir
       method_options={:wait => true, :highlight => true}.merge(method_options)
       raise ArgumentError, "no block given!" unless block_given?
       any_changed=false
+      any_matched=false
       with_highlight(method_options[:highlight]) do
         self.options.each do |option|
           if yield option
-            any_changed=true
-            option.selected=true
+            any_matched=true
+            if !option.selected
+              option.selected=true
+              any_changed=true
+            end
           end
         end
         if any_changed
           fire_event(:onchange, method_options.merge(:highlight => false))
-        else
+        end
+        if !any_matched
           raise Watir::Exception::NoValueFoundException
         end
       end
@@ -342,6 +367,14 @@ module Watir
     # nested tables. 
     def row_count
       element_object.rows.length
+    end
+    
+    # returns all of the cells of this table. to get the cells including nested tables, 
+    # use #table_cells, which is defined on all containers (including Table) 
+    def cells
+      ElementCollection.new(rows.inject([]) do |cells_arr, row|
+        cells_arr+row.cells.to_a
+      end)
     end
     
     # returns the number of columns of the table, either on the row at the given index
@@ -486,7 +519,7 @@ module Watir
     def for
       raise "document is not defined - cannot search for labeled element" unless document_object
       if for_object=document_object.getElementById(element_object.htmlFor)
-        base_element_klass.factory(for_object, extra)
+        base_element_class.factory(for_object, extra)
       else
         raise "no element found that #{self.inspect} is for!"
       end

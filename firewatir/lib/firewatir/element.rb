@@ -4,19 +4,8 @@ module Watir
   class FFElement
     include Watir::FFContainer
     include Element
-    # Number of spaces that separate the property from the value in the to_s method
-    TO_S_SIZE = 14
+    extend DomWrap
   
-
-    # How to get the nodes using XPath in mozilla.
-    #ORDERED_NODE_ITERATOR_TYPE = 5
-    # To get the number of nodes returned by the xpath expression
-    #NUMBER_TYPE = 1
-    # To get single node value
-    #FIRST_ORDERED_NODE_TYPE = 9
-    # This stores the level to which we have gone finding element inside another element.
-    # This is just to make sure that every element has unique name in JSSH.
-    
     class << self
       def factory(element_object, extra={})
         curr_klass=self
@@ -29,18 +18,9 @@ module Watir
         end
         curr_klass.new(:element_object, element_object, extra)
       end
-    
     end
 
-    #
-    # Description:
-    #    Creates new instance of element. 
-    #
-    #    Used internally by FireWatir.
-    #
-    # Input:
-    #   
-    #
+    # Creates new instance of FFElement. 
     def initialize(how, what, extra={})
       @how, @what=how, what
       raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
@@ -59,6 +39,7 @@ module Watir
     
     def outer_html
       # in case doing appendChild of self on the temp_parent_element causes it to be removed from our parentNode, we first copy the list of parentNode's childNodes (our siblings)
+      # todo/fix: can use cloneNode instead of all this? 
       if parentNode=element_object.parentNode
         parentNode=parentNode.store_rand_temp
         orig_siblings=jssh_socket.object('[]').store_rand_prefix('firewatir_elements')
@@ -92,42 +73,24 @@ module Watir
 #    alias ole_object element_object
 
     private
-    def base_element_klass
+    def base_element_class
       FFElement
     end
-    def browser_klass
+    def browser_class
       Firefox
     end
 
-    private
-    #def self.def_wrap(ruby_method_name, ole_method_name = nil)
-    #  ole_method_name = ruby_method_name unless ole_method_name
-    #  define_method ruby_method_name do
-    #    locate
-    #    attr=element_object.attr(ole_method_name)
-    #    attr.type=='undefined' ? nil : element_object.get(ole_method_name)
-    #  end
-    #end
-  
-    #def get_attribute_value(attribute_name)
-    #  element_object.getAttribute attribute_name
-    #end
-  
     public
     def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
       document_object.defaultView.getComputedStyle(element_object, nil)
     end
     
-    #
-    # Description:
-    #   Sets and clears the colored highlighting on the currently active element.
-    #
-    # Input:
-    #   set_or_clear - this can have following two values
+    #   Sets or clears the colored highlighting on the currently active element.
+    #   set_or_clear - should be 
     #   :set - To set the color of the element.
-    #   :clear - To clear the color of the element.
-    #
+    #   :clear - To restore the element to its original color
     def highlight(set_or_clear)
+      # TODO: make common
       if set_or_clear == :set
         @original_color=element_object.style.background
         element_object.style.background=DEFAULT_HIGHLIGHT_COLOR
@@ -145,44 +108,21 @@ module Watir
   
     public
 
-    #
-    #
-    # Description:
-    #   Matches the given text with the current text shown in the browser for that particular element.
-    #
-    # Input:
-    #   target - Text to match. Can be a string or regex
-    #
-    # Output:
-    #   Returns the index if the specified text was found.
-    #   Returns matchdata object if the specified regexp was found.
-    #
-    def contains_text?(target)
+    # Returns true if this Element's #text matches the given String or Regexp to match; otherwise false. 
+    def contains_text?(match)
       self_text=self.text
-      if target.kind_of? Regexp
-        !!self_text =~ target
-      elsif target.kind_of? String
-        self_text.include?(target)
+      if match.kind_of? Regexp
+        !!self_text =~ match
+      elsif match.kind_of? String
+        self_text.include?(match)
       else
-        raise TypeError, "Expected String or Regexp, got #{target.inspect} (#{target.class.name})"
+        raise TypeError, "Expected String or Regexp, got #{match.inspect} (#{match.class.name})"
       end
     end
     alias contains_text contains_text?
-    
 
-    #
-    # Description:
-    #   Returns array of elements that matches a given XPath query.
-    #   Mozilla browser directly supports XPath query on its DOM. So no need to create the DOM tree as WATiR does for IE.
+    # Returns array of element objects that match the given XPath query.
     #   Refer: https://developer.mozilla.org/en/DOM/document.evaluate
-    #   Used internally by Firewatir use ff.elements_by_xpath instead.
-    #
-    # Input:
-    #   xpath - The xpath expression or query.
-    #
-    # Output:
-    #   Array of elements that matched the xpath expression provided as parameter.
-    #
     def element_objects_by_xpath(xpath)
       elements=[]
       result=document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
@@ -192,24 +132,13 @@ module Watir
       elements
     end
 
-    #
-    # Description:
-    #   Returns first element found while traversing the DOM; that matches an given XPath query.
-    #   Mozilla browser directly supports XPath query on its DOM. So no need to create the DOM tree as WATiR does for IE.
+    # Returns the first element object that matches the given XPath query.
     #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
-    #   Used internally by Firewatir use ff.element_by_xpath instead.
-    #
-    # Input:
-    #   xpath - The xpath expression or query.
-    #
-    # Output:
-    #   First element in DOM that matched the XPath expression or query.
-    #
     def element_object_by_xpath(xpath)
       document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
     end
 
-    # Returns the parent element (a FFElement or something that inherits from it, using FFElement.factory). 
+    # Returns the parent element (a FFElement or subclass, using FFElement.factory). 
     # returns nil if there is no parent, or if the parent is the document. 
     def parent(options={})
       @parent=nil if options[:reload]
@@ -223,13 +152,12 @@ module Watir
       end
     end
     
-    #
-    # Description:
-    #   Fires the provided event for an element and by default waits for the action to get completed.
-    #
-    # Input:
-    #   event - Event to be fired like "onclick", "onchange" etc.
-    #   wait - Whether to wait for the action to get completed or not. By default its true.
+    # Fires the given event on this element. 
+    # The given event name can be either of the form 'onclick' (for compatibility with IE) or just 'click' (can also be Symbol :onclick or :click)
+    # takes options:
+    # - :wait => true/false - (default true) whether to wait for the fire event to return, and call #wait (see #wait's documentation). 
+    #   if false, fires the event in a setTimeout(click function, 0) in the browser. 
+    # - :highlight => true/false - (default true) whether to highlight this Element when firing the event. 
     #
     # TODO: Provide ability to specify event parameters like keycode for key events, and click screen
     #       coordinates for mouse events.
@@ -271,7 +199,7 @@ module Watir
         else
           element_object.dispatchEvent(event)
         end
-      
+
         # I do not know why the following was here, clobbering the event type. 
         #if(element_type == "HTMLSelectElement")
         #  dom_event_type = 'HTMLEvents'
@@ -282,29 +210,6 @@ module Watir
       end
     end
     alias fireEvent fire_event
-
-    #
-    # Description:
-    #   Checks element for display: none or visibility: hidden, these are
-    #   the most common methods to hide an html element
-    def visible? 
-      assert_exists 
-      element_to_check=element_object
-      while element_to_check && !element_to_check.instanceof(jssh_socket.Components.interfaces.nsIDOMDocument)
-        style=document_object.defaultView.getComputedStyle(element_to_check, nil)
-        if style.visibility=='hidden' || style[:display]=='none'
-          return false
-        end
-        element_to_check=element_to_check.parentNode
-      end
-      return true
-    end
-
-    # Returns the text content of the element.
-    def text
-      element_object.textContent
-    end
-    alias innerText text
 
     # Fires the click event on this element. 
     #
@@ -342,6 +247,30 @@ module Watir
     # Waits for the browser to finish loading, if it is loading. See Firefox#wait. 
     def wait
       @container.wait
+    end
+    # Checks this element and its parents for display: none or visibility: hidden, these are 
+    # the most common methods to hide an html element. Returns false if this seems to be hidden
+    # or a parent is hidden. 
+    def visible? 
+      assert_exists 
+      element_to_check=element_object
+      while element_to_check && !element_to_check.instanceof(jssh_socket.Components.interfaces.nsIDOMDocument)
+        style=document_object.defaultView.getComputedStyle(element_to_check, nil)
+        if style.visibility=='hidden' || style[:display]=='none'
+          return false
+        end
+        element_to_check=element_to_check.parentNode
+      end
+      return true
+    end
+
+    # Returns the text content of the element.
+    dom_wrap :text => :textContent
+  
+    def jssh_to_element_collection(element_class, jssh_collection)
+      ElementCollection.new(jssh_collection.to_array.map do |element_object|
+        element_class.new(:element_object, element_object, extra)
+      end)
     end
     
 #    def invoke(js_method)

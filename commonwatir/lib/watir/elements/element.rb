@@ -8,62 +8,6 @@ class Module
   end
 end
 module Watir
-  class ElementCollection # TODO/FIX: move this somewhere more appropriate
-    include Enumerable
-    def initialize(enumerable=nil)
-      if enumerable && !enumerable.is_a?(Enumerable)
-        raise ArgumentError, "Initialize giving an enumerable, not #{enumerable.inspect} (#{enumerable.class})"
-      end
-      @array=[]
-      enumerable.each do |element|
-        @array << element
-      end
-      @array.freeze
-    end
-    def to_a
-      @array.dup # return unfrozen dup
-    end
-    
-    def each
-      @array.each do |element|
-        yield element
-      end
-    end
-    def each_index
-      (1..size).each do |i|
-        yield i
-      end
-    end
-    
-    def [](index)
-      at(index)
-    end
-    def at(index)
-      unless index.is_a?(Integer) && (1..size).include?(index)
-        raise IndexError, "Expected an integer between 1 and #{size}"
-      end
-      array_index=index-1
-      @array.at(array_index)
-    end
-    def index(obj)
-      array_index=@array.index(obj)
-      array_index && array_index+1
-    end
-    
-    def inspect
-      "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{@array.map{|el|el.inspect}.join(', ')}>"
-    end
-
-    # methods to just pass to the array 
-    [:empty?, :size, :length, :first, :last, :include?].each do |method|
-      define_method method do |*args|
-        @array.send(method, *args)
-      end
-    end
-    def ==(other_collection)
-      other_collection.class==self.class && other_collection.to_a==@array
-    end
-  end
   module DomWrap
     # takes any number of arguments, where each argument is either a symbols or strings representing 
     # a method that is the same in ruby and on the dom, or a hash of key/value pairs where each
@@ -75,31 +19,15 @@ module Watir
         hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise("don't know what to do with arg #{arg.inspect} (#{arg.class})")
         hash.each_pair do |ruby_method_name, dom_method_name|
           define_method ruby_method_name do |*args|
-            assert_exists
-            if element_object.respond_to?(dom_method_name)
-              element_object.method_missing(dom_method_name, *args)
-              # note: using method_missing (not invoke) so that attribute= methods can be used. 
-            elsif args.length==0
-              element_object.getAttribute(dom_method_name.to_s)
-            else
-              raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
-            end
+            method_from_element_object(dom_method_name, *args)
           end
         end
       end
     end
-    #TODO fix duplication with dom_wrap
     def dom_wrap_deprecated(ruby_method_name, dom_method_name, new_method_name)
       define_method ruby_method_name do |*args|
         STDERR.puts "DEPRECATION WARNING: #{self.class.name}\##{ruby_method_name} is deprecated, please use #{self.class.name}\##{new_method_name}\n(called from #{caller.map{|c|"\n"+c}}})"
-        assert_exists
-        if element_object.respond_to?(dom_method_name)
-          element_object.method_missing(dom_method_name, *args)
-        elsif args.length==0
-          element_object.getAttribute(dom_method_name.to_s)
-        else
-          raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
-        end
+        method_from_element_object(dom_method_name, *args)
       end
     end
   end
@@ -259,6 +187,25 @@ module Watir
     end
     include ElementModule
     
+    private
+    def method_from_element_object(dom_method_name, *args)
+      assert_exists
+      if element_object.object_respond_to?(dom_method_name)
+        element_object.method_missing(dom_method_name, *args)
+        # note: using method_missing (not invoke) so that attribute= methods can be used. 
+      elsif args.length==0
+        if element_object.object_respond_to?(:getAttributeNode)
+          element_object.getAttributeNode(dom_method_name.to_s).value
+          #element_object.getAttribute(dom_method_name.to_s)
+        else
+          nil
+        end
+      else
+        raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
+      end
+    end
+    public
+    
     inspect_these(:how, :what, {:label => :index, :value => proc{ @index }, :if => proc{ @index }})
     dom_wrap_inspect :tagName, :id
     dom_wrap :className, :title, :innerHTML, :tag_name => :tagName, :text => :textContent, :inner_html => :innerHTML, :class_name => :className
@@ -267,6 +214,10 @@ module Watir
     dom_wrap :style
     dom_wrap :scrollIntoView
     dom_wrap :get_attribute_value => :getAttribute, :attribute_value => :getAttribute
+
+    # #text is defined on browser-specific Element classes 
+    alias_deprecated :innerText, :text
+    alias_deprecated :textContent, :text
     
     attr_reader :how
     attr_reader :what
@@ -292,7 +243,7 @@ module Watir
       end
       if element_object && Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
         begin
-          if method_to_invoke=['id', 'name', 'src'].detect{|method| element_object.ole_respond_to?(method)}
+          if method_to_invoke=['id', 'name', 'src', 'location'].detect{|method| element_object.object_respond_to?(method)}
             element_object.invoke(method_to_invoke) # try invoking a method on it 
           else # if we can't find a method that it responds to 
             # then.. carry on, I suppose, and it will just error if it needed to be relocated. 

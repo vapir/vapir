@@ -1019,6 +1019,13 @@ module Watir
       "Watir::IE.attach(:hwnd, #{hwnd})"
     end
     
+    private
+    def base_element_class
+      IEElement
+    end
+    def browser_class
+      IE
+    end
     
   end # class IE
 end

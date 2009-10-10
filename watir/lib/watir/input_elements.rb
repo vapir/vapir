@@ -2,15 +2,6 @@ module Watir
   
   class IEInputElement < IEElement
     include InputElement
-#    def locate
-#      @o = @container.locate_input_element(@how, @what, self.class::INPUT_TYPES)
-#    end
-#    def initialize(container, how, what)
-#      set_container container
-#      @how = how
-#      @what = what
-#      super(nil)
-#    end
   end
 
   #
@@ -28,86 +19,22 @@ module Watir
     # An empty array is returned if the select box has no contents.
     # Raises UnknownObjectException if the select box is not found
     def options
-      options_list=[]
-      element_object.options.each do |option_object|
-        options_list << IEOption.new(:element_object, option_object, extra)
-      end
-      ElementCollection.new(options_list)
+      ole_to_element_collection(IEOption, element_object.options)
     end
     
-    # Does the SelectList include the specified option (text)?
-#    def include? text_or_regexp
-#      getAllContents.grep(text_or_regexp).size > 0
-#    end
-
-    # Is the specified option (text) selected? Raises exception of option does not exist.
-#    def selected? text_or_regexp
-#      unless includes? text_or_regexp
-#        raise UnknownObjectException, "Option #{text_or_regexp.inspect} not found."
-#      end
-
-#      getSelectedItems.grep(text_or_regexp).size > 0
-#    end
-
 #    def option(attribute, value)
 #      assert_exists
 #      IEOption.new(self, attribute, value)
 #    end
   end
   
-#  module IEOptionAccess
-#    def text
-#      @option.text
-#    end
-#    def value
-#      @option.value
-#    end
-#    def selected
-#      @option.selected
-#    end
-#  end
-#  
-#  class IEOptionWrapper
-#    include IEOptionAccess
-#    def initialize(option)
-#      @option = option
-#    end
-#  end
-  
   # An item in a select list
   class IEOption < IEElement
     include Option
-#    include IEOptionAccess
     include Watir::Exception
-#    def initialize(select_list, attribute, value)
-#      @select_list = select_list
-#      @how = attribute
-#      @what = value
-#      @option = nil
-#      
-#      unless [:text, :value, :label].include? attribute
-#        raise MissingWayOfFindingObjectException,
-#                    "Option does not support attribute #{@how}"
-#      end
-#      @select_list.o.each do |option| # items in the list
-#        if value.matches(option.invoke(attribute.to_s))
-#          @option = option
-#          break
-#        end
-#      end
-#      
-#    end
-#    def assert_exists
-#      unless @option
-#        raise UnknownObjectException,
-#                    "Unable to locate an option using #{@how} and #{@what}"
-#      end
-#    end
-#    private :assert_exists
     def select
       assert_exists
       element_object.selected=true
-      #@select_list.select_item_in_select_list(@how, @what)
     end
   end
   
@@ -176,10 +103,10 @@ module Watir
     # It causes no events to be fired or exceptions to be raised, 
     # so generally shouldn't be used.
     # It is preffered to use the set method.
-    def value=(v)
-      assert_exists
-      element_object.value = v.to_s
-    end
+    #def value=(v)
+    #  assert_exists
+    #  element_object.value = v.to_s
+    #end
     
     def requires_typing
     	@type_keys = true
@@ -198,29 +125,29 @@ module Watir
     INPUT_TYPES = ["hidden"]
     
     # set is overriden in this class, as there is no way to set focus to a hidden field
-    def set(n)
-      self.value = n
-    end
-    
-    # override the append method, so that focus isnt set to the hidden object
-    def append(n)
-      self.value = self.value.to_s + n.to_s
-    end
-    
-    # override the clear method, so that focus isnt set to the hidden object
-    def clear
-      self.value = ""
-    end
-    
-    # this method will do nothing, as you cant set focus to a hidden field
-    def focus
-    end
-    
-    # Hidden element is never visible - returns false.
-    def visible?
-      assert_exists
-      false
-    end
+    #def set(n)
+    #  self.value = n
+    #end
+    #
+    ## override the append method, so that focus isnt set to the hidden object
+    #def append(n)
+    #  self.value = self.value.to_s + n.to_s
+    #end
+    #
+    ## override the clear method, so that focus isnt set to the hidden object
+    #def clear
+    #  self.value = ""
+    #end
+    #
+    ## this method will do nothing, as you cant set focus to a hidden field
+    #def focus
+    #end
+    #
+    ## Hidden element is never visible - returns false.
+    #def visible?
+    #  assert_exists
+    #  false
+    #end
     
   end
   
@@ -266,90 +193,17 @@ module Watir
     end
   end
   
-  # This class is the class for radio buttons and check boxes.
-  # It contains methods common to both.
-  # Normally a user would not need to create this object as it is returned by the Watir::Container#checkbox or Watir::Container#radio methods
-  #
-  # most of the methods available to this element are inherited from the Element class
-  #
-#  module IERadioCheckCommon
-#    # This method determines if a radio button or check box is set.
-#    # Returns true is set/checked or false if not set/checked.
-#    # Raises UnknownObjectException if its unable to locate an object.
-#    def set? # could be just "checked?"
-#      assert_exists
-#      return element_object.checked
-#    end
-#    alias checked? set?
-    
-    # This method is the common code for setting or clearing checkboxes and radio.
-#    def set_clear_item(set)
-#      element_object.checked = set
-#      element_object.fireEvent("onClick")
-#      @container.wait
-#    end
-#    private :set_clear_item
-    
-#  end
-  
   #--
   #  this class makes the docs better
   #++
   # This class is the watir representation of a radio button.
   class IERadio < IEInputElement
-#    include IERadioCheckCommon
     include Radio
-#    INPUT_TYPES = ["radio"]
-    # This method clears a radio button. One of them will almost always be set.
-    # Returns true if set or false if not set.
-    #   Raises UnknownObjectException if its unable to locate an object
-    #         ObjectDisabledException IF THE OBJECT IS DISABLED
-#    def clear
-#      assert_enabled
-#      highlight(:set)
-#      set_clear_item(false)
-#      highlight(:clear)
-#    end
-#    
-#    # This method sets the radio list item.
-#    #   Raises UnknownObjectException  if it's unable to locate an object
-#    #         ObjectDisabledException  if the object is disabled
-#    def set
-#      assert_enabled
-#      highlight(:set)
-#      element_object.scrollIntoView
-#      set_clear_item(true)
-#      highlight(:clear)
-#    end
-    
   end
   
   # This class is the watir representation of a check box.
   class IECheckBox < IEInputElement
-#    include IERadioCheckCommon
     include CheckBox
-#    INPUT_TYPES = ["checkbox"]
-    # With no arguments supplied, sets the check box.
-    # If the optional value is supplied, the checkbox is set, when its true and 
-    # cleared when its false
-    #   Raises UnknownObjectException if it's unable to locate an object
-    #         ObjectDisabledException if the object is disabled
-#    def set(value=true)
-#      assert_enabled
-#      highlight :set
-#      unless element_object.checked == value
-#        set_clear_item value
-#      end
-#      highlight :clear
-#    end
-#    
-#    # Clears a check box.
-#    #   Raises UnknownObjectException if its unable to locate an object
-#    #         ObjectDisabledException if the object is disabled
-#    def clear
-#      set false
-#    end
-        
   end
   
 end

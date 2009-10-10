@@ -2,10 +2,10 @@ module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
   class IEElement # Wrapper
-    include Element
-    #extend DomWrap
-    include Watir::Exception
     include IEContainer # presumes @container is defined
+    include Element
+    extend DomWrap
+    include Watir::Exception
     attr_accessor :container
     
     # number of spaces that separate the property from the value in the to_s method
@@ -46,14 +46,14 @@ module Watir
     #  @element_object = o
     #end
     
-    extend DomWrap
     dom_wrap :currentStyle
+    dom_wrap :disabled # this applies to all elements for IE, apparently. 
     
     private
-    def base_element_klass
+    def base_element_class
       IEElement
     end
-    def browser_klass
+    def browser_class
       IE
     end
     private
@@ -97,12 +97,8 @@ module Watir
       ole_object.getAdjacentText("beforeBegin").strip
     end
     
-    # Return the innerText of the object
-    # Raise an ObjectNotFound exception if the object cannot be found
-    def text
-      assert_exists
-      return ole_object.innerText
-    end
+    # Returns the text content of the element.
+    dom_wrap :text => :innerText
     
 #    def ole_inner_elements
 #      assert_exists
@@ -278,6 +274,14 @@ module Watir
       return ole_object.getAttribute(attribute_name)
     end
     
+    private
+    def ole_to_element_collection(element_class, ole_collection)
+      elements=[]
+      (0...ole_collection.length).each do |i|
+        elements << element_class.new(:element_object, ole_collection.item(i), extra)
+      end
+      ElementCollection.new(elements)
+    end
   end
   
   class ElementMapper # Still to be used

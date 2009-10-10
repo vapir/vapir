@@ -40,9 +40,9 @@ require 'watir/win32ole'
 # necessary extension of win32ole 
 class WIN32OLE
   def respond_to?(method)
-    super || ole_respond_to?(method)
+    super || object_respond_to?(method)
   end
-  def ole_respond_to?(method)
+  def object_respond_to?(method)
     #!!ole_methods.detect{|ole_method| ole_method.to_s == method.to_s}
     # the above is ridiculously slow.
     method=method.to_s

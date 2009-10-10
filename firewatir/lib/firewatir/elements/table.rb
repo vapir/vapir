@@ -1,16 +1,11 @@
 module Watir
-  module FFHasRowsAndColumns
+  class FFTable < FFElement
+    include Table
     # returns an ElementCollection of rows in the table.
     def rows
       assert_exists
-      ElementCollection.new(element_object.rows.to_array.map do |row|
-        FFTableRow.new(:element_object, row, extra)
-      end)
+      jssh_to_element_collection(FFTableRow, element_object.rows)
     end
-  end
-  class FFTable < FFElement
-    include Table
-    include FFHasRowsAndColumns
     #
     # Description:
     #   Override the highlight method, as if the tables rows are set to have a background color,
@@ -50,6 +45,10 @@ module Watir
 
   class FFTBody < FFElement
     include TBody
-    include FFHasRowsAndColumns
+    # returns an ElementCollection of rows in the tbody.
+    def rows
+      assert_exists
+      jssh_to_element_collection(FFTableRow, element_object.rows)
+    end
   end
 end # FireWatir

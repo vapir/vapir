@@ -1,37 +1,7 @@
 module Watir
 
-  # Forms
-  
-#  module IEFormAccess
-#    def name
-#      @element_object.getAttributeNode('name').value
-#    end
-#    def action
-#      @element_object.action
-#    end
-#    def method
-#      @element_object.invoke('method')
-#    end
-#    def id
-#      @element_object.invoke('id')
-#    end
-#  end
-  
-  # wraps around a form OLE object
-#  class IEFormWrapper
-#    include IEFormAccess
-#    def initialize ole_object
-#      @element_object = ole_object
-#    end
-#  end
-  
-  #   Form Factory object
   class IEForm < IEElement
     include Form
-#    include IEFormAccess
-#    include IEContainer
-    
-#    attr_accessor :form, :ole_object
     
     # Submit the data -- equivalent to pressing Enter or Return to submit a form.
     def submit 
@@ -40,23 +10,10 @@ module Watir
       wait
     end
     
-#    def ole_inner_elements
-#      assert_exists
-#      @element_object.elements
-#    end
-#    private :ole_inner_elements
-    
-#    def document
-#      return @element_object
-#    end
-    
-#    def wait(no_sleep=false)
-#      @container.wait(no_sleep)
-#    end
-    
     # This method is responsible for setting and clearing the colored highlighting on the specified form.
     # use :set  to set the highlight
     #   :clear  to clear the highlight
+    # TODO: move to common
     def highlight(set_or_clear, element, count)
       
       if set_or_clear == :set
@@ -104,20 +61,4 @@ module Watir
     
   end # class IEForm
   
-end
-
-module Watir
-#  class IEForms < IEElementCollections
-#    def element_class; Form; end
-#    def element_tag; 'FORM'; end
-#    def length
-#      @container.document.getElementsByTagName("FORM").length
-#    end
-#  end
-
-#  module IEContainer
-#    def forms
-#      Forms.new(self)
-#    end
-#  end
 end

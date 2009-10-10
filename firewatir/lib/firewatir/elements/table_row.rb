@@ -16,9 +16,7 @@ module Watir
     #
     def cells
       assert_exists
-      ElementCollection.new(element_object.cells.to_array.map do |cell|
-        FFTableCell.new(:element_object, cell, extra)
-      end)
+      jssh_to_element_collection(FFTableCell, element_object.cells)
     end
 
   end # TableRow

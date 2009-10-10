@@ -441,30 +441,5 @@ module Watir
     # return document.body.all 
     # end
     # private :ole_inner_elements
-    
-    
-    # 
-    # Description:
-    #   This method shows the available objects on the current page.
-    #   This is usually only used for debugging or writing new test scripts.
-    #   This is a nice feature to help find out what HTML objects are on a page
-    #   when developing a test case using FireWatir.
-    #
-    # Typical Usage:
-    #   ff.show_all_objects
-    #
-    # Output:
-    #   Prints all the available elements on the page.
-    #
-    def show_all_objects(write_to=$stdout)
-      # this used to reject tagNames 'br', 'hr', 'doctype', 'meta', and elements with no tagName
-      elements=ElementCollection.new(containing_object.getElementsByTagName('*').to_array.map{|el| FFElement.factory(el)})
-      elements.each do |element|
-        write_to.write element.to_s+"\n"
-        write_to.write "------------------------------------------\n"
-      end
-      return elements
-    end
-    
   end
 end # module 

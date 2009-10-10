@@ -825,9 +825,9 @@ class JsshObject
   end
   
   def respond_to?(method)
-    super || js_respond_to?(method)
+    super || object_respond_to?(method)
   end
-  def js_respond_to?(method)
+  def object_respond_to?(method)
     method=method.to_s
     if method =~ /^([a-z_][a-z0-9_]*)([=?!])?$/i
       method = $1
@@ -849,6 +849,7 @@ class JsshObject
       return attr.type!='undefined'
     end
   end
+  
   def id(*args)
     method_missing :id, *args
   end

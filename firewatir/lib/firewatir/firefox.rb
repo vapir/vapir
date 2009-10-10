@@ -1026,5 +1026,12 @@ module Watir
       "#{ff}/Contents/MacOS/firefox-bin"
     end
 
+    private
+    def base_element_class
+      FFElement
+    end
+    def browser_class
+      Firefox
+    end
   end # Firefox
 end # FireWatir

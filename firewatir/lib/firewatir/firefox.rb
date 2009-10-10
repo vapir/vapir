@@ -621,10 +621,14 @@ module Watir
 
     ARBITRARY_TIMEOUT=300 # seconds 
     # Waits for the page to get loaded.
-    def wait(last_url = nil)
+    def wait(options={})
+      unless options.is_a?(Hash)
+        raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
+      end
+      options={:sleep => false, :last_url => nil}.merge(options)
       started=Time.now
       while browser_object.webProgress.isLoadingDocument
-        sleep 0.5
+        sleep 0.1
         if Time.now - started > ARBITRARY_TIMEOUT
           raise "Page Load Timeout"
         end
@@ -635,7 +639,7 @@ module Watir
       # twice with the same URL, we simply accept that we're done.
       url= document_object.URL
 
-      if(url != last_url)
+      if(url != options[:last_url])
         # Check for Javascript redirect. As we are connected to Firefox via JSSh. JSSh
         # doesn't detect any javascript redirects so check it here.
         # If page redirects to itself that this code will enter in infinite loop.
@@ -651,7 +655,7 @@ module Watir
         
         if wait_time
           sleep(wait_time)
-          wait(url)
+          wait(:last_url => url)
         end    
       end
       run_error_checks

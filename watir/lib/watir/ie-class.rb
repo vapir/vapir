@@ -488,7 +488,11 @@ module Watir
     # =nodoc
     # Note: This code needs to be prepared for the ie object to be closed at 
     # any moment!
-    def wait(no_sleep=false)
+    def wait(options={})
+      unless options.is_a?(Hash)
+        raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
+      end
+      options={:sleep => false}.merge(options)
       @xml_parser_doc = nil
       @down_load_time = 0.0
       a_moment = 0.2 # seconds
@@ -501,7 +505,7 @@ module Watir
         until @ie.readyState == READYSTATE_COMPLETE do
           sleep a_moment
         end
-        sleep a_moment
+        #sleep a_moment # why is this here? 
         until @ie.document do
           sleep a_moment
         end
@@ -510,7 +514,7 @@ module Watir
 
       rescue WIN32OLERuntimeError # IE window must have been closed
         @down_load_time = Time.now - start_load_time
-        sleep @pause_after_wait unless no_sleep
+        #sleep @pause_after_wait if options[:sleep]
         return @down_load_time
       end
             
@@ -532,7 +536,7 @@ module Watir
 
       @down_load_time = Time.now - start_load_time
       run_error_checks
-      sleep @pause_after_wait unless no_sleep
+      sleep @pause_after_wait if options[:sleep]
       @down_load_time
     end
     

@@ -110,7 +110,7 @@ module Watir
       "Watir::IE.find(:hwnd, #{@container.hwnd}).modal_dialog"
     end
       
-    def wait(no_sleep=false)
+    def wait(options={})
     end
     
     # Return true if the modal exists. Mostly this is useful for testing whether

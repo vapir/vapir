@@ -190,18 +190,43 @@ module Watir
     private
     def method_from_element_object(dom_method_name, *args)
       assert_exists
-      if element_object.object_respond_to?(dom_method_name)
-        element_object.method_missing(dom_method_name, *args)
-        # note: using method_missing (not invoke) so that attribute= methods can be used. 
-      elsif args.length==0
-        if element_object.object_respond_to?(:getAttributeNode)
-          element_object.getAttributeNode(dom_method_name.to_s).value
-          #element_object.getAttribute(dom_method_name.to_s)
-        else
-          nil
+
+      if Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE)
+        # avoid respond_to? on WIN32OLE because it's slow. just call the method and rescue if it fails. 
+        # the else block works fine for win32ole, but it's slower, so optimizing for IE here. 
+        got_attribute=false
+        attribute=nil
+        begin
+          attribute=element_object.method_missing(dom_method_name)
+          got_attribute=true
+        rescue WIN32OLERuntimeError
         end
+        if !got_attribute
+          if args.length==0
+            begin
+              attribute=element_object.getAttributeNode(dom_method_name.to_s).value
+              got_attribute=true
+            rescue WIN32OLERuntimeError
+            end
+          else
+            raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
+          end
+        end
+        attribute
       else
-        raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
+        if element_object.object_respond_to?(dom_method_name)
+          element_object.method_missing(dom_method_name, *args)
+          # note: using method_missing (not invoke) so that attribute= methods can be used. 
+        elsif args.length==0
+          if element_object.object_respond_to?(:getAttributeNode)
+            element_object.getAttributeNode(dom_method_name.to_s).value
+            #element_object.getAttribute(dom_method_name.to_s)
+          else
+            nil
+          end
+        else
+          raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
+        end
       end
     end
     public
@@ -238,21 +263,28 @@ module Watir
     # locates a javascript reference for this element
     def locate(options={})
       default_options={}
-      if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at
+      if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at # TODO: implement this for IE; only exists for Firefox now. 
         default_options[:relocate]=:recursive
       end
       if element_object && Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
+        # there has to be a better way of seeing if a win32ole still exists. 
+        ole_object_exists=true
+        method_name_to_test='ItDoesntReallyMatterWhatMethodITryToGetAsLongAsItDoesntExist'
         begin
-          if method_to_invoke=['id', 'name', 'src', 'location'].detect{|method| element_object.object_respond_to?(method)}
-            element_object.invoke(method_to_invoke) # try invoking a method on it 
-          else # if we can't find a method that it responds to 
-            # then.. carry on, I suppose, and it will just error if it needed to be relocated. 
-            # there must be a better way than this to see if it still exists. 
+          element_object.ole_method(method_name_to_test)
+          # try to get a method that doesn't exist - then we can tell from the error whether the ole object exists or not
+        rescue RuntimeError, WIN32OLERuntimeError
+          if $!.is_a?(RuntimeError) && $!.message.include?("failed to GetTypeInfo")
+            # if we get a RuntimeError with "failed to GetTypeInfo" then the object doesn't exist 
+            ole_object_exists=false
+          elsif $!.is_a?(WIN32OLERuntimeError) && $!.message.include?("not found "+method_name_to_test)
+            # if we get the normal "unknown property or method" WIN32OLERuntimeError, then the object exists 
+            ole_object_exists=true
+          else
+            raise
           end
-        rescue WIN32OLERuntimeError, RuntimeError               # if invoking that method errors
-          raise unless $!.message.include?("Access is denied.") # with an access denied exception
-           # then the element is probably gone - probably because of a reload or something -
-           # and we need to relocate recursively. 
+        end
+        if !ole_object_exists
           default_options[:relocate]=:recursive
         end
       end

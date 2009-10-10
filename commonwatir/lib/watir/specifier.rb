@@ -31,6 +31,12 @@ module Watir
       names=attributes_in_specifiers.call(:name)
       classNames=attributes_in_specifiers.call(:className)
 
+      # TODO/FIX: account for IE's getElementById / getElementsByName bug? 
+      # - http://www.romantika.name/v2/javascripts-getelementsbyname-ie-vs-firefox/
+      # - http://jszen.blogspot.com/2004/07/whats-in-name.html
+      # - http://webbugtrack.blogspot.com/2007/08/bug-411-getelementsbyname-doesnt-work.html
+      # - http://webbugtrack.blogspot.com/2007/08/bug-152-getelementbyid-returns.html
+
       # we can only use getElementById if:
       # - id is a string, as getElementById doesn't do regexp
       # - index is 1 or nil; otherwise even though it's not really valid, other identical ids won't get searched
@@ -38,6 +44,8 @@ module Watir
       #   the given specifiers, the element won't be found
       # - container has getElementById defined (that is, it's a Browser or a Frame), otherwise if we called 
       #   document_object.getElementById we wouldn't know if what's returned is below container in the DOM heirarchy or not
+      # TODO: have a user-settable flag somewhere that specifies that IDs are unique in pages they use. then getElementById 
+      # could be used a lot more than it is limited to here, and stuff would be faster. 
       if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && container.containing_object.respond_to?(:getElementById)
         candidates= if by_id=document_object.getElementById(ids.first)
           [by_id]
@@ -47,11 +55,11 @@ module Watir
       elsif names.size==1 && names.first.is_a?(String) && container.containing_object.respond_to?(:getElementsByName)
         candidates=container.containing_object.getElementsByName(names.first)#.to_array
       elsif classNames.size==1 && classNames.first.is_a?(String) && container.containing_object.respond_to?(:getElementsByClassName)
-        candidates=container.containing_object.getElementsByClassName(classNames.first)#.to_array
+        candidates=container.containing_object.getElementsByClassName(classNames.first)
       elsif tags.size==1 && tags.first.is_a?(String)
-        candidates=container.containing_object.getElementsByTagName(tags.first)#.to_array
+        candidates=container.containing_object.getElementsByTagName(tags.first)
       else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
-        candidates=container.containing_object.getElementsByTagName('*')#.to_array
+        candidates=container.containing_object.getElementsByTagName('*')
       end
       if candidates.is_a?(Array)
         candidates

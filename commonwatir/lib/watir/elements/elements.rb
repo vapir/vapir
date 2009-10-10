@@ -65,53 +65,67 @@ module Watir
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
     def clear
-      set ''
+      assert_enabled
+      assert_not_readonly
+      with_highlight do
+        element_object.focus
+        fire_event('onFocus', :just_fire => true)
+        element_object.select
+        fire_event("onSelect", :just_fire => true)
+        element_object.value = ''
+        fire_event :onKeyDown, :just_fire => true
+        fire_event :onKeyPress, :just_fire => true
+        fire_event :onKeyUp, :just_fire => true
+        fire_event('onBlur', :just_fire => true)
+        fire_event("onChange", :just_fire => true)
+      end
     end
     # Appends the specified string value to the contents of the text box.
     #   Raises UnknownObjectException if the object cant be found
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
-    def append(text)
-      set value+text
+    def append(value)
+      assert_enabled
+      assert_not_readonly
+      
+      with_highlight do
+        existing_value_chars=element_object.value.split(//)
+        new_value_chars=existing_value_chars+value.split(//)
+        #value_chars=value.split(//) # split on blank regexp (rather than iterating over each byte) for multibyte chars
+        if self.type.downcase=='text' && maxlength && maxlength >= 0 && new_value_chars.length > maxlength
+          new_value_chars=new_value_chars[0...maxlength]
+        end
+        element_object.scrollIntoView
+        type_keys=respond_to?(:type_keys) ? self.type_keys : true # TODO: FIX
+        typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0 # TODO: FIX
+        if type_keys
+          element_object.focus
+          fire_event('onFocus', :just_fire => true)
+          element_object.select
+          fire_event("onSelect", :just_fire => true)
+          ((existing_value_chars.length)...new_value_chars.length).each do |i|
+            #sleep typingspeed
+            element_object.value = new_value_chars[0..i].join('')
+            fire_event :onKeyDown, :just_fire => true
+            fire_event :onKeyPress, :just_fire => true
+            fire_event :onKeyUp, :just_fire => true
+          end
+          fire_event('onBlur', :just_fire => true)
+          fire_event("onChange", :just_fire => true)
+        else
+          element_object.value = element_object.value + value
+        end
+        wait
+      end
     end
     # Sets the contents of the text box to the specified text value
     #   Raises UnknownObjectException if the object cant be found
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
-    # todo/fix: type_keys and typingspeed
     def set(value)
-      assert_enabled
-      assert_not_readonly
-      
-      highlight(:set)
-      
-      value_chars=value.split(//) # split on blank regexp (rather than iterating over each byte) for multibyte chars
-      if self.type.downcase=='text' && maxlength && maxlength >= 0 && value_chars.length > maxlength
-        value_chars=value_chars[0...maxlength]
-        value=value_chars.join('')
-      end
-      element_object.scrollIntoView
-      type_keys=respond_to?(:type_keys) ? self.type_keys : true
-      typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0
-      if type_keys
-        element_object.focus
-        fire_event('onFocus', :highlight => false)
-        element_object.select
-        fire_event("onSelect", :highlight => false)
-        (0..value_chars.length).each do |i|
-          sleep typingspeed
-          element_object.value = value_chars[0...i].join('')
-          fire_event :onKeyDown, :highlight => false
-          fire_event :onKeyPress, :highlight => false
-          fire_event :onKeyUp, :highlight => false
-        end
-        fire_event("onChange", :highlight => false)
-        fire_event('onBlur', :highlight => false)
-      else
-        element_object.value = value
-      end
-      wait
-      highlight(:clear)
+      #element_object.value=''
+      clear
+      append(value)
     end
   end
   module Hidden
@@ -183,8 +197,8 @@ module Watir
           end
         end
         if changed
-          fire_event :onchange, :highlight => false
-          self.wait
+          fire_event :onchange, :just_fire => true
+          wait
         end
       end
     end
@@ -296,12 +310,12 @@ module Watir
       assert_enabled
       with_highlight do
         if checked!=state || self.is_a?(Radio) # don't click if it's already checked. but do anyway if it's a radio. 
-          fire_event :onclick, :highlight => false
+          fire_event :onclick, :just_fire => true
         end
         if checked!=state # firing the click event doesn't change the checked state in IE. check and change if needed. 
           element_object.checked=state
         end
-        fire_event :onchange, :highlight => false
+        fire_event :onchange, :just_fire => true
         wait
       end
     end

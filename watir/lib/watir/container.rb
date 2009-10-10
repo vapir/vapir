@@ -48,11 +48,6 @@ module Watir
       @container.logger.debug(what) if @logger
     end
     
-    # Wait until Internet Explorer has finished loading the page.
-    def wait(no_sleep=false)
-      @container.wait(no_sleep)
-    end
-    
     # Determine the how and what when defaults are possible.
     def process_default(default_attribute, how, what)
       if what.nil? && String === how

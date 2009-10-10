@@ -47,7 +47,10 @@ module Watir
     #end
     
     dom_wrap :currentStyle
-    dom_wrap :disabled # this applies to all elements for IE, apparently. 
+    dom_wrap :disabled, :disabled? => :disabled # this applies to all elements for IE, apparently. 
+    def enabled?
+      !disabled
+    end
     
     private
     def base_element_class
@@ -214,7 +217,7 @@ module Watir
       assert_enabled if !options[:just_fire] && respond_to?(:assert_enabled)
       with_highlight(options[:highlight]) do
         ole_object.fireEvent(event.to_s)
-        wait(true)
+        wait
       end
     end
     # Executes a user defined "fireEvent" for objects with JavaScript events tied to them such as DHTML menus.

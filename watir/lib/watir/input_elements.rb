@@ -156,41 +156,66 @@ module Watir
   # launching into a new process. 
   class IEFileField < IEInputElement
     include FileField
-    INPUT_TYPES = ["file"]
-    POPUP_TITLES = ['Choose file', 'Choose File to Upload']
+    # titles of file upload window titles in supported browsers 
+    UploadWindowTitles= { :IE8 => "Choose File to Upload", 
+                          :IE7 => 'Choose file', 
+                        }
+    # list of arguments to give to WinWindow#child_control_with_preceding_label to find the filename field
+    # on dialogs of supported browsers (just the one right now because it's the same in ie7 and ie8)
+    UploadWindowFilenameFields = [["File &name:", {:control_class_name => 'ComboBoxEx32'}]]
     
+    def set(setPath)
+      assert_exists
+      click_no_wait
+      require 'lib/win_window'
+      require 'lib/waiter'
+      container_window=WinWindow.new(browser.hwnd)
+
+      upload_dialog=::Waiter.try_for(16, :exception => Watir::Exception::NoMatchingWindowFoundException.new('No window found to upload a file')) do
+        if (popup=container_window.enabled_popup) && UploadWindowTitles.values.include?(popup.text)
+          popup
+        end
+      end
+        
+      filename_fields=UploadWindowFilenameFields.map do |control_args|
+        upload_dialog.child_control_with_preceding_label(*control_args)
+      end
+      (filename_field=filename_fields.compact.first) || (raise Watir::Exception::NoMatchingWindowFoundException, "Could not find a filename field in the File Upload dialog")
+      filename_field.send_set_text! setPath
+      upload_dialog.click_child_button_try_for!('Open', 4, :exception => WinWindow::Error.new("Failed to click the Open button on the File Upload dialog. It exists, but we couldn't click it."))
+    end
     # set the file location in the Choose file dialog in a new process
     # will raise a Watir Exception if AutoIt is not correctly installed
-    def set(path_to_file)
-      assert_exists
-      require 'watir/windowhelper'
-      WindowHelper.check_autoit_installed
-      begin
-        Thread.new do
-          sleep 1 # it takes some time for popup to appear
-
-          system %{ruby -e '
-              require "win32ole"
-
-              @autoit = WIN32OLE.new("AutoItX3.Control")
-              time    = Time.now
-
-              while (Time.now - time) < 15 # the loop will wait up to 15 seconds for popup to appear
-                #{POPUP_TITLES.inspect}.each do |popup_title|
-                  next unless @autoit.WinWait(popup_title, "", 1) == 1
-
-                  @autoit.ControlSetText(popup_title, "", "Edit1", #{path_to_file.inspect})
-                  @autoit.ControlSend(popup_title, "", "Button2", "{ENTER}")
-                  exit
-                end # each
-              end # while
-          '}
-        end.join(1)
-      rescue
-        raise Watir::Exception::WatirException, "Problem accessing Choose file dialog"
-      end
-      click
-    end
+#    def set(path_to_file)
+#      assert_exists
+#      require 'watir/windowhelper'
+#      WindowHelper.check_autoit_installed
+#      begin
+#        Thread.new do
+#          sleep 1 # it takes some time for popup to appear
+#
+#          system %{ruby -e '
+#              require "win32ole"
+#
+#              @autoit = WIN32OLE.new("AutoItX3.Control")
+#              time    = Time.now
+#
+#              while (Time.now - time) < 15 # the loop will wait up to 15 seconds for popup to appear
+#                #{POPUP_TITLES.inspect}.each do |popup_title|
+#                  next unless @autoit.WinWait(popup_title, "", 1) == 1
+#
+#                  @autoit.ControlSetText(popup_title, "", "Edit1", #{path_to_file.inspect})
+#                  @autoit.ControlSend(popup_title, "", "Button2", "{ENTER}")
+#                  exit
+#                end # each
+#              end # while
+#          '}
+#        end.join(1)
+#      rescue
+#        raise Watir::Exception::WatirException, "Problem accessing Choose file dialog"
+#      end
+#      click
+#    end
   end
   
   #--

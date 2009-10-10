@@ -234,7 +234,7 @@ module Watir
           fire_event('onclick', options)
         end
       end
-      self.wait if options[:wait]
+      wait if options[:wait]
     end
 
     # calls #click with :wait option false. 
@@ -245,8 +245,8 @@ module Watir
     end
   
     # Waits for the browser to finish loading, if it is loading. See Firefox#wait. 
-    def wait
-      @container.wait
+    def wait(options={})
+      @container.wait(options)
     end
     # Checks this element and its parents for display: none or visibility: hidden, these are 
     # the most common methods to hide an html element. Returns false if this seems to be hidden
@@ -256,7 +256,7 @@ module Watir
       element_to_check=element_object
       while element_to_check && !element_to_check.instanceof(jssh_socket.Components.interfaces.nsIDOMDocument)
         style=document_object.defaultView.getComputedStyle(element_to_check, nil)
-        if style.visibility=='hidden' || style[:display]=='none'
+        if style.visibility =~ /\Ahidden\z/i || style[:display] =~ /\Anone\z/i
           return false
         end
         element_to_check=element_to_check.parentNode

@@ -75,44 +75,123 @@ module Watir
     
     module_function
     def match_candidates(candidates, specifiers_list)
-      candidates.each do |candidate|
-        candidate_attributes=proc do |attr|
-          attrs=[]
-          if Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE) # ie & WIN32OLE optimization: hasAttribute does not exist on IE, and also avoid respond_to? on WIN32OLE (slow)
-            begin
-              attr_node=candidate.getAttributeNode(attr.to_s)
-              attrs << attr_node.value if attr_node
-            rescue WIN32OLERuntimeError
+      if candidates.length != 0 && Object.const_defined?('JsshObject') && (candidates.is_a?(JsshObject) || candidates.all?{|c| c.is_a?(JsshObject)})
+        # optimize for JSSH by moving code to the other side of the socket, rather than talking across it a whole lot
+        # this javascript should be exactly the same as the ruby in the else (minus WIN32OLE optimization) - 
+        # just written in javascript instead of ruby. 
+        #
+        # Note that the else block works perfectly fine, but is much much slower due to the amount of 
+        # socket activity. 
+        jssh_socket= candidates.is_a?(JsshObject) ? candidates.jssh_socket : candidates.first.jssh_socket
+        match_candidates_js=JsshObject.new("
+          (function(candidates, specifiers_list, LocateAliases)
+          { candidates=$A(candidates);
+            specifiers_list=$A(specifiers_list);
+            var matched_candidates=[];
+            var fuzzy_match=function(attr, what)
+            { if(typeof what=='string')
+              { if(typeof attr=='string')
+                { return attr.toLowerCase().strip()==what.toLowerCase().strip();
+                }
+                else
+                { return attr==what;
+                }
+              }
+              else if(typeof what=='number')
+              { return attr==what || attr==what.toString();
+              }
+              else
+              { if(typeof attr=='string')
+                { return attr.match(what);
+                }
+                else
+                { return attr==what;
+                }
+              }
+            };
+            candidates.each(function(candidate)
+            { var candidate_attributes=function(attr)
+              { var attrs=[];
+                if(candidate.hasAttribute && candidate.hasAttribute(attr))
+                { attrs.push(candidate.getAttributeNode(attr).value);
+                }
+                if(candidate[attr])
+                { attrs.push(candidate[attr]);
+                }
+                return $A(attrs);
+              };
+              var match= specifiers_list.any(function(specifier)
+              { return $H(specifier).all(function(howwhat)
+                { how=howwhat.key;
+                  what=howwhat.value;
+                  if(how=='types')
+                  { return what.any(function(type)
+                    { return candidate_attributes('type').any(function(attr){ return fuzzy_match(attr, type); });
+                    });
+                  }
+                  else
+                  { return $A([how].concat(LocateAliases[how] || [])).any(function(how_alias)
+                    { return candidate_attributes(how_alias).any(function(attr){ return fuzzy_match(attr, what); });
+                    });
+                  }
+                })
+              });
+              if(match)
+              { matched_candidates.push(candidate);
+              }
+            });
+            return matched_candidates;
+          })
+        ", jssh_socket, :debug_name => 'match_candidates_function')
+        matched_candidates=match_candidates_js.call(candidates, specifiers_list, LocateAliases)
+        matched_candidates.to_array.each do |matched_candidate|
+          yield matched_candidate
+        end
+      else
+        # IF YOU CHANGE THIS CODE CHANGE THE CORRESPONDING JAVASCRIPT ABOVE TOO 
+        candidates.each do |candidate|
+          candidate_attributes=proc do |attr|
+            attrs=[]
+            if Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE)
+              # ie & WIN32OLE optimization: hasAttribute does not exist on IE, and also avoid respond_to? on WIN32OLE; it is slow. 
+              begin
+                attr_node=candidate.getAttributeNode(attr.to_s)
+                attrs << attr_node.value if attr_node
+              rescue WIN32OLERuntimeError
+              end
+              begin
+                attrs << candidate.invoke(attr.to_s)
+              rescue WIN32OLERuntimeError
+              end
+            else 
+              # this doesn't actually get called anymore, since there are optimizations for both IE and firefox. 
+              # leaving it here anyway - maybe someday a different browser will have an object this code can use, 
+              # or maybe someday IE or firefox or both will not need the optimizations above. 
+              if candidate.object_respond_to?(:hasAttribute) && candidate.hasAttribute(attr)
+                attrs << candidate.getAttributeNode(attr.to_s).value
+              end
+              if candidate.object_respond_to?(attr)
+                attrs << candidate.invoke(attr.to_s)
+              end
             end
-            begin
-              attrs << candidate.invoke(attr.to_s)
-            rescue WIN32OLERuntimeError
-            end
-          else
-            if candidate.object_respond_to?(:hasAttribute) && candidate.hasAttribute(attr)
-              attrs << candidate.getAttributeNode(attr.to_s).value
-            end
-            if candidate.object_respond_to?(attr)
-              attrs << candidate.invoke(attr.to_s)
+            attrs
+          end
+          match= specifiers_list.any? do |specifier|
+            specifier.all? do |(how, what)|
+              if how==:types
+                what.any? do |type|
+                  candidate_attributes.call(:type).any?{|attr| Watir::Specifier.fuzzy_match(attr, type)}
+                end
+              else
+                ([how]+LocateAliases[how]).any? do |how_alias|
+                  candidate_attributes.call(how_alias).any?{|attr| Watir::Specifier.fuzzy_match(attr, what)}
+                end
+              end
             end
           end
-          attrs
-        end
-        match= specifiers_list.any? do |specifier|
-          specifier.all? do |(how, what)|
-            if how==:types
-              what.any? do |type|
-                candidate_attributes.call(:type).any?{|attr| Watir::Specifier.fuzzy_match(attr, type)}
-              end
-            else
-              ([how]+LocateAliases[how]).any? do |how_alias|
-                candidate_attributes.call(how_alias).any?{|attr| Watir::Specifier.fuzzy_match(attr, what)}
-              end
-            end
+          if match
+            yield candidate
           end
-        end
-        if match
-          yield candidate
         end
       end
       nil

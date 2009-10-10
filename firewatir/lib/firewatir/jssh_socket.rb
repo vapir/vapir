@@ -36,8 +36,8 @@ require 'socket'
 
 class JsshError < StandardError
   attr_accessor :source, :lineNumber, :stack, :fileName
-  class JsshSyntaxError < JsshError; end
 end
+class JsshSyntaxError < JsshError; end
 # This exception is thrown if we are unable to connect to JSSh.
 class JsshUnableToStart < JsshError; end
 class JsshUndefinedValueError < JsshError; end
@@ -624,11 +624,12 @@ class JsshObject
     cache_object([:pass, args], "#{ref}(#{args.map{|arg| arg.to_json}.join(', ')})", :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JsshObject) ? arg.debug_name : arg.to_json}.join(', ')})")
   end
   
-  # returns the value (via JsshSocket#value_json) of the return value of this function
-  # (assumes this object is a function) passing it thet given arguments (which are converted to_json). 
-  # simply, it just calls self.pass(*args).val 
+  # returns the value (via JsshSocket#value_json) or a JsshObject (see #val_or_object) of the return 
+  # value of this function (assumes this object is a function) passing it the given arguments (which 
+  # are converted to_json). 
+  # simply, it just calls self.pass(*args).val_or_object
   def call(*args)
-    pass(*args).val
+    pass(*args).val_or_object
   end
   
   # sets the given javascript variable to this object, and returns a JsshObject referring
@@ -951,7 +952,7 @@ class JsshHash < JsshObject
                }
                return keys;
              }"
-    @keys=jssh_socket.object(keyfunc).call(self)
+    @keys=jssh_socket.object(keyfunc).pass(self).val
   end
   def each
     keys.each do |key|

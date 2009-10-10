@@ -42,9 +42,12 @@ class WIN32OLE
   def respond_to?(method)
     super || object_respond_to?(method)
   end
+  
+  # checks if WIN32OLE#ole_method returns an WIN32OLE_METHOD, or errors. 
+  # WARNING: #ole_method is pretty slow, and consequently so is this. you are likely to be better
+  # off just calling a method you are not sure exists, and rescuing the WIN32OLERuntimeError
+  # that is raised if it doesn't exist. 
   def object_respond_to?(method)
-    #!!ole_methods.detect{|ole_method| ole_method.to_s == method.to_s}
-    # the above is ridiculously slow.
     method=method.to_s
     # strip assignment = from methods. going to assume that if it has a getter method, it will take assignment, too. this may not be correct, but will have to do. 
     if method =~ /=\z/
@@ -53,6 +56,19 @@ class WIN32OLE
     respond_to_cache[method]
   end
   
+  # TODO: implement! 
+  def exists?
+    begin
+      invoke('id') # TODO/FIX: what if it just doesn't respond to id? 
+      true
+    rescue WIN32OLERuntimeError
+      expected_message=["unknown property or method `id'","HRESULT error code:0x80070005","Access is denied."]
+      raise unless $!.message.split("\n").map{|line| line.strip } == expected_message
+      false
+    end
+  end
+  
+  private
   def respond_to_cache
     @respond_to_cache||=Hash.new do |hash, key|
       hash[key]=begin

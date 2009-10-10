@@ -43,18 +43,19 @@ module Watir
       # - id is the _only_ specifier, otherwise if the same id is used multiple times but the first one doesn't match 
       #   the given specifiers, the element won't be found
       # - container has getElementById defined (that is, it's a Browser or a Frame), otherwise if we called 
-      #   document_object.getElementById we wouldn't know if what's returned is below container in the DOM heirarchy or not
+      #   container.containing_object.getElementById we wouldn't know if what's returned is below container in the DOM heirarchy or not
+      # since this is almost always called with specifiers including tag name, input type, etc, getElementById is basically never used. 
       # TODO: have a user-settable flag somewhere that specifies that IDs are unique in pages they use. then getElementById 
       # could be used a lot more than it is limited to here, and stuff would be faster. 
-      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && container.containing_object.respond_to?(:getElementById)
-        candidates= if by_id=document_object.getElementById(ids.first)
+      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && container.containing_object.object_respond_to?(:getElementById)
+        candidates= if by_id=container.containing_object.getElementById(ids.first)
           [by_id]
         else
           []
         end
-      elsif names.size==1 && names.first.is_a?(String) && container.containing_object.respond_to?(:getElementsByName)
+      elsif names.size==1 && names.first.is_a?(String) && container.containing_object.object_respond_to?(:getElementsByName)
         candidates=container.containing_object.getElementsByName(names.first)#.to_array
-      elsif classNames.size==1 && classNames.first.is_a?(String) && container.containing_object.respond_to?(:getElementsByClassName)
+      elsif classNames.size==1 && classNames.first.is_a?(String) && container.containing_object.object_respond_to?(:getElementsByClassName)
         candidates=container.containing_object.getElementsByClassName(classNames.first)
       elsif tags.size==1 && tags.first.is_a?(String)
         candidates=container.containing_object.getElementsByTagName(tags.first)
@@ -74,37 +75,27 @@ module Watir
     
     module_function
     def match_candidates(candidates, specifiers_list)
-      # this proc works around hasAttribute not existing in IE 
-      has_attribute = proc do |element, attr|
-        if Object.const_defined?('WIN32OLE') && element.is_a?(WIN32OLE)
-          begin
-            !element.getAttributeNode(attr.to_s).nil?
-          rescue WIN32OLERuntimeError
-            false
-          end
-        else
-          element.object_respond_to?(:hasAttribute) && element.hasAttribute(attr)
-        end
-      end
       candidates.each do |candidate|
         candidate_attributes=proc do |attr|
           attrs=[]
-          attrs << candidate.getAttributeNode(attr.to_s).value if has_attribute.call(candidate, attr)
-          if candidate.object_respond_to?(attr)
-            attrs << candidate.invoke(attr.to_s)
+          if Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE) # ie & WIN32OLE optimization: hasAttribute does not exist on IE, and also avoid respond_to? on WIN32OLE (slow)
+            begin
+              attr_node=candidate.getAttributeNode(attr.to_s)
+              attrs << attr_node.value if attr_node
+            rescue WIN32OLERuntimeError
+            end
+            begin
+              attrs << candidate.invoke(attr.to_s)
+            rescue WIN32OLERuntimeError
+            end
+          else
+            if candidate.object_respond_to?(:hasAttribute) && candidate.hasAttribute(attr)
+              attrs << candidate.getAttributeNode(attr.to_s).value
+            end
+            if candidate.object_respond_to?(attr)
+              attrs << candidate.invoke(attr.to_s)
+            end
           end
-#          if Object.const_defined?('JsshObject') && candidate.is_a?(JsshObject)
-#            if candidate.js_respond_to?(attr)
-#              attrs << candidate.invoke(attr)
-#            end
-#          elsif Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE)
-#            begin
-#              attrs << candidate.invoke(attr.to_s)
-#            rescue WIN32OLERuntimeError
-#            end
-#          else
-#            raise RuntimeError, "candidate type not recognized: #{candidate.inspect} (#{candidate.class.name})"
-#          end
           attrs
         end
         match= specifiers_list.any? do |specifier|

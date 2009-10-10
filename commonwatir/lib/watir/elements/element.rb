@@ -267,25 +267,8 @@ module Watir
         default_options[:relocate]=:recursive
       end
       if element_object && Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
-        # there has to be a better way of seeing if a win32ole still exists. 
-        ole_object_exists=true
-        method_name_to_test='ItDoesntReallyMatterWhatMethodITryToGetAsLongAsItDoesntExist'
-        begin
-          element_object.ole_method(method_name_to_test)
-          # try to get a method that doesn't exist - then we can tell from the error whether the ole object exists or not
-        rescue RuntimeError, WIN32OLERuntimeError
-          if $!.is_a?(RuntimeError) && $!.message.include?("failed to GetTypeInfo")
-            # if we get a RuntimeError with "failed to GetTypeInfo" then the object doesn't exist 
-            ole_object_exists=false
-          elsif $!.is_a?(WIN32OLERuntimeError) && $!.message.include?("not found "+method_name_to_test)
-            # if we get the normal "unknown property or method" WIN32OLERuntimeError, then the object exists 
-            ole_object_exists=true
-          else
-            raise
-          end
-        end
-        if !ole_object_exists
-          default_options[:relocate]=:recursive
+        if !element_object.exists?
+          default_options[:relocate]=true
         end
       end
       options=default_options.merge(options)

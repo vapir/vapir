@@ -23,7 +23,7 @@ class TC_Dialog_Test < Test::Unit::TestCase
   def test_alert_without_bonus_script
     browser.button!(:id, 'btnAlert').click_no_wait
     sleep 0.4 # FIXME: need to be able to poll for window to exist
-    dialog.button!("OK").click
+    dialog.button("OK").click
     assert_match(/Alert button!/, browser.text_field!(:id, "testResult").value)  
   end
   

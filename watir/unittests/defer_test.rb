@@ -12,9 +12,12 @@ class TC_Defer < Test::Unit::TestCase
   tag_method :test_binding_to_newly_loaded_page, :fails_on_firefox, :attach
   def test_binding_to_newly_loaded_page
     @new_browser = Watir::Browser.new
-    text_field = @new_browser.text_field!(:name, 'text1')
-    button = @new_browser.button!(:value, 'Clear Events Box')
-    div = @new_browser.div!(:name, 'divvy')
+    #text_field = @new_browser.text_field!(:name, 'text1')
+    text_field=Watir::IETextField.new(:attributes, {:name => 'text1'}, :container => @new_browser, :browser => @new_browser, :locate => false)
+    #button = @new_browser.button!(:value, 'Clear Events Box')
+    button=Watir::IEButton.new(:attributes, {:value => 'Clear Events Box'}, :container => @new_browser, :browser => @new_browser, :locate => false)
+    #div = @new_browser.div!(:name, 'divvy')
+    div=Watir::IEDiv.new(:attributes, {:name => 'divvy'}, :container => @new_browser, :browser => @new_browser, :locate => false)
     @new_browser.goto($htmlRoot + "textfields1.html")
     assert_equal('Hello World', text_field.value)
     assert_equal('Clear Events Box', button.value)
@@ -34,11 +37,14 @@ class TC_Defer < Test::Unit::TestCase
   tag_method :test_exists, :fails_on_firefox, :attach
   def test_exists
     @new_browser = Watir::Browser.new
-    text_field = @new_browser.text_field(:name, 'text1')
-    button = @new_browser.button(:value, 'Clear Events Box')
-    div = @new_browser.div!(:name, 'divvy')
-    assert_nil(text_field)
-    assert_nil(button)
+    #text_field = @new_browser.text_field!(:name, 'text1')
+    text_field=Watir::IETextField.new(:attributes, {:name => 'text1'}, :container => @new_browser, :browser => @new_browser, :locate => false)
+    #button = @new_browser.button!(:value, 'Clear Events Box')
+    button=Watir::IEButton.new(:attributes, {:value => 'Clear Events Box'}, :container => @new_browser, :browser => @new_browser, :locate => false)
+    #div = @new_browser.div!(:name, 'divvy')
+    div=Watir::IEDiv.new(:attributes, {:name => 'divvy'}, :container => @new_browser, :browser => @new_browser, :locate => false)
+    assert_false(text_field.exists?)
+    assert_false(button.exists?)
     @new_browser.goto($htmlRoot + "textfields1.html")
     assert(text_field.exists?)
     assert(button.exists?)

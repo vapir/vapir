@@ -7,20 +7,6 @@ module Watir
   #
   class IEImage < IEElement
     include Image
-#    def initialize(container, how, what)
-#      set_container container
-#      @how = how
-#      @what = what
-#      super nil
-#    end
-    
-#    def locate
-#      if @how == :xpath
-#        @o = @container.element_by_xpath(@what)
-#      else
-#        @o = @container.locate_tagged_element('IMG', @how, @what)
-#      end
-#    end
     
     # this method returns the file created date of the image
     def file_created_date

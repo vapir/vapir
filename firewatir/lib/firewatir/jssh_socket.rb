@@ -134,7 +134,6 @@ class JsshSocket
       if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd.blank?}
         raise JsshError, "Socket seems to no longer be connected"
       end
-      #STDERR.puts "recv_socket has received #{received_data.size} recv's (s=#{s.inspect}): "+data
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end
 #    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}" }

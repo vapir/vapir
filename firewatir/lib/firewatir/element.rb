@@ -183,9 +183,9 @@ module Watir
     # Output:
     #   Array of elements that matched the xpath expression provided as parameter.
     #
-    def element_objects_by_xpath(container_object, xpath)
+    def element_objects_by_xpath(xpath)
       elements=[]
-      result=document_object.evaluate(xpath, container_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
+      result=document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
       while element=result.iterateNext
         elements << element.store_rand_object_key(@browser_jssh_objects)
       end
@@ -205,8 +205,8 @@ module Watir
     # Output:
     #   First element in DOM that matched the XPath expression or query.
     #
-    def element_object_by_xpath(container_object, xpath)
-      document_object.evaluate(xpath, container_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
+    def element_object_by_xpath(xpath)
+      document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
     end
 
     # Returns the parent element (a FFElement or something that inherits from it, using FFElement.factory). 

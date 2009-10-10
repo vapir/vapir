@@ -145,7 +145,9 @@ module Watir
         else
          attr =~ what
         end
-     else
+      when Numeric
+        attr==what || attr==what.to_s
+      else
         attr==what
       end
     end

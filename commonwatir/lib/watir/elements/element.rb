@@ -316,7 +316,15 @@ module Watir
           raise if options[:relocate]
           @what
         when :xpath
-          by_xpath=element_object_by_xpath(@container.containing_object, @what)
+          if !@container
+            raise
+          end
+          @container.locate!(options)
+          unless @container.respond_to?(:element_object_by_xpath)
+            raise Watir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
+          end
+          by_xpath=@container.element_object_by_xpath(@what)
+          # todo/fix: implement @index for this, using element_objects_by_xpath ? 
           matched_by_xpath=nil
           Watir::Specifier.match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers) do |match|
             matched_by_xpath=match
@@ -351,7 +359,7 @@ module Watir
       @element_object
     end
     def locate!(options={})
-      locate(options) || raise(self.class==FFFrame ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException, Watir::Exception.message_for_unable_to_locate(@how, @what, @index))
+      locate(options) || raise(self.is_a?(Frame) ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException, Watir::Exception.message_for_unable_to_locate(@how, @what, @index))
     end
     alias assert_exists locate!
 

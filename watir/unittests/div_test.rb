@@ -40,9 +40,9 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal("div1" ,      browser.div!(:index, 1).id)
     assert_equal("" ,          browser.div!(:index, 1).class_name)
     assert_equal("blueText" ,  browser.div!(:index, 2).class_name)
-    assert_equal(""    ,       browser.div!(:index, 2).value)
-    assert_equal(false ,       browser.div!(:index, 2).disabled)
-    assert_equal(""    ,       browser.div!(:index, 2).name)
+    #assert_equal(""    ,       browser.div!(:index, 2).value)
+    #assert_equal(false ,       browser.div!(:index, 2).disabled)
+    #assert_equal(""    ,       browser.div!(:index, 2).name)
     assert_equal("div2",       browser.div!(:index, 2).id)
   end
   
@@ -52,7 +52,7 @@ class TC_Divs < Test::Unit::TestCase
     
     index = 1
     browser.divs.each do |s|
-      assert_equal(browser.div!(:index,index).name, s.name)
+      #assert_equal(browser.div!(:index,index).name, s.name)
       assert_equal(browser.div!(:index,index).id, s.id)
       assert_equal(browser.div!(:index,index).class_name , s.class_name)
       index += 1
@@ -119,9 +119,9 @@ class TC_Divs < Test::Unit::TestCase
     assert_equal("span1" ,     browser.span!(:index , 1).id )
     assert_equal("" ,          browser.span!(:index , 1).class_name )
     assert_equal("blueText" ,  browser.span!(:index , 2).class_name )
-    assert_equal(""    ,       browser.span!(:index , 2).value)
-    assert_equal(false ,       browser.span!(:index , 2).disabled)
-    assert_equal(""    ,       browser.span!(:index , 2).name)
+    #assert_equal(""    ,       browser.span!(:index , 2).value)
+    #assert_equal(false ,       browser.span!(:index , 2).disabled)
+    #assert_equal(""    ,       browser.span!(:index , 2).name)
     assert_equal("span2",      browser.span!(:index , 2).id)
   end
   
@@ -132,7 +132,7 @@ class TC_Divs < Test::Unit::TestCase
     index = 1
     browser.spans.each do |s|
       # puts "each - span = " + s.to_s
-      assert_equal(browser.span!(:index, index ).name , s.name )
+      #assert_equal(browser.span!(:index, index ).name , s.name )
       assert_equal(browser.span!(:index, index ).id , s.id )
       assert_equal(browser.span!(:index, index ).class_name , s.class_name )
       index += 1

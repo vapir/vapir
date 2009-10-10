@@ -39,13 +39,14 @@ class TC_Forms2 < Test::Unit::TestCase # Note: there is no TC_Forms1
   # The following tests form bug 2261 
   tag_method :test_form_outer_html, :fails_on_firefox
   def test_form_outer_html 
-    expected = "\r\n<FORM id=f2 name=test2 action=pass2.html method=get><BR><INPUT type=submit value=Submit> </FORM>"
-    assert_equal(expected, browser.form!(:name, 'test2').html)
+    #expected = "\r\n<FORM id=f2 name=test2 action=pass2.html method=get><BR><INPUT type=submit value=Submit> </FORM>"
+    #assert_equal(expected, browser.form!(:name, 'test2').outer_html)
+    assert_match(/<FORM( id=f2| name=test2| action=pass2.html| method=get){4}><BR><INPUT( type=submit| value=Submit){2}> <\/FORM>/, browser.form!(:name, 'test2').outer_html)
   end
   tag_method :test_form_inner_html, :fails_on_ie
   def test_form_inner_html
     expected = "\n<br><input value=\"Submit\" type=\"submit\">\n"
-    assert_equal(expected, browser.form!(:name, 'test2').html)
+    assert_equal(expected, browser.form!(:name, 'test2').outer_html)
   end
   def test_form_flash
     assert_nothing_raised{ browser.form!(:name, 'test2').flash }
@@ -56,26 +57,7 @@ class TC_Form_Display < Test::Unit::TestCase
   include CaptureIOHelper
   def test_showforms
     goto_page "forms2.html"
-    actual = capture_stdout { browser.showForms }
-    assert_equal(<<END_OF_MESSAGE, actual)
-There are 4 forms
-Form name: 
-       id: 
-   method: get
-   action: pass.html
-Form name: test2
-       id: f2
-   method: get
-   action: pass2.html
-Form name: test3
-       id: 
-   method: get
-   action: pass2.html
-Form name: test2
-       id: 
-   method: get
-   action: pass2.html
-END_OF_MESSAGE
+    assert_match(/There are 4 forms(\nWatir::\w*Form.*?){4}/m, capture_stdout { browser.show_forms })
   end
 end
 

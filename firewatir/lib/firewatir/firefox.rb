@@ -345,11 +345,11 @@ module Watir
       unless browser_window_object
         raise "Window must be set (using open_window or attach) before the browser document can be set!"
       end
-      @browser_object=@browser_jssh_objects[:browser]= ::Waiter.try_for(2, :exception => Watir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
+      @browser_object=@browser_jssh_objects[:browser]= ::Waiter.try_for(2, :exception => nil) do# Watir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
         if browser_window_object.respond_to?(:getBrowser)
           browser_window_object.getBrowser
         end
-      end
+      end || debugger # TODO take out debug code
       
       # the following are not stored elsewhere; the ref will just be to attributes of the browser, so that updating the 
       # browser (in javascript) will cause all of these refs to reflect that as well 
@@ -398,7 +398,11 @@ module Watir
     #   Closes the window.
     def close
       if exists?
-        browser_window_object.close
+        begin
+          browser_window_object.close
+        rescue JsshError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
+          nil
+        end
       end
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
       if false #TODO/FIX: check here if we originally launched the browser process
@@ -464,9 +468,6 @@ module Watir
       end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@browser_window_name.to_json}}) ? true : false")
       watcher=jssh_socket.Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(jssh_socket.Components.interfaces.nsIWindowWatcher)
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
-      
-      #opener_obj=watcher.attr(:openWindow).pass(nil, 'chrome://browser/content/browser.xul', @browser_window_name, '', nil)
-      #@browser_window_object=@browser_jssh_objects.attr(:browser_window).assign(opener_obj)
       
       @browser_window_object=@browser_jssh_objects[:browser_window]=watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'resizable', nil)
       return @browser_window_object

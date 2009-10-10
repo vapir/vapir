@@ -298,7 +298,7 @@ module Watir
             # then.. carry on, I suppose, and it will just error if it needed to be relocated. 
             # there must be a better way than this to see if it still exists. 
           end
-        rescue WIN32OLERuntimeError                             # if invoking that method errors
+        rescue WIN32OLERuntimeError, RuntimeError               # if invoking that method errors
           raise unless $!.message.include?("Access is denied.") # with an access denied exception
            # then the element is probably gone - probably because of a reload or something -
            # and we need to relocate recursively. 

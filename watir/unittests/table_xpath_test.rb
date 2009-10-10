@@ -31,16 +31,17 @@ class TC_Tables_XPath < Test::Unit::TestCase
   
   def test_columns
     assert_raises( UnknownObjectException  ){ browser.table!(:xpath , "//table[@id='missingTable']/").column_count }
-    assert_equal( 1 , browser.table!(:xpath , "//table[@id='t1']/").column_count)   # row one has 1 cell with a colspan of 2
+    assert_equal(2, browser.table!(:xpath , "//table[@id='t1']/").column_count)   # row one has 1 cell with a colspan of 2
+    assert_equal(1, browser.table!(:xpath , "//table[@id='t1']/").rows[1].cells.length)
   end
   
   def test_links_and_images_in_table
     table = browser.table!(:xpath , "//table[@id='pic_table']/")
     image = table[1][2].image!(:index,1)
-    assert_equal("106", image.width)
+    assert_equal(106, image.width)
     
     link = table[1][4].link!(:index,1)
-    assert_equal("Google", link.innerText)
+    assert_equal("Google", link.text)
   end
   
   def test_table_from_element
@@ -57,22 +58,22 @@ class TC_Tables_XPath < Test::Unit::TestCase
     
     assert( browser.table_cell!(:xpath , "//td[@id='cell1']/").exists? )
     assert_nil( browser.table_cell(:xpath , "//td[@id='no_exist']/") )
-    assert_equal( "Row 1 Col1",  browser.table_cell!(:xpath , "//td[@id='cell1']/").to_s.strip )
+    assert_equal( "Row 1 Col1",  browser.table_cell!(:xpath , "//td[@id='cell1']/").text.strip )
   end
   
   def test_row_directly
     assert( browser.table_row(:xpath , "//tr[@id='row1']/").exists? )  
     assert_nil( browser.table_row(:xpath , "//tr[@id='no_exist']/") )
     
-    assert_equal('Row 2 Col1' ,  browser.table_row(:xpath , "//tr[@id='row1']/")[1].to_s.strip )
+    assert_equal('Row 2 Col1' ,  browser.table_row(:xpath , "//tr[@id='row1']/")[1].text.strip )
   end
   
   
   def test_table_body
-    assert_equal( 3, browser.table!(:xpath , "//table[@id='body_test']/").bodies.length )
+    assert_equal( 3, browser.table!(:xpath , "//table[@id='body_test']/").tbodies.length )
     
     count = 1
-    browser.table!(:xpath , "//table[@id='body_test']/").bodies.each do |n|
+    browser.table!(:xpath , "//table[@id='body_test']/").tbodies.each do |n|
       
       # do something better here!
       # n.flash # this line commented out to speed up the test
@@ -86,13 +87,13 @@ class TC_Tables_XPath < Test::Unit::TestCase
         compare_text = "This text is in the THIRD TBODY."
       end
       
-      assert_equal( compare_text , n[1][1].to_s.strip )   # this is the 1st cell of the first row of this particular body
+      assert_equal( compare_text , n[1][1].text.strip )   # this is the 1st cell of the first row of this particular body
       
       count +=1
     end
-    assert_equal( count-1, browser.table!(:xpath , "//table[@id='body_test']/").bodies.length  )
+    assert_equal( count-1, browser.table!(:xpath , "//table[@id='body_test']/").tbodies.length  )
     
-    assert_equal( "This text is in the THIRD TBODY." ,browser.table!(:xpath , "//table[@id='body_test']/").tbody(:index,3)[1][1].to_s.strip ) 
+    assert_equal( "This text is in the THIRD TBODY." ,browser.table!(:xpath , "//table[@id='body_test']/").tbody(:index,3)[1][1].text.strip ) 
     
     # iterate through all the rows in a table body
     count = 1

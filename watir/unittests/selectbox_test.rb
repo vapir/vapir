@@ -30,9 +30,9 @@ class TC_SelectList < Test::Unit::TestCase
   end
 
   def test_select_by_text
-    assert_equal(['Option 3'], browser.select_list!(:name, "sel1").getSelectedItems)
+    assert_equal(['Option 3'], browser.select_list!(:name, "sel1").selected_option_texts)
     browser.select_list!(:name, "sel1").select('Option 2')
-    assert_equal(['Option 2'], browser.select_list!(:name, "sel1").getSelectedItems)
+    assert_equal(['Option 2'], browser.select_list!(:name, "sel1").selected_option_texts)
   end
   
   def test_select_by_value
@@ -41,9 +41,9 @@ class TC_SelectList < Test::Unit::TestCase
   end
   
   def test_set # by text
-    assert_equal(['Option 3'], browser.select_list!(:name, "sel1").getSelectedItems)
+    assert_equal(['Option 3'], browser.select_list!(:name, "sel1").selected_option_texts)
     browser.select_list!(:name, "sel1").set('Option 2')
-    assert_equal(['Option 2'], browser.select_list!(:name, "sel1").getSelectedItems)
+    assert_equal(['Option 2'], browser.select_list!(:name, "sel1").selected_option_texts)
   end
   
   # Option
@@ -51,12 +51,12 @@ class TC_SelectList < Test::Unit::TestCase
   def test_Option_text_select
     assert_raises(UnknownObjectException) { browser.select_list!(:name, "sel1").option!(:text, "missing item").select }  
     assert_raises(UnknownObjectException) { browser.select_list!(:name, "sel1").option!(:text, /missing/).select }  
-    assert_raises(MissingWayOfFindingObjectException) { browser.select_list!(:name, "sel1").option!(:missing, "Option 1").select }
+    assert_raises(UnknownObjectException) { browser.select_list!(:name, "sel1").option!(:missing, "Option 1").select }
     
     # the select method keeps any currently selected items - use the clear selection method first
     browser.select_list!(:name, "sel1").clearSelection
     browser.select_list!(:name, "sel1").option!(:text, "Option 1").select
-    assert_equal(["Option 1" ], browser.select_list!(:name, "sel1").getSelectedItems)   
+    assert_equal(["Option 1" ], browser.select_list!(:name, "sel1").selected_option_texts)   
   end    
   
   def xtest_option_class_name

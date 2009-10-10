@@ -44,10 +44,10 @@ class TC_Pre < Test::Unit::TestCase
     assert_false( pre.text.include?( "Pre Tag Test" ) )
   end
 
-  tag_method :test_html, :fails_on_firefox # http://jira.openqa.org/browse/WTR-260
+  #tag_method :test_html, :fails_on_firefox # http://jira.openqa.org/browse/WTR-260
   def test_html
     pre = browser.pre!(:index, 1)
-    assert( pre.html.include?( "id=1 name=\"1\"" ) )
+    assert( pre.outer_html.include?( "id=1 name=\"1\"" ) )
   end
   
 end

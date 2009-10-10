@@ -43,58 +43,58 @@ class TC_Radios_XPath < Test::Unit::TestCase
   end
   
   def test_Radio_isSet
-    assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']/").isSet?  }  
+    assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']/").checked?  }  
     
-    puts "radio 1 is set : #{ browser.radio!(:xpath, "//input[@name='box1']/").isSet? } "
-    assert_false(browser.radio!(:xpath, "//input[@name='box1']/").isSet?)   
+    #puts "radio 1 is set : #{ browser.radio!(:xpath, "//input[@name='box1']/").checked? } "
+    assert_false(browser.radio!(:xpath, "//input[@name='box1']/").checked?)   
     
-    assert(browser.radio!(:xpath, "//input[@name='box3']/").isSet?)   
-    assert_false(browser.radio!(:xpath, "//input[@name='box2']/").isSet?)   
+    assert(browser.radio!(:xpath, "//input[@name='box3']/").checked?)   
+    assert_false(browser.radio!(:xpath, "//input[@name='box2']/").checked?)   
     
-    assert( browser.radio!(:xpath, "//input[@name='box4' and @value='1']/").isSet?)   
-    assert_false(browser.radio!(:xpath, "//input[@name='box4' and @value='2']/").isSet?)   
+    assert( browser.radio!(:xpath, "//input[@name='box4' and @value='1']/").checked?)   
+    assert_false(browser.radio!(:xpath, "//input[@name='box4' and @value='2']/").checked?)   
   end
   
   def test_radio_clear
     assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']/").clear  }  
     
     browser.radio!(:xpath, "//input[@name='box1']/").clear
-    assert_false(browser.radio!(:xpath, "//input[@name='box1']/").isSet?)   
+    assert_false(browser.radio!(:xpath, "//input[@name='box1']/").checked?)   
     
     assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) {   browser.radio!(:xpath, "//input[@name='box2']/").clear  } 
-    assert_false(browser.radio!(:xpath, "//input[@name='box2']/").isSet?)   
+    assert_false(browser.radio!(:xpath, "//input[@name='box2']/").checked?)   
     
     browser.radio!(:xpath, "//input[@name='box3']/").clear
-    assert_false(browser.radio!(:xpath, "//input[@name='box3']/").isSet?)   
+    assert_false(browser.radio!(:xpath, "//input[@name='box3']/").checked?)   
     
     browser.radio!(:xpath, "//input[@name='box4' and @value='1']/").clear
-    assert_false(browser.radio!(:xpath, "//input[@name='box4' and @value='1']/").isSet?)   
+    assert_false(browser.radio!(:xpath, "//input[@name='box4' and @value='1']/").checked?)   
   end
   
-  def test_radio_getState
-    assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']/").getState  }  
+  def test_radio_checked?
+    assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']/").checked?  }  
     
-    assert_equal( false , browser.radio!(:xpath, "//input[@name='box1']/").getState )   
-    assert_equal( true , browser.radio!(:xpath, "//input[@name='box3']/").getState)   
+    assert_equal( false , browser.radio!(:xpath, "//input[@name='box1']/").checked? )   
+    assert_equal( true , browser.radio!(:xpath, "//input[@name='box3']/").checked?)   
     
     # radioes that have the same name but different values
-    assert_equal( false , browser.radio!(:xpath, "//input[@name='box4' and @value='2']/").getState )   
-    assert_equal( true , browser.radio!(:xpath, "//input[@name='box4' and @value='1']/").getState)   
+    assert_equal( false , browser.radio!(:xpath, "//input[@name='box4' and @value='2']/").checked? )   
+    assert_equal( true , browser.radio!(:xpath, "//input[@name='box4' and @value='1']/").checked?)   
   end
   
   def test_radio_set
     assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']/").set  }  
     browser.radio!(:xpath, "//input[@name='box1']/").set
-    assert(browser.radio!(:xpath, "//input[@name='box1']/").isSet?)   
+    assert(browser.radio!(:xpath, "//input[@name='box1']/").checked?)   
     
     assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) {   browser.radio!(:xpath, "//input[@name='box2']/").set  }  
     
     browser.radio!(:xpath, "//input[@name='box3']/").set
-    assert(browser.radio!(:xpath, "//input[@name='box3']/").isSet?)   
+    assert(browser.radio!(:xpath, "//input[@name='box3']/").checked?)   
     
     # radioes that have the same name but different values
     browser.radio!(:xpath, "//input[@name='box4' and @value='3']/").set
-    assert(browser.radio!(:xpath, "//input[@name='box4' and @value='3']/").isSet?)   
+    assert(browser.radio!(:xpath, "//input[@name='box4' and @value='3']/").checked?)   
   end
   
 end

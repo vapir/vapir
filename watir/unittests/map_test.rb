@@ -34,7 +34,7 @@ class Map_Tests < Watir::TestCase
     assert(browser.area!(:alt, 'Pass').exists?)
     assert(browser.area!(:alt, 'Table Buttons').exists?)
     assert(browser.area!(:alt, 'Images').exists?)
-    assert ! (browser.area(:alt, 'Blobs'))
+    assert_nil(browser.area(:alt, 'Blobs'))
     assert(browser.map!(:name, 'maptest01').area!(:alt, 'Pass').exists?)
     assert(browser.map!(:id, 'maptestid01').area!(:alt, 'Table Buttons').exists?)
   end

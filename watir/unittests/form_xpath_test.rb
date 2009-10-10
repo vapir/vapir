@@ -29,27 +29,7 @@ class TC_Form_Display_XPath < Test::Unit::TestCase
   include CaptureIOHelper                
   def test_showforms
     goto_page "forms2.html"
-
-    actual = capture_stdout { browser.show_forms }
-    assert_equal(<<END_OF_MESSAGE, actual)
-There are 4 forms
-Form name: 
-       id: 
-   method: get
-   action: pass.html
-Form name: test2
-       id: f2
-   method: get
-   action: pass2.html
-Form name: test3
-       id: 
-   method: get
-   action: pass2.html
-Form name: test2
-       id: 
-   method: get
-   action: pass2.html
-END_OF_MESSAGE
+    assert_match(/There are 4 forms(\nWatir::\w*Form.*?){4}/m, capture_stdout { browser.show_forms })
   end
 end
 
@@ -74,9 +54,9 @@ class TC_Forms3_XPath < Test::Unit::TestCase
     assert_equal("check1" , browser.checkbox!(:index,1).name )
   end
   
-  def test_showforms # add verification of output!
-    browser.show_forms
-  end
+#  def test_showforms # add verification of output!
+#    browser.show_forms
+#  end
   
   def test_reset
     
@@ -116,16 +96,16 @@ class TC_Forms3_XPath < Test::Unit::TestCase
     assert_raises( Watir::UnknownObjectException ) { browser.text_field!( :name , 'g177').flash }
   end
   
-  def test_showElements # add verification!
-    browser.show_all_objects
-  end
+#  def test_showElements # add verification!
+#    browser.show_all_objects
+#  end
   
   def test_showText
-    puts browser.text
+    #puts browser.text
   end
   
   def test_showHTML
-    puts browser.html
+    #puts browser.html
   end
   
   def test_submitWithImage

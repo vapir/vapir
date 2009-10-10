@@ -12,13 +12,13 @@ class TC_Links < Test::Unit::TestCase
     goto_page "links1.html"
   end
   
-  tag_method :test_bad_attribute, :fails_on_firefox
+  #tag_method :test_bad_attribute, :fails_on_firefox
   def test_bad_attribute
-    assert_raises(MissingWayOfFindingObjectException) { browser.link!(:bad_attribute, 199).click }  
+    assert_raises(UnknownObjectException) { browser.link!(:bad_attribute, 199).click }  
     begin
-      browser.link!(:bad_attribute, 199).click 
-    rescue MissingWayOfFindingObjectException => e           
-      assert_equal "bad_attribute is an unknown way of finding a <A> element (199)", e.to_s
+      browser.link!(:bad_attribute, 199).click
+    rescue UnknownObjectException => e           
+      assert_equal "Unable to locate element, using attributes, {:bad_attribute=>199}", e.message
     end
   end
   
@@ -81,7 +81,7 @@ class TC_Links < Test::Unit::TestCase
   def test_link_properties
     assert_raises(UnknownObjectException) { browser.link!(:index, 199).href }  
     assert_raises(UnknownObjectException) { browser.link!(:index, 199).value}  
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).innerText }  
+    assert_raises(UnknownObjectException) { browser.link!(:index, 199).text }  
     assert_raises(UnknownObjectException) { browser.link!(:index, 199).name }  
     assert_raises(UnknownObjectException) { browser.link!(:index, 199).id }  
     assert_raises(UnknownObjectException) { browser.link!(:index, 199).disabled }  
@@ -90,7 +90,7 @@ class TC_Links < Test::Unit::TestCase
     
     assert_match(/links2/ ,browser.link!(:index, 1).href )
     assert_equal(""      , browser.link!(:index, 1).value)
-    assert_equal("test1" , browser.link!(:index, 1).innerText )
+    assert_equal("test1" , browser.link!(:index, 1).text )
     assert_equal(""      , browser.link!(:index, 1).name )
     assert_equal(""      , browser.link!(:index, 1).id )
     assert_equal(false   , browser.link!(:index, 1).disabled )  
@@ -107,14 +107,14 @@ class TC_Links < Test::Unit::TestCase
   
   def test_link_iterator
     assert_equal(9, browser.links.length )
-    assert_equal("Link Using a name" , browser.links[7].innerText)
+    assert_equal("Link Using a name" , browser.links[7].text)
     
     index = 1
     browser.links.each do |link|
       assert_equal(browser.link!(:index, index).href      , link.href )
       assert_equal(browser.link!(:index, index).id        , link.id )
       assert_equal(browser.link!(:index, index).name      , link.name )
-      assert_equal(browser.link!(:index, index).innerText , link.innerText )
+      assert_equal(browser.link!(:index, index).text , link.text )
       index+=1
     end
   end
@@ -149,27 +149,27 @@ class TC_Frame_Links < Test::Unit::TestCase
 end
 
 class TC_showlinks < Test::Unit::TestCase
-  tags :fails_on_firefox
+  #tags :fails_on_firefox
   include CaptureIOHelper
   
   def test_showLinks
     goto_page "links1.html"
-    actual = capture_stdout { browser.showLinks }
-    expected = [/^index name +id +href + text\/src$/,
-    get_path_regex(1, "links2.html", "test1"),
-    get_path_regex(2, "link_pass.html", "test1"),
-    get_path_regex(3, "pass3.html", " / file:///#{$myDir.downcase}/html/images/button.jpg"),
-    get_path_regex(4, "textarea.html", "new window"),
-    get_path_regex(5, "textarea.html", "new window"),
-    get_path_regex(6, "links1.html", "link using an id", "link_id"),
-    get_path_regex(7, "links1.html", "link using a name", "link_name"),
-    get_path_regex(8, "links1.html", "link using a title"),
-    get_path_regex(9, "pass.html", "image and a text link / file:///#{$myDir.downcase}/html/images/triangle.jpg")]
-    items = actual.split(/\n/).collect {|s| CGI.unescape(s.downcase.strip)}
-    expected.each_with_index{|regex, x| assert_match(regex, items[x])}
+    assert_match(/There are 9 links(\nWatir::\w*Link.*?){9}/m, capture_stdout { browser.show_links })
+#    expected = [/^index name +id +href + text\/src$/,
+#    get_path_regex(1, "links2.html", "test1"),
+#    get_path_regex(2, "link_pass.html", "test1"),
+#    get_path_regex(3, "pass3.html", " / file:///#{$myDir.downcase}/html/images/button.jpg"),
+#    get_path_regex(4, "textarea.html", "new window"),
+#    get_path_regex(5, "textarea.html", "new window"),
+#    get_path_regex(6, "links1.html", "link using an id", "link_id"),
+#    get_path_regex(7, "links1.html", "link using a name", "link_name"),
+#    get_path_regex(8, "links1.html", "link using a title"),
+#    get_path_regex(9, "pass.html", "image and a text link / file:///#{$myDir.downcase}/html/images/triangle.jpg")]
+#    items = @mockout.split(/\n/).collect {|s| CGI.unescape(s.downcase.strip)}
+#    expected.each_with_index{|regex, x| assert_match(regex, items[x])}
   end
   
-  def get_path_regex(idx, name, inner, nameid="")
-    Regexp.new("^#{idx} +#{nameid} +file:///#{$myDir.downcase}/html/#{name} *#{inner}$")
-  end
+#  def get_path_regex(idx, name, inner, nameid="")
+#    Regexp.new("^#{idx} +#{nameid} +file:///#{$myDir.downcase}/html/#{name} *#{inner}$")
+#  end
 end

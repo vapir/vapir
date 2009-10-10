@@ -22,15 +22,15 @@ class TC_Images < Test::Unit::TestCase
   end
   
   def test_imageExists
-    assert( !  browser.image!(:name , "missing_name").exists?  )
+    assert_nil(browser.image(:name , "missing_name")  )
     assert(    browser.image!(:name , "circle").exists?  )
     assert(    browser.image!(:name , /circ/ ).exists?  )
     
-    assert( !  browser.image!(:id , "missing_id").exists?  )
+    assert_nil(browser.image(:id , "missing_id")  )
     assert(    browser.image!(:id , "square").exists?  )
     assert(    browser.image!(:id , /squ/ ).exists?  )
     
-    assert( !  browser.image!(:src, "missingsrc.gif").exists?  )
+    assert_nil(browser.image(:src, "missingsrc.gif"))
     
     assert(    browser.image!(:src, "file:///#{$myDir}/html/images/triangle.jpg").exists?  )
     assert(    browser.image!(:src , /triangle/ ).exists?  )
@@ -38,11 +38,11 @@ class TC_Images < Test::Unit::TestCase
     assert(    browser.image!(:alt , "circle" ).exists?  )
     assert(    browser.image!(:alt , /cir/ ).exists?  )
     
-    assert( !  browser.image!(:alt , "triangle" ).exists?  )
-    assert( !  browser.image!(:alt , /tri/ ).exists?  )
+    assert_nil(browser.image(:alt , "triangle" ))
+    assert_nil(browser.image(:alt , /tri/ ))
     
     assert(    browser.image!(:title, 'square_image').exists? )
-    assert( !  browser.image!(:title, 'pentagram').exists? )
+    assert_nil(browser.image(:title, 'pentagram'))
   end
   
   def test_image_click
@@ -68,23 +68,23 @@ class TC_Images < Test::Unit::TestCase
   end
   
   def test_imageHasLoaded
-    assert_raises(UnknownObjectException) { browser.image!(:name, "no_image_with_this").hasLoaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:id, "no_image_with_this").hasLoaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:src, "no_image_with_this").hasLoaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:alt, "no_image_with_this").hasLoaded? }
+    assert_raises(UnknownObjectException) { browser.image!(:name, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image!(:id, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image!(:src, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image!(:alt, "no_image_with_this").loaded? }
     
-    assert( ! browser.image!(:name, "themissingimage").hasLoaded?  )
-    assert( browser.image!(:name, "circle").hasLoaded?  )
+    assert( ! browser.image!(:name, "themissingimage").loaded?  )
+    assert( browser.image!(:name, "circle").loaded?  )
     
-    assert( browser.image!(:alt, "circle").hasLoaded?  )
-    assert( browser.image!(:alt, /cir/ ).hasLoaded?  )
+    assert( browser.image!(:alt, "circle").loaded?  )
+    assert( browser.image!(:alt, /cir/ ).loaded?  )
   end
   
   def test_image_properties
-    assert_raises(UnknownObjectException) { browser.image!(:name, "no_image_with_this").hasLoaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:id, "no_image_with_this").hasLoaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:src, "no_image_with_this").hasLoaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).hasLoaded? }
+    assert_raises(UnknownObjectException) { browser.image!(:name, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image!(:id, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image!(:src, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image!(:index, 82).loaded? }
     
     assert_raises(UnknownObjectException) { browser.image!(:index, 82).name }
     assert_raises(UnknownObjectException) { browser.image!(:index, 82).id }
@@ -100,9 +100,9 @@ class TC_Images < Test::Unit::TestCase
     assert_equal( ""       , browser.image!(:index, 2).name ) 
     assert_equal( "square" , browser.image!(:index, 2).id )
     assert_match( /square\.jpg/i ,browser.image!(:index, 2).src )
-    assert_equal( "" , browser.image!(:index, 2).value )
-    assert_equal( "88" , browser.image!(:index, 2).height )
-    assert_equal( "88" , browser.image!(:index, 2).width )
+    #assert_equal( "" , browser.image!(:index, 2).value )
+    assert_equal( 88 , browser.image!(:index, 2).height )
+    assert_equal( 88 , browser.image!(:index, 2).width )
     
     # this line fails, as the date is when it is installed on the local oc, not the date the file was really created
     #assert_equal( "03/10/2005" , browser.image!(:index, 2).fileCreatedDate )

@@ -35,7 +35,7 @@ class TC_Tables < Test::Unit::TestCase
     assert_raises UnknownObjectException do
       browser.table!(:index, 66).row_count
     end
-    assert_raises MissingWayOfFindingObjectException do
+    assert_raises UnknownObjectException do
       browser.table!(:bad_attribute, 99).row_count
     end
   end
@@ -51,7 +51,7 @@ class TC_Tables < Test::Unit::TestCase
     row = browser.table!(:index, 2)[2]
     result = []
     row.each do |cell|
-      result << cell.to_s.strip
+      result << cell.text.strip
     end
     assert_equal(['Row 1 Col1', 'Row 1 Col2'], result)
     assert_equal(2, row.column_count)        
@@ -60,8 +60,8 @@ class TC_Tables < Test::Unit::TestCase
   tag_method :test_row_counts, :fails_on_firefox
   def test_row_counts
     table = browser.table!(:id => 't2')
-    assert_equal(3, table.row_count)
-    assert_equal(2, table.row_count_excluding_nested_tables)
+    assert_equal(2, table.row_count)
+    assert_equal(3, table.table_rows.length)
   end
 
   tag_method :test_dynamic_tables, :fails_on_firefox
@@ -81,7 +81,8 @@ class TC_Tables < Test::Unit::TestCase
       browser.table!(:index, 77).column_count
     end
     assert_equal(2, browser.table!(:index, 1).column_count)
-    assert_equal(1, browser.table!(:id, 't1').column_count)   # row one has 1 cell with a colspan of 2
+    assert_equal(2, browser.table!(:id, 't1').column_count)   # row one has 1 cell with a colspan of 2
+    assert_equal(1, browser.table!(:id, 't1').rows[1].cells.length)
   end
   
   def test_to_a
@@ -93,20 +94,20 @@ class TC_Tables < Test::Unit::TestCase
   def test_links_and_images_in_table
     table = browser.table!(:id, 'pic_table')
     image = table[1][2].image!(:index,1)
-    assert_equal("106", image.width)
+    assert_equal(106, image.width)
     
     link = table[1][4].link!(:index,1)
-    assert_equal("Google", link.innerText)
+    assert_equal("Google", link.text)
   end
   
   def test_cell_directly
     assert browser.table_cell!(:id, 'cell1').exists?
-    assert ! browser.table_cell(:id, 'no_exist').exists?
-    assert_equal("Row 1 Col1", browser.table_cell!(:id, 'cell1').to_s.strip)
+    assert_nil browser.table_cell(:id, 'no_exist')
+    assert_equal("Row 1 Col1", browser.table_cell!(:id, 'cell1').text.strip)
   end
   
   def test_cell_another_way
-    assert_equal( "Row 1 Col1", browser.table!(:index,1)[1][1].to_s.strip)
+    assert_equal( "Row 1 Col1", browser.table!(:index,1)[1][1].text.strip)
   end
   
   def test_row_directly
@@ -114,13 +115,12 @@ class TC_Tables < Test::Unit::TestCase
     assert ! browser.table_row(:id, 'no_exist')
   end
   def test_row_another_way
-    assert_equal('Row 2 Col1',  browser.row(:id, 'row1')[1].to_s.strip)
+    assert_equal('Row 2 Col1',  browser.table_row(:id, 'row1')[1].text.strip)
   end
 
   tag_method :test_row_in_table, :fails_on_firefox
   def test_row_in_table
-    assert_equal 'Row 2 Col1 Row 2 Col2', 
-      browser.table!(:id, 't1').row(:id, 'row1').text
+    assert_equal 'Row 2 Col1 Row 2 Col2', browser.table!(:id, 't1').table_row(:id, 'row1').text.strip
   end
   
   def test_row_iterator
@@ -156,17 +156,17 @@ class TC_Tables < Test::Unit::TestCase
   tag_method :test_cell_collection, :fails_on_firefox
   def test_cell_collection
     t = browser.table!(:index,1)
-    contents = t.cells.collect {|c| c.text}
+    contents = t.cells.collect {|c| c.text.strip}
     assert_equal(["Row 1 Col1","Row 1 Col2","Row 2 Col1","Row 2 Col2"], contents)
   end    
    
   tag_method :test_table_body, :fails_on_firefox
   def test_table_body
-    assert_equal(1, browser.table!(:index, 1).bodies.length)
-    assert_equal(3, browser.table!(:id, 'body_test').bodies.length)
+    assert_equal(1, browser.table!(:index, 1).tbodies.length)
+    assert_equal(3, browser.table!(:id, 'body_test').tbodies.length)
     
     count = 1
-    browser.table!(:id, 'body_test').bodies.each do |n|
+    browser.table!(:id, 'body_test').tbodies.each do |n|
       # do something better here!
       case count 
       when 1 
@@ -176,11 +176,11 @@ class TC_Tables < Test::Unit::TestCase
       when 3 
         compare_text = "This text is in the THIRD TBODY."
       end
-      assert_equal(compare_text, n[1][1].to_s.strip )   # this is the 1st cell of the first row of this particular body
+      assert_equal(compare_text, n[1][1].text.strip )   # this is the 1st cell of the first row of this particular body
       count += 1
     end
-    assert_equal( count - 1, browser.table!(:id, 'body_test').bodies.length )
-    assert_equal( "This text is in the THIRD TBODY." ,browser.table!(:id, 'body_test' ).tbody(:index,3)[1][1].to_s.strip ) 
+    assert_equal( count - 1, browser.table!(:id, 'body_test').tbodies.length )
+    assert_equal( "This text is in the THIRD TBODY." ,browser.table!(:id, 'body_test' ).tbody(:index,3)[1][1].text.strip ) 
     
     # iterate through all the rows in a table body
     count = 1
@@ -196,7 +196,7 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_table_container
-    assert_nothing_raised { browser.table!(:id, 't1').html }
+    assert_nothing_raised { browser.table!(:id, 't1').outer_html }
   end
   
   def test_multiple_selector
@@ -285,13 +285,17 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     
     # expand the table
     t.each do |r|
-      r[1].image!(:src, /plus/).click if r[1].image!(:src, /plus/).exists?
+      if image=r[1].image(:src, /plus/)
+        image.click 
+      end
     end
     
     # shrink rows 1,2,3
     count = 1
     t.each do |r|
-      r[1].image!(:src, /minus/).click if r[1].image!(:src, /minus/).exists? and (1..3) === count 
+      if (image=r[1].image(:src, /minus/)) and (1..3) === count 
+        image.click
+      end
       count = 2
     end
   end
@@ -313,7 +317,7 @@ class TC_Table_Columns < Test::Unit::TestCase
   end
   
   def test_get_columnvalues_single_column
-    assert_equal(["R1C1", "R2C1", "R3C1"], browser.table!(:index, 1).column_values(1))
+    assert_equal(["R1C1", "R2C1", "R3C1"], browser.table!(:index, 1).column_texts_at(1))
   end
   
   def test_colspan
@@ -323,27 +327,27 @@ class TC_Table_Columns < Test::Unit::TestCase
   end
   
   def test_get_columnvalues_multiple_column
-    assert_equal(["R1C1", "R2C1", "R3C1"], browser.table!(:index, 2).column_values(1))
-    assert_equal(["R1C3", "R2C3", "R3C3"], browser.table!(:index, 2).column_values(3))
+    assert_equal(["R1C1", "R2C1", "R3C1"], browser.table!(:index, 2).column_texts_at(1))
+    assert_equal(["R1C3", "R2C3", "R3C3"], browser.table!(:index, 2).column_texts_at(3))
   end
   
   tag_method :test_get_columnvalues_with_colspan, :fails_on_firefox
   def test_get_columnvalues_with_colspan
-    assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], browser.table!(:index, 3).column_values(1))
-     (2..4).each{|x|assert_raises(UnknownCellException){browser.table!(:index, 3).column_values(x)}}
+    assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], browser.table!(:index, 3).column_texts_at(1))
+     (2..4).each{|x|assert_raises(IndexError){browser.table!(:index, 3).column_texts_at(x)}}
   end
   
   def test_get_rowvalues_full_row
-    assert_equal(["R1C1", "R1C2", "R1C3"], browser.table!(:index, 3).row_values(1))
+    assert_equal(["R1C1", "R1C2", "R1C3"], browser.table!(:index, 3).row_texts_at(1))
   end
   
   def test_get_rowvalues_with_colspan
-    assert_equal(["R2C1", "R2C2"], browser.table!(:index, 3).row_values(2))
+    assert_equal(["R2C1", "R2C2"], browser.table!(:index, 3).row_texts_at(2))
   end
   
   def test_getrowvalues_with_rowspan
-    assert_equal(["R5C1", "R5C2", "R5C3"], browser.table!(:index, 3).row_values(5))
-    assert_equal(["R6C2", "R6C3"], browser.table!(:index, 3).row_values(6))
+    assert_equal(["R5C1", "R5C2", "R5C3"], browser.table!(:index, 3).row_texts_at(5))
+    assert_equal(["R6C2", "R6C3"], browser.table!(:index, 3).row_texts_at(6))
   end
 end
 

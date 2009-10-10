@@ -16,8 +16,8 @@ class TC_TableCell_XPath < Test::Unit::TestCase
     # Select the parent element of image with src='square.jpg' which is a tablecell.
     assert(       browser.table_cell!(:xpath , "//img[@src='images\/square.jpg']/../").exists?  )
     assert(       browser.table_cell!(:xpath , "//img[@src='images\/triangle.jpg']/../").exists?  )
-    puts "Selected table cell with text 'Table Cell with image of triangle.'"
-    puts browser.table_cell!(:xpath , "//img[@src='images\/triangle.jpg']/../").to_s
+    #puts "Selected table cell with text 'Table Cell with image of triangle.'"
+    #puts browser.table_cell!(:xpath , "//img[@src='images\/triangle.jpg']/../").to_s
   end
   
   def testCell_properties
@@ -27,8 +27,8 @@ class TC_TableCell_XPath < Test::Unit::TestCase
     assert_equal(4 , browser.table_cell!(:xpath , "//img[@src='images\/button.jpg']/../").colspan) 
     
     # to string tests -- output should be verified!
-    puts browser.table_cell!(:xpath , "//img[@src='images\/square.jpg']/../").to_s
-    puts browser.table_cell!(:xpath , "//img[@src='images\/triangle.jpg']/../").to_s
+    #puts browser.table_cell!(:xpath , "//img[@src='images\/square.jpg']/../").to_s
+    #puts browser.table_cell!(:xpath , "//img[@src='images\/triangle.jpg']/../").to_s
   end
   
 end

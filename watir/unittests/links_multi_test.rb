@@ -36,14 +36,14 @@ class TC_Links_Multi < Test::Unit::TestCase
     exception = assert_raise(UnknownObjectException) do
       browser.link!(:id, 'Missing').href
     end
-    assert_equal('Unable to locate element, using :id, "Missing"', exception.message)
+    assert_equal("Unable to locate element, using attributes, {:id=>\"Missing\"}", exception.message)
   end
   
   def test_not_found_with_multi
     exception = assert_raise(UnknownObjectException) do
       browser.link!(:class => 'Missing', :index => 2).href
     end
-    assert_equal('Unable to locate element, using {:class=>"Missing", :index=>2}', exception.message)
+    assert_equal("Unable to locate element, using attributes, {:class=>\"Missing\"}, index 2", exception.message)
   end
   
 end

@@ -36,52 +36,52 @@ class TC_Selectbox_XPath < Test::Unit::TestCase
        assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").enabled? }  
     end
 
-    def test_select_list_getAllContents
-       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").getAllContents }  
+    def test_select_list_option_texts
+       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").option_texts }  
        assert_equal( ["Option 1" ,"Option 2" , "Option 3" , "Option 4"] , 
-           browser.select_list!(:xpath, "//select[@name='sel1']").getAllContents)   
+           browser.select_list!(:xpath, "//select[@name='sel1']").option_texts)   
     end
 
-    def test_select_list_getSelectedItems
-       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").getSelectedItems }  
+    def test_select_list_selected_option_texts
+       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").selected_option_texts }  
        assert_equal( ["Option 3" ] , 
-           browser.select_list!(:xpath, "//select[@name='sel1']").getSelectedItems)   
+           browser.select_list!(:xpath, "//select[@name='sel1']").selected_option_texts)   
        assert_equal( ["Option 3" , "Option 6" ] , 
-           browser.select_list!(:xpath, "//select[@name='sel2']").getSelectedItems)   
+           browser.select_list!(:xpath, "//select[@name='sel2']").selected_option_texts)   
     end
 
-    tag_method :test_clearSelection, :fails_on_ie
-    def test_clearSelection
-       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").clearSelection }  
-       browser.select_list!(:xpath, "//select[@name='sel1']").clearSelection
+    tag_method :test_clear, :fails_on_ie
+    def test_clear
+       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").clear }  
+       browser.select_list!(:xpath, "//select[@name='sel1']").clear
 
        # the box sel1 has no ability to have a de-selected item
        # By default Option 1 will be selected
-       assert_equal( ["Option 1" ] , browser.select_list!(:xpath, "//select[@name='sel1']").getSelectedItems)   
+       assert_equal( ["Option 1" ] , browser.select_list!(:xpath, "//select[@name='sel1']").selected_option_texts)   
 
-       browser.select_list!(:xpath, "//select[@name='sel2']").clearSelection
-       assert_equal( [ ] , browser.select_list!(:xpath, "//select[@name='sel2']").getSelectedItems)   
+       browser.select_list!(:xpath, "//select[@name='sel2']").clear
+       assert_equal( [ ] , browser.select_list!(:xpath, "//select[@name='sel2']").selected_option_texts)   
     end
 
     def test_select_list_select
-       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").getSelectedItems }  
+       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").selected_option_texts }  
        assert_raises(NoValueFoundException) { browser.select_list!(:xpath, "//select[@name='sel1']").select("missing item") }  
        assert_raises(NoValueFoundException) { browser.select_list!(:xpath, "//select[@name='sel1']").select(/missing/) }  
 
        # the select method keeps any currently selected items - use the clear selectcion method first
-       browser.select_list!(:xpath, "//select[@name='sel1']").clearSelection
+       browser.select_list!(:xpath, "//select[@name='sel1']").clear
        browser.select_list!(:xpath, "//select[@name='sel1']").select("Option 1")
-       assert_equal( ["Option 1" ] , browser.select_list!(:xpath, "//select[@name='sel1']").getSelectedItems)   
+       assert_equal( ["Option 1" ] , browser.select_list!(:xpath, "//select[@name='sel1']").selected_option_texts)   
 
-       browser.select_list!(:xpath, "//select[@name='sel1']").clearSelection
+       browser.select_list!(:xpath, "//select[@name='sel1']").clear
        browser.select_list!(:xpath, "//select[@name='sel1']").select(/2/)
-       assert_equal( ["Option 2" ] , browser.select_list!(:xpath, "//select[@name='sel1']").getSelectedItems)   
+       assert_equal( ["Option 2" ] , browser.select_list!(:xpath, "//select[@name='sel1']").selected_option_texts)   
 
-       browser.select_list!(:xpath, "//select[@name='sel2']").clearSelection
+       browser.select_list!(:xpath, "//select[@name='sel2']").clear
        browser.select_list!(:xpath, "//select[@name='sel2']").select( /2/ )
        browser.select_list!(:xpath, "//select[@name='sel2']").select( /4/ )
        assert_equal( ["Option 2" , "Option 4" ] , 
-       browser.select_list!(:xpath, "//select[@name='sel2']").getSelectedItems)   
+       browser.select_list!(:xpath, "//select[@name='sel2']").selected_option_texts)   
 
        # these are to test the onchange event
        # the event shouldnt get fired, as this is the selected item
@@ -96,23 +96,23 @@ class TC_Selectbox_XPath < Test::Unit::TestCase
     end
 
     def test_select_list_select_using_value
-       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").getSelectedItems }  
+       assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']").selected_option_texts }  
        assert_raises(NoValueFoundException) { browser.select_list!(:xpath, "//select[@name='sel1']").select_value("missing item") }  
        assert_raises(NoValueFoundException) { browser.select_list!(:xpath, "//select[@name='sel1']").select_value(/missing/) }  
 
        # the select method keeps any currently selected items - use the clear selectcion method first
-       browser.select_list!(:xpath, "//select[@name='sel1']").clearSelection
+       browser.select_list!(:xpath, "//select[@name='sel1']").clear
        browser.select_list!(:xpath, "//select[@name='sel1']").select_value("o1")
-       assert_equal( ["Option 1" ] , browser.select_list!(:xpath, "//select[@name='sel1']").getSelectedItems)   
+       assert_equal( ["Option 1" ] , browser.select_list!(:xpath, "//select[@name='sel1']").selected_option_texts)   
 
-       browser.select_list!(:xpath, "//select[@name='sel1']").clearSelection
+       browser.select_list!(:xpath, "//select[@name='sel1']").clear
        browser.select_list!(:xpath, "//select[@name='sel1']").select_value(/2/)
-       assert_equal( ["Option 2" ] , browser.select_list!(:xpath, "//select[@name='sel1']").getSelectedItems)   
+       assert_equal( ["Option 2" ] , browser.select_list!(:xpath, "//select[@name='sel1']").selected_option_texts)   
 
-       browser.select_list!(:xpath, "//select[@name='sel2']").clearSelection
+       browser.select_list!(:xpath, "//select[@name='sel2']").clear
        browser.select_list!(:xpath, "//select[@name='sel2']").select( /2/ )
        browser.select_list!(:xpath, "//select[@name='sel2']").select( /4/ )
-       assert_equal( ["Option 2" , "Option 4" ] , browser.select_list!(:xpath, "//select[@name='sel2']").getSelectedItems)   
+       assert_equal( ["Option 2" , "Option 4" ] , browser.select_list!(:xpath, "//select[@name='sel2']").selected_option_texts)   
 
        # these are to test the onchange event
        # the event shouldnt get fired, as this is the selected item

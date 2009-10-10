@@ -114,44 +114,26 @@ class TC_IFrames < Test::Unit::TestCase
   
 end   
 
+require 'unittests/iostring'
 class TC_show_frames < Test::Unit::TestCase
   include CaptureIOHelper
   tags :fails_on_ie
  
   def capture_and_compare(page, expected)
     goto_page(page)
-    actual = capture_stdout { browser.showFrames }
-    assert_equal(expected, actual)
+    assert_match(expected, capture_stdout { browser.show_frames })
   end
  
   def test_show_nested_frames
-    capture_and_compare("nestedFrames.html", <<END_OF_MESSAGE)
-There are 2 frames
-frame: name: nestedFrame
-      index: 1
-frame: name: nestedFrame2
-      index: 2
-END_OF_MESSAGE
+    capture_and_compare("nestedFrames.html", /There are 2 frames(\nWatir::\w*Frame.*?nestedFrame.*?){2}/m)
   end
   
   def test_button_frames
-    capture_and_compare("frame_buttons.html", <<END_OF_MESSAGE)
-There are 2 frames
-frame: name: buttonFrame
-      index: 1
-frame: name: buttonFrame2
-      index: 2
-END_OF_MESSAGE
+    capture_and_compare("frame_buttons.html", /There are 2 frames(\nWatir::\w*Frame.*?buttonFrame.*?){2}/m)
   end
  
   def test_iframes
-    capture_and_compare("iframeTest.html", <<END_OF_MESSAGE)
-There are 2 frames
-frame: name: senderFrame
-      index: 1
-frame: name: receiverFrame
-      index: 2
-END_OF_MESSAGE
+    capture_and_compare("iframeTest.html", /There are 2 frames(\nWatir::\w*Frame.*?(sender|receiver)Frame.*?){2}/m)
   end
   
 end

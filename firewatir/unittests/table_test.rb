@@ -41,9 +41,9 @@ class TC_Tables < Test::Unit::TestCase
     count = 1
     row.each do |cell|
       if count == 1
-        assert_equal('Row 1 Col1', cell.to_s.strip)
+        assert_equal('Row 1 Col1', cell.text.strip)
       elsif count==2
-        assert_equal('Row 1 Col2', cell.to_s.strip)
+        assert_equal('Row 1 Col2', cell.text.strip)
       end
       count += 1
     end
@@ -83,10 +83,10 @@ class TC_Tables < Test::Unit::TestCase
   def test_cell_directly
     assert( browser.table_cell!(:id, 'cell1').exists? )
     assert_nil( browser.table_cell(:id, 'no_exist'))
-    assert_equal( "Row 1 Col1",  browser.table_cell!(:id, 'cell1').to_s.strip )
+    assert_equal( "Row 1 Col1",  browser.table_cell!(:id, 'cell1').text.strip )
     
     # not really cell directly, but just to show another way of geting the cell
-    assert_equal( "Row 1 Col1",  browser.table!(:index,1)[1][1].to_s.strip )
+    assert_equal( "Row 1 Col1",  browser.table!(:index,1)[1][1].text.strip )
     assert_equal(2, browser.table_cell!(:id, "cell_with_colspan").colspan)
   end
   
@@ -94,7 +94,7 @@ class TC_Tables < Test::Unit::TestCase
     assert( browser.table_row!(:id, 'row1').exists? )  
     assert_nil( browser.table_row(:id, 'no_exist'))
     
-    assert_equal('Row 2 Col1' ,  browser.table_row!(:id, 'row1')[1].to_s.strip )
+    assert_equal('Row 2 Col1' ,  browser.table_row!(:id, 'row1')[1].text.strip )
   end
   
   def test_row_iterator
@@ -144,7 +144,7 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_table_container
-    assert_nothing_raised { browser.table!(:id, 't1').html }
+    assert_nothing_raised { browser.table!(:id, 't1').outer_html }
   end
 end    
 
@@ -257,9 +257,9 @@ class TC_Table_Columns < Test::Unit::TestCase
     goto_page("simple_table_columns.html")
   end
   
-#  def test_get_columnvalues_single_column
-#    assert_equal(["R1C1", "R2C1", "R3C1"], browser.table!(:index, 1).column_values(1))
-#  end
+  def test_get_columnvalues_single_column
+    assert_equal(["R1C1", "R2C1", "R3C1"], browser.table!(:index, 1).column_texts_at(1))
+  end
 
   def test_colspan
     assert_equal(2, browser.table!(:index, 3)[2][1].colspan)
@@ -268,25 +268,25 @@ class TC_Table_Columns < Test::Unit::TestCase
   end
 
   def test_get_columnvalues_multiple_column
-    assert_equal(["R1C1", "R2C1", "R3C1"], browser.table!(:index, 2).column_values(1))
-    assert_equal(["R1C3", "R2C3", "R3C3"], browser.table!(:index, 2).column_values(3))
+    assert_equal(["R1C1", "R2C1", "R3C1"], browser.table!(:index, 2).column_texts_at(1))
+    assert_equal(["R1C3", "R2C3", "R3C3"], browser.table!(:index, 2).column_texts_at(3))
   end
 
   def test_get_columnvalues_with_colspan
-    assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], browser.table!(:index, 3).column_values(1))
+    assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], browser.table!(:index, 3).column_texts_at(1))
   end
 
   def test_get_rowvalues_full_row
-    assert_equal(["R1C1", "R1C2", "R1C3"], browser.table!(:index, 3).row_values(1))
+    assert_equal(["R1C1", "R1C2", "R1C3"], browser.table!(:index, 3).row_texts_at(1))
   end
 
   def test_get_rowvalues_with_colspan
-    assert_equal(["R2C1", "R2C2"], browser.table!(:index, 3).row_values(2))
+    assert_equal(["R2C1", "R2C2"], browser.table!(:index, 3).row_texts_at(2))
   end
 
   def test_getrowvalues_with_rowspan
-    assert_equal(["R5C1", "R5C2", "R5C3"], browser.table!(:index, 3).row_values(5))
-    assert_equal(["R6C2", "R6C3"], browser.table!(:index, 3).row_values(6))
+    assert_equal(["R5C1", "R5C2", "R5C3"], browser.table!(:index, 3).row_texts_at(5))
+    assert_equal(["R6C2", "R6C3"], browser.table!(:index, 3).row_texts_at(6))
   end
 end
 
@@ -309,40 +309,9 @@ end
 class TC_Tables_Display < Test::Unit::TestCase
   include CaptureIOHelper
 
-  tag_method :test_showTables, :fails_on_ie
+  #tag_method :test_showTables, :fails_on_ie
   def test_showTables
     goto_page("table1.html")
-    actual = capture_stdout { browser.showTables }
-    assert_equal(<<END_OF_MESSAGE, actual)
-There are 7 tables
-table:   id: tblTest
-       rows: 2
-    columns: 2
-      index: 1
-table:   id: t1
-       rows: 5
-    columns: 1
-      index: 2
-table:   id: t2
-       rows: 2
-    columns: 2
-      index: 3
-table:   id: 
-       rows: 1
-    columns: 2
-      index: 4
-table:   id: body_test
-       rows: 5
-    columns: 1
-      index: 5
-table:   id: pic_table
-       rows: 2
-    columns: 2
-      index: 6
-table:   id: tblTest1
-       rows: 5
-    columns: 1
-      index: 7
-END_OF_MESSAGE
+    assert_match(/There are 7 tables(\nWatir::\w*Table.*?){7}/m, capture_stdout { browser.show_tables })
   end
 end

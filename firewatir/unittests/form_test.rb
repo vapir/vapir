@@ -36,9 +36,9 @@ class TC_Forms2 < Test::Unit::TestCase # Note: there is no TC_Forms
   end     
   
   # The following tests from bug 2261 
-  tag_method :test_form_html, :fails_on_ie
+  #tag_method :test_form_html, :fails_on_ie
   def test_form_html 
-    assert_equal("\n<BR><INPUT value=\"Submit\" type=\"submit\">\n".downcase(), browser.form!(:name, 'test2').html.downcase())
+    assert_equal("<form name=\"test2\" id=\"f2\" method=\"get\" action=\"pass2.html\">\n<br><input value=\"Submit\" type=\"submit\">\n</form>", browser.form!(:name, 'test2').outer_html)
   end
   def test_form_flash
     assert_nothing_raised{ browser.form!(:name, 'test2').flash }
@@ -54,26 +54,7 @@ class TC_Form_Display < Test::Unit::TestCase
 
   def test_showforms
     goto_page("forms2.html")
-    actual = capture_stdout { browser.showForms }
-    assert_equal(<<END_OF_MESSAGE, actual)
-There are 4 forms
-Form name: 
-       id: 
-   method: get
-   action: pass.html
-Form name: test2
-       id: f2
-   method: get
-   action: pass2.html
-Form name: test3
-       id: 
-   method: get
-   action: pass2.html
-Form name: test2
-       id: 
-   method: get
-   action: pass2.html
-END_OF_MESSAGE
+    assert_match(/There are 4 forms(\nWatir::\w*Form.*?){4}/m, capture_stdout { browser.show_forms })
   end
 end
 

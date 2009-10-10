@@ -52,7 +52,8 @@ class TC_JavaScript_Test < Test::Unit::TestCase
     tag_method :test_ok_selectbox, :fails_on_ie
     def test_ok_selectbox
         goto_page("selectboxes1.html")
-        browser.select_list!(:id , "selectbox_5").select_value(/2/)
+        browser.select_list!(:id , "selectbox_5").select_value(/2/, :wait => false)
+        sleep 0.2 # give it a (short) moment for the no-wait event to fire
         assert_equal("Press OK", browser.get_popup_text)
         browser.click_modal_button('OK')
         assert_equal(browser.text_field!(:id, "txtAlert").value , "You pressed OK button")

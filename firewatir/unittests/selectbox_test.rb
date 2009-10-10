@@ -22,10 +22,10 @@ class TC_SelectList < Test::Unit::TestCase
         assert_raises(UnknownObjectException) { browser.select_list!(:name, "NoName").enabled? }  
     end
 
-    def test_select_list_getAllContents
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "NoName").getAllContents }  
+    def test_select_list_option_texts
+        assert_raises(UnknownObjectException) { browser.select_list!(:name, "NoName").option_texts }  
         assert_equal( ["Option 1" ,"Option 2" , "Option 3" , "Option 4"] , 
-        browser.select_list!(:name, "sel1").getAllContents)   
+        browser.select_list!(:name, "sel1").option_texts)   
     end
 
     def test_Option_text_select
@@ -34,9 +34,9 @@ class TC_SelectList < Test::Unit::TestCase
         assert_raises(UnknownObjectException) { browser.select_list!(:name, "sel1").option!(:missing, "Option 1").select }
 
         # the select method keeps any currently selected items - use the clear selection method first
-        browser.select_list!( :name , "sel1").clearSelection
+        browser.select_list!( :name , "sel1").clear
         browser.select_list!( :name , "sel1").option!(:text, "Option 1").select
-        assert_equal( ["Option 1" ] , browser.select_list!(:name, "sel1").getSelectedItems)   
+        assert_equal( ["Option 1" ] , browser.select_list!(:name, "sel1").selected_option_texts)   
     end    
 
 
@@ -51,24 +51,24 @@ class TC_SelectList < Test::Unit::TestCase
     end
 
     def test_selectBox_select_using_value
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "NoName").getSelectedItems }  
+        assert_raises(UnknownObjectException) { browser.select_list!(:name, "NoName").selected_option_texts }  
         assert_raises(NoValueFoundException) { browser.select_list!(:name, "sel1").select_value("missing item") }  
         assert_raises(NoValueFoundException) { browser.select_list!(:name, "sel1").select_value(/missing/) }  
         
         # the select method keeps any currently selected items - use the clear selectcion method first
-        browser.select_list!( :name , "sel1").clearSelection
+        browser.select_list!( :name , "sel1").clear
         browser.select_list!( :name , "sel1").select_value("o1")
-        assert_equal( ["Option 1" ] , browser.select_list!(:name, "sel1").getSelectedItems)   
+        assert_equal( ["Option 1" ] , browser.select_list!(:name, "sel1").selected_option_texts)   
         
-        browser.select_list!( :name , "sel1").clearSelection
+        browser.select_list!( :name , "sel1").clear
         browser.select_list!( :name , "sel1").select_value(/2/)
-        assert_equal( ["Option 2" ] , browser.select_list!(:name, "sel1").getSelectedItems)   
+        assert_equal( ["Option 2" ] , browser.select_list!(:name, "sel1").selected_option_texts)   
         
-        browser.select_list!( :name , "sel2").clearSelection
+        browser.select_list!( :name , "sel2").clear
         browser.select_list!( :name , "sel2").select_value(/4/)
         browser.select_list!( :name , "sel2").select_value(/2/)
         assert_equal( ["Option 2" , "Option 4" ] , 
-        browser.select_list!(:name, "sel2").getSelectedItems)   
+        browser.select_list!(:name, "sel2").selected_option_texts)   
         
         # these are to test the onchange event
         # the event shouldnt get fired, as this is the selected item
@@ -121,7 +121,7 @@ class TC_SelectList < Test::Unit::TestCase
         assert_equal( index-1, browser.select_lists.length)
         # Bug Fix 25 
         # TODO/FIX
-        #browser.select_lists.each { |list| puts list.getAllContents() }
+        #browser.select_lists.each { |list| puts list.option_texts() }
     end
 end
 
@@ -135,7 +135,7 @@ class TC_Select_Options < Test::Unit::TestCase
     def test_options_text
         browser.select_list!(:name, 'op_numhits').option!(:text, '>=').select
         assert(browser.select_list!(:name, 'op_numhits').option!(:text, '>=').selected)
-        assert_equal( [">=" ] , browser.select_list!(:name, "op_numhits").getSelectedItems)   
+        assert_equal( [">=" ] , browser.select_list!(:name, "op_numhits").selected_option_texts)   
         assert_equal( "=" , browser.select_list!(:name, "op_numhits")[1].text)   
         assert_equal( "0" , browser.select_list!(:name, "op_numhits")[1].value)   
     end

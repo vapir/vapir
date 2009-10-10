@@ -158,12 +158,12 @@ class TC_Fields < Test::Unit::TestCase
         browser.text_field!(:name, 'events_tester').set('p')
         
         # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
-        assert_equal( "keypresskeydownkeypresskeyup" , browser.text_field!(:name , 'events_text').value.gsub("\n" , "")  )
+        assert_equal(['keydown', 'keypress', 'keyup']*2, browser.text_field(:name, 'events_text').value.split("\n").reject{|v| v.blank?})
         browser.button!(:value , "Clear Events Box").click
         browser.text_field!(:name , 'events_tester').set('ab')
         
         # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
-        assert_equal( "keypresskeydownkeypresskeyupkeydownkeypresskeyup" , browser.text_field!(:name , 'events_text').value.gsub("\n" , "") )
+        assert_equal(['keydown', 'keypress', 'keyup']*3, browser.text_field(:name, 'events_text').value.split("\n").reject{|v| v.blank?})
 
         browser.text_field!(:name, "events_text").set("angrez\nsingh")
         browser.text_field!(:name, "events_text").append("\n") 
@@ -202,8 +202,8 @@ class TC_Fields < Test::Unit::TestCase
         assert(browser.label!(:index,1).exists?) 
        
         assert_equal("", browser.label!(:index,1).id)
-        assert_false(    browser.label!(:index,1).disabled?) 
-        assert(          browser.label!(:index,1).enabled?)
+        #assert_false(    browser.label!(:index,1).disabled?) 
+        #assert(          browser.label!(:index,1).enabled?)
         
         assert_equal("label2", browser.label!(:index,2).id )
        
@@ -216,25 +216,9 @@ class TC_Labels_Display < Test::Unit::TestCase
   
   include CaptureIOHelper
 
-  tag_method :test_showLabels, :fails_on_ie
+  #tag_method :test_showLabels, :fails_on_ie
   def test_showLabels
     goto_page("textfields1.html")
-
-    actual = capture_stdout { browser.showLabels }
-    assert_equal(<<END_OF_MESSAGE, actual)
-There are 3 labels
-label: name: 
-         id: 
-        for: text2
-      index: 1
-label: name: 
-         id: label2
-        for: readOnly2
-      index: 2
-label: name: 
-         id: 
-        for: password1
-      index: 3
-END_OF_MESSAGE
+    assert_match(/There are 3 labels(\nWatir::\w*Label.*?){3}/m, capture_stdout { browser.show_labels })
   end
 end

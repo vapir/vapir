@@ -99,7 +99,7 @@ class TC_Links < Test::Unit::TestCase
         assert_equal( "test1" , browser.link!(:index, 1).text )
         assert_equal( ""      , browser.link!(:index, 1).name )
         assert_equal( ""      , browser.link!(:index, 1).id )
-        assert_equal( false   , browser.link!(:index, 1).disabled )  
+        #assert_equal( false   , browser.link!(:index, 1).disabled )  
         assert_equal( ""      , browser.link!(:index, 1).class_name)
         assert_equal( "link_class_1"      , browser.link!(:index, 2).class_name)
         
@@ -112,9 +112,9 @@ class TC_Links < Test::Unit::TestCase
     end
 
     def test_text_attribute
-        arr1 = browser.link!(:text, "nameDelet").to_s
-        arr2 = browser.link!(:text, /Delet/).to_s
-        assert_equal(arr1, arr2)
+        link1= browser.link!(:text, "nameDelet")
+        link2= browser.link!(:text, /Delet/)
+        assert_equal(link1.text, link2.text)
         
     end
     
@@ -182,53 +182,6 @@ class TC_Links_Display < Test::Unit::TestCase
   tag_method :test_showLinks, :fails_on_ie
   def test_showLinks
     goto_page("links1.html")
-    actual = capture_stdout { browser.showLinks }
-    assert_equal(<<END_OF_MESSAGE, actual)
-There are 11 links
-link:  name: 
-         id: 
-       href: links2.html
-      index: 1
-link:  name: 
-         id: 
-       href: link_pass.html
-      index: 2
-link:  name: 
-         id: 
-       href: pass3.html
-      index: 3
-link:  name: 
-         id: 
-       href: textarea.html
-      index: 4
-link:  name: 
-         id: 
-       href: textarea.html
-      index: 5
-link:  name: 
-         id: link_id
-       href: links1.HTML
-      index: 6
-link:  name: link_name
-         id: 
-       href: links1.HTML
-      index: 7
-link:  name: 
-         id: 
-       href: links1.HTML
-      index: 8
-link:  name: 
-         id: 
-       href: pass.html
-      index: 9
-link:  name: 
-         id: linktos
-       href: link_pass.html
-      index: 10
-link:  name: test_link
-         id: 
-       href: link1.html
-      index: 11
-END_OF_MESSAGE
+    assert_match(/There are 11 links(\nWatir::\w*Link.*?){11}/m, capture_stdout { browser.show_links })
   end
 end

@@ -47,7 +47,7 @@ class TC_Bugs< Test::Unit::TestCase
         elements = browser.elements_by_xpath("//a")
         assert_equal(11, elements.length)
         assert_match(/links2.html$/, elements[0].href)
-        assert_equal("link_class_1", elements[1].invoke("className"))
+        assert_equal("link_class_1", elements[1].className)
         assert_equal("link_id", elements[5].id)
         assert_equal("Link Using an ID", elements[5].text)
     end
@@ -165,10 +165,10 @@ class TC_Bugs< Test::Unit::TestCase
         assert_equal("b7", btn.id)
     end
     
-    def test_getAllContents_bug25
+    def test_option_texts_bug25
         goto_page("select_tealeaf.html")
         browser.select_lists.each do |select|
-            contents =  select.getAllContents().join
+            contents =  select.option_texts.join('')
             assert_equal("=<>>=<=", contents)
             break
         end

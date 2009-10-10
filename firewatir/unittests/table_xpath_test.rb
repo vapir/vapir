@@ -39,9 +39,9 @@ class TC_Tables_XPath < Test::Unit::TestCase
     count = 1
     row.each do |cell|
       if count == 1
-        assert_equal('Row 1 Col1', cell.to_s.strip)
+        assert_equal('Row 1 Col1', cell.text.strip)
       elsif count==2
-        assert_equal('Row 1 Col2', cell.to_s.strip)
+        assert_equal('Row 1 Col2', cell.text.strip)
       end
       count += 1
     end
@@ -79,17 +79,17 @@ class TC_Tables_XPath < Test::Unit::TestCase
   #def test_cell_directly
   #  assert( browser.table_cell(:id, 'cell1').exists? )
   #  assert_nil( browser.table_cell(:id, 'no_exist'))
-  #  assert_equal( "Row 1 Col1",  browser.table_cell(:id, 'cell1').to_s.strip )
+  #  assert_equal( "Row 1 Col1",  browser.table_cell(:id, 'cell1').text.strip )
   #  
   #  # not really cell directly, but just to show another way of geting the cell
-  #  assert_equal( "Row 1 Col1",  browser.table!(:index,1)[1][1].to_s.strip )
+  #  assert_equal( "Row 1 Col1",  browser.table!(:index,1)[1][1].text.strip )
   #end
   
   #def test_row_directly
   #  assert( browser.row(:id, 'row1').exists? )  
   #  assert_nil( browser.row(:id, 'no_exist'))
   #  
-  #  assert_equal('Row 2 Col1' ,  browser.row(:id, 'row1')[1].to_s.strip )
+  #  assert_equal('Row 2 Col1' ,  browser.row(:id, 'row1')[1].text.strip )
   #end
   
   def test_row_iterator
@@ -140,7 +140,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
   
   
   def test_table_container
-    assert_nothing_raised { browser.table!(:id, 't1').html }
+    assert_nothing_raised { browser.table!(:id, 't1').outer_html }
   end
 end    
 

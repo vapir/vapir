@@ -2,7 +2,7 @@ require 'active_support/inflector'
 class Module
   def alias_deprecated(to, from)
     define_method to do |*args|
-      STDERR.puts "DEPRECATION WARNING: #{self.class.name}\##{to} is deprecated. Please use #{self.class.name}\##{from}\n(called from #{caller.map{|c|"\n"+c}})"
+      Kernel.warn "DEPRECATION WARNING: #{self.class.name}\##{to} is deprecated. Please use #{self.class.name}\##{from}\n(called from #{caller.map{|c|"\n"+c}})"
       send(from, *args)
     end
   end
@@ -26,7 +26,7 @@ module Watir
     end
     def dom_wrap_deprecated(ruby_method_name, dom_method_name, new_method_name)
       define_method ruby_method_name do |*args|
-        STDERR.puts "DEPRECATION WARNING: #{self.class.name}\##{ruby_method_name} is deprecated, please use #{self.class.name}\##{new_method_name}\n(called from #{caller.map{|c|"\n"+c}}})"
+        Kernel.warn "DEPRECATION WARNING: #{self.class.name}\##{ruby_method_name} is deprecated, please use #{self.class.name}\##{new_method_name}\n(called from #{caller.map{|c|"\n"+c}}})"
         method_from_element_object(dom_method_name, *args)
       end
     end
@@ -248,7 +248,7 @@ module Watir
     attr_reader :what
     
     def html
-      STDERR.puts "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)"
+      Kernel.warn "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)"
       outer_html
     end
 

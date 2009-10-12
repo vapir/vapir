@@ -143,7 +143,7 @@ module Watir
                     
     def self.initialize_jssh_socket
       if class_variable_defined?('@@jssh_socket') # if it already exists, then a new socket will not have any objects of the old one
-        STDERR.puts "WARNING: JSSH_SOCKET RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
+        Kernel.warn "WARNING: JSSH_SOCKET RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
       end
       @@jssh_socket=JsshSocket.new
       @@firewatir_jssh_objects=@@jssh_socket.object("FireWatir").assign({})
@@ -516,6 +516,8 @@ module Watir
     # return the window jssh object for the browser window with the given title or url.
     #   how - :url or :title
     #   what - string or regexp
+    #
+    # TODO/FIX: doesn't do this:
     # Start searching windows in reverse order so that we attach/find the latest opened window.
     def find_window(how, what)
       orig_how=how

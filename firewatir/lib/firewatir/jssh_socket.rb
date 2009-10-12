@@ -188,7 +188,7 @@ class JsshSocket
 #    logger.add(-1) { "SEND_AND_READ is starting. options=#{options.inspect}" }
 #    logger.add(-1) { "SEND_AND_READ is checking for leftovers" }
     if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != PROMPT
-      STDERR.puts("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
+      Kernel.warn("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
 #      logger.warn { "SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}" }
     end
     @last_expression=js_expr

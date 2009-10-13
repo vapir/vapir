@@ -3,32 +3,37 @@ require 'watir/common_container'
 
 module Watir
   module Frame
-    Specifiers=[ {:tagName => 'frame'},
-                 {:tagName => 'iframe'},
-               ]
-    include ContainerMethodsFromName
-    include ElementModule
-    DefaultHow=:name
+    extend ElementHelper
     
-    dom_wrap_inspect :name, :src
+    add_specifier :tagName => 'frame'
+    add_specifier :tagName => 'iframe'
+    
+    container_single_method :frame
+    container_collection_method :frames
+    self.default_how=:name
+    
+    dom_attr :name
+    dom_attr :src
+    inspect_these :name, :src
   end
   module InputElement
-    Specifiers= [ {:tagName => 'input'},
-                  {:tagName => 'textarea'},
-                  {:tagName => 'button'},
-                  {:tagName => 'select'},
-                ]
-    ContainerSingleMethod=['input', 'input_element']
-    ContainerMultipleMethod=['inputs', 'input_elements']
-    include ElementModule
+    extend ElementHelper
     
-    dom_wrap_inspect :name, :value, :type
-    dom_wrap :value=
-    dom_wrap :default_value => :defaultValue
-    dom_wrap :disabled
-    alias disabled? disabled
-    dom_wrap :readonly => :readOnly, :readonly? => :readOnly, :readOnly? => :readOnly
-    dom_wrap :focus
+    add_specifier :tagName => 'input'
+    add_specifier :tagName => 'textarea'
+    add_specifier :tagName => 'button'
+    add_specifier :tagName => 'select'
+    
+    container_single_method :input, :input_element
+    container_collection_method :inputs, :input_elements
+    
+    dom_attr :name, :value, :type
+    dom_attr :disabled => [:disabled, :disabled?]
+    dom_attr :readOnly => [:readonly, :readonly?]
+    dom_attr :defaultValue => :default_value
+    dom_function :focus
+    dom_setter :value
+    inspect_these :name, :value, :type
 
     # Checks if this element is enabled or not. Raises ObjectDisabledException if this is disabled.
     def assert_enabled
@@ -51,16 +56,18 @@ module Watir
     
   end
   module TextField
-    Specifiers= [ {:tagName => 'textarea'},
-                  {:tagName => 'input', :types => ['text', 'password', 'hidden']},
-                ]
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
     
-    dom_wrap :size, :maxLength, :maxlength => :maxLength
-    dom_wrap_deprecated :getContents, :value, :value
+    add_specifier :tagName => 'textarea'
+    add_specifier :tagName => 'input', :types => ['text', 'password', 'hidden']
     
-    # Clears the contents of the text box.
+    container_single_method :text_field
+    container_collection_method :text_fields
+    
+    dom_attr :size, :maxLength => :maxlength
+    alias_deprecated :getContents, :value
+    
+    # Clears the contents of the text field.
     #   Raises UnknownObjectException if the object can't be found
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
@@ -118,21 +125,24 @@ module Watir
         wait
       end
     end
-    # Sets the contents of the text box to the specified text value
+    # Sets the contents of the text field to the given value
     #   Raises UnknownObjectException if the object cant be found
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
     def set(value)
-      #element_object.value=''
-      clear
-      append(value)
+      with_highlight do
+        clear
+        append(value)
+      end
     end
   end
   module Hidden
-    Specifiers=[{:tagName => 'input', :type => 'hidden'}]
-    include ContainerMethodsFromName
-    DefaultHow=:name
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'input', :type => 'hidden'
+    container_single_method :hidden
+    container_collection_method :hiddens
+    self.default_how=:name
+
     
     # Sets the value of this hidden field. Overriden from TextField, as there is no way to set focus and type to a hidden field
     def set(value)
@@ -156,30 +166,36 @@ module Watir
     end
   end
   module Button
-    Specifiers=[ {:tagName => 'input', :types => ['button', 'submit', 'image', 'reset']}, 
-                 {:tagName => 'button'}
-               ]
-    include ContainerMethodsFromName
-    DefaultHow=:value
-    include ElementModule
-    dom_wrap :src, :height, :width # these are used on <input type=image>
+    extend ElementHelper
+    add_specifier :tagName => 'input', :types => ['button', 'submit', 'image', 'reset']
+    add_specifier :tagName => 'button'
+    container_single_method :button
+    container_collection_method :buttons
+    self.default_how=:value
+
+    dom_attr :src, :height, :width # these are used on <input type=image>
   end
   module FileField
-    Specifiers=[{:tagName => 'input', :type => 'file'}]
-    include ContainerMethodsFromName
-    DefaultHow=:name
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'input', :type => 'file'
+    container_single_method :file_field
+    container_collection_method :file_fields
+    self.default_how=:name
   end
   module Option
-    TAG='option'
-    include ContainerMethodsFromName
-    include ElementModule
-    dom_wrap :text, :value, :selected, :selected=
+    extend ElementHelper
+    add_specifier :tagName => 'option'
+    container_single_method :option
+    container_collection_method :options
+
+    dom_attr :text, :value, :selected
+    dom_setter :selected
   end
   module SelectList
-    TAG='select'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'select'
+    container_single_method :select_list
+    container_collection_method :select_lists
 
     def [](index)
       options[index]
@@ -292,10 +308,10 @@ module Watir
   end
   
   module RadioCheckBoxCommon
-    extend DomWrap
-    dom_wrap :checked, :checked? => :checked, :set? => :checked
-    dom_wrap_deprecated :isSet?, :checked, :checked
-    dom_wrap_deprecated :getState, :checked, :checked
+    extend ElementClassAndModuleMethods
+    dom_attr :checked => [:checked, :checked?, :set?]
+    alias_deprecated :isSet?, :checked
+    alias_deprecated :getState, :checked
 
     #   Unchecks the radio button or check box element.
     #   Raises ObjectDisabledException exception if element is disabled.
@@ -322,40 +338,46 @@ module Watir
   end
   
   module Radio
-    Specifiers=[{:tagName => 'input', :type => 'radio'}]
-    include ContainerMethodsFromName
+    extend ElementHelper
+    add_specifier :tagName => 'input', :type => 'radio'
+    container_single_method :radio
+    container_collection_method :radios
     ContainerMethodExtraArgs=[:value]
-    include ElementModule
-    
+
     include RadioCheckBoxCommon
     inspect_these :checked
   end
   module CheckBox
-    Specifiers=[{:tagName => 'input', :type => 'checkbox'}]
-    ContainerSingleMethod=['checkbox', 'check_box']
-    ContainerMultipleMethod=['checkboxes', 'check_boxes']
+    extend ElementHelper
+    add_specifier :tagName => 'input', :type => 'checkbox'
+    container_single_method :checkbox, :check_box
+    container_collection_method :checkboxes, :check_boxes
     ContainerMethodExtraArgs=[:value]
-    include ElementModule
+
 
     include RadioCheckBoxCommon
     inspect_these :checked
   end
   module Form
-    TAG='form'
-    include ContainerMethodsFromName
-    DefaultHow=:name
-    include ElementModule
-    
-    dom_wrap_inspect :name, :action
+    extend ElementHelper
+    add_specifier :tagName => 'form'
+    container_single_method :form
+    container_collection_method :forms
+    self.default_how=:name
+
+    dom_attr :name, :action
+    inspect_these :name, :action
   end
   module Image
-    TAG = 'IMG'
-    include ContainerMethodsFromName
-    DefaultHow=:name
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'IMG'
+    container_single_method :image
+    container_collection_method :images
+    self.default_how=:name
+
     
-    dom_wrap_inspect :src, :name, :width, :height, :alt
-    dom_wrap :border
+    dom_attr :src, :name, :width, :height, :alt, :border
+    inspect_these :src, :name, :width, :height, :alt
   end
   module HasRowsAndColumns
     # Returns a 2 dimensional array of text contents of each row and column of the table or tbody.
@@ -440,27 +462,31 @@ module Watir
 
   end
   module Table
+    extend ElementHelper
     # Table assumes the inheriting class defines a #rows method which returns 
     # an ElementCollection
-    TAG = 'TABLE'
-    include ContainerMethodsFromName
-    include ElementModule
+    add_specifier :tagName => 'TABLE'
+    container_single_method :table
+    container_collection_method :tables
+
     include HasRowsAndColumns
     
   end
   module TBody
-    TAG = 'TBODY'
-    ContainerSingleMethod=['tbody']
-    ContainerMultipleMethod=['tbodies']
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'TBODY'
+    container_single_method :tbody
+    container_collection_method :tbodies
+
     include HasRowsAndColumns
   end
   module TableRow
+    extend ElementHelper
     # TableRow assumes that the inheriting class defines a #cells method which
     # returns an ElementCollection
-    TAG='tr'
-    include ContainerMethodsFromName
-    include ElementModule
+    add_specifier :tagName => 'tr'
+    container_single_method :table_row
+    container_collection_method :table_rows
     
     #   Iterate over each cell in the row.
     def each_cell
@@ -485,50 +511,61 @@ module Watir
     end
   end
   module TableCell
-    TAG='td'
-    include ContainerMethodsFromName
-    include ElementModule
-    dom_wrap :colSpan, :rowSpan, :colspan => :colSpan, :rowspan => :rowSpan
+    extend ElementHelper
+    add_specifier :tagName => 'td'
+    add_specifier :tagName => 'th'
+    container_single_method :table_cell
+    container_collection_method :table_cells
+
+    dom_attr :colSpan => [:colSpan, :colspan], :rowSpan => [:rowSpan, :rowspan]
   end
   module Link
-    TAG = 'A'
-    ContainerSingleMethod=['a', 'link']
-    ContainerMultipleMethod=['as', 'links']
-    include ElementModule
-    
-    dom_wrap_inspect :href, :name
+    extend ElementHelper
+    add_specifier :tagName => 'A'
+    container_single_method :a, :link
+    container_collection_method :as, :links
+
+    dom_attr :href, :name
+    inspect_these :href, :name
   end
   module Pre
-    TAG = 'PRE'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'PRE'
+    container_single_method :pre
+    container_collection_method :pres
   end
   module P
-    TAG = 'P'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'P'
+    container_single_method :p
+    container_collection_method :ps
   end
   module Div
-    TAG = 'DIV'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'DIV'
+    container_single_method :div
+    container_collection_method :divs
   end
   module Span
-    TAG = 'SPAN'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'SPAN'
+    container_single_method :span
+    container_collection_method :spans
   end
   module Strong
-    TAG = 'STRONG'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'STRONG'
+    container_single_method :strong
+    container_collection_method :strongs
   end
   module Label
-    TAG = 'LABEL'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'LABEL'
+    container_single_method :label
+    container_collection_method :labels
     
-    dom_wrap_inspect :htmlFor
+    dom_attr :htmlFor
+    inspect_these :htmlFor
 
     def for
       raise "document is not defined - cannot search for labeled element" unless document_object
@@ -540,73 +577,87 @@ module Watir
     end
   end
   module Ul
-    TAG = 'UL'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'UL'
+    container_single_method :ul
+    container_collection_method :uls
   end
   module Li
-    TAG = 'LI'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'LI'
+    container_single_method :li
+    container_collection_method :lis
   end
   module Dl
-    TAG = 'DL'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'DL'
+    container_single_method :dl
+    container_collection_method :dls
   end
   module Dt
-    TAG = 'DT'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'DT'
+    container_single_method :dt
+    container_collection_method :dts
   end
   module Dd
-    TAG = 'DD'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'DD'
+    container_single_method :dd
+    container_collection_method :dds
   end
   module H1
-    TAG = 'H1'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'H1'
+    container_single_method :h1
+    container_collection_method :h1s
   end
   module H2
-    TAG = 'H2'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'H2'
+    container_single_method :h2
+    container_collection_method :h2s
   end
   module H3
-    TAG = 'H3'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'H3'
+    container_single_method :h3
+    container_collection_method :h3s
   end
   module H4
-    TAG = 'H4'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'H4'
+    container_single_method :h4
+    container_collection_method :h4s
   end
   module H5
-    TAG = 'H5'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'H5'
+    container_single_method :h5
+    container_collection_method :h5s
   end
   module H6
-    TAG = 'H6'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'H6'
+    container_single_method :h6
+    container_collection_method :h6s
   end
   module Map
-    TAG = 'MAP'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'MAP'
+    container_single_method :map
+    container_collection_method :maps
   end
   module Area
-    TAG = 'AREA'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'AREA'
+    container_single_method :area
+    container_collection_method :areas
   end
   module Em
-    TAG = 'EM'
-    include ContainerMethodsFromName
-    include ElementModule
+    extend ElementHelper
+    add_specifier :tagName => 'EM'
+    container_single_method :em
+    container_collection_method :ems
   end
 end

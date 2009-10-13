@@ -1,4 +1,3 @@
-require 'active_support/inflector'
 class Module
   def alias_deprecated(to, from)
     define_method to do |*args|
@@ -8,184 +7,223 @@ class Module
   end
 end
 module Watir
-  module DomWrap
-    # takes any number of arguments, where each argument is either a symbols or strings representing 
-    # a method that is the same in ruby and on the dom, or a hash of key/value pairs where each
-    # key is a ruby method name and value is a corresponding dom method_name. 
-    #
-    # see immediately following method definition for an example. 
-    def dom_wrap(*args)
-      args.each do |arg|
+  module ElementClassAndModuleMethods
+    # this module is for methods that should go on both common element modules (ie, TextField) as well
+    # as browser-specific element classes (ie, FFTextField). 
+    
+    # takes any number of arguments, where each argument is either:
+    # - a symbol or strings representing a method that is the same in ruby and on the dom
+    # - or a hash of key/value pairs where each key is a dom attribute, and each value
+    #   is a is a corresponding ruby method name or list of ruby method names.
+    def dom_attr(*dom_attrs)
+      dom_attrs.each do |arg|
         hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise("don't know what to do with arg #{arg.inspect} (#{arg.class})")
-        hash.each_pair do |ruby_method_name, dom_method_name|
-          define_method ruby_method_name do |*args|
-            method_from_element_object(dom_method_name, *args)
+        hash.each_pair do |dom_attr, ruby_method_names|
+          ruby_method_names= ruby_method_names.is_a?(Array) ? ruby_method_names : [ruby_method_names]
+          class_array_append 'dom_attrs', dom_attr
+          ruby_method_names.each do |ruby_method_name|
+            define_method ruby_method_name do |*args|
+              method_from_element_object(dom_attr, *args)
+            end
           end
         end
       end
     end
-    def dom_wrap_deprecated(ruby_method_name, dom_method_name, new_method_name)
-      define_method ruby_method_name do |*args|
-        Kernel.warn "DEPRECATION WARNING: #{self.class.name}\##{ruby_method_name} is deprecated, please use #{self.class.name}\##{new_method_name}\n(called from #{caller.map{|c|"\n"+c}}})"
-        method_from_element_object(dom_method_name, *args)
+    
+    # dom_function is the same as dom_attr, but dom_attr isn't really supposed to take arguments
+    # whereas dom_function can. may change this in the future to actually enforce that. 
+    alias dom_function dom_attr
+    
+    # dom_setter takes arguments in the same format as dom_attr, but sends the given setter method (plus = sign)
+    # to the element object. eg, 
+    # module TextField
+    #   dom_setter :value
+    #   dom_setter :maxLength => :maxlength
+    # end
+    # the #value= method in ruby will send to #value= on the element object
+    # the #maxlength= method in ruby will send to #maxLength= on the element object (note case difference). 
+    def dom_setter(*dom_setters)
+      dom_setters.each do |arg|
+        hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise("don't know what to do with arg #{arg.inspect} (#{arg.class})")
+        hash.each_pair do |dom_setter, ruby_method_names|
+          ruby_method_names= ruby_method_names.is_a?(Array) ? ruby_method_names : [ruby_method_names]
+          class_array_append 'dom_setters', dom_setter
+          ruby_method_names.each do |ruby_method_name|
+            define_method(ruby_method_name.to_s+'=') do |value|
+              element_object.send(dom_setter.to_s+'=', value)
+            end
+          end
+        end
       end
     end
-  end
-  module ElementModule
-    # set container methods on inherit
-    def self.included(includer) # when this module gets included (by a Watir Element module)
-      __orig_included_before_ElementModule__=includer.respond_to?(:included) ? includer.method(:included) : nil
-      includer_metaclass=(class << includer;self;end)
-      includer_metaclass.send(:define_method, :included) do |subincluder| # make its .included method
-          __orig_included_before_ElementModule__.call(subincluder) if __orig_included_before_ElementModule__
 
-          container_modules=subincluder.included_modules.select do |mod| # get Container modules that the subincluder includes (ie, Watir::FFTextField includes the Watir::FFContainer Container module)
-            mod.included_modules.include?(Watir::Container)
-          end
+    # notes the given arguments to be inspected by #inspect and #to_s on each inheriting element. 
+    # each argument may be a symbol, in which case the corresponding method is called on the element, or 
+    # a hash, with the following keys:
+    # - :label - how the the attribute is labeled in the string returned by #inspect or #to_s. 
+    #            should be a string or symbol (but anything works; #to_s is called on the label). 
+    # - :value - can be one of:
+    #   - String starting with '@' - assumes this is an instance variable; gets the value of that instance variable
+    #   - Symbol - assumes it is a method name, gives this to #send on the element. this is most commonly-used. 
+    #   - Proc - calls the proc, giving this element as an argument. should return a string. #to_s is called on its return value.
+    #   - anything else - just assumes that that is the value that is wanted in the string. 
+    #     (see Element#attributes_for_stringifying)
+    # - :if - if defined, should be a proc that returns false/nil if this should not be included in the 
+    #   string, or anything else (that is, any value considered 'true') if it should. this element is passed
+    #   as an argument to the proc. 
+    def inspect_these(*inspect_these)
+      inspect_these.each do |inspect_this|
+        attribute_to_inspect=case inspect_this
+        when Hash
+          inspect_this
+        when Symbol
+          {:label => inspect_this, :value => inspect_this}
+        else
+          raise RuntimeError, "unrecognized thing to inspect: #{inspect_this} (#{inspect_this.class})"
+        end
+        class_array_append 'attributes_to_inspect', attribute_to_inspect
+      end
+    end
+    # inspect_this_if(inspect_this, &block) is shorthand for 
+    # inspect_this({:label => inspect_this, :value => inspect_this, :if => block)
+    # if a block isn't given, the :if proc is the result of sending the inspect_this symbol to the element.
+    # if inspect_this isn't a symbol, and no block is given, raises ArgumentError. 
+    def inspect_this_if inspect_this, &block
+      unless inspect_this.is_a?(Symbol) || block
+        raise ArgumentError, "Either give a block, or specify a symbol as the first argument, instead of #{inspect_this.inspect} (#{inspect_this.class})"
+      end
+      to_inspect={:label => inspect_this, :value => inspect_this}
+      to_inspect[:if]= block || proc {|element| element.send(inspect_this) }
+      class_array_append 'attributes_to_inspect', to_inspect
+    end
+    
+    def class_array_append(name, *elements)
+      existing_array=if class_variable_defined?('@@'+name.to_s)
+        class_variable_get('@@'+name.to_s)
+      else
+        []
+      end
+      class_variable_set('@@'+name.to_s, existing_array.push(*elements))
+    end
+
+    def class_array_get(name)
+      # just return the value of appending nothing
+      class_array_append(name) 
+    end
+    def default_how
+      class_variable_defined?('@@default_how') ? class_variable_get('@@default_how') : nil
+    end
+    def specifiers
+      class_array_get 'specifiers'
+    end
+  end
+  module ElementHelper
+    def add_specifier(specifier)
+      class_array_append 'specifiers', specifier
+    end
+
+    def container_single_method(*method_names)
+      class_array_append 'container_single_methods', *method_names
+    end
+    def container_collection_method(*method_names)
+      class_array_append 'container_collection_methods', *method_names
+    end
+
+    def default_how=(how)
+      class_variable_set('@@default_how', how)
+    end
+    
+    include ElementClassAndModuleMethods
+    
+    def included(including_class)
+      including_class.send :extend, ElementClassAndModuleMethods
+      
+      # get Container modules that the including_class includes (ie, Watir::FFTextField includes the Watir::FFContainer Container module)
+      container_modules=including_class.included_modules.select do |mod|
+        mod.included_modules.include?(Watir::Container)
+      end
   
-          const_to_array=proc do |const_name| # take a constant name, and return an array 
-            const_got=includer.const_defined?(const_name) ? includer.const_get(const_name) : []
-            const_got.is_a?(Enumerable) ? const_got : [const_got]
-          end
-  
-          container_modules.each do |container_module|
-            const_to_array.call('ContainerSingleMethod').each do |container_single_method|
-              # define both bang-methods (like #text_field!) and not (#text_field) with corresponding :locate option for element_by_howwhat
-              [{:method_name => container_single_method, :locate => false}, {:method_name => container_single_method.to_s+'!', :locate => true}].each do |method_hash|
-                unless container_module.method_defined?(method_hash[:method_name])
-                  container_module.module_eval do
-                    define_method(method_hash[:method_name]) do |how, *what_args| # can't take how, what as args because blocks don't do default values so it will want 2 args
-                      locate! # make sure self is located before trying contained stuff 
-                      what=what_args.shift # what is the first what_arg
-                      other_attribute_keys=subincluder.const_defined?('ContainerMethodExtraArgs') ? subincluder::ContainerMethodExtraArgs : []
-                      raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}" if what_args.size>other_attribute_keys.length
-                      if what_args.size == 0
-                        other_attributes= nil
-                      else
-                        other_attributes={}
-                        what_args.each_with_index do |arg, i|
-                          other_attributes[other_attribute_keys[i]]=arg
-                        end
-                      end
-                      element_by_howwhat(subincluder, how, what, :locate => method_hash[:locate], :other_attributes => other_attributes)
+      container_modules.each do |container_module|
+        class_array_get('container_single_methods').each do |container_single_method|
+          # define both bang-methods (like #text_field!) and not (#text_field) with corresponding :locate option for element_by_howwhat
+          [{:method_name => container_single_method, :locate => false}, {:method_name => container_single_method.to_s+'!', :locate => true}].each do |method_hash|
+            unless container_module.method_defined?(method_hash[:method_name])
+              container_module.module_eval do
+                define_method(method_hash[:method_name]) do |how, *what_args| # can't take how, what as args because blocks don't do default values so it will want 2 args
+                  locate! # make sure self is located before trying contained stuff 
+                  what=what_args.shift # what is the first what_arg
+                  other_attribute_keys=including_class.const_defined?('ContainerMethodExtraArgs') ? including_class::ContainerMethodExtraArgs : []
+                  raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}" if what_args.size>other_attribute_keys.length
+                  if what_args.size == 0
+                    other_attributes= nil
+                  else
+                    other_attributes={}
+                    what_args.each_with_index do |arg, i|
+                      other_attributes[other_attribute_keys[i]]=arg
                     end
                   end
+                  element_by_howwhat(including_class, how, what, :locate => method_hash[:locate], :other_attributes => other_attributes)
                 end
               end
             end
-            const_to_array.call('ContainerMultipleMethod').each do |container_multiple_method|
-              unless container_module.method_defined?(container_multiple_method)
-                container_module.module_eval do
-                  define_method(container_multiple_method) do
-                    element_collection(subincluder)
-                  end
-                end
-              end
-              container_module.module_eval do
-                define_method('show_'+container_multiple_method.to_s) do |*io|
-                  io=io.first||$stdout # io is a *array so that you don't have to give an arg (since procs don't do default args)
-                  element_collection=element_collection(subincluder)
-                  io.write("There are #{element_collection.length} #{container_multiple_method}\n")
-                  element_collection.each do |element|
-                    io.write(element.to_s)
-                  end
-                end
-                alias_deprecated "show#{container_multiple_method.to_s.capitalize}", "show_"+container_multiple_method.to_s
+          end
+        end
+        class_array_get('container_collection_methods').each do |container_multiple_method|
+          unless container_module.method_defined?(container_multiple_method)
+            container_module.module_eval do
+              define_method(container_multiple_method) do
+                element_collection(including_class)
               end
             end
           end
-        
-        # copy constants (like Specifiers) onto classes when inherited
-        # this is here to set the constants of the Element modules below onto the actual classes that instantiate 
-        # per-browser (Watir::IETextField, Watir::FFTextField, etc) so that calling #const_defined? on those 
-        # returns true, and so that the constants defined here clobber any inherited stuff from superclasses
-        # which is unwanted. 
-        includer.constants.each do |const| # copy all of its constants onto wherever it was included
-          subincluder.const_set(const, includer.const_get(const))
-        end
-        
-        class << subincluder
-          def attributes_to_inspect
-            super_attrs=superclass.respond_to?(:attributes_to_inspect) ? superclass.attributes_to_inspect : []
-            super_attrs + (const_defined?('AttributesToInspect') ? const_get('AttributesToInspect') : [])
+          container_module.module_eval do
+            define_method('show_'+container_multiple_method.to_s) do |*io|
+              io=io.first||$stdout # io is a *array so that you don't have to give an arg (since procs don't do default args)
+              element_collection=element_collection(including_class)
+              io.write("There are #{element_collection.length} #{container_multiple_method}\n")
+              element_collection.each do |element|
+                io.write(element.to_s)
+              end
+            end
+            alias_deprecated "show#{container_multiple_method.to_s.capitalize}", "show_"+container_multiple_method.to_s
           end
         end
+      end
+
+      # copy constants (like Specifiers) onto classes when inherited
+      # this is here to set the constants of the Element modules below onto the actual classes that instantiate 
+      # per-browser (Watir::IETextField, Watir::FFTextField, etc) so that calling #const_defined? on those 
+      # returns true, and so that the constants defined here clobber any inherited stuff from superclasses
+      # which is unwanted. 
+      self.constants.each do |const| # copy all of its constants onto wherever it was included
+        including_class.const_set(const, self.const_get(const))
       end
       
-      includer.send :extend, DomWrap
-      includer_metaclass.send(:define_method, :dom_wrap_inspect) do |*args|
-        dom_wrap *args
-        inspect_these *args
+      # now the constants (above) have switched away from constants to class variables, pretty much, so copy those.
+      self.class_variables.each do |class_var|
+        including_class.send(:class_variable_set, class_var, class_variable_get(class_var))
       end
-      includer_metaclass.send(:define_method, :inspect_these) do |*args|
-        # set default inspect variables. This constant gets copied onto the Element classes by constant-copying code above.
-        unless includer.const_defined?('AttributesToInspect')
-          includer.const_set('AttributesToInspect', [])
-        end
-        attributes_to_inspect=includer.const_get('AttributesToInspect')
-        args.each do |arg|
-          attributes_to_inspect << case arg
-          when Hash
-            arg
-          when Symbol
-            {:label => arg, :value => arg}
-          else
-            raise RuntimeError, "unrecognized thing to inspect: #{arg} (#{arg.class})"
-          end
+      
+      class << including_class
+        def attributes_to_inspect
+          super_attrs=superclass.respond_to?(:attributes_to_inspect) ? superclass.attributes_to_inspect : []
+          super_attrs + class_array_get('attributes_to_inspect')
         end
       end
-      includer_metaclass.send(:define_method, :inspect_this_if) do |arg, *ifproc|
-        ifproc=ifproc.first
-        to_inspect={:label => arg, :value => proc{ send(arg).inspect }}
-        to_inspect[:if] = ifproc || proc{ send(arg) }
-        inspect_these(to_inspect)
-      end
-#      includer.inspect_these(:how, :what, {:label => :index, :value => proc{ @index }, :if => proc{ @index }}, :tag_name, :id)  # set defaults to inspect
     end
-  end
-  # this is to define common constants from the class name rather than repeating slight variations
-  # on the class name for every class
-  module ContainerMethodsFromName
-    def self.included(includer)
-      single_meth=includer.name.demodulize.underscore
-      multiple_meth=single_meth.pluralize
-      if single_meth==multiple_meth
-        raise RuntimeError, "defining container methods #{single_meth}: single is the same as multiple! specify Container*Method constants manually."
-      end
-      includer.const_set('ContainerSingleMethod', [single_meth])
-      includer.const_set('ContainerMultipleMethod', [multiple_meth])
-    end
+    
   end
 
   # this is included by every Element. it relies on the including class implementing a 
   # #element_object method 
   # some stuff assumes the element has a defined @container. 
   module Element
-    include ContainerMethodsFromName
-    Specifiers=[{}] # one specifier with no criteria - note that an empty specifiers list
-                     # would match no elements; a non-empty list with no criteria matches any
-                     # element.
-    def self.included(element_klass)
-      # look for constants to define specifiers - either class::Specifier, or
-      # the simpler class::TAG
-      def element_klass.specifiers
-        if self.const_defined?('Specifiers') # note that though constants are inherited, this checks if Specifiers is defined on the class itself 
-                                              # (although the class itself may not define them, these are mostly defined for classes by element classes in commonwatir)
-          #self.const_get('Specifiers')
-          self::Specifiers
-        elsif self.const_defined?('TAG')
-          [{:tagName => self::TAG}]
-        else
-          raise "No way found to specify #{self}."
-        end
-      end
-      
-      def element_klass.default_how
-        self.const_defined?('DefaultHow') ? self.const_get('DefaultHow') : nil
-      end
-      
-    end
-    include ElementModule
+    extend ElementHelper
+    add_specifier({}) # one specifier with no criteria - note that having no specifiers 
+                       # would match no elements; having a specifier with no criteria matches any
+                       # element.
+    container_single_method :element
+    container_collection_method :elements
     
     private
     def method_from_element_object(dom_method_name, *args)
@@ -231,14 +269,13 @@ module Watir
     end
     public
     
+    dom_attr :tagName, :id
     inspect_these(:how, :what, {:label => :index, :value => proc{ @index }, :if => proc{ @index }})
-    dom_wrap_inspect :tagName, :id
-    dom_wrap :className, :title, :innerHTML, :tag_name => :tagName, :text => :textContent, :inner_html => :innerHTML, :class_name => :className
-    #TODO/FIX: this was is outerhtml in IE; innerHTML in FF. maybe just deprecate this and go with the html names?
-    #dom_wrap :html => :innerHTML
-    dom_wrap :style
-    dom_wrap :scrollIntoView
-    dom_wrap :get_attribute_value => :getAttribute, :attribute_value => :getAttribute
+    inspect_these :tagName, :id
+    dom_attr :title, :tagName => [:tagName, :tag_name], :innerHTML => [:innerHTML, :inner_html], :className => [:className, :class_name]
+    dom_attr :style
+    dom_function :scrollIntoView
+    dom_function :getAttribute => [:get_attribute_value, :attribute_value]
 
     # #text is defined on browser-specific Element classes 
     alias_deprecated :innerText, :text
@@ -260,7 +297,7 @@ module Watir
     end
 
     public
-    # locates a javascript reference for this element
+    # locates the element object for this element 
     def locate(options={})
       default_options={}
       if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at # TODO: implement this for IE; only exists for Firefox now. 
@@ -382,16 +419,16 @@ module Watir
     
     def attributes_for_stringifying
       self.class.attributes_to_inspect.map do |inspect_hash|
-        if !inspect_hash[:if] || inspect_hash[:if].call
+        if !inspect_hash[:if] || inspect_hash[:if].call(self)
           value=case inspect_hash[:value]
           when /\A@/ # starts with @, look for instance variable
             instance_variable_get(inspect_hash[:value]).inspect
           when Symbol
             send(inspect_hash[:value]).inspect
           when Proc
-            inspect_hash[:value].call(self)
+            inspect_hash[:value].call(self).to_s
           else
-            inspect_hash[:value]
+            inspect_hash[:value].to_s
           end
           [inspect_hash[:label].to_s, value]
         end

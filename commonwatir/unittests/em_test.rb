@@ -57,10 +57,10 @@ class TC_Em < Test::Unit::TestCase
     assert_equal("two text", browser.ems[2].text)
     
     browser.ems.each_with_index do |em, idx|
-      assert_equal browser.em!(:index, idx+1).text, em.text
-      assert_equal browser.em!(:index, idx+1).id, em.id
-      assert_equal browser.em!(:index, idx+1).class_name, em.class_name
-      assert_equal browser.em!(:index, idx+1).title, em.title
+      assert_equal browser.em!(:index, idx).text, em.text
+      assert_equal browser.em!(:index, idx).id, em.id
+      assert_equal browser.em!(:index, idx).class_name, em.class_name
+      assert_equal browser.em!(:index, idx).title, em.title
     end
   end
     

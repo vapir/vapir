@@ -8,9 +8,8 @@ module Watir
   class IEImage < IEElement
     include Image
     
-    dom_wrap :fileSize, :file_size => :fileSize
-    dom_wrap :height, :width
-    dom_wrap :fileCreatedDate, :file_created_date => :fileCreatedDate
+    dom_attr :fileSize => :file_size
+    dom_attr :fileCreatedDate => :file_created_date
     
     # This method attempts to find out if the image was actually loaded by the web browser.
     # If the image was not loaded, the browser is unable to determine some of the properties.

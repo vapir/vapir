@@ -58,10 +58,10 @@ class TC_Dt < Test::Unit::TestCase
     assert_equal("experience", browser.dts[1].id)
     
     browser.dts.each_with_index do |dt, idx|
-      assert_equal(browser.dt!(:index,idx+1).text, dt.text)
-      assert_equal(browser.dt!(:index,idx+1).id, dt.id)
-      assert_equal(browser.dt!(:index,idx+1).class_name , dt.class_name)
-      assert_equal(browser.dt!(:index,idx+1).title, dt.title)
+      assert_equal(browser.dt!(:index,idx).text, dt.text)
+      assert_equal(browser.dt!(:index,idx).id, dt.id)
+      assert_equal(browser.dt!(:index,idx).class_name , dt.class_name)
+      assert_equal(browser.dt!(:index,idx).title, dt.title)
     end
   end
     

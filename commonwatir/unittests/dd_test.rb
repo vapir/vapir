@@ -60,10 +60,10 @@ class TC_Dd < Test::Unit::TestCase
     assert_equal("education", browser.dds[2].title)
     
     browser.dds.each_with_index do |dd, idx|
-      assert_equal(browser.dd!(:index,idx+1).text, dd.text)
-      assert_equal(browser.dd!(:index,idx+1).id, dd.id)
-      assert_equal(browser.dd!(:index,idx+1).class_name , dd.class_name)
-      assert_equal(browser.dd!(:index,idx+1).title, dd.title)
+      assert_equal(browser.dd!(:index,idx).text, dd.text)
+      assert_equal(browser.dd!(:index,idx).id, dd.id)
+      assert_equal(browser.dd!(:index,idx).class_name , dd.class_name)
+      assert_equal(browser.dd!(:index,idx).title, dd.title)
     end
   end
     

@@ -58,10 +58,10 @@ class TC_Dl < Test::Unit::TestCase
     assert_equal("experience-list", browser.dls[1].id)
     
     browser.dls.each_with_index do |dl, idx|
-      assert_equal(browser.dl!(:index,idx+1).text, dl.text)
-      assert_equal(browser.dl!(:index,idx+1).id, dl.id)
-      assert_equal(browser.dl!(:index,idx+1).class_name , dl.class_name)
-      assert_equal(browser.dl!(:index,idx+1).title, dl.title)
+      assert_equal(browser.dl!(:index,idx).text, dl.text)
+      assert_equal(browser.dl!(:index,idx).id, dl.id)
+      assert_equal(browser.dl!(:index,idx).class_name , dl.class_name)
+      assert_equal(browser.dl!(:index,idx).title, dl.title)
     end
   end
     

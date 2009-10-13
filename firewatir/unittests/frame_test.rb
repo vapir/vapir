@@ -114,7 +114,6 @@ class TC_IFrames < Test::Unit::TestCase
   
 end   
 
-require 'unittests/iostring'
 class TC_show_frames < Test::Unit::TestCase
   include CaptureIOHelper
   tags :fails_on_ie

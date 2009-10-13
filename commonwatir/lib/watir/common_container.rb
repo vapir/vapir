@@ -17,7 +17,7 @@ module Watir
     # element, in terms of browser, container, other things each element uses. 
     def element_by_howwhat(klass, how, what, other={})
       other={:locate => false, :other_attributes => nil}.merge(other)
-      how, what, index=*normalize_howwhat_index(how, what, klass.respond_to?(:default_how) && klass.default_how)
+      how, what, index=*normalize_howwhat_index(how, what, klass.default_how)
       if other[:other_attributes]
         if how==:attributes
           what.merge!(other[:other_attributes])
@@ -56,7 +56,7 @@ module Watir
             if default_how
               [:attributes, {default_how => how}, nil]
             else
-              raise
+              raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search using how=#{how.inspect} (#{how.class}), what=#{what.inspect} (#{what.class}), default_how=#{default_how.inspect} (#{default_how.class})"
             end
           elsif how==:index
             [:attributes, {}, what]

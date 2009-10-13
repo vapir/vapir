@@ -73,7 +73,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
     assert_equal(106, image.width)
     
     link = table[2][2].link!(:index,1)
-    assert_equal("Google", link.innerText)
+    assert_equal("Google", link.text)
   end
   
   #def test_cell_directly

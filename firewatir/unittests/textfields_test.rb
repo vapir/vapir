@@ -180,8 +180,8 @@ class TC_Fields < Test::Unit::TestCase
     
     def test_labels_iterator
         assert_equal(3, browser.labels.length)
-        assert_equal('Label For this Field' , browser.labels[1].innerText.strip )
-        assert_equal('Password With ID ( the text here is a label for it )' , browser.labels[3].innerText )
+        assert_equal('Label For this Field' , browser.labels[1].text.strip )
+        assert_equal('Password With ID ( the text here is a label for it )' , browser.labels[3].text )
        
         count=0
         browser.labels.each do |l|
@@ -191,7 +191,7 @@ class TC_Fields < Test::Unit::TestCase
     end
     
     def test_label_properties
-        assert_raises(UnknownObjectException) { browser.label!(:index,20).innerText } 
+        assert_raises(UnknownObjectException) { browser.label!(:index,20).text } 
         assert_raises(UnknownObjectException) { browser.label!(:index,20).for } 
         assert_raises(UnknownObjectException) { browser.label!(:index,20).name } 
         assert_raises(UnknownObjectException) { browser.label!(:index,20).type } 
@@ -207,7 +207,7 @@ class TC_Fields < Test::Unit::TestCase
         
         assert_equal("label2", browser.label!(:index,2).id )
        
-        assert_equal("Password With ID ( the text here is a label for it )" , browser.label!(:index,3).innerText)
+        assert_equal("Password With ID ( the text here is a label for it )" , browser.label!(:index,3).text)
         assert_equal("password1", browser.label!(:index,3).for.id)
     end
 end

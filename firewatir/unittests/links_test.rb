@@ -127,7 +127,7 @@ class TC_Links < Test::Unit::TestCase
             assert_equal( browser.link!(:index, index).href      , link.href )
             assert_equal( browser.link!(:index, index).id        , link.id )
             assert_equal( browser.link!(:index, index).name      , link.name )
-            assert_equal( browser.link!(:index, index).innerText , link.text )
+            assert_equal( browser.link!(:index, index).text      , link.text )
             index+=1
         end
     end

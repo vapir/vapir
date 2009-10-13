@@ -63,6 +63,36 @@ module Watir
       end)
     end
     
+    # Returns array of element objects that match the given XPath query.
+    #   Refer: https://developer.mozilla.org/en/DOM/document.evaluate
+    def element_objects_by_xpath(xpath)
+      elements=[]
+      result=document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
+      while element=result.iterateNext
+        elements << element.store_rand_object_key(@browser_jssh_objects)
+      end
+      elements
+    end
+
+    # Returns the first element object that matches the given XPath query.
+    #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
+    def element_object_by_xpath(xpath)
+      document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
+    end
+
+    # Returns the first element that matches the given xpath expression or query.
+    def element_by_xpath(xpath)
+      base_element_class.factory(element_object_by_xpath(xpath))
+    end
+
+    # Returns the array of elements that match the given xpath query.
+    def elements_by_xpath(xpath)
+      # TODO/FIX: shouldn't this return an ElementCollection? tests seem to expect it not to, addressing it with 0-based indexing, but that seems insconsistent with everything else. 
+      element_objects_by_xpath(xpath).map do |element_object|
+        base_element_class.factory(element_object)
+      end
+    end
+
 =begin    
     #
     # Description:

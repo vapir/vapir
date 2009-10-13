@@ -4,7 +4,6 @@ module Watir
   class FFElement
     include Watir::FFContainer
     include Element
-    extend DomWrap
   
     class << self
       #TODO/FIX: repeated on both Element base classes; move to common 
@@ -121,23 +120,6 @@ module Watir
       end
     end
     alias contains_text contains_text?
-
-    # Returns array of element objects that match the given XPath query.
-    #   Refer: https://developer.mozilla.org/en/DOM/document.evaluate
-    def element_objects_by_xpath(xpath)
-      elements=[]
-      result=document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
-      while element=result.iterateNext
-        elements << element.store_rand_object_key(@browser_jssh_objects)
-      end
-      elements
-    end
-
-    # Returns the first element object that matches the given XPath query.
-    #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
-    def element_object_by_xpath(xpath)
-      document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
-    end
 
     # Returns the parent element (a FFElement or subclass, using FFElement.factory). 
     # returns nil if there is no parent, or if the parent is the document. 
@@ -266,7 +248,7 @@ module Watir
     end
 
     # Returns the text content of the element.
-    dom_wrap :text => :textContent
+    dom_attr :textContent => :text
   
     def jssh_to_element_collection(element_class, jssh_collection)
       ElementCollection.new(jssh_collection.to_array.map do |element_object|

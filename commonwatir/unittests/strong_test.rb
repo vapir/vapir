@@ -22,10 +22,10 @@ class TC_Strong < Test::Unit::TestCase
     assert_equal("this is a strong", browser.strongs[1].text)
     
     browser.strongs.each_with_index do |strong, idx|
-      assert_equal(browser.strong!(:index,idx+1).text, strong.text)
-      assert_equal(browser.strong!(:index,idx+1).id, strong.id)
-      assert_equal(browser.strong!(:index,idx+1).class_name , strong.class_name)
-      assert_equal(browser.strong!(:index,idx+1).title, strong.title)
+      assert_equal(browser.strong!(:index,idx).text, strong.text)
+      assert_equal(browser.strong!(:index,idx).id, strong.id)
+      assert_equal(browser.strong!(:index,idx).class_name , strong.class_name)
+      assert_equal(browser.strong!(:index,idx).title, strong.title)
     end
   end
     

@@ -4,7 +4,6 @@ module Watir
   class IEElement # Wrapper
     include IEContainer # presumes @container is defined
     include Element
-    extend DomWrap
     include Watir::Exception
     attr_accessor :container
     
@@ -47,8 +46,8 @@ module Watir
     #  @element_object = o
     #end
     
-    dom_wrap :currentStyle
-    dom_wrap :disabled, :disabled? => :disabled # this applies to all elements for IE, apparently. 
+    dom_attr :currentStyle
+    dom_attr :disabled => [:disabled, :disabled?] # this applies to all elements for IE, apparently. 
     def enabled?
       !disabled
     end
@@ -84,9 +83,9 @@ module Watir
     public
     
     # return the unique COM number for the element
-    dom_wrap :uniqueNumber, :unique_number => :uniqueNumber
+    dom_attr :uniqueNumber => :unique_number
     # Return the outer html of the object - see http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/outerhtml.asp?frame=true
-    dom_wrap :outerHTML, :outer_html => :outerHTML
+    dom_attr :outerHTML => :outer_html
 
     # return the text before the element
     # TODO/FIX: ?
@@ -102,7 +101,7 @@ module Watir
     end
     
     # Returns the text content of the element.
-    dom_wrap :text => :innerText
+    dom_attr :innerText => :text
     
 #    def ole_inner_elements
 #      assert_exists
@@ -134,7 +133,7 @@ module Watir
 #      other.assert_exists
 #      ole_object.sourceindex <=> other.ole_object.sourceindex
 #    end
-    dom_wrap :sourceindex => :sourceIndex
+    dom_attr :sourceIndex => :source_index
 
 #    # Return true if self is contained earlier in the html than other. 
 #    alias :before? :< 

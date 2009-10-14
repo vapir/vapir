@@ -10,7 +10,7 @@ module Watir
     
     container_single_method :frame
     container_collection_method :frames
-    self.default_how=:name
+    default_how :name
     
     dom_attr :name
     dom_attr :src
@@ -141,7 +141,7 @@ module Watir
     add_specifier :tagName => 'input', :type => 'hidden'
     container_single_method :hidden
     container_collection_method :hiddens
-    self.default_how=:name
+    default_how :name
 
     
     # Sets the value of this hidden field. Overriden from TextField, as there is no way to set focus and type to a hidden field
@@ -171,7 +171,7 @@ module Watir
     add_specifier :tagName => 'button'
     container_single_method :button
     container_collection_method :buttons
-    self.default_how=:value
+    default_how :value
 
     dom_attr :src, :height, :width # these are used on <input type=image>
   end
@@ -180,7 +180,7 @@ module Watir
     add_specifier :tagName => 'input', :type => 'file'
     container_single_method :file_field
     container_collection_method :file_fields
-    self.default_how=:name
+    default_how :name
   end
   module Option
     extend ElementHelper
@@ -363,7 +363,7 @@ module Watir
     add_specifier :tagName => 'form'
     container_single_method :form
     container_collection_method :forms
-    self.default_how=:name
+    default_how :name
 
     dom_attr :name, :action
     inspect_these :name, :action
@@ -373,7 +373,7 @@ module Watir
     add_specifier :tagName => 'IMG'
     container_single_method :image
     container_collection_method :images
-    self.default_how=:name
+    default_how :name
 
     
     dom_attr :src, :name, :width, :height, :alt, :border

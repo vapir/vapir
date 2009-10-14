@@ -110,8 +110,14 @@ module Watir
       # just return the value of appending nothing
       class_array_append(name) 
     end
-    def default_how
-      class_variable_defined?('@@default_how') ? class_variable_get('@@default_how') : nil
+    def default_how(*arg)
+      if arg.length==0
+        class_variable_defined?('@@default_how') ? class_variable_get('@@default_how') : nil
+      elsif arg.length==1
+        class_variable_set('@@default_how', arg.first)
+      else
+        raise ArgumentError, "#{arg.length} arguments given; expected one or two. arguments were #{arg.inspect}"
+      end
     end
     def specifiers
       class_array_get 'specifiers'
@@ -129,10 +135,6 @@ module Watir
       class_array_append 'container_collection_methods', *method_names
     end
 
-    def default_how=(how)
-      class_variable_set('@@default_how', how)
-    end
-    
     include ElementClassAndModuleMethods
     
     def included(including_class)

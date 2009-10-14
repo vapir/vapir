@@ -7,9 +7,9 @@ class Module
   end
 end
 module Watir
+  # this module is for methods that should go on both common element modules (ie, TextField) as well
+  # as browser-specific element classes (ie, FFTextField). 
   module ElementClassAndModuleMethods
-    # this module is for methods that should go on both common element modules (ie, TextField) as well
-    # as browser-specific element classes (ie, FFTextField). 
     
     # takes any number of arguments, where each argument is either:
     # - a symbol or strings representing a method that is the same in ruby and on the dom
@@ -220,12 +220,21 @@ module Watir
   module Element
     extend ElementHelper
     add_specifier({}) # one specifier with no criteria - note that having no specifiers 
-                       # would match no elements; having a specifier with no criteria matches any
-                       # element.
+                      # would match no elements; having a specifier with no criteria matches any
+                      # element.
     container_single_method :element
     container_collection_method :elements
     
     private
+    # invokes the given method on the element_object, passing it the given args. 
+    # if the element_object doesn't respond to the method name:
+    # - if you don't give it any arguments, returns element_object.getAttributeNode(dom_method_name).value
+    # - if you give it any arguments, raises ArgumentError, as you can't pass more arguments to getAttributeNode.
+    #
+    # it may support setter methods (that is, method_from_element_object('value=', 'foo')), but this has 
+    # caused issues in the past - WIN32OLE complaining about doing stuff with a terminated object, and then
+    # when garbage collection gets called, ruby terminating abnormally when garbage-collecting an 
+    # unrecognized type. so, not so much recommended. 
     def method_from_element_object(dom_method_name, *args)
       assert_exists
 
@@ -255,10 +264,10 @@ module Watir
         if element_object.object_respond_to?(dom_method_name)
           element_object.method_missing(dom_method_name, *args)
           # note: using method_missing (not invoke) so that attribute= methods can be used. 
+          # but that is problematic. see documentation above. 
         elsif args.length==0
           if element_object.object_respond_to?(:getAttributeNode)
             element_object.getAttributeNode(dom_method_name.to_s).value
-            #element_object.getAttribute(dom_method_name.to_s)
           else
             nil
           end
@@ -293,6 +302,7 @@ module Watir
     # this is used by #locate. 
     # it may be overridden, as it is by Frame classes
     def container_candidates(specifiers)
+      assert_container
       Watir::Specifier.specifier_candidates(@container, specifiers)
     end
 
@@ -319,9 +329,7 @@ module Watir
           raise if options[:relocate]
           @what
         when :xpath
-          if !@container
-            raise
-          end
+          assert_container
           @container.locate!(options)
           unless @container.respond_to?(:element_object_by_xpath)
             raise Watir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
@@ -334,9 +342,7 @@ module Watir
           end
           matched_by_xpath
         when :attributes
-          if !@container
-            raise
-          end
+          assert_container
           @container.locate!(options)
           specified_attributes=@what
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
@@ -362,10 +368,22 @@ module Watir
       @element_object
     end
     def locate!(options={})
-      locate(options) || raise(self.is_a?(Frame) ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException, Watir::Exception.message_for_unable_to_locate(@how, @what, @index))
+      locate(options) || begin
+        klass=self.is_a?(Frame) ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException
+        message="Unable to locate element, using #{@how}"+(@what ? ", "+@what.inspect : '')+(@index ? ", index #{@index}" : "")
+        raise(klass, message)
+      end
     end
     alias assert_exists locate!
+    
+    private
+    def assert_container
+      unless @container
+        raise Watir::Exception::MissingContainerException, "No container is defined on #{self.inspect}"
+      end
+    end
 
+    public
     # Returns whether this element actually exists.
     def exists?
       !!locate
@@ -398,22 +416,24 @@ module Watir
     end
 
     # accesses the object representing this Element in the DOM. 
-    # will error if this Element does not exist. 
     def element_object
-      #locate!
       @element_object
     end
     
     def browser
+      assert_container
       @container.browser
     end
     def document_object
+      assert_container
       @container.document_object
     end
     def content_window_object
+      assert_container
       @container.content_window_object
     end
     def browser_window_object
+      assert_container
       @container.browser_window_object
     end
     

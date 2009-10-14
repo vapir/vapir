@@ -314,7 +314,7 @@ module Watir
       if browser_object.canGoBack
         browser_object.goBack
       else
-        raise "Cannot go back!"
+        raise Watir::Exception::NavigationException, "Cannot go back!"
       end
       wait
     end
@@ -324,7 +324,7 @@ module Watir
       if browser_object.canGoForward
         browser_object.goForward
       else
-        raise "Cannot go forward!"
+        raise Watir::Exception::NavigationException, "Cannot go forward!"
       end
       wait
     end

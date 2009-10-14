@@ -3,9 +3,9 @@ module Watir
 
     # Root class for all Watir Exceptions
     class WatirException < RuntimeError  
-        def initialize(message="")
-            super(message)
-        end
+      def initialize(message="")
+        super(message)
+      end
     end
     
     class NoBrowserException < WatirException; end
@@ -31,6 +31,8 @@ module Watir
     class NoStatusBarException < WatirException; end
     # This exception is thrown if an http error, such as a 404, 500 etc is encountered while navigating
     class NavigationException < WatirException; end
+    # This exception is raised if an element does not have a container defined, and needs one. 
+    class MissingContainerException < WatirException; end
     # This exception is raised if a timeout is exceeded
     class TimeOutException < WatirException
       def initialize(duration, timeout)
@@ -38,10 +40,5 @@ module Watir
       end 
       attr_reader :duration, :timeout
     end
-
-    # Return an error message for when unable to locate the element
-    def self.message_for_unable_to_locate(how, what, index)
-      "Unable to locate element, using #{how}"+(what ? ", "+what.inspect : '')+(index ? ", index #{index}" : "")
-    end    
   end
 end

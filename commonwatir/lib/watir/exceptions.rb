@@ -11,6 +11,8 @@ module Watir
     class NoBrowserException < WatirException; end
     # This exception is thrown if an attempt is made to access an object that doesn't exist
     class UnknownObjectException < WatirException; end
+    # This exception is raised if attempting to relocate an Element that was located in a way that does not support relocating 
+    class UnableToRelocateException < WatirException; end
     # This exception is thrown if an attempt is made to access an object that is in a disabled state
     class ObjectDisabledException   < WatirException; end
     # This exception is thrown if an attempt is made to access a frame that cannot be found 

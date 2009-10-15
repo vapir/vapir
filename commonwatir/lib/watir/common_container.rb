@@ -22,7 +22,7 @@ module Watir
         if how==:attributes
           what.merge!(other[:other_attributes])
         else
-          raise
+          raise ArgumentError, ":other_attributes option was given, but we are not locating by attributes. We are locating by how=#{how.inspect} what=#{what.inspect}. :other_attributes option was #{other[:other_attributes].inspect}"
         end
       end
       element=klass.new(how, what, extra.merge(:index => index, :locate => other[:locate]))
@@ -43,11 +43,11 @@ module Watir
     def normalize_howwhat_index(how, what, default_how=nil)
       case how
       when nil
-        raise
+        raise ArgumentError, "no how was given!"
       when Hash
         how=how.dup
         index=how.delete(:index)
-        what==nil ? [:attributes, how, index] : raise
+        what==nil ? [:attributes, how, index] : raise(ArgumentError, "'how' was given as a Hash, so assumed to be the 'what' for :attributes, but 'what' was also given. how=#{how.inspect}, what=#{what.inspect}")
       when String, Symbol
         if Watir::Specifier::HowList.include?(how)
           [how, what, nil]
@@ -65,7 +65,7 @@ module Watir
           end
         end
       else
-        raise
+        raise ArgumentError, "Locating with how=#{how.inspect} is not recognized or supported. Also given what=#{what.inspect}"
       end
     end
 

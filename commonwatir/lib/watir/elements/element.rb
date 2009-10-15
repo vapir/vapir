@@ -17,7 +17,7 @@ module Watir
     #   is a is a corresponding ruby method name or list of ruby method names.
     def dom_attr(*dom_attrs)
       dom_attrs.each do |arg|
-        hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise("don't know what to do with arg #{arg.inspect} (#{arg.class})")
+        hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise(ArgumentError, "don't know what to do with arg #{arg.inspect} (#{arg.class})")
         hash.each_pair do |dom_attr, ruby_method_names|
           ruby_method_names= ruby_method_names.is_a?(Array) ? ruby_method_names : [ruby_method_names]
           class_array_append 'dom_attrs', dom_attr
@@ -44,7 +44,7 @@ module Watir
     # the #maxlength= method in ruby will send to #maxLength= on the element object (note case difference). 
     def dom_setter(*dom_setters)
       dom_setters.each do |arg|
-        hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise("don't know what to do with arg #{arg.inspect} (#{arg.class})")
+        hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise(ArgumentError, "don't know what to do with arg #{arg.inspect} (#{arg.class})")
         hash.each_pair do |dom_setter, ruby_method_names|
           ruby_method_names= ruby_method_names.is_a?(Array) ? ruby_method_names : [ruby_method_names]
           class_array_append 'dom_setters', dom_setter
@@ -79,7 +79,7 @@ module Watir
         when Symbol
           {:label => inspect_this, :value => inspect_this}
         else
-          raise RuntimeError, "unrecognized thing to inspect: #{inspect_this} (#{inspect_this.class})"
+          raise ArgumentError, "unrecognized thing to inspect: #{inspect_this} (#{inspect_this.class})"
         end
         class_array_append 'attributes_to_inspect', attribute_to_inspect
       end
@@ -121,6 +121,12 @@ module Watir
     end
     def specifiers
       class_array_get 'specifiers'
+    end
+    def container_single_methods
+      class_array_get 'container_single_methods'
+    end
+    def container_collection_methods
+      class_array_get 'container_collection_methods'
     end
   end
   module ElementHelper
@@ -339,7 +345,9 @@ module Watir
       @element_object||= begin
         case @how
         when :element_object
-          raise if options[:relocate]
+          if options[:relocate]
+            raise Watir::Exception::UnableToRelocateException, "#{self.inspect} was specified using #{how.inspect} and cannot be relocated."
+          end
           @what
         when :xpath
           assert_container

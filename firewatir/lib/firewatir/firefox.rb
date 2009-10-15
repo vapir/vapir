@@ -570,20 +570,27 @@ module Watir
       elsif candidates.size==1
         return *candidates
       else
-        raise
+        raise "Multiple windows found which this is a parent of - cannot determine which is the expected modal dialog"
       end
     end
     
+    # returns #modal_dialog if it exists; otherwise, errors. use this with the expectation that the dialog does exist. 
+    # use #modal_dialog when you will check if it exists. 
+    def modal_dialog!
+      modal_dialog || raise(NoMatchingWindowFoundException, "No modal dialog found on this browser")
+    end
+    
     def click_modal_button(button_text)
-      modal=self.modal_dialog || raise
-      anonymous_dialog_nodes=modal.document.getAnonymousNodes(modal.document.documentElement) || raise # raise if no anymous nodes are found (this is where the buttons are) 
+      modal=self.modal_dialog!
+      # raise if no anonymous nodes are found (this is where the buttons are) 
+      anonymous_dialog_nodes=modal.document.getAnonymousNodes(modal.document.documentElement) || raise("Could not find anonymous nodes on which to look for buttons")
       xul_buttons=[]
       anonymous_dialog_nodes.to_array.each do |node|
         xul_buttons+=node.getElementsByTagName('xul:button').to_array.select do |button|
           Watir::Specifier.fuzzy_match(button.label, button_text)
         end
       end
-      raise unless xul_buttons.size==1
+      raise("Found #{xul_buttons.size} buttons which match #{button_text} - expected to find 1") unless xul_buttons.size==1
       xul_button=xul_buttons.first
       xul_button.disabled=false # get around firefox's stupid thing where the default button is disabled for a few seconds or something, god knows why
       xul_button.click
@@ -703,7 +710,7 @@ module Watir
 
     # Returns the text content of the current modal dialog on this browser. 
     def modal_text
-      modal=self.modal_dialog || raise
+      modal=self.modal_dialog!
       modal.document.documentElement.textContent
     end
     alias get_popup_text modal_text
@@ -736,7 +743,7 @@ module Watir
         when /linux/i
           :linux
         else
-          raise
+          raise "Unidentified platform #{platform}"
         end
       end
     end

@@ -310,17 +310,28 @@ module Watir
 
     public
     # locates the element object for this element 
+    # 
+    # takes options hash. currently the only option is
+    # - :relocate => nil, :recursive, true, false 
+    #   - nil or not set (default): this Element is only relocated if the browser is updated (in firefox) or the WIN32OLE stops existing (IE). 
+    #   - :recursive: this element and its containers are relocated, recursively up to the containing browser. 
+    #   - false: no relocating is done even if the browser is updated or the element_object stops existing. 
+    #   - true: this Element is relocated. the container is relocated only if the browser is updated or the element_object stops existing. 
     def locate(options={})
-      default_options={}
-      if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at # TODO: implement this for IE; only exists for Firefox now. 
-        default_options[:relocate]=:recursive
-      end
-      if element_object && Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
-        if !element_object.exists?
-          default_options[:relocate]=true
+      if options[:relocate]==nil # don't override if it is set to false; only if it's nil 
+        if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at # TODO: implement this for IE; only exists for Firefox now. 
+          options[:relocate]=:recursive
+        end
+        if element_object && Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
+          if !element_object.exists?
+            options[:relocate]=true
+          end
         end
       end
-      options=default_options.merge(options)
+      container_locate_options={}
+      if options[:relocate]==:recursive
+        container_locate_options[:relocate]= options[:relocate]
+      end
       if options[:relocate]
         @element_object=nil
       end
@@ -332,7 +343,7 @@ module Watir
           @what
         when :xpath
           assert_container
-          @container.locate!(options)
+          @container.locate!(container_locate_options)
           unless @container.respond_to?(:element_object_by_xpath)
             raise Watir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
           end
@@ -345,7 +356,7 @@ module Watir
           matched_by_xpath
         when :attributes
           assert_container
-          @container.locate!(options)
+          @container.locate!(container_locate_options)
           specified_attributes=@what
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
           

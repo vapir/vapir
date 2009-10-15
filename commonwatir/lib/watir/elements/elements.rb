@@ -301,7 +301,7 @@ module Watir
           fire_event(:onchange, method_options.merge(:highlight => false))
         end
         if !any_matched
-          raise Watir::Exception::NoValueFoundException
+          raise Watir::Exception::NoValueFoundException, "Could not find any options matching those specified on #{self.inspect}"
         end
       end
     end
@@ -428,18 +428,11 @@ module Watir
         nil
       end
     end
+    # I was going to define #cell_count(index=nil) here as an alternative to #column_count
+    # but it seems confusing; to me #cell_count on a Table would count up all the cells in
+    # all rows, so going to avoid confusion and not do it. 
     
-    #
-    # Description:
-    #   Get the text of each column in the specified row.
-    #
-    # Input:
-    #   Row index (starting at 1)
-    #
-    # Output:
-    #   Value of all columns present in the row.
-    #
-    # is this method really useful?
+    # Returns an array of the text of each cell in the row at the given index.
     def row_texts_at(row_index)
       rows[row_index].cells.map do |cell|
         cell.text
@@ -447,19 +440,13 @@ module Watir
     end
     alias_deprecated :row_values, :row_texts_at
     
-    # Returns an array containing the text values in the specified column index in each row. 
+    # Returns an array containing the text of the cell in the specified index in each row. 
     def column_texts_at(column_index)
       rows.map do |row|
         row.cells[column_index].text
       end
     end
     alias_deprecated :column_values, :column_texts_at
-    
-    
-    # I was going to define #cell_count(index=nil) here as an alternative to #column_count
-    # but it seems confusing; to me #cell_count on a Table would count up all the cells in
-    # all rows, so going to avoid confusion and not do it. 
-
   end
   module Table
     extend ElementHelper
@@ -508,6 +495,17 @@ module Watir
     end
     def cell_count
       cells.length
+    end
+    
+    # returns the cell of the current row at the given column index (starting from 1), taking
+    # into account conSpans of other cells. 
+    #
+    # returns nil if index is greater than the number of columns of this row. 
+    def cell_at_colum(index)
+      cells.detect do |cell|
+        index=index-(cell.colSpan || 1)
+        index <= 0
+      end
     end
   end
   module TableCell
@@ -572,7 +570,7 @@ module Watir
       if for_object=document_object.getElementById(element_object.htmlFor)
         base_element_class.factory(for_object, extra)
       else
-        raise "no element found that #{self.inspect} is for!"
+        raise UnknownObjectException, "no element found that #{self.inspect} is for!"
       end
     end
   end

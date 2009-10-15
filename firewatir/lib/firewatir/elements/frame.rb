@@ -2,7 +2,6 @@ require 'firewatir/firefox'
 
 module Watir
   class FFFrame < FFElement
-    include FFContainer
     include Frame
     include FFHasDocument
     #include FFDocument

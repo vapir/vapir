@@ -492,52 +492,43 @@ module Watir
       unless options.is_a?(Hash)
         raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
       end
-      options={:sleep => false}.merge(options)
+      options={:sleep => false, :interval => 0.1, :timeout => 120}.merge(options)
       @xml_parser_doc = nil
-      @down_load_time = 0.0
-      a_moment = 0.2 # seconds
+      @down_load_time = nil
       start_load_time = Time.now
-
-      begin      
-        while @ie.busy # XXX need to add time out
-          sleep a_moment
-        end
-        until @ie.readyState == READYSTATE_COMPLETE do
-          sleep a_moment
-        end
-        #sleep a_moment # why is this here? 
-        until @ie.document do
-          sleep a_moment
-        end
-
-        documents_to_wait_for = [@ie.document]
-
-      rescue WIN32OLERuntimeError # IE window must have been closed
-        @down_load_time = Time.now - start_load_time
-        #sleep @pause_after_wait if options[:sleep]
-        return @down_load_time
+      
+      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser was still busy at the end of the specified interval") do
+        !@ie.busy
       end
-            
-      while doc = documents_to_wait_for.shift
-        begin
-          until doc.readyState == "complete" do
-            sleep a_moment
-          end
-          @url_list << doc.location.href unless @url_list.include?(doc.location.href)
-          doc.frames.length.times do |n|
-            begin
-              documents_to_wait_for << doc.frames[n.to_s].document
-            rescue WIN32OLERuntimeError, NoMethodError
-            end
-          end
-        rescue WIN32OLERuntimeError
-        end
+      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's readyState was still not READYSTATE_COMPLETE at the end of the specified interval") do
+        @ie.readyState == READYSTATE_COMPLETE
       end
-
-      @down_load_time = Time.now - start_load_time
+      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's document was still not defined at the end of the specified interval") do
+        @ie.document
+      end
+      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "A frame on the browser did not come into readyState complete by the end of the specified interval") do
+        all_frames_complete?(@ie.document)
+      end
+      
+      # TODO/FIX: this dropped the @url_list stuff. restore that. 
+      
+      @down_load_time= Time.now - start_load_time
       run_error_checks
       sleep @pause_after_wait if options[:sleep]
       @down_load_time
+    end
+    
+    private
+    def all_frames_complete?(document)
+      begin
+        frames=document.frames
+        return document.readyState=='complete' && (0...frames.length).all? do |i|
+          frame=document.frames[i.to_s]
+          frame.document && all_frames_complete?(frame.document)
+        end
+      rescue WIN32OLERuntimeError
+        false
+      end
     end
     
     # Error checkers

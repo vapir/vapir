@@ -239,10 +239,8 @@ module Watir
         browser_window_object.document.title=orig_browser_window_title+(rand(36**16).to_s(36))
         begin
           require 'lib/win_window'
-          candidates=::Waiter.try_for(2, :condition => proc{|ret| ret.size > 0}, :error => nil) do
-            WinWindow::All.select do |win|
-              win.class_name=="MozillaUIWindowClass" && win.text==browser_window_object.document.title
-            end
+          candidates=WinWindow::All.select do |win|
+            win.class_name=="MozillaUIWindowClass" && win.text==browser_window_object.document.title
           end
           unless candidates.size==1
             raise ::WinWindow::MatchError, "Found #{candidates.size} MozillaUIWindowClass windows titled #{browser_window_object.document.title}"

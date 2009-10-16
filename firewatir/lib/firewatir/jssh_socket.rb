@@ -478,7 +478,11 @@ class JsshObject
       @cache[key]
     else
 #      logger.add(-1) { "adding object cache for #{[key, ref, other].inspect}" }
-      @cache[key]=JsshObject.new(ref, jssh_socket, other)
+      object=JsshObject.new(ref, jssh_socket, other)
+      if object.type!='undefined' # don't cache undefined stuff. 
+        @cache[key]=object
+      end
+      object
     end
   end
   

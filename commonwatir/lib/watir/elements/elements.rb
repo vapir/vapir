@@ -326,12 +326,13 @@ module Watir
       assert_enabled
       with_highlight do
         if checked!=state || self.is_a?(Radio) # don't click if it's already checked. but do anyway if it's a radio. 
+          if browser_class.name != 'Watir::Firefox'  # compare by name to not trigger autoload or raise NameError if not loaded 
+            # in firefox, firing the onclick event changes the state. in IE, it doesn't, so do that first 
+            element_object.checked=state
+          end
           fire_event :onclick, :just_fire => true
+          fire_event :onchange, :just_fire => true
         end
-        if checked!=state # firing the click event doesn't change the checked state in IE. check and change if needed. 
-          element_object.checked=state
-        end
-        fire_event :onchange, :just_fire => true
         wait
       end
     end

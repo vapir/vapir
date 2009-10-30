@@ -472,6 +472,7 @@ module Watir
       unless @container
         raise Watir::Exception::MissingContainerException, "No container is defined on #{self.inspect}"
       end
+      @container.locate!
     end
 
     public

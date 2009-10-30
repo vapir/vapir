@@ -5,10 +5,5 @@ module Watir
   #
   class FFOption < FFElement
     include Option
-    def select
-      assert_exists
-      element_object.selected=true
-    end
-    
   end # Option
 end # FireWatir

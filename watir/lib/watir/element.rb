@@ -282,10 +282,10 @@ module Watir
     end
     
     private
-    def ole_to_element_collection(element_class, ole_collection)
+    def ole_to_element_collection(element_class, ole_collection, _extra={})
       elements=[]
       (0...ole_collection.length).each do |i|
-        elements << element_class.new(:element_object, ole_collection.item(i), extra)
+        elements << element_class.new(:element_object, ole_collection.item(i), extra.merge(_extra))
       end
       ElementCollection.new(elements)
     end

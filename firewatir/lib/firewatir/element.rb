@@ -250,9 +250,9 @@ module Watir
     # Returns the text content of the element.
     dom_attr :textContent => :text
   
-    def jssh_to_element_collection(element_class, jssh_collection)
+    def jssh_to_element_collection(element_class, jssh_collection, _extra={})
       ElementCollection.new(jssh_collection.to_array.map do |element_object|
-        element_class.new(:element_object, element_object, extra)
+        element_class.new(:element_object, element_object, extra.merge(_extra))
       end)
     end
     

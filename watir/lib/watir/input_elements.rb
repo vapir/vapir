@@ -19,7 +19,7 @@ module Watir
     # An empty array is returned if the select box has no contents.
     # Raises UnknownObjectException if the select box is not found
     def options
-      ole_to_element_collection(IEOption, element_object.options)
+      ole_to_element_collection(IEOption, element_object.options, :select_list => self)
     end
     
 #    def option(attribute, value)
@@ -31,11 +31,6 @@ module Watir
   # An item in a select list
   class IEOption < IEElement
     include Option
-    include Watir::Exception
-    def select
-      assert_exists
-      element_object.selected=true
-    end
   end
   
   # 

@@ -187,9 +187,30 @@ module Watir
     add_specifier :tagName => 'option'
     container_single_method :option
     container_collection_method :options
-
+    
+    inspect_these :text, :value, :selected
     dom_attr :text, :value, :selected
-    dom_setter :selected
+    
+    # sets this Option's selected state to the given (true or false). 
+    # if this Option is aware of its select list (this will generally be the case if you
+    # got this Option from a SelectList container), will fire the onchange event on the 
+    # select list if our state changes. 
+    def selected=(state)
+      assert_exists
+      state_was=element_object.selected
+      element_object.selected=state
+      if @extra[:select_list] && state_was != state
+        @extra[:select_list].fire_event(:onchange)
+      end
+      wait
+    end
+    #dom_setter :selected
+
+    # selects this option, firing the onchange event on the containing select list if we 
+    # are aware of it (see #selected=) 
+    def select
+      self.selected=true
+    end
   end
   module SelectList
     extend ElementHelper
@@ -285,6 +306,7 @@ module Watir
     def select_options_if(method_options={})
       method_options={:wait => true, :highlight => true}.merge(method_options)
       raise ArgumentError, "no block given!" unless block_given?
+      assert_enabled
       any_changed=false
       any_matched=false
       with_highlight(method_options[:highlight]) do

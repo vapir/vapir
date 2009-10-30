@@ -175,7 +175,7 @@ module Watir
       with_highlight do
         unique_number=element_object.uniqueNumber
         #Thread.new { ole_object.click } # that doesn't work.
-         browser.document.parentWindow.setTimeout("
+         document_object.parentWindow.setTimeout("
           (function(tagName, uniqueNumber)
           { var candidate_elements=document.getElementsByTagName(tagName);
             for(var i=0;i<candidate_elements.length;++i)

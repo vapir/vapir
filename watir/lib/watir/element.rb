@@ -1,3 +1,5 @@
+require 'activesupport'
+
 module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
@@ -39,26 +41,6 @@ module Watir
     def browser_class
       IE
     end
-    private
-#    def self.def_wrap(ruby_method_name, ole_method_name=nil)
-#      ole_method_name = ruby_method_name unless ole_method_name
-#      class_eval "def #{ruby_method_name}
-#                          assert_exists
-#                          ole_object.invoke('#{ole_method_name}')
-#                        end"
-#    end
-#    def self.def_wrap_guard(method_name)
-#      class_eval "def #{method_name}
-#                          assert_exists
-#                          begin
-#                            ole_object.invoke('#{method_name}')
-#                          rescue
-#                            ''
-#                          end
-#                        end"
-#    end
-
-
 
     public
     
@@ -173,9 +155,7 @@ module Watir
       assert_exists
       assert_enabled if respond_to?(:assert_enabled)
       with_highlight do
-        unique_number=element_object.uniqueNumber
-        #Thread.new { ole_object.click } # that doesn't work.
-         document_object.parentWindow.setTimeout("
+        document_object.parentWindow.setTimeout("
           (function(tagName, uniqueNumber)
           { var candidate_elements=document.getElementsByTagName(tagName);
             for(var i=0;i<candidate_elements.length;++i)
@@ -205,13 +185,12 @@ module Watir
     #   usage: allows a generic way to fire javascript events on page objects such as "onMouseOver", "onClick", etc.
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
-    def fire_event_no_wait(event, options)
+    def fire_event_no_wait(event, options={})
       assert_enabled if respond_to?(:assert_enabled)
       options={:highlight => true}.merge(options)
       with_highlight(options[:highlight]) do
-        unique_number=element_object.uniqueNumber
         #Thread.new { ole_object.click } # that doesn't work.
-        browser.document.parentWindow.setTimeout("
+        document_object.parentWindow.setTimeout("
           (function(tagName, uniqueNumber, event)
           { var candidate_elements=document.getElementsByTagName(tagName);
             for(var i=0;i<candidate_elements.length;++i)

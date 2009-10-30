@@ -1,4 +1,4 @@
-require 'json/pure'
+require 'activesupport'
 require 'socket'
 #require 'logger'
 
@@ -396,23 +396,15 @@ class JsshSocket
     value_json "(#{js_expression}) instanceof (#{js_interface})"
   end
 
-  # sticks a json string inside array brackets because on windows (at least?) 
-  # the ruby json library craps out on some stuff. 
-  #
-  # >> JSON.parse('3')
-  # JSON::ParserError: A JSON text must at least contain two octets!
-  # >> JSON.parse('333')
-  # JSON::ParserError: 618: unexpected token at '333'
-  # >> JSON.parse('""')
-  # JSON::ParserError: 618: unexpected token at '""'
-  # >> JSON.parse('[]')
-  # => []
+  # parses the given JSON string using ActiveSupport::JSON.decode
+  # Raises ActiveSupport::JSON::ParseError if given a blank string, something that is not a string, or 
+  # a string that contains invalid JSON
   def parse_json(json)
-    raise JSON::ParserError, "Not a string! got: #{json.inspect}" unless json.is_a?(String)
-    raise JSON::ParserError, "Blank string!" if json==''
+    raise ActiveSupport::JSON::ParseError, "Not a string! got: #{json.inspect}" unless json.is_a?(String)
+    raise ActiveSupport::JSON::ParseError, "Blank string!" if json==''
     begin
-      return *JSON.parse("["+json+"]")
-    rescue JSON::ParserError
+      return ActiveSupport::JSON.decode(json)
+    rescue ActiveSupport::JSON::ParseError
       err=$!.class.new($!.message+"\nParsing: #{json.inspect}")
       err.set_backtrace($!.backtrace)
       raise err
@@ -861,7 +853,7 @@ class JsshObject
   
   # okay, so it's not actually json, but it makes it so that when #to_json is called, it gets the reference
   # instead of '#<JsshObject:0x2de5524>'
-  def to_json
+  def to_json(options={})
     ref
   end
   
@@ -942,7 +934,7 @@ class JsshArray < JsshObject
     end
   end
   include Enumerable
-  def to_json # Enumerable clobbers this; redefine
+  def to_json(options={}) # Enumerable clobbers this; redefine
     ref
   end
 end
@@ -970,7 +962,7 @@ class JsshHash < JsshObject
   end
 
   include Enumerable
-  def to_json # Enumerable clobbers this; redefine
+  def to_json(options={}) # Enumerable clobbers this; redefine
     ref
   end
 end

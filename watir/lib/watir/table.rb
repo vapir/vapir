@@ -20,34 +20,6 @@ module Watir
       o = o.parentElement until o.tagName == 'TABLE'
       new container, :ole_object, o 
     end
-    
-    # override the highlight method, as if the tables rows are set to have a background color,
-    # this will override the table background color, and the normal flash method won't work
-    # TODO/Fix: move out to common 
-    def highlight(set_or_clear)
-      if set_or_clear == :set
-        begin
-          @original_border = element_object.border.to_i
-          if element_object.border.to_i==1
-            element_object.border = 2
-          else
-            element_object.border = 1
-          end
-        rescue
-          @original_border = nil
-        end
-      else
-        begin
-          element_object.border= @original_border unless @original_border == nil
-          @original_border = nil
-        rescue
-          # we could be here for a number of reasons...
-        ensure
-          @original_border = nil
-        end
-      end
-      super
-    end
   end
   
   # this class is a table body

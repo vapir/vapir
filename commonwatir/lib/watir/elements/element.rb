@@ -593,7 +593,7 @@ module Watir
       assert_exists do
         was_highlighting=@highlighting
         if (!@highlighting && do_highlight)
-          highlight(:set)
+          set_highlight
         end
         @highlighting=true
         begin
@@ -601,13 +601,68 @@ module Watir
         ensure
           @highlighting=was_highlighting
           if !@highlighting && do_highlight && exists? # if we stopped existing during the highlight, don't try to clear. 
-            highlight(:clear) 
+            clear_highlight
           end
         end
         result
       end
     end
+    
+    private
+    # The default color for highlighting objects as they are accessed.
+    DEFAULT_HIGHLIGHT_COLOR = "yellow"
 
+    # Sets or clears the colored highlighting on the currently active element.
+    # set_or_clear - should be 
+    # :set - To set highlight
+    # :clear - To restore the element to its original color
+    #
+    # todo: is this used anymore? I think it's all with_highlight. 
+    def highlight(set_or_clear)
+      if set_or_clear == :set
+        set_highlight
+      elsif set_or_clear==:clear
+        clear_highlight
+      else
+        raise ArgumentError, "argument must me :set or :clear; got #{set_or_clear.inspect}"
+      end
+    end
+
+    def set_highlight_color
+      assert_exists do
+        @original_color=element_object.style.backgroundColor
+        element_object.style.backgroundColor=DEFAULT_HIGHLIGHT_COLOR
+      end
+    end
+    def clear_highlight_color
+      begin
+        element_object.style.background=@original_color
+      ensure
+        @original_color=nil
+      end
+    end
+    # Highlights the image by adding a border 
+    def set_highlight_border
+      assert_exists do
+        @original_border= element_object.border.to_i
+        element_object.border= @original_border+1
+      end
+    end
+    # restores the image to its original border 
+    # TODO: and border color 
+    def clear_highlight_border
+      assert_exists do
+        begin
+          element_object.border = @original_border
+        ensure
+          @original_border = nil
+        end
+      end
+    end
+    alias set_highlight set_highlight_color
+    alias clear_highlight clear_highlight_color
+
+    public
     # Flash the element the specified number of times.
     # Defaults to 10 flashes.
     def flash number=10

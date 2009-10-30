@@ -43,17 +43,12 @@ module Watir
   module FFContainer 
     include Container
     
-    # The default color for highlighting objects as they are accessed.
-    DEFAULT_HIGHLIGHT_COLOR = "yellow"
-    
     private
-    
     def extra_for_contained
       {:container => self, :browser => self.browser, :jssh_socket => self.jssh_socket}
     end
 
     public
-    
     # Returns array of element objects that match the given XPath query.
     #   Refer: https://developer.mozilla.org/en/DOM/document.evaluate
     def element_objects_by_xpath(xpath)

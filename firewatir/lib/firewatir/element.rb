@@ -64,27 +64,6 @@ module Watir
       document_object.defaultView.getComputedStyle(element_object, nil)
     end
     
-    #   Sets or clears the colored highlighting on the currently active element.
-    #   set_or_clear - should be 
-    #   :set - To set the color of the element.
-    #   :clear - To restore the element to its original color
-    def highlight(set_or_clear)
-      # TODO: make common
-      if set_or_clear == :set
-        @original_color=element_object.style.background
-        element_object.style.background=DEFAULT_HIGHLIGHT_COLOR
-      elsif set_or_clear==:clear
-        begin
-          element_object.style.background=@original_color
-        ensure
-          @original_color=nil
-        end
-      else
-        raise ArgumentError, "argument must me :set or :clear; got #{set_or_clear.inspect}"
-      end
-    end
-    protected :highlight
-  
     public
 
     # Returns true if this Element's #text matches the given String or Regexp to match; otherwise false. 

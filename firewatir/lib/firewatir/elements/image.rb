@@ -31,34 +31,5 @@ module Watir
     #    return true
     #end
     # alias hasLoaded? loaded?
-
-    #
-    # Description:
-    #   Highlights the image ( in fact it adds or removes a border around the image)
-    #
-    # Input:
-    #   - set_or_clear - :set to set the border, :clear to remove it
-    #
-    def highlight( set_or_clear )
-      if set_or_clear == :set
-        begin
-          @original_border = @element_object.border
-          self.border = 1
-        rescue
-          @original_border = nil
-        end
-      else
-        begin
-          self.border = @original_border
-          @original_border = nil
-        rescue
-          # we could be here for a number of reasons...
-        ensure
-          @original_border = nil
-        end
-      end
-    end
-    private :highlight
-
   end # Image
 end # FireWatir

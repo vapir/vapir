@@ -22,29 +22,6 @@ module Watir
     end
     alias_deprecated :hasLoaded?, :loaded?
     
-    # this method highlights the image (in fact it adds or removes a border around the image)
-    #  * set_or_clear   - symbol - :set to set the border, :clear to remove it
-    def highlight(set_or_clear)
-      if set_or_clear == :set
-        begin
-          @original_border = element_object.border
-          element_object.border = 1
-        rescue
-          @original_border = nil
-        end
-      else
-        begin
-          element_object.border = @original_border
-          @original_border = nil
-        rescue
-          # we could be here for a number of reasons...
-        ensure
-          @original_border = nil
-        end
-      end
-    end
-    private :highlight
-    
     # This method saves the image to the file path that is given.  The
     # path must be in windows format (c:\\dirname\\somename.gif).  This method
     # will not overwrite a previously existing image.  If an image already

@@ -76,35 +76,6 @@ module Watir
     def type_keys
       @type_keys || @container.type_keys
     end
-    def activeObjectHighLightColor
-      @container.activeObjectHighLightColor
-    end
-    
-    # This method is responsible for setting and clearing the colored highlighting on the currently active element.
-    # use :set   to set the highlight
-    #   :clear  to clear the highlight
-    # TODO: Make this two methods: set_highlight & clear_highlight
-    # TODO: Remove begin/rescue blocks
-    def highlight(set_or_clear)
-      if set_or_clear == :set
-        begin
-          @original_color ||= style.backgroundColor
-          style.backgroundColor = @container.activeObjectHighLightColor
-        rescue
-          @original_color = nil
-        end
-      else # BUG: assumes is :clear, but could actually be anything
-        begin
-          style.backgroundColor = @original_color unless @original_color == nil
-        rescue
-          # we could be here for a number of reasons...
-          # e.g. page may have reloaded and the reference is no longer valid
-        ensure
-          @original_color = nil
-        end
-      end
-    end
-    private :highlight
     
     #   This method clicks the active element.
     #   raises: UnknownObjectException  if the object is not found

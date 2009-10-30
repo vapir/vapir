@@ -57,9 +57,6 @@ module Watir
     # Used internally to determine when IE has finished loading a page
     READYSTATE_COMPLETE = 4
        
-    # The default color for highlighting objects as they are accessed.
-    HIGHLIGHT_COLOR = 'yellow'
-    
     # IE inserts some element whose tagName is empty and just acts as block level element
     # Probably some IE method of cleaning things
     # To pass the same to the xml parser we need to give some name to empty tagName
@@ -178,8 +175,6 @@ module Watir
       @element_object = nil
       @page_container = self
       @error_checkers = []
-      @activeObjectHighLightColor = HIGHLIGHT_COLOR
-
       
       @logger = DefaultLogger.new
       @url_list = []

@@ -405,6 +405,26 @@ module Watir
     # Submit the form. Equivalent to pressing Enter or Return to submit a form.
     dom_function :submit
     inspect_these :name, :action
+    
+    private
+    # these are kind of slow for large forms. 
+    def set_highlight
+      assert_exists do
+        @elements_for_highlighting=self.input_elements.to_a
+        @elements_for_highlighting.each do |element|
+          element.send(:set_highlight)
+        end
+      end
+    end
+    def clear_highlight
+      assert_exists do
+        @elements_for_highlighting.each do |element|
+          if element.exists?
+            element.send(:clear_highlight)
+          end
+        end
+      end
+    end
   end
   module Image
     extend ElementHelper
@@ -413,9 +433,18 @@ module Watir
     container_collection_method :images
     default_how :name
 
-    
     dom_attr :src, :name, :width, :height, :alt, :border
+    dom_setter :border
     inspect_these :src, :name, :width, :height, :alt
+    
+    private
+    # note: can't use alias here because set_highlight_border is defined in the Element module, which isn't included here (but it will be on the receiver) 
+    def set_highlight
+      set_highlight_border
+    end
+    def clear_highlight
+      clear_highlight_border
+    end
   end
   module HasRowsAndColumns
     # Returns a 2 dimensional array of text contents of each row and column of the table or tbody.
@@ -561,6 +590,16 @@ module Watir
     
     # returns an ElementCollection of rows in the table.
     element_collection :rows, :rows, TableRow
+    
+    private
+    def set_highlight
+      set_highlight_color
+      set_highlight_border
+    end
+    def clear_highlight
+      clear_highlight_color
+      clear_highlight_border
+    end
   end
   module Link
     extend ElementHelper

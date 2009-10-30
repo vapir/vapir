@@ -470,11 +470,14 @@ module Watir
           matched_candidate
         when :index
           # TODO/FIX: DRY; basically repeats how=:attributes 
+          unless @what.nil?
+            raise ArgumentError, "'what' was specified, but when 'how'=:index, no 'what' is used (just extra[:index])"
+          end
           matched_candidate=nil
           matched_count=0
           matched_candidates(self.class.specifiers) do |match|
             matched_count+=1
-            if what.to_i==matched_count
+            if @extra[:index]==matched_count
               matched_candidate=match
               break
             end
@@ -546,7 +549,9 @@ module Watir
       begin
         yield
       ensure
-        highlight(:clear) if do_highlight
+        if do_highlight && exists? # if we stopped existing during the highlight, don't try to clear. 
+          highlight(:clear) 
+        end
       end
     end
 

@@ -60,8 +60,8 @@ module Watir
             else
               raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search using how=#{how.inspect} (#{how.class}), what=#{what.inspect} (#{what.class}), default_how=#{default_how.inspect} (#{default_how.class})"
             end
-          elsif how==:index
-            [:attributes, {}, what]
+          elsif how==:index # this is different because the index number doesn't go in the 'how'
+            [:index, nil, what]
           else
             [:attributes, {how.to_sym => what}, nil]
           end

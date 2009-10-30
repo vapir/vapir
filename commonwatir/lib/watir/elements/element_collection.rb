@@ -61,7 +61,7 @@ module Watir
       at(index)
     end
     def at(index)
-      @collection_class.new(:index, index, @extra)
+      @collection_class.new(:index, nil, @extra.merge(:index => index))
     end
     def first
       at(1)

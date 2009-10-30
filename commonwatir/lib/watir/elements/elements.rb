@@ -83,7 +83,7 @@ module Watir
         fire_event :onKeyDown, :just_fire => true
         fire_event :onKeyPress, :just_fire => true
         fire_event :onKeyUp, :just_fire => true
-        fire_event('onBlur', :just_fire => true)
+#        fire_event('onBlur', :just_fire => true)
         fire_event("onChange", :just_fire => true)
       end
     end
@@ -110,14 +110,14 @@ module Watir
           fire_event('onFocus', :just_fire => true)
           element_object.select
           fire_event("onSelect", :just_fire => true)
-          ((existing_value_chars.length)...new_value_chars.length).each do |i|
-            #sleep typingspeed
+          ((existing_value_chars.length)...new_value_chars.length).each do |i|   
+#            sleep typingspeed
             element_object.value = new_value_chars[0..i].join('')
             fire_event :onKeyDown, :just_fire => true
             fire_event :onKeyPress, :just_fire => true
             fire_event :onKeyUp, :just_fire => true
           end
-          fire_event('onBlur', :just_fire => true)
+#          fire_event('onBlur', :just_fire => true)
           fire_event("onChange", :just_fire => true)
         else
           element_object.value = element_object.value + value

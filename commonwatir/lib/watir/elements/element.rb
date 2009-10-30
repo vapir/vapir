@@ -201,14 +201,19 @@ module Watir
       container_modules.each do |container_module|
         class_array_get('container_single_methods').each do |container_single_method|
           # define both bang-methods (like #text_field!) and not (#text_field) with corresponding :locate option for element_by_howwhat
-          [{:method_name => container_single_method, :locate => false}, {:method_name => container_single_method.to_s+'!', :locate => true}].each do |method_hash|
+          [ {:method_name => container_single_method, :locate => true}, 
+            {:method_name => container_single_method.to_s+'!', :locate => :assert},
+            {:method_name => container_single_method.to_s+'?', :locate => :nil_unless_exists},
+          ].each do |method_hash|
             unless container_module.method_defined?(method_hash[:method_name])
               container_module.module_eval do
                 define_method(method_hash[:method_name]) do |how, *what_args| # can't take how, what as args because blocks don't do default values so it will want 2 args
-                  locate! # make sure self is located before trying contained stuff 
+                  #locate! # make sure self is located before trying contained stuff 
                   what=what_args.shift # what is the first what_arg
                   other_attribute_keys=including_class.const_defined?('ContainerMethodExtraArgs') ? including_class::ContainerMethodExtraArgs : []
-                  raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}" if what_args.size>other_attribute_keys.length
+                  if what_args.size>other_attribute_keys.length
+                    raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}"
+                  end
                   if what_args.size == 0
                     other_attributes= nil
                   else
@@ -226,8 +231,9 @@ module Watir
         class_array_get('container_collection_methods').each do |container_multiple_method|
           unless container_module.method_defined?(container_multiple_method)
             container_module.module_eval do
+              # returns an ElementCollection of Elements that are instances of the including class 
               define_method(container_multiple_method) do
-                element_collection(including_class)
+                ElementCollection.new(self, including_class, extra_for_contained)
               end
             end
           end
@@ -359,6 +365,31 @@ module Watir
     include ElementObjectCandidates
     
     public
+    
+    # the class-specific Elements may implement their own #initialize, but should call to this
+    # after they've done their stuff
+    def default_initialize(how, what, extra={})
+      @how, @what=how, what
+      raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
+      @extra=extra
+      @index=extra[:index] && Integer(extra[:index])
+      @container=extra[:container]
+      @browser=extra[:browser]
+      extra[:locate]=true unless @extra.key?(:locate) # set default 
+      case extra[:locate]
+      when :assert
+        locate!
+      when true
+        locate
+      when false
+      else
+        raise ArgumentError, "Unrecognized value given for extra[:locate]: #{extra[:locate].inspect} (#{extra[:locate].class})"
+      end
+    end
+    
+    # alias it in case class-specific ones don't need to override
+    alias initialize default_initialize
+    
     # locates the element object for this element 
     # 
     # takes options hash. currently the only option is
@@ -372,8 +403,8 @@ module Watir
         if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at # TODO: implement this for IE; only exists for Firefox now. 
           options[:relocate]=:recursive
         end
-        if element_object && Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
-          if !element_object.exists?
+        if @element_object && Object.const_defined?('WIN32OLE') && @element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
+          if !@element_object.exists?
             options[:relocate]=true
           end
         end
@@ -466,7 +497,7 @@ module Watir
           end
           by_custom
         else
-          raise Watir::Exception::MissingWayOfFindingObjectException
+          raise Watir::Exception::MissingWayOfFindingObjectException, "Unkwon 'how' given: #{@how.inspect} (#{@how.class}). 'what' was #{@what.inspect} (#{@what.class})"
         end
       end
       if !element_object_existed && @element_object
@@ -525,6 +556,7 @@ module Watir
 
     # accesses the object representing this Element in the DOM. 
     def element_object
+      assert_exists
       @element_object
     end
     

@@ -12,16 +12,6 @@ module Watir
     # number of spaces that separate the property from the value in the to_s method
     TO_S_SIZE = 14
     
-    def initialize(how, what, extra={})
-      @how, @what=how, what
-      raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
-      @extra=extra
-      @index=extra[:index] && Integer(extra[:index])
-      @container=extra[:container]
-      @browser=extra[:browser]
-      locate! unless extra.key?(:locate) && !extra[:locate]
-    end
-    
     alias ole_object element_object 
     alias containing_object element_object
     #def ole_object=(o)

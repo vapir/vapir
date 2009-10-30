@@ -7,14 +7,8 @@ module Watir
 
     # Creates new instance of FFElement. 
     def initialize(how, what, extra={})
-      @how, @what=how, what
-      raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
-      @extra=extra
-      @index=extra[:index] && Integer(extra[:index])
-      @container=extra[:container]
-      @browser=extra[:browser]
-      @jssh_socket=extra[:jssh_socket] || (@container ? @container.jssh_socket : @browser ? @browser.jssh_socket : nil)
-      locate! unless extra.key?(:locate) && !extra[:locate]
+      @jssh_socket=extra[:jssh_socket]
+      default_initialize(how, what, extra)
     end
 
     attr_reader :browser

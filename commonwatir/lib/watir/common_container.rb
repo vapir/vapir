@@ -6,17 +6,20 @@ module Watir
     # returns an Element of the given class klass with the specified how & what, and
     # with self as its container. 
     # takes options:
-    # - :locate => true/false, whether the element should locate itself (this will cause it 
-    #    to raise an exception if it can't find itself). if :locate is false and no matching
-    #    element exists, this returns nil. #todo: maybe this should return the not-found element
-    #    anyway? on the idea that it could come into existence, as in watir/unittests/defer_test.rb
+    # - :locate => true, false, :assert, or :nil_unless_exists
+    #    whether the element should locate itself. 
+    #    - false -  will not attempt to locate element at all
+    #    - true - will try to locate element but not complain if it can't
+    #    - :assert - will raise UnkownObjectException if it can't locate. 
+    #    - :nil_unless_exists - will attempt to locate the element, and only return it if 
+    #      successful - returns nil otherwise. 
     # - :other_attributes => Hash, attributes other than the given how/what to look for. This is
     #    used by radio and checkbox to specify :value (the third argument). 
     # 
     # see also #extra_for_contained on inheriting classes (IEElement, FFElement) for what this passes to the created 
     # element, in terms of browser, container, other things each element uses. 
     def element_by_howwhat(klass, how, what, other={})
-      other={:locate => false, :other_attributes => nil}.merge(other)
+      other={:other_attributes => nil}.merge(other)
       how, what, index=*normalize_howwhat_index(how, what, klass.default_how)
       if other[:other_attributes]
         if how==:attributes
@@ -25,13 +28,16 @@ module Watir
           raise ArgumentError, ":other_attributes option was given, but we are not locating by attributes. We are locating by how=#{how.inspect} what=#{what.inspect}. :other_attributes option was #{other[:other_attributes].inspect}"
         end
       end
-      element=klass.new(how, what, extra_for_contained.merge(:index => index, :locate => other[:locate]))
-      element.exists? ? element : nil
-    end
-    # returns an ElementCollection of Elements that are instances of the given class klass below
-    # this container. 
-    def element_collection(klass)
-      ElementCollection.new(self, klass, extra_for_contained)
+      extra=extra_for_contained.merge(:index => index)
+      case other[:locate]
+      when :assert, true, false
+        element=klass.new(how, what, extra.merge(:locate => other[:locate]))
+      when :nil_unless_exists
+        element=klass.new(how, what, extra.merge(:locate => true))
+        element.exists? ? element : nil
+      else
+        raise ArgumentError, "Unrecognized value given for :locate: #{other[:locate].inspect} (#{other[:locate].class})"
+      end
     end
     
     # takes how and what in the form that users use, and translates it to a standard form 

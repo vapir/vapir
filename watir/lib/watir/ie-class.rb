@@ -524,7 +524,26 @@ module Watir
         frames=document.frames
         return document.readyState=='complete' && (0...frames.length).all? do |i|
           frame=document.frames[i.to_s]
-          frame.document && all_frames_complete?(frame.document)
+          frame_document=begin
+            frame.document
+          rescue WIN32OLERuntimeError
+            $!
+          end
+          case frame_document
+          when nil
+            # frame hasn't loaded to the point where it has a document yet 
+            false
+          when WIN32OLE
+            # frame has a document - check recursively 
+            all_frames_complete?(frame_document)
+          when WIN32OLERuntimeError 
+            # if we get a WIN32OLERuntimeError with access denied, that is probably a 404 and it's not going 
+            # to load, so no reason to keep waiting for it - consider it 'complete' and return true. 
+            # there's probably a better method of determining this but I haven't found it yet. 
+            true
+          else # don't know what we'd have here 
+            raise RuntimeError, "unknown frame.document: #{frame_document.inspect} (#{frame_document.class})"
+          end
         end
       rescue WIN32OLERuntimeError
         false
@@ -902,6 +921,7 @@ module Watir
     end
     private :html_source
     
+    public
     # return the first element object (not Element) that matches the xpath
     def element_object_by_xpath(xpath)
       objects= element_objects_by_xpath(xpath)

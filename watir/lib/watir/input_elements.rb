@@ -109,18 +109,33 @@ module Watir
   # launching into a new process. 
   class IEFileField < IEInputElement
     include FileField
-    # titles of file upload window titles in supported browsers 
-    UploadWindowTitles= { :IE8 => "Choose File to Upload", 
-                          :IE7 => 'Choose file', 
-                        }
-    # list of arguments to give to WinWindow#child_control_with_preceding_label to find the filename field
-    # on dialogs of supported browsers (just the one right now because it's the same in ie7 and ie8)
-    UploadWindowFilenameFields = [["File &name:", {:control_class_name => 'ComboBoxEx32'}]]
     
     # set the file location in the Choose file dialog 
-    def set(setPath)
+    def set(file_path)
       assert_exists
-      click_no_wait
+      
+      require 'win32/process'
+      require 'timeout'
+      rubyw_exe= File.join(Config::CONFIG['bindir'], 'rubyw').gsub("/", "\\")
+      select_file_script=File.expand_path(File.join(File.dirname(__FILE__), 'scripts', 'select_file.rb')).gsub("/", "\\")
+      select_file_process=::Process.create('command_line' => rubyw_exe+[select_file_script, browser.hwnd, file_path].map{|arg| " \"#{arg}\""}.join(''))
+      
+      begin
+        Timeout::timeout(32) do
+          click
+        end
+      rescue Timeout::Error
+        raise "Something went wrong setting the file field"
+      end
+      
+      # below doesn't work; waitpid2 blocks (even if in its own thread) so can't go before click; and after click, it's already dead. 
+      # TODO/FIX: figure out a way for select_file_process to indicate a success/failure to us here 
+      #process_result=::Process.waitpid2(process.process_id)
+      #if process_result.last != 0
+      #  
+      #end
+    end
+=begin
       require 'lib/win_window'
       require 'lib/waiter'
       container_window=WinWindow.new(browser.hwnd)
@@ -140,9 +155,10 @@ module Watir
       unless (filename_field=filename_fields.compact.first)
         raise Watir::Exception::NoMatchingWindowFoundException, "Could not find a filename field in the File Upload dialog"
       end
-      filename_field.send_set_text! setPath
+      filename_field.send_set_text! file_path
       upload_dialog.click_child_button_try_for!('Open', 4, :exception => WinWindow::Error.new("Failed to click the Open button on the File Upload dialog. It exists, but we couldn't click it."))
     end
+=end
   end
   
   #--

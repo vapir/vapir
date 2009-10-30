@@ -12,8 +12,6 @@ module Watir
   # Normally a user would not need to create this object as it is returned by the Watir::Container#select_list method
   class IESelectList < IEInputElement
     include SelectList
-#    INPUT_TYPES = ["select-one", "select-multiple"]
-
     
     # Returns all the items in the select list as an array.
     # An empty array is returned if the select box has no contents.
@@ -21,11 +19,6 @@ module Watir
     def options
       ole_to_element_collection(IEOption, element_object.options, :select_list => self)
     end
-    
-#    def option(attribute, value)
-#      assert_exists
-#      IEOption.new(self, attribute, value)
-#    end
   end
   
   # An item in a select list
@@ -40,7 +33,6 @@ module Watir
   # Returned by the Watir::Container#button method
   class IEButton < IEInputElement
     include Button
-    INPUT_TYPES = ["button", "submit", "image", "reset"]
   end
 
   #
@@ -56,6 +48,8 @@ module Watir
     # Returns true if the text field contents is matches the specified target,
     # which can be either a string or a regular expression.
     #   Raises UnknownObjectException if the object can't be found
+    #
+    # TODO: move to common 
     def verify_contains(target) # FIXME: verify_contains should have same name and semantics as IE#contains_text (prolly make this work for all elements)
       assert_exists
       if target.kind_of? String
@@ -93,16 +87,6 @@ module Watir
       self.value = ""
     end
     
-    
-    # Sets the value of the text field directly. 
-    # It causes no events to be fired or exceptions to be raised, 
-    # so generally shouldn't be used.
-    # It is preffered to use the set method.
-    #def value=(v)
-    #  assert_exists
-    #  element_object.value = v.to_s
-    #end
-    
     def requires_typing
     	@type_keys = true
     	self
@@ -117,33 +101,6 @@ module Watir
   # Normally a user would not need to create this object as it is returned by the Watir::Container#hidden method
   class IEHidden < IETextField
     include Hidden
-    INPUT_TYPES = ["hidden"]
-    
-    # set is overriden in this class, as there is no way to set focus to a hidden field
-    #def set(n)
-    #  self.value = n
-    #end
-    #
-    ## override the append method, so that focus isnt set to the hidden object
-    #def append(n)
-    #  self.value = self.value.to_s + n.to_s
-    #end
-    #
-    ## override the clear method, so that focus isnt set to the hidden object
-    #def clear
-    #  self.value = ""
-    #end
-    #
-    ## this method will do nothing, as you cant set focus to a hidden field
-    #def focus
-    #end
-    #
-    ## Hidden element is never visible - returns false.
-    #def visible?
-    #  assert_exists
-    #  false
-    #end
-    
   end
   
   # For fields that accept file uploads
@@ -159,6 +116,7 @@ module Watir
     # on dialogs of supported browsers (just the one right now because it's the same in ie7 and ie8)
     UploadWindowFilenameFields = [["File &name:", {:control_class_name => 'ComboBoxEx32'}]]
     
+    # set the file location in the Choose file dialog 
     def set(setPath)
       assert_exists
       click_no_wait
@@ -166,51 +124,24 @@ module Watir
       require 'lib/waiter'
       container_window=WinWindow.new(browser.hwnd)
 
-      upload_dialog=::Waiter.try_for(16, :exception => Watir::Exception::NoMatchingWindowFoundException.new('No window found to upload a file')) do
+      popup=nil
+      upload_dialog=::Waiter.try_for(16, :exception => nil) do
         if (popup=container_window.enabled_popup) && UploadWindowTitles.values.include?(popup.text)
           popup
         end
       end
-        
+      unless upload_dialog
+        raise Watir::Exception::NoMatchingWindowFoundException.new('No window found to upload a file - '+(popup ? "enabled popup exists but has unrecognized text #{popup.text}" : 'no popup is on the browser'))
+      end
       filename_fields=UploadWindowFilenameFields.map do |control_args|
         upload_dialog.child_control_with_preceding_label(*control_args)
       end
-      (filename_field=filename_fields.compact.first) || (raise Watir::Exception::NoMatchingWindowFoundException, "Could not find a filename field in the File Upload dialog")
+      unless (filename_field=filename_fields.compact.first)
+        raise Watir::Exception::NoMatchingWindowFoundException, "Could not find a filename field in the File Upload dialog"
+      end
       filename_field.send_set_text! setPath
       upload_dialog.click_child_button_try_for!('Open', 4, :exception => WinWindow::Error.new("Failed to click the Open button on the File Upload dialog. It exists, but we couldn't click it."))
     end
-    # set the file location in the Choose file dialog in a new process
-    # will raise a Watir Exception if AutoIt is not correctly installed
-#    def set(path_to_file)
-#      assert_exists
-#      require 'watir/windowhelper'
-#      WindowHelper.check_autoit_installed
-#      begin
-#        Thread.new do
-#          sleep 1 # it takes some time for popup to appear
-#
-#          system %{ruby -e '
-#              require "win32ole"
-#
-#              @autoit = WIN32OLE.new("AutoItX3.Control")
-#              time    = Time.now
-#
-#              while (Time.now - time) < 15 # the loop will wait up to 15 seconds for popup to appear
-#                #{POPUP_TITLES.inspect}.each do |popup_title|
-#                  next unless @autoit.WinWait(popup_title, "", 1) == 1
-#
-#                  @autoit.ControlSetText(popup_title, "", "Edit1", #{path_to_file.inspect})
-#                  @autoit.ControlSend(popup_title, "", "Button2", "{ENTER}")
-#                  exit
-#                end # each
-#              end # while
-#          '}
-#        end.join(1)
-#      rescue
-#        raise Watir::Exception::WatirException, "Problem accessing Choose file dialog"
-#      end
-#      click
-#    end
   end
   
   #--

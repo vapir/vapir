@@ -215,6 +215,7 @@ module Watir
   module SelectList
     extend ElementHelper
     add_specifier :tagName => 'select'
+    # in IE, type attribute is one of "select-one", "select-multiple" - but all are still the 'select' tag 
     container_single_method :select_list
     container_collection_method :select_lists
 

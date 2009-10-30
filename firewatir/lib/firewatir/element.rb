@@ -4,21 +4,6 @@ module Watir
   class FFElement
     include Watir::FFContainer
     include Element
-  
-    class << self
-      #TODO/FIX: repeated on both Element base classes; move to common 
-      def factory(element_object, extra={})
-        curr_klass=self
-        ObjectSpace.each_object(Class) do |klass|
-          if klass < curr_klass
-            Watir::Specifier.match_candidates([element_object], klass.specifiers) do |match|
-              curr_klass=klass
-            end
-          end
-        end
-        curr_klass.new(:element_object, element_object, extra)
-      end
-    end
 
     # Creates new instance of FFElement. 
     def initialize(how, what, extra={})

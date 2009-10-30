@@ -10,6 +10,37 @@ module Watir
   # this module is for methods that should go on both common element modules (ie, TextField) as well
   # as browser-specific element classes (ie, FFTextField). 
   module ElementClassAndModuleMethods
+    # takes an element_object (JsshObject or WIN32OLE), and finds the most specific class 
+    # that is < self whose specifiers match it. Returns an instance of that class using the given
+    # element_object. 
+    #
+    # second argument, extra, is passed as the 'extra' argument to the Element constructor (see its documentation). 
+    #
+    # if you give a different how/what (third and fourth arguments, optional), then those are passed
+    # to the Element constructor. 
+    def factory(element_object, extra={}, how=nil, what=nil)
+      curr_klass=self
+      # since this gets included in the Element modules, too, check where we are 
+      unless self.is_a?(Class) && self < Watir::Element
+        raise TypeError, "factory was called on #{self} (#{self.class}), which is not a Class that is < Element"
+      end
+      if how
+        # use how and what as given
+      elsif what
+        raise ArgumentError, "'what' was given as #{what.inspect} (#{what.class}) but how was not given"
+      else
+        how=:element_object
+        what=element_object
+      end
+      ObjectSpace.each_object(Class) do |klass|
+        if klass < curr_klass
+          Watir::Specifier.match_candidates([element_object], klass.specifiers) do |match|
+            curr_klass=klass
+          end
+        end
+      end
+      curr_klass.new(how, what, extra)
+    end
     
     # takes any number of arguments, where each argument is either:
     # - a symbol or strings representing a method that is the same in ruby and on the dom
@@ -362,6 +393,20 @@ module Watir
             matched_by_xpath=match
           end
           matched_by_xpath
+        when :label
+          unless document_object
+            raise "No document object found for this #{self.inspect} - needed to search by id for label from #{@container.inspect}"
+          end
+          unless what.is_a?(Label)
+            raise "how=:label specified on this #{self.class}, but 'what' is not a Label! what=#{what.inspect} (#{what.class})"
+          end
+          what.locate!(container_locate_options) # the what Label is functionally synonymous with the @container. actually it is currently always the same as the @container. 
+          by_label=document_object.getElementById(@container.for)
+          matched_by_label=nil
+          Watir::Specifier.match_candidates(by_label ? [by_label] : [], self.class.specifiers) do |match|
+            matched_by_label=match
+          end
+          matched_by_label
         when :attributes
           assert_container
           @container.locate!(container_locate_options)

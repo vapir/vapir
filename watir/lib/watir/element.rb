@@ -20,26 +20,6 @@ module Watir
       locate! unless extra.key?(:locate) && !extra[:locate]
     end
     
-    # Return the ole object, allowing any methods of the DOM that Watir doesn't support to be used.
-    #def ole_object # BUG: should use an attribute reader and rename the instance variable
-    #  return @o
-    #end
-
-    class << self
-      #TODO/FIX: repeated on both Element base classes; move to common 
-      def factory(element_object, extra={})
-        curr_klass=self
-        ObjectSpace.each_object(Class) do |klass|
-          if klass < curr_klass
-            Watir::Specifier.match_candidates([element_object], klass.specifiers) do |match|
-              curr_klass=klass
-            end
-          end
-        end
-        curr_klass.new(:element_object, element_object, extra)
-      end
-    end
-    
     alias ole_object element_object 
     alias containing_object element_object
     #def ole_object=(o)
@@ -214,6 +194,7 @@ module Watir
     #           ObjectDisabledException if the object is currently disabled
     def fire_event(event, options={})
       options={:highlight => !options[:just_fire], :just_fire => false}.merge(options)
+      assert_exists
       assert_enabled if !options[:just_fire] && respond_to?(:assert_enabled)
       with_highlight(options[:highlight]) do
         ole_object.fireEvent(event.to_s)

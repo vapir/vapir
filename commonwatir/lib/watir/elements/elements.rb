@@ -586,13 +586,13 @@ module Watir
     container_single_method :label
     container_collection_method :labels
     
-    dom_attr :htmlFor
-    inspect_these :htmlFor
+    dom_attr :htmlFor => [:html_for, :for]
+    inspect_these :for
 
-    def for
+    def for_element
       raise "document is not defined - cannot search for labeled element" unless document_object
       if for_object=document_object.getElementById(element_object.htmlFor)
-        base_element_class.factory(for_object, extra)
+        base_element_class.factory(for_object, extra, :label, self)
       else
         raise UnknownObjectException, "no element found that #{self.inspect} is for!"
       end

@@ -105,8 +105,7 @@ module Watir
   end
   
   # For fields that accept file uploads
-  # Windows dialog is opened and handled in this case by autoit 
-  # launching into a new process. 
+  # Windows dialog is opened and handled by WinWindow (see scripts/select_file.rb), launched in a new process.  
   class IEFileField < IEInputElement
     include FileField
     
@@ -115,50 +114,26 @@ module Watir
       assert_exists
       
       require 'win32/process'
-      require 'timeout'
-      rubyw_exe= File.join(Config::CONFIG['bindir'], 'rubyw').gsub("/", "\\")
-      select_file_script=File.expand_path(File.join(File.dirname(__FILE__), 'scripts', 'select_file.rb')).gsub("/", "\\")
-      select_file_process=::Process.create('command_line' => rubyw_exe+[select_file_script, browser.hwnd, file_path].map{|arg| " \"#{arg}\""}.join(''))
-      
-      begin
-        Timeout::timeout(32) do
-          click
-        end
-      rescue Timeout::Error
-        raise "Something went wrong setting the file field"
-      end
-      
-      # below doesn't work; waitpid2 blocks (even if in its own thread) so can't go before click; and after click, it's already dead. 
-      # TODO/FIX: figure out a way for select_file_process to indicate a success/failure to us here 
-      #process_result=::Process.waitpid2(process.process_id)
-      #if process_result.last != 0
-      #  
-      #end
-    end
-=begin
       require 'lib/win_window'
-      require 'lib/waiter'
-      container_window=WinWindow.new(browser.hwnd)
-
-      popup=nil
-      upload_dialog=::Waiter.try_for(16, :exception => nil) do
-        if (popup=container_window.enabled_popup) && UploadWindowTitles.values.include?(popup.text)
-          popup
-        end
+      rubyw_exe= File.join(Config::CONFIG['bindir'], 'rubyw')
+      error_file_name=File.expand_path(File.join(File.dirname(__FILE__), 'scripts', 'select_file_error_status.marshal_dump'))
+      select_file_script=File.expand_path(File.join(File.dirname(__FILE__), 'scripts', 'select_file.rb'))
+      command_line=rubyw_exe+[select_file_script, browser.hwnd.to_s, file_path, error_file_name].map{|arg| " \"#{arg.gsub("/", "\\")}\""}.join('')
+       # TODO/FIX: the above method of escaping seems to have issues with trailing slashes. 
+      select_file_process=::Process.create('command_line' => command_line)
+      
+      click
+      
+      if ::Waiter.try_for(2, :exception => nil) { File.exists?(error_file_name) } # wait around a moment for the script to finish writing - #click returns before that script exits 
+        marshaled_error=File.read(error_file_name)
+        error=Marshal.load(marshaled_error)
+        error[:backtrace]+= caller(0)
+        File.delete(error_file_name)
+        raise error[:class], error[:message], error[:backtrace]
       end
-      unless upload_dialog
-        raise Watir::Exception::NoMatchingWindowFoundException.new('No window found to upload a file - '+(popup ? "enabled popup exists but has unrecognized text #{popup.text}" : 'no popup is on the browser'))
-      end
-      filename_fields=UploadWindowFilenameFields.map do |control_args|
-        upload_dialog.child_control_with_preceding_label(*control_args)
-      end
-      unless (filename_field=filename_fields.compact.first)
-        raise Watir::Exception::NoMatchingWindowFoundException, "Could not find a filename field in the File Upload dialog"
-      end
-      filename_field.send_set_text! file_path
-      upload_dialog.click_child_button_try_for!('Open', 4, :exception => WinWindow::Error.new("Failed to click the Open button on the File Upload dialog. It exists, but we couldn't click it."))
+      return file_path
+      # TODO/FIX: figure out what events ought to be fired here 
     end
-=end
   end
   
   #--

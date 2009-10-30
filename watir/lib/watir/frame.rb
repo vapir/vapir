@@ -64,19 +64,6 @@ module Watir
     def attach_command
       @container.page_container.attach_command + ".frame(#{@how.inspect}, #{@what.inspect})"
     end
-    #def container_candidates(specifiers)
-      #if @container.is_a?(Browser) || @container.is_a?(Frame)
-      #  frames=[]
-      #  document_frames=@container.document_object.frames
-      #  for i in 0...(document_frames.length)
-      #    frames << document_frames.item(i)
-      #  end
-      #  frames
-      #else
-      #  raise Watir::Exception::MissingWayOfFindingObjectException, "Unable to locate frames with container #{@contaner.inspect} (#{@container.class}). only Frame and Browser are supported for locating frames."
-      #  #Watir::Specifier.specifier_candidates(@container, specifiers)
-      #end
-    #end
     
   end
 end

@@ -77,6 +77,9 @@ module Watir
     
     module_function
     def match_candidates(candidates, specifiers_list)
+      unless specifiers_list.is_a?(Enumerable) && specifiers_list.all?{|spec| spec.is_a?(Hash)}
+        raise ArgumentError, "specifiers_list should be a list of Hashes!"
+      end
       if candidates.length != 0 && Object.const_defined?('JsshObject') && (candidates.is_a?(JsshObject) || candidates.all?{|c| c.is_a?(JsshObject)})
         # optimize for JSSH by moving code to the other side of the socket, rather than talking across it a whole lot
         # this javascript should be exactly the same as the ruby in the else (minus WIN32OLE optimization) - 
@@ -146,11 +149,15 @@ module Watir
           })
         ", jssh_socket, :debug_name => 'match_candidates_function')
         matched_candidates=match_candidates_js.call(candidates, specifiers_list, LocateAliases)
-        matched_candidates.to_array.each do |matched_candidate|
-          yield matched_candidate
+        if block_given?
+          matched_candidates.to_array.each do |matched_candidate|
+            yield matched_candidate
+          end
         end
+        return matched_candidates.to_array
       else
         # IF YOU CHANGE THIS CODE CHANGE THE CORRESPONDING JAVASCRIPT ABOVE TOO 
+        matched_candidates=[]
         candidates.each do |candidate|
           candidate_attributes=proc do |attr|
             attrs=[]
@@ -192,11 +199,14 @@ module Watir
             end
           end
           if match
-            yield candidate
+            if block_given?
+              yield candidate
+            end
+            matched_candidates << candidate
           end
         end
+        return matched_candidates
       end
-      nil
     end
     module_function
     def fuzzy_match(attr, what)

@@ -1,3 +1,5 @@
+require 'watir/elements/element_collection'
+
 class Module
   def alias_deprecated(to, from)
     define_method to do |*args|
@@ -36,6 +38,7 @@ module Watir
         if klass < curr_klass
           Watir::Specifier.match_candidates([element_object], klass.specifiers) do |match|
             curr_klass=klass
+            break
           end
         end
       end
@@ -85,6 +88,19 @@ module Watir
             end
           end
         end
+      end
+    end
+    
+    # defines an element collection method on the given element - such as SelectList#options
+    # or Table#rows. takes the name of the dom method that returns a collection
+    # of element objects, a ruby method name, and an element class - actually this is
+    # generally an Element module; this method goes ahead and finds the browser-specific
+    # class that will actually be instantiated. the defined method returns an 
+    # ElementCollection. 
+    def element_collection(dom_attr, ruby_method_name, element_class)
+      define_method ruby_method_name do
+        assert_exists
+        ElementCollection.new(self, element_class_for(element_class), extra_for_contained.merge(:candidates => dom_attr))
       end
     end
 
@@ -323,6 +339,9 @@ module Watir
     dom_attr :title, :tagName => [:tagName, :tag_name], :innerHTML => [:innerHTML, :inner_html], :className => [:className, :class_name]
     dom_attr :style
     dom_function :scrollIntoView
+
+    # Get attribute value for any attribute of the element.
+    # Returns null if attribute doesn't exist.
     dom_function :getAttribute => [:get_attribute_value, :attribute_value]
 
     # #text is defined on browser-specific Element classes 
@@ -337,14 +356,8 @@ module Watir
       outer_html
     end
 
-    private
-    # this is used by #locate. 
-    # it may be overridden, as it is by Frame classes
-    def container_candidates(specifiers)
-      assert_container
-      Watir::Specifier.specifier_candidates(@container, specifiers)
-    end
-
+    include ElementObjectCandidates
+    
     public
     # locates the element object for this element 
     # 
@@ -388,11 +401,7 @@ module Watir
           end
           by_xpath=@container.element_object_by_xpath(@what)
           # todo/fix: implement @index for this, using element_objects_by_xpath ? 
-          matched_by_xpath=nil
-          Watir::Specifier.match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers) do |match|
-            matched_by_xpath=match
-          end
-          matched_by_xpath
+          Watir::Specifier.match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers).first
         when :label
           unless document_object
             raise "No document object found for this #{self.inspect} - needed to search by id for label from #{@container.inspect}"
@@ -402,11 +411,7 @@ module Watir
           end
           what.locate!(container_locate_options) # the what Label is functionally synonymous with the @container. actually it is currently always the same as the @container. 
           by_label=document_object.getElementById(@container.for)
-          matched_by_label=nil
-          Watir::Specifier.match_candidates(by_label ? [by_label] : [], self.class.specifiers) do |match|
-            matched_by_label=match
-          end
-          matched_by_label
+          Watir::Specifier.match_candidates(by_label ? [by_label] : [], self.class.specifiers).first
         when :attributes
           assert_container
           @container.locate!(container_locate_options)
@@ -415,10 +420,21 @@ module Watir
           
           matched_candidate=nil
           matched_count=0
-          container_candidates=container_candidates(specifiers)
-          Watir::Specifier.match_candidates(container_candidates, specifiers) do |match|
+          matched_candidates(specifiers) do |match|
             matched_count+=1
             if !@index || @index==matched_count
+              matched_candidate=match
+              break
+            end
+          end
+          matched_candidate
+        when :index
+          # TODO/FIX: DRY; basically repeats how=:attributes 
+          matched_candidate=nil
+          matched_count=0
+          matched_candidates(self.class.specifiers) do |match|
+            matched_count+=1
+            if what.to_i==matched_count
               matched_candidate=match
               break
             end
@@ -442,7 +458,7 @@ module Watir
           # the proc should return true (that is, not false or nil) when it likes the given Element - 
           # when it matches what it expects of this Element. 
           by_custom=nil
-          Watir::Specifier.match_candidates(container_candidates(self.class.specifiers), self.class.specifiers) do |match|
+          matched_candidates(self.class.specifiers) do |match|
             if what.call(self.class.new(:element_object, match, @extra))
               by_custom=match
               break
@@ -558,5 +574,39 @@ module Watir
         (attr.first+": ").ljust(longest_label+2)+attr.last+"\n"
       end.join('')
     end
+
+    # for a common module, such as a TextField, returns an elements-specific class (such as
+    # FFTextField) that inherits from the base_element_class of self. That is, this returns
+    # a sibling class, as it were, of whatever class inheriting from Element is instantiated.
+    def element_class_for(common_module)
+      element_class=nil
+      ObjectSpace.each_object(Class) do |klass|
+        if klass < common_module && klass < base_element_class
+          element_class= klass
+        end
+      end
+      unless element_class
+        raise RuntimeError, "No class found that inherits from both #{common_module} and #{base_element_class}"
+      end
+      element_class
+    end
+    
+    module_function
+    def object_collection_to_enumerable(object)
+      if object.is_a?(Enumerable)
+        object
+      elsif Object.const_defined?('JsshObject') && object.is_a?(JsshObject)
+        object.to_array
+      elsif Object.const_defined?('WIN32OLE') && object.is_a?(WIN32OLE)
+        array=[]
+        (0...object.length).each do |i|
+          array << object.item(i)
+        end
+        array
+      else
+        raise TypeError, "Don't know how to make enumerable from given object #{object.inspect} (#{object.class})"
+      end
+    end
+    
   end
 end

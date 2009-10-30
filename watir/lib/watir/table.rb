@@ -48,29 +48,15 @@ module Watir
       end
       super
     end
-    
-    def rows
-      assert_exists
-      ole_to_element_collection(IETableRow, element_object.rows)
-    end
   end
   
   # this class is a table body
   class IETableBody < IEElement
     include TBody
-    def rows
-      assert_exists
-      ole_to_element_collection(IETableRow, element_object.rows)
-    end
   end
     
   class IETableRow < IEElement
     include TableRow
-    
-    def cells
-      assert_exists
-      ole_to_element_collection(IETableCell, element_object.cells)
-    end
   end
   
   # this class is a table cell - when called via the Table object

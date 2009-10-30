@@ -31,11 +31,7 @@ module Watir
     # returns an ElementCollection of Elements that are instances of the given class klass below
     # this container. 
     def element_collection(klass)
-      elements=[]
-      Watir::Specifier.match_candidates(Watir::Specifier.specifier_candidates(self, klass.specifiers), klass.specifiers) do |match|
-        elements << klass.new(:element_object, match, extra_for_contained)
-      end
-      ElementCollection.new(elements)
+      ElementCollection.new(self, klass, extra_for_contained)
     end
     
     # takes how and what in the form that users use, and translates it to a standard form 
@@ -90,7 +86,7 @@ module Watir
       else
         raise RuntimeError, "unknown element object list #{element_object_arr.inspect} (#{element_object_arr.class})"
       end
-      elements=ElementCollection.new(element_objects.map{|el| base_element_class.factory(el)})
+      elements=element_objects.map{|el| base_element_class.factory(el)}
       elements.each do |element|
         write_to.write element.to_s+"\n"
         write_to.write "------------------------------------------\n"

@@ -1,12 +1,6 @@
 module Watir
   class FFTable < FFElement
     include Table
-    # returns an ElementCollection of rows in the table.
-    def rows
-      assert_exists
-      jssh_to_element_collection(FFTableRow, element_object.rows)
-    end
-    #
     # Description:
     #   Override the highlight method, as if the tables rows are set to have a background color,
     #   this will override the table background color,  and the normal flash method wont work
@@ -45,10 +39,5 @@ module Watir
 
   class FFTBody < FFElement
     include TBody
-    # returns an ElementCollection of rows in the tbody.
-    def rows
-      assert_exists
-      jssh_to_element_collection(FFTableRow, element_object.rows)
-    end
   end
 end # FireWatir

@@ -1,66 +1,103 @@
 module Watir
+  module ElementObjectCandidates
+    private
+    # this is used by #locate in Element and by ElementCollection. 
+    def element_object_candidates(specifiers)
+      case @extra[:candidates]
+      when nil
+        Watir::Specifier.specifier_candidates(@container, specifiers)
+      when Symbol
+        Watir::Element.object_collection_to_enumerable(@container.element_object.send(@extra[:candidates]))
+      when Proc
+        @extra[:candidates].call(@container)
+      else
+        raise Watir::Exception::MissingWayOfFindingObjectException, "Unknown method of specifying candidates: #{@extra[:candidates].inspect} (#{@extra[:candidates].class})"
+      end
+    end
+    def matched_candidates(specifiers, &block)
+      Watir::Specifier.match_candidates(element_object_candidates(specifiers), specifiers, &block)
+    end
+  end
+
   class ElementCollection
     include Enumerable
-    def initialize(enumerable=nil)
-      if enumerable && !enumerable.is_a?(Enumerable)
-        raise ArgumentError, "Initialize giving an enumerable, not #{enumerable.inspect} (#{enumerable.class})"
-      end
-      @array=[]
-      enumerable.each do |element|
-        @array << element
-      end
-      @array.freeze
+
+    def initialize(container, collection_class, extra={})
+      @container=container
+      @collection_class=collection_class
+      @extra=extra.merge(:container => container)
     end
-    def to_a
-      @array.dup # return unfrozen dup
-    end
-    
+
     def each
-      @array.each do |element|
-        yield element
+      candidates.each do |candidate|
+        yield @collection_class.new(:element_object, candidate, @extra)
       end
     end
     def each_index
-      (1..size).each do |i|
+      (1..length).each do |i|
         yield i
       end
     end
-    def each_with_index
-      #@array.each_with_index do |element, array_index|
-      #  yield element, array_index+1
+    def length
+      candidates.length
+    end
+    alias size length
+    def empty?
+      size==0
+    end
+    alias each_with_enumerable_index each_with_index # call ruby's 0-based indexing enumerable_index; call ours element_index
+    def each_with_element_index
+      #each_with_enumerable_index do |element, enumerable_index|
+      #  yield element, enumerable_index+1
       #end
+      # above method makes it use how=:element_object - since we're associating with index, going by how=:index seems more logical, hence below
       each_index do |i|
         yield at(i), i
       end
     end
+    alias each_with_index each_with_element_index
     
     def [](index)
       at(index)
     end
     def at(index)
-      unless index.is_a?(Integer) && (1..size).include?(index)
-        raise IndexError, "Expected an integer between 1 and #{size}; got #{index.inspect} (#{index.class})"
-      end
-      array_index=index-1
-      @array.at(array_index)
+      @collection_class.new(:index, index, @extra)
     end
-    def index(obj)
-      array_index=@array.index(obj)
-      array_index && array_index+1
+    def first
+      at(1)
+    end
+    def last
+      specifiers=@collection_class.specifiers
+      element=@collection_class.new(:custom, proc{true}, @extra.merge(:candidates => proc do |container|
+        [Watir::Specifier.match_candidates(Watir::Specifier.specifier_candidates(container, specifiers), specifiers).to_a.last]
+      end))
     end
     
+    def find(&block)
+      element=@collection_class.new(:custom, block, @extra.merge(:locate => false))
+      element.exists? ? element : nil
+    end
+    alias detect find
+    
     def inspect
-      "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{@array.map{|el|el.inspect}.join(', ')}>"
+      "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{map{|el|el.inspect}.join(', ')}>"
     end
 
-    # methods to just pass to the array 
-    [:empty?, :size, :length, :first, :last, :include?].each do |method|
-      define_method method do |*args|
-        @array.send(method, *args)
-      end
+    private
+    include ElementObjectCandidates
+    def candidates
+      matched_candidates(@collection_class.specifiers)
     end
-    def ==(other_collection)
-      other_collection.class==self.class && other_collection.to_a==@array
+    public
+    def pretty_print(pp)
+      pp.object_address_group(self) do
+        pp.seplist(self, lambda { pp.text ',' }) do |element|
+          pp.breakable ' '
+          pp.group(0) do
+            pp.pp element
+          end
+        end
+      end
     end
   end
 end

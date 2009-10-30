@@ -235,12 +235,6 @@ module Watir
     # Returns the text content of the element.
     dom_attr :textContent => :text
   
-    def jssh_to_element_collection(element_class, jssh_collection, extra={})
-      ElementCollection.new(jssh_collection.to_array.map do |element_object|
-        element_class.new(:element_object, element_object, extra_for_contained.merge(extra))
-      end)
-    end
-    
 #    def invoke(js_method)
 #      element_object.invoke(js_method)
 #    end

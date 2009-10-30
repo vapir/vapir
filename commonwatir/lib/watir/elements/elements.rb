@@ -219,6 +219,15 @@ module Watir
     container_single_method :select_list
     container_collection_method :select_lists
 
+    # Returns an ElementCollection containing all the option elements of the select list 
+    # Raises UnknownObjectException if the select box is not found
+    def options
+      assert_exists
+      ElementCollection.new(self, element_class_for(Option), extra_for_contained.merge(:candidates => :options, :select_list => self))
+    end
+    # note that the above is defined that way rather than with element_collection, as below, because adding :select_list => self to extra isn't implemented yet 
+    #element_collection :options, :options, Option, proc { {:select_list => self} }
+
     def [](index)
       options[index]
     end
@@ -433,9 +442,12 @@ module Watir
     # returns all of the cells of this table. to get the cells including nested tables, 
     # use #table_cells, which is defined on all containers (including Table) 
     def cells
-      ElementCollection.new(rows.inject([]) do |cells_arr, row|
-        cells_arr+row.cells.to_a
-      end)
+      ElementCollection.new(self, element_class_for(TableCell), extra_for_contained.merge(:candidates => proc do |container|
+        container_object=container.element_object
+        object_collection_to_enumerable(container_object.rows).inject([]) do |candidates, row|
+          candidates+object_collection_to_enumerable(row.cells).to_a
+        end
+      end))
     end
     
     # returns the number of columns of the table, either on the row at the given index
@@ -473,32 +485,23 @@ module Watir
     end
     alias_deprecated :column_values, :column_texts_at
   end
-  module Table
+  module TableCell
     extend ElementHelper
-    # Table assumes the inheriting class defines a #rows method which returns 
-    # an ElementCollection
-    add_specifier :tagName => 'TABLE'
-    container_single_method :table
-    container_collection_method :tables
+    add_specifier :tagName => 'td'
+    add_specifier :tagName => 'th'
+    container_single_method :table_cell
+    container_collection_method :table_cells
 
-    include HasRowsAndColumns
-    
-  end
-  module TBody
-    extend ElementHelper
-    add_specifier :tagName => 'TBODY'
-    container_single_method :tbody
-    container_collection_method :tbodies
-
-    include HasRowsAndColumns
+    dom_attr :colSpan => [:colSpan, :colspan], :rowSpan => [:rowSpan, :rowspan]
   end
   module TableRow
     extend ElementHelper
-    # TableRow assumes that the inheriting class defines a #cells method which
-    # returns an ElementCollection
     add_specifier :tagName => 'tr'
     container_single_method :table_row
     container_collection_method :table_rows
+    
+    # Returns an ElementCollection of cells in the row 
+    element_collection :cells, :cells, TableCell
     
     #   Iterate over each cell in the row.
     def each_cell
@@ -533,14 +536,27 @@ module Watir
       end
     end
   end
-  module TableCell
+  module TBody
     extend ElementHelper
-    add_specifier :tagName => 'td'
-    add_specifier :tagName => 'th'
-    container_single_method :table_cell
-    container_collection_method :table_cells
+    add_specifier :tagName => 'TBODY'
+    container_single_method :tbody
+    container_collection_method :tbodies
 
-    dom_attr :colSpan => [:colSpan, :colspan], :rowSpan => [:rowSpan, :rowspan]
+    include HasRowsAndColumns
+
+    # returns an ElementCollection of rows in the tbody.
+    element_collection :rows, :rows, TableRow
+  end
+  module Table
+    extend ElementHelper
+    add_specifier :tagName => 'TABLE'
+    container_single_method :table
+    container_collection_method :tables
+
+    include HasRowsAndColumns
+    
+    # returns an ElementCollection of rows in the table.
+    element_collection :rows, :rows, TableRow
   end
   module Link
     extend ElementHelper

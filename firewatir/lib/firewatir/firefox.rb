@@ -238,7 +238,7 @@ module Watir
         orig_browser_window_title=browser_window_object.document.title
         browser_window_object.document.title=orig_browser_window_title+(rand(36**16).to_s(36))
         begin
-          require 'lib/win_window'
+          require 'watir/win_window'
           candidates=::Waiter.try_for(2, :condition => proc{|ret| ret.size > 0}, :error => nil) do
             WinWindow::All.select do |win|
               win.class_name=="MozillaUIWindowClass" && win.text==browser_window_object.document.title

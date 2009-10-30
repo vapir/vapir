@@ -12,14 +12,6 @@ module Watir
   # Normally a user would not need to create this object as it is returned by the Watir::Container#select_list method
   class IESelectList < IEInputElement
     include SelectList
-    
-    # Returns all the items in the select list as an array.
-    # An empty array is returned if the select box has no contents.
-    # Raises UnknownObjectException if the select box is not found
-    def options
-      assert_exists
-      ole_to_element_collection(IEOption, element_object.options, :select_list => self)
-    end
   end
   
   # An item in a select list
@@ -114,7 +106,7 @@ module Watir
       assert_exists
       
       require 'win32/process'
-      require 'lib/win_window'
+      require 'watir/win_window'
       rubyw_exe= File.join(Config::CONFIG['bindir'], 'rubyw')
       error_file_name=File.expand_path(File.join(File.dirname(__FILE__), 'scripts', 'select_file_error_status.marshal_dump'))
       select_file_script=File.expand_path(File.join(File.dirname(__FILE__), 'scripts', 'select_file.rb'))

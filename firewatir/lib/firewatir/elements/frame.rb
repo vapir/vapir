@@ -6,15 +6,6 @@ module Watir
     include FFHasDocument
     #include FFDocument
 
-    def container_candidates(specifiers)
-      if @container.is_a?(Browser) || @container.is_a?(Frame)
-        candidates=@container.content_window_object.frames.to_array.map{|c|c.frameElement}
-      else
-        #raise Watir::Exception::MissingWayOfFindingObjectException, "Unable to locate frames with container #{@contaner.inspect} (#{@container.class}). only Frame and Browser are supported for locating frames."
-        Watir::Specifier.specifier_candidates(@container, specifiers)
-      end
-    end
-
     def containing_object
       element_object.contentDocument
     end
@@ -25,7 +16,6 @@ module Watir
     def content_window_object
       element_object.contentWindow
     end
-    #attr_reader :document
     def url
       content_window_object.location.href
     end

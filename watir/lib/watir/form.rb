@@ -3,13 +3,6 @@ module Watir
   class IEForm < IEElement
     include Form
     
-    # Submit the data -- equivalent to pressing Enter or Return to submit a form.
-    def submit 
-      assert_exists
-      @element_object.invoke('submit')
-      wait
-    end
-    
     # This method is responsible for setting and clearing the colored highlighting on the specified form.
     # use :set  to set the highlight
     #   :clear  to clear the highlight

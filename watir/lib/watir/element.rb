@@ -42,29 +42,20 @@ module Watir
     # return the text before the element
     # TODO/FIX: ?
     def before_text # label only
-      assert_exists
-      ole_object.getAdjacentText("afterEnd").strip
+      assert_exists do
+        ole_object.getAdjacentText("afterEnd").strip
+      end
     end
     
     # return the text after the element
     def after_text # label only
-      assert_exists
-      ole_object.getAdjacentText("beforeBegin").strip
+      assert_exists do
+        ole_object.getAdjacentText("beforeBegin").strip
+      end
     end
     
     # Returns the text content of the element.
     dom_attr :innerText => :text
-    
-#    def ole_inner_elements
-#      assert_exists
-#      return ole_object.all
-#    end
-#    private :ole_inner_elements
-    
-#    def document
-#      assert_exists
-#      return ole_object
-#    end
 
 #    include Comparable
 #    def <=> other
@@ -119,19 +110,16 @@ module Watir
     #   raises: UnknownObjectException  if the object is not found
     #   ObjectDisabledException if the object is currently disabled
     def click
-      assert_exists
-      assert_enabled if respond_to?(:assert_enabled)
-      
       with_highlight do
+        assert_enabled if respond_to?(:assert_enabled)
         ole_object.click
       end
       wait
     end
     
     def click_no_wait
-      assert_exists
-      assert_enabled if respond_to?(:assert_enabled)
       with_highlight do
+        assert_enabled if respond_to?(:assert_enabled)
         document_object.parentWindow.setTimeout("
           (function(tagName, uniqueNumber)
           { var candidate_elements=document.getElementsByTagName(tagName);
@@ -150,10 +138,9 @@ module Watir
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
     def fire_event(event, options={})
-      options={:highlight => !options[:just_fire], :just_fire => false}.merge(options)
-      assert_exists
-      assert_enabled if !options[:just_fire] && respond_to?(:assert_enabled)
+      options={:highlight => true}.merge(options)
       with_highlight(options[:highlight]) do
+        assert_enabled if respond_to?(:assert_enabled)
         ole_object.fireEvent(event.to_s)
         wait
       end
@@ -163,10 +150,9 @@ module Watir
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
     def fire_event_no_wait(event, options={})
-      assert_enabled if respond_to?(:assert_enabled)
       options={:highlight => true}.merge(options)
       with_highlight(options[:highlight]) do
-        #Thread.new { ole_object.click } # that doesn't work.
+        assert_enabled if respond_to?(:assert_enabled)
         document_object.parentWindow.setTimeout("
           (function(tagName, uniqueNumber, event)
           { var candidate_elements=document.getElementsByTagName(tagName);
@@ -191,24 +177,25 @@ module Watir
     def visible?
       # Now iterate up the DOM element tree and return false if any
       # parent element isn't visible or is disabled.
-      assert_exists
-      object = @element_object
-      while object
-        begin
-          if object.currentstyle.invoke('visibility') =~ /^hidden$/i
-            return false
+      assert_exists do
+        object = @element_object
+        while object
+          begin
+            if object.currentstyle.invoke('visibility') =~ /^hidden$/i
+              return false
+            end
+            if object.currentstyle.invoke('display') =~ /^none$/i
+              return false
+            end
+            if object.invoke('isDisabled')
+              return false
+            end
+          rescue WIN32OLERuntimeError
           end
-          if object.currentstyle.invoke('display') =~ /^none$/i
-            return false
-          end
-          if object.invoke('isDisabled')
-            return false
-          end
-        rescue WIN32OLERuntimeError
+          object = object.parentElement
         end
-        object = object.parentElement
+        true
       end
-      true
     end
   end
   

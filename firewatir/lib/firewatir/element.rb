@@ -111,7 +111,6 @@ module Watir
     #       coordinates for mouse events.
     def fire_event(event, options={})
       options={:wait => true, :highlight => true}.merge(options)
-      assert_exists
       with_highlight(options[:highlight]) do
 
         event = event.to_s.downcase # in case event was given as a symbol
@@ -168,9 +167,8 @@ module Watir
     # - :highlight => true or false. Highlights the element while clicking if true. Default is true. 
     def click(options={})
       options={:wait => true, :highlight => true}.merge(options)
-      assert_exists
-      assert_enabled if respond_to?(:assert_enabled)
       with_highlight(options[:highlight]) do
+        assert_enabled if respond_to?(:assert_enabled)
         if element_object.respond_to?(:click)
           if options[:wait]
             element_object.click
@@ -200,14 +198,15 @@ module Watir
     # the most common methods to hide an html element. Returns false if this seems to be hidden
     # or a parent is hidden. 
     def visible? 
-      assert_exists 
-      element_to_check=element_object
-      while element_to_check && !element_to_check.instanceof(jssh_socket.Components.interfaces.nsIDOMDocument)
-        style=document_object.defaultView.getComputedStyle(element_to_check, nil)
-        if style.visibility =~ /\Ahidden\z/i || style[:display] =~ /\Anone\z/i
-          return false
+      assert_exists do
+        element_to_check=element_object
+        while element_to_check && !element_to_check.instanceof(jssh_socket.Components.interfaces.nsIDOMDocument)
+          style=document_object.defaultView.getComputedStyle(element_to_check, nil)
+          if style.visibility =~ /\Ahidden\z/i || style[:display] =~ /\Anone\z/i
+            return false
+          end
+          element_to_check=element_to_check.parentNode
         end
-        element_to_check=element_to_check.parentNode
       end
       return true
     end

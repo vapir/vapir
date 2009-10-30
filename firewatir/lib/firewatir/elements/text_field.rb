@@ -17,13 +17,14 @@ module Watir
     #   True if provided text matches with the contents of text field, false otherwise.
     #
     def verify_contains( containsThis )
-      assert_exists
-      if containsThis.kind_of? String
-        return true if self.value == containsThis
-      elsif containsThis.kind_of? Regexp
-        return true if self.value.match(containsThis) != nil
+      assert_exists do
+        if containsThis.kind_of? String
+          return true if self.value == containsThis
+        elsif containsThis.kind_of? Regexp
+          return true if self.value.match(containsThis) != nil
+        end
+        return false
       end
-      return false
     end
 
     # this method is used to drag the entire contents of the text field to another text field

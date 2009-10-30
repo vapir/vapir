@@ -16,9 +16,9 @@ module Watir
     # We look for these missing properties to see if the image is really there or not.
     # If the Disk cache is full (tools menu -> Internet options -> Temporary Internet Files), it may produce incorrect responses.
     def loaded?
-      assert_exists
-      return false if @element_object.fileCreatedDate == "" and @element_object.fileSize.to_i == -1
-      return true
+      assert_exists do
+        element_object.fileCreatedDate == "" and element_object.fileSize.to_i == -1
+      end
     end
     alias_deprecated :hasLoaded?, :loaded?
     

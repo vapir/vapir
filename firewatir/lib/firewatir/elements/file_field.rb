@@ -14,9 +14,10 @@ module Watir
     #   path - Path of the file.
     #
     def set(path)
-      assert_exists
-      element_object.value=path
-      fireEvent("onChange")
+      assert_exists do
+        element_object.value=path
+        fireEvent("onChange")
+      end
     end
 
   end # FileField

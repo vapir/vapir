@@ -76,15 +76,15 @@ module Watir
       assert_not_readonly
       with_highlight do
         element_object.focus
-        fire_event('onFocus', :just_fire => true)
+        fire_event('onFocus')
         element_object.select
-        fire_event("onSelect", :just_fire => true)
+        fire_event("onSelect")
         element_object.value = ''
-        fire_event :onKeyDown, :just_fire => true
-        fire_event :onKeyPress, :just_fire => true
-        fire_event :onKeyUp, :just_fire => true
-#        fire_event('onBlur', :just_fire => true)
-        fire_event("onChange", :just_fire => true)
+        fire_event :onKeyDown
+        fire_event :onKeyPress
+        fire_event :onKeyUp
+#        fire_event('onBlur')
+        fire_event("onChange")
       end
     end
     # Appends the specified string value to the contents of the text box.
@@ -107,18 +107,18 @@ module Watir
         typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0 # TODO: FIX
         if type_keys
           element_object.focus
-          fire_event('onFocus', :just_fire => true)
+          fire_event('onFocus')
           element_object.select
-          fire_event("onSelect", :just_fire => true)
+          fire_event("onSelect")
           ((existing_value_chars.length)...new_value_chars.length).each do |i|   
 #            sleep typingspeed
             element_object.value = new_value_chars[0..i].join('')
-            fire_event :onKeyDown, :just_fire => true
-            fire_event :onKeyPress, :just_fire => true
-            fire_event :onKeyUp, :just_fire => true
+            fire_event :onKeyDown
+            fire_event :onKeyPress
+            fire_event :onKeyUp
           end
-#          fire_event('onBlur', :just_fire => true)
-          fire_event("onChange", :just_fire => true)
+#          fire_event('onBlur')
+          fire_event("onChange")
         else
           element_object.value = element_object.value + value
         end
@@ -196,13 +196,14 @@ module Watir
     # got this Option from a SelectList container), will fire the onchange event on the 
     # select list if our state changes. 
     def selected=(state)
-      assert_exists
-      state_was=element_object.selected
-      element_object.selected=state
-      if @extra[:select_list] && state_was != state
-        @extra[:select_list].fire_event(:onchange)
+      assert_exists do
+        state_was=element_object.selected
+        element_object.selected=state
+        if @extra[:select_list] && state_was != state
+          @extra[:select_list].fire_event(:onchange)
+        end
+        wait
       end
-      wait
     end
     #dom_setter :selected
 
@@ -222,8 +223,9 @@ module Watir
     # Returns an ElementCollection containing all the option elements of the select list 
     # Raises UnknownObjectException if the select box is not found
     def options
-      assert_exists
-      ElementCollection.new(self, element_class_for(Option), extra_for_contained.merge(:candidates => :options, :select_list => self))
+      assert_exists do
+        ElementCollection.new(self, element_class_for(Option), extra_for_contained.merge(:candidates => :options, :select_list => self))
+      end
     end
     # note that the above is defined that way rather than with element_collection, as below, because adding :select_list => self to extra isn't implemented yet 
     #element_collection :options, :options, Option, proc { {:select_list => self} }
@@ -234,7 +236,6 @@ module Watir
 
     #   Clears the selected items in the select box.
     def clear
-      assert_exists
       with_highlight do
         changed=false
         options.each do |option|
@@ -244,7 +245,7 @@ module Watir
           end
         end
         if changed
-          fire_event :onchange, :just_fire => true
+          fire_event :onchange
           wait
         end
       end
@@ -297,8 +298,9 @@ module Watir
     #   Returns an array of selected option Elements in this select list.
     #   An empty array is returned if the select box has no selected item.
     def selected_options
-      assert_exists
-      options.select{|o|o.selected}
+      assert_exists do
+        options.select{|o|o.selected}
+      end
     end
 
     def selected_option_texts
@@ -355,16 +357,15 @@ module Watir
     #   Checks the radio button or check box element.
     #   Raises ObjectDisabledException exception if element is disabled.
     def set(state=true)
-      assert_exists
-      assert_enabled
       with_highlight do
+        assert_enabled
         if checked!=state || self.is_a?(Radio) # don't click if it's already checked. but do anyway if it's a radio. 
           if browser_class.name != 'Watir::Firefox'  # compare by name to not trigger autoload or raise NameError if not loaded 
             # in firefox, firing the onclick event changes the state. in IE, it doesn't, so do that first 
             element_object.checked=state
           end
-          fire_event :onclick, :just_fire => true
-          fire_event :onchange, :just_fire => true
+          fire_event :onclick
+          fire_event :onchange
         end
         wait
       end
@@ -400,6 +401,9 @@ module Watir
     default_how :name
 
     dom_attr :name, :action
+
+    # Submit the form. Equivalent to pressing Enter or Return to submit a form.
+    dom_function :submit
     inspect_these :name, :action
   end
   module Image

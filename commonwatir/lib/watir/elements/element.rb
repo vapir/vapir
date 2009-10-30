@@ -56,17 +56,32 @@ module Watir
           ruby_method_names= ruby_method_names.is_a?(Array) ? ruby_method_names : [ruby_method_names]
           class_array_append 'dom_attrs', dom_attr
           ruby_method_names.each do |ruby_method_name|
-            define_method ruby_method_name do |*args|
-              method_from_element_object(dom_attr, *args)
+            define_method ruby_method_name do
+              method_from_element_object(dom_attr)
             end
           end
         end
       end
     end
     
-    # dom_function is the same as dom_attr, but dom_attr isn't really supposed to take arguments
-    # whereas dom_function can. may change this in the future to actually enforce that. 
+    # dom_function is about the same as dom_attr, but dom_attr doesn't take arguments. 
+    # also, dom_function methods call #wait; dom_attr ones don't. 
     alias dom_function dom_attr
+    def dom_function(*dom_functions)
+      dom_functions.each do |arg|
+        hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise(ArgumentError, "don't know what to do with arg #{arg.inspect} (#{arg.class})")
+        hash.each_pair do |dom_function, ruby_method_names|
+          ruby_method_names= ruby_method_names.is_a?(Array) ? ruby_method_names : [ruby_method_names]
+          class_array_append 'dom_functions', dom_function
+          ruby_method_names.each do |ruby_method_name|
+            define_method ruby_method_name do |*args|
+              method_from_element_object(dom_function, *args)
+              wait
+            end
+          end
+        end
+      end
+    end
     
     # dom_setter takes arguments in the same format as dom_attr, but sends the given setter method (plus = sign)
     # to the element object. eg, 
@@ -99,8 +114,9 @@ module Watir
     # ElementCollection. 
     def element_collection(dom_attr, ruby_method_name, element_class)
       define_method ruby_method_name do
-        assert_exists
-        ElementCollection.new(self, element_class_for(element_class), extra_for_contained.merge(:candidates => dom_attr))
+        assert_exists do
+          ElementCollection.new(self, element_class_for(element_class), extra_for_contained.merge(:candidates => dom_attr))
+        end
       end
     end
 
@@ -306,43 +322,43 @@ module Watir
     # when garbage collection gets called, ruby terminating abnormally when garbage-collecting an 
     # unrecognized type. so, not so much recommended. 
     def method_from_element_object(dom_method_name, *args)
-      assert_exists
-
-      if Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE)
-        # avoid respond_to? on WIN32OLE because it's slow. just call the method and rescue if it fails. 
-        # the else block works fine for win32ole, but it's slower, so optimizing for IE here. 
-        got_attribute=false
-        attribute=nil
-        begin
-          attribute=element_object.method_missing(dom_method_name)
-          got_attribute=true
-        rescue WIN32OLERuntimeError
-        end
-        if !got_attribute
-          if args.length==0
-            begin
-              attribute=element_object.getAttributeNode(dom_method_name.to_s).value
-              got_attribute=true
-            rescue WIN32OLERuntimeError
+      assert_exists do
+        if Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE)
+          # avoid respond_to? on WIN32OLE because it's slow. just call the method and rescue if it fails. 
+          # the else block works fine for win32ole, but it's slower, so optimizing for IE here. 
+          got_attribute=false
+          attribute=nil
+          begin
+            attribute=element_object.method_missing(dom_method_name)
+            got_attribute=true
+          rescue WIN32OLERuntimeError
+          end
+          if !got_attribute
+            if args.length==0
+              begin
+                attribute=element_object.getAttributeNode(dom_method_name.to_s).value
+                got_attribute=true
+              rescue WIN32OLERuntimeError
+              end
+            else
+              raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
+            end
+          end
+          attribute
+        else
+          if element_object.object_respond_to?(dom_method_name)
+            element_object.method_missing(dom_method_name, *args)
+            # note: using method_missing (not invoke) so that attribute= methods can be used. 
+            # but that is problematic. see documentation above. 
+          elsif args.length==0
+            if element_object.object_respond_to?(:getAttributeNode)
+              element_object.getAttributeNode(dom_method_name.to_s).value
+            else
+              nil
             end
           else
             raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
           end
-        end
-        attribute
-      else
-        if element_object.object_respond_to?(dom_method_name)
-          element_object.method_missing(dom_method_name, *args)
-          # note: using method_missing (not invoke) so that attribute= methods can be used. 
-          # but that is problematic. see documentation above. 
-        elsif args.length==0
-          if element_object.object_respond_to?(:getAttributeNode)
-            element_object.getAttributeNode(dom_method_name.to_s).value
-          else
-            nil
-          end
-        else
-          raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"
         end
       end
     end
@@ -524,7 +540,24 @@ module Watir
         raise(klass, message)
       end
     end
-    alias assert_exists locate!
+    
+    # asserts that this element exists - optionally, takes a block, and other calls to assert_exists
+    # over the course of the block will not cause redundant assertions. 
+    def assert_exists(options={})
+      was_asserting_exists=@asserting_exists
+      if (!@asserting_exists || options[:force])
+        locate!
+      end
+      @asserting_exists=true
+      begin
+        if block_given?
+          result=yield
+        end
+      ensure
+        @asserting_exists=was_asserting_exists
+      end
+      result
+    end
     
     private
     def assert_container
@@ -550,26 +583,41 @@ module Watir
     # takes a block. sets highlight on this element; calls the block; clears the highlight.
     # the clear is in an ensure block so that you can call return from the given block. 
     # doesn't actually perform the highlighting if argument do_highlight is false. 
+    #
+    # also, you can nest these safely; it checks if you're already highlighting before trying
+    # to set and subsequently clear the highlight. 
+    #
+    # the block is called within an assert_exists block, so for methods that highlight, the
+    # assert_exists can generally be omitted from there. 
     def with_highlight(do_highlight=true)
-      highlight(:set) if do_highlight
-      begin
-        yield
-      ensure
-        if do_highlight && exists? # if we stopped existing during the highlight, don't try to clear. 
-          highlight(:clear) 
+      assert_exists do
+        was_highlighting=@highlighting
+        if (!@highlighting && do_highlight)
+          highlight(:set)
         end
+        @highlighting=true
+        begin
+          result=yield
+        ensure
+          @highlighting=was_highlighting
+          if !@highlighting && do_highlight && exists? # if we stopped existing during the highlight, don't try to clear. 
+            highlight(:clear) 
+          end
+        end
+        result
       end
     end
 
     # Flash the element the specified number of times.
     # Defaults to 10 flashes.
     def flash number=10
-      assert_exists
-      number.times do
-        highlight(:set)
-        sleep 0.05
-        highlight(:clear)
-        sleep 0.05
+      assert_exists do
+        number.times do
+          highlight(:set)
+          sleep 0.05
+          highlight(:clear)
+          sleep 0.05
+        end
       end
       nil
     end
@@ -614,17 +662,20 @@ module Watir
     end
     
     def attributes_for_stringifying
+      unless exists?
+        return [['exists?', false]]
+      end
       self.class.attributes_to_inspect.map do |inspect_hash|
         if !inspect_hash[:if] || inspect_hash[:if].call(self)
           value=case inspect_hash[:value]
           when /\A@/ # starts with @, look for instance variable
             instance_variable_get(inspect_hash[:value]).inspect
           when Symbol
-            send(inspect_hash[:value]).inspect
+            send(inspect_hash[:value])
           when Proc
-            inspect_hash[:value].call(self).to_s
+            inspect_hash[:value].call(self)
           else
-            inspect_hash[:value].to_s
+            inspect_hash[:value]
           end
           [inspect_hash[:label].to_s, value]
         end
@@ -632,15 +683,29 @@ module Watir
     end
     def inspect
       "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)}"+attributes_for_stringifying.map do |attr|
-        " "+attr.first+'='+attr.last
+        " "+attr.first+'='+attr.last.inspect
       end.join('') + ">"
     end
     def to_s
       attrs=attributes_for_stringifying
       longest_label=attrs.inject(0) {|max, attr| [max, attr.first.size].max }
       "#{self.class.name}:0x#{"%.8x"%(self.hash*2)}\n"+attrs.map do |attr|
-        (attr.first+": ").ljust(longest_label+2)+attr.last+"\n"
+        (attr.first+": ").ljust(longest_label+2)+attr.last.inspect+"\n"
       end.join('')
+    end
+
+    def pretty_print(pp)
+      pp.object_address_group(self) do
+        pp.seplist(attributes_for_stringifying, lambda { pp.text ',' }) do |attr|
+          pp.breakable ' '
+          pp.group(0) do
+            pp.text attr.first
+            pp.text ':'
+            pp.breakable
+            pp.pp attr.last
+          end
+        end
+      end
     end
 
     # for a common module, such as a TextField, returns an elements-specific class (such as

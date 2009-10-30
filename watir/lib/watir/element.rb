@@ -66,19 +66,6 @@ module Watir
 #      return ole_object
 #    end
 
-    # Return the element immediately containing self. 
-    def parent(options={})
-      @parent=nil if options[:reload]
-      @parent||=begin
-        parentNode=element_object.parentNode # TODO/FIX: should this use parentElement? 
-        if parentNode && parentNode != document_object # don't ascend up to the document. #TODO/Fix - comparing WIN32OLEs doesn't really work, this comparison is pointless. 
-          IEElement.factory(parentNode, extra_for_contained)
-        else
-          nil
-        end
-      end
-    end
-    
 #    include Comparable
 #    def <=> other
 #      assert_exists

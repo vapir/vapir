@@ -574,6 +574,22 @@ module Watir
       nil
     end
 
+    # Return the element immediately containing this element. 
+    # returns nil if there is no parent, or if the parent is the document. 
+    #
+    # this is cached; call parent(:reload => true) if you wish to uncache it. 
+    def parent(options={})
+      @parent=nil if options[:reload]
+      @parent||=begin
+        parentNode=element_object.parentNode
+        if parentNode && parentNode != document_object # don't ascend up to the document. #TODO/Fix - for IE, comparing WIN32OLEs doesn't really work, this comparison is pointless. 
+          base_element_class.factory(parentNode, extra_for_contained) # this is a little weird, passing extra_for_contained so that this is the container of its parent. 
+        else
+          nil
+        end
+      end
+    end
+    
     # accesses the object representing this Element in the DOM. 
     def element_object
       assert_exists

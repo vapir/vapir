@@ -100,20 +100,6 @@ module Watir
     end
     alias contains_text contains_text?
 
-    # Returns the parent element (a FFElement or subclass, using FFElement.factory). 
-    # returns nil if there is no parent, or if the parent is the document. 
-    def parent(options={})
-      @parent=nil if options[:reload]
-      @parent||=begin
-        parentNode=element_object.parentNode
-        if parentNode && parentNode != document_object # don't ascend up to the document
-          FFElement.factory(parentNode.store_rand_prefix('firewatir_elements'), extra_for_contained) # this is a little weird, passing extra_for_contained so that this is the container of its parent. 
-        else
-          nil
-        end
-      end
-    end
-    
     # Fires the given event on this element. 
     # The given event name can be either of the form 'onclick' (for compatibility with IE) or just 'click' (can also be Symbol :onclick or :click)
     # takes options:

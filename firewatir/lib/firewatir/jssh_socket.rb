@@ -131,7 +131,7 @@ class JsshSocket
       received_data << data
       
       # Kernel.select seems to indicate that a dead socket is ready to read, and returns endless blank strings to recv. rather irritating. 
-      if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd.blank?}
+      if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd==''}
         raise JsshError, "Socket seems to no longer be connected"
       end
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }

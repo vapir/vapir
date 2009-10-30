@@ -17,6 +17,7 @@ module Watir
     # An empty array is returned if the select box has no contents.
     # Raises UnknownObjectException if the select box is not found
     def options
+      assert_exists
       ole_to_element_collection(IEOption, element_object.options, :select_list => self)
     end
   end

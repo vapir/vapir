@@ -346,7 +346,7 @@ module Watir
         case @how
         when :element_object
           if options[:relocate]
-            raise Watir::Exception::UnableToRelocateException, "#{self.inspect} was specified using #{how.inspect} and cannot be relocated."
+            raise Watir::Exception::UnableToRelocateException, "This #{self.class.name} was specified using #{how.inspect} and cannot be relocated."
           end
           @what
         when :xpath

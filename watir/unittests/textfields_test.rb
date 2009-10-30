@@ -209,7 +209,7 @@ class TC_Fields < Test::Unit::TestCase
     
     assert_equal("Password With ID ( the text here is a label for it )" , browser.label!(:index,3).text)
     assert_equal("password1", browser.label!(:index,3).htmlFor)
-    assert(browser.label!(:index, 3).for.is_a?(Watir::TextField))
+    assert(browser.label!(:index, 3).for_element.is_a?(Watir::TextField))
   end
 
   def test_max_length_is_not_exceeded

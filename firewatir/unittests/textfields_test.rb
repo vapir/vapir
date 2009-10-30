@@ -208,7 +208,7 @@ class TC_Fields < Test::Unit::TestCase
         assert_equal("label2", browser.label!(:index,2).id )
        
         assert_equal("Password With ID ( the text here is a label for it )" , browser.label!(:index,3).text)
-        assert_equal("password1", browser.label!(:index,3).for.id)
+        assert_equal("password1", browser.label!(:index,3).for)
     end
 end
 

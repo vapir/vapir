@@ -307,20 +307,21 @@ module Watir
       method_options={:wait => true, :highlight => true}.merge(method_options)
       raise ArgumentError, "no block given!" unless block_given?
       assert_enabled
-      any_changed=false
       any_matched=false
       with_highlight(method_options[:highlight]) do
-        self.options.each do |option|
+        i=0
+        # TODO: FIX this when relocating on element collections works. sometimes the OLE object for a select list goes 
+        # away when a new option is selected (seems to be related to javascript events?) and it has to be relocated. 
+        # relocating by :element_object (which is how #options get specified) doesn't work, it errors, so as a temporary 
+        # workaround, just reload the options every iteration. 
+        while i < options.length
+          i+=1
+          option=options[i]
+#        self.options.each do |option|
           if yield option
             any_matched=true
-            if !option.selected
-              option.selected=true
-              any_changed=true
-            end
+            option.selected=true # note that this fires the onchange event on this SelectList 
           end
-        end
-        if any_changed
-          fire_event(:onchange, method_options.merge(:highlight => false))
         end
         if !any_matched
           raise Watir::Exception::NoValueFoundException, "Could not find any options matching those specified on #{self.inspect}"

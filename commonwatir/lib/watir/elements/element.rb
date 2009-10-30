@@ -157,14 +157,23 @@ module Watir
       # just return the value of appending nothing
       class_array_append(name) 
     end
-    def default_how(*arg)
+    def set_or_get_class_var(class_var, *arg)
       if arg.length==0
-        class_variable_defined?('@@default_how') ? class_variable_get('@@default_how') : nil
+        class_variable_defined?(class_var) ? class_variable_get(class_var) : nil
       elsif arg.length==1
-        class_variable_set('@@default_how', arg.first)
+        class_variable_set(class_var, arg.first)
       else
         raise ArgumentError, "#{arg.length} arguments given; expected one or two. arguments were #{arg.inspect}"
       end
+    end
+    def default_how(*arg)
+      set_or_get_class_var('@@default_how', *arg)
+    end
+    def add_container_method_extra_args(*args)
+      class_array_append('container_method_extra_args', *args)
+    end
+    def container_method_extra_args
+      class_array_get('container_method_extra_args')
     end
     def specifiers
       class_array_get 'specifiers'
@@ -210,7 +219,7 @@ module Watir
                 define_method(method_hash[:method_name]) do |how, *what_args| # can't take how, what as args because blocks don't do default values so it will want 2 args
                   #locate! # make sure self is located before trying contained stuff 
                   what=what_args.shift # what is the first what_arg
-                  other_attribute_keys=including_class.const_defined?('ContainerMethodExtraArgs') ? including_class::ContainerMethodExtraArgs : []
+                  other_attribute_keys=including_class.container_method_extra_args
                   if what_args.size>other_attribute_keys.length
                     raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}"
                   end

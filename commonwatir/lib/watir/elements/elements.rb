@@ -376,7 +376,7 @@ module Watir
     add_specifier :tagName => 'input', :type => 'radio'
     container_single_method :radio
     container_collection_method :radios
-    ContainerMethodExtraArgs=[:value]
+    add_container_method_extra_args(:value)
 
     include RadioCheckBoxCommon
     inspect_these :checked
@@ -386,7 +386,7 @@ module Watir
     add_specifier :tagName => 'input', :type => 'checkbox'
     container_single_method :checkbox, :check_box
     container_collection_method :checkboxes, :check_boxes
-    ContainerMethodExtraArgs=[:value]
+    add_container_method_extra_args(:value)
 
 
     include RadioCheckBoxCommon

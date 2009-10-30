@@ -431,14 +431,21 @@ module Watir
           # the purpose is so that this Element can be relocated if we lose the element_object. 
           # the Elements that are yielded are instantiated by :element object which cannot be 
           # relocated. 
+          #
+          # the alternative to this would be for the calling code to loop over the element collection
+          # for this class on the container - that is, instead of:
+          #   found_div=frame.divs.detect{|div| weird_criteria_for(div) }
+          # which can't be relocated - since element collections use :element object - you'd do
+          #   found_div=frame.div(:custom, proc{|div| weird_criteria_for(div) })
+          # this way, found_div can be relocated. yay! 
           # 
-          # the proc should return true when it likes the given Element - when it matches what it
-          # expects of this Element. 
-          # this allows for relocating when the criteria for an element are unusual. 
+          # the proc should return true (that is, not false or nil) when it likes the given Element - 
+          # when it matches what it expects of this Element. 
           by_custom=nil
           Watir::Specifier.match_candidates(container_candidates(self.class.specifiers), self.class.specifiers) do |match|
-            if what.call(base_element_class.factory(match, @extra))
+            if what.call(self.class.new(:element_object, match, @extra))
               by_custom=match
+              break
             end
           end
           by_custom

@@ -424,6 +424,24 @@ module Watir
             end
           end
           matched_candidate
+        when :custom
+          # this allows a proc to be given as 'what', which is called yielding candidates, each being 
+          # an instanted Element of this class. this might seem a bit odd - instantiating a bunch 
+          # of elements in order to figure out which element_object to use in locating this one. 
+          # the purpose is so that this Element can be relocated if we lose the element_object. 
+          # the Elements that are yielded are instantiated by :element object which cannot be 
+          # relocated. 
+          # 
+          # the proc should return true when it likes the given Element - when it matches what it
+          # expects of this Element. 
+          # this allows for relocating when the criteria for an element are unusual. 
+          by_custom=nil
+          Watir::Specifier.match_candidates(container_candidates(self.class.specifiers), self.class.specifiers) do |match|
+            if what.call(base_element_class.factory(match, @extra))
+              by_custom=match
+            end
+          end
+          by_custom
         else
           raise Watir::Exception::MissingWayOfFindingObjectException
         end

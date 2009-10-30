@@ -19,7 +19,7 @@ module Watir
     include Container
     include Watir::Exception
     
-    def extra
+    def extra_for_contained
       {:container => self, :browser => self.browser}
     end
 
@@ -105,7 +105,7 @@ module Watir
     #  frames=[]
     #  document_frames=document.frames
     #  for i in 0...(document_frames.length)
-    #    frames << IEFrame.new(:element_object, document_frames.item(i), extra)
+    #    frames << IEFrame.new(:element_object, document_frames.item(i), extra_for_contained)
     #  end
     #  ElementCollection.new(frames)
     #end

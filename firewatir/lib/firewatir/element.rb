@@ -113,7 +113,7 @@ module Watir
       @parent||=begin
         parentNode=element_object.parentNode
         if parentNode && parentNode != document_object # don't ascend up to the document
-          FFElement.factory(parentNode.store_rand_prefix('firewatir_elements'), extra)
+          FFElement.factory(parentNode.store_rand_prefix('firewatir_elements'), extra_for_contained) # this is a little weird, passing extra_for_contained so that this is the container of its parent. 
         else
           nil
         end
@@ -235,9 +235,9 @@ module Watir
     # Returns the text content of the element.
     dom_attr :textContent => :text
   
-    def jssh_to_element_collection(element_class, jssh_collection, _extra={})
+    def jssh_to_element_collection(element_class, jssh_collection, extra={})
       ElementCollection.new(jssh_collection.to_array.map do |element_object|
-        element_class.new(:element_object, element_object, extra.merge(_extra))
+        element_class.new(:element_object, element_object, extra_for_contained.merge(extra))
       end)
     end
     

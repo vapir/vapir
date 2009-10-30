@@ -48,7 +48,7 @@ module Watir
     
     private
     
-    def extra
+    def extra_for_contained
       {:container => self, :browser => self.browser, :jssh_socket => self.jssh_socket}
     end
 
@@ -59,7 +59,7 @@ module Watir
       end
       
       ElementCollection.new(content_window_object.frames.to_array.map do |frame_window|
-        FFFrame.new(:element_object, frame_window.frameElement.store_rand_prefix('firewatir_frames'), extra)
+        FFFrame.new(:element_object, frame_window.frameElement.store_rand_prefix('firewatir_frames'), extra_for_contained)
       end)
     end
     

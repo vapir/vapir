@@ -13,7 +13,7 @@ module Watir
     # - :other_attributes => Hash, attributes other than the given how/what to look for. This is
     #    used by radio and checkbox to specify :value (the third argument). 
     # 
-    # see also #extra on inheriting classes (IEElement, FFElement) for what this passes to the created 
+    # see also #extra_for_contained on inheriting classes (IEElement, FFElement) for what this passes to the created 
     # element, in terms of browser, container, other things each element uses. 
     def element_by_howwhat(klass, how, what, other={})
       other={:locate => false, :other_attributes => nil}.merge(other)
@@ -25,7 +25,7 @@ module Watir
           raise ArgumentError, ":other_attributes option was given, but we are not locating by attributes. We are locating by how=#{how.inspect} what=#{what.inspect}. :other_attributes option was #{other[:other_attributes].inspect}"
         end
       end
-      element=klass.new(how, what, extra.merge(:index => index, :locate => other[:locate]))
+      element=klass.new(how, what, extra_for_contained.merge(:index => index, :locate => other[:locate]))
       element.exists? ? element : nil
     end
     # returns an ElementCollection of Elements that are instances of the given class klass below
@@ -33,7 +33,7 @@ module Watir
     def element_collection(klass)
       elements=[]
       Watir::Specifier.match_candidates(Watir::Specifier.specifier_candidates(self, klass.specifiers), klass.specifiers) do |match|
-        elements << klass.new(:element_object, match, extra)
+        elements << klass.new(:element_object, match, extra_for_contained)
       end
       ElementCollection.new(elements)
     end

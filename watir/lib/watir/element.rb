@@ -99,8 +99,8 @@ module Watir
       @parent=nil if options[:reload]
       @parent||=begin
         parentNode=element_object.parentNode # TODO/FIX: should this use parentElement? 
-        if parentNode && parentNode != document_object # don't ascend up to the document
-          IEElement.factory(parentNode, extra)
+        if parentNode && parentNode != document_object # don't ascend up to the document. #TODO/Fix - comparing WIN32OLEs doesn't really work, this comparison is pointless. 
+          IEElement.factory(parentNode, extra_for_contained)
         else
           nil
         end
@@ -263,10 +263,10 @@ module Watir
     end
     
     private
-    def ole_to_element_collection(element_class, ole_collection, _extra={})
+    def ole_to_element_collection(element_class, ole_collection, extra={})
       elements=[]
       (0...ole_collection.length).each do |i|
-        elements << element_class.new(:element_object, ole_collection.item(i), extra.merge(_extra))
+        elements << element_class.new(:element_object, ole_collection.item(i), extra_for_contained.merge(extra))
       end
       ElementCollection.new(elements)
     end

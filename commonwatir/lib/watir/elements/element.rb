@@ -520,7 +520,7 @@ module Watir
     def locate!(options={})
       locate(options) || begin
         klass=self.is_a?(Frame) ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException
-        message="Unable to locate element, using #{@how}"+(@what ? ", "+@what.inspect : '')+(@index ? ", index #{@index}" : "")
+        message="Unable to locate #{self.class}, using #{@how}"+(@what ? ": "+@what.inspect : '')+(@index ? ", index #{@index}" : "")
         raise(klass, message)
       end
     end
@@ -537,7 +537,13 @@ module Watir
     public
     # Returns whether this element actually exists.
     def exists?
-      !!locate
+      begin
+        !!locate
+      rescue Watir::Exception::UnknownObjectException, Watir::Exception::UnknownFrameException
+        # if the container (or some parent container) stopped existing, then these may be raised on any of those. 
+        # in which case self may be assumed not to exist. 
+        false
+      end
     end
     alias :exist? :exists?
 

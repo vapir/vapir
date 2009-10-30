@@ -98,17 +98,6 @@ module Watir
     #   ie.frame('main_frame')        # in this case, just a name is supplied
     public
         
-    #def frames
-    #  unless self.is_a?(Browser) || self.is_a?(Frame)
-    #    raise NotImplementedError, "frames called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::IE and Watir::IEFrame"
-    #  end
-    #  frames=[]
-    #  document_frames=document.frames
-    #  for i in 0...(document_frames.length)
-    #    frames << IEFrame.new(:element_object, document_frames.item(i), extra_for_contained)
-    #  end
-    #  ElementCollection.new(frames)
-    #end
 =begin
     # this method is used to access a form.
     # available ways of accessing it are, :index, :name, :id, :method, :action, :xpath

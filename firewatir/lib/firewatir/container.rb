@@ -53,15 +53,6 @@ module Watir
     end
 
     public
-    def frames
-      unless self.is_a?(Browser) || self.is_a?(Frame)
-        raise NotImplementedError, "frames called on #{self.class} - not yet implemented to deal with locating frames on classes other than Watir::Firefox and Watir::FFFrame"
-      end
-      
-      ElementCollection.new(content_window_object.frames.to_array.map do |frame_window|
-        FFFrame.new(:element_object, frame_window.frameElement.store_rand_prefix('firewatir_frames'), extra_for_contained)
-      end)
-    end
     
     # Returns array of element objects that match the given XPath query.
     #   Refer: https://developer.mozilla.org/en/DOM/document.evaluate

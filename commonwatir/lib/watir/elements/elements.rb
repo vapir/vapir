@@ -298,9 +298,7 @@ module Watir
     #   Returns an array of selected option Elements in this select list.
     #   An empty array is returned if the select box has no selected item.
     def selected_options
-      assert_exists do
-        options.select{|o|o.selected}
-      end
+      options.select{|o|o.selected}
     end
 
     def selected_option_texts
@@ -321,15 +319,10 @@ module Watir
       assert_enabled
       any_matched=false
       with_highlight(method_options[:highlight]) do
-        i=0
-        # TODO: FIX this when relocating on element collections works. sometimes the OLE object for a select list goes 
-        # away when a new option is selected (seems to be related to javascript events?) and it has to be relocated. 
-        # relocating by :element_object (which is how #options get specified) doesn't work, it errors, so as a temporary 
-        # workaround, just reload the options every iteration. 
-        while i < options.length
-          i+=1
-          option=options[i]
-#        self.options.each do |option|
+        # using #each_with_index (rather than #each) because sometimes the OLE object goes away when a 
+        # new option is selected (seems to be related to javascript events) and it has to be relocated. 
+        # see documentation on ElementCollection#each_with_index vs. #each. 
+        self.options.each_with_index do |option,i|
           if yield option
             any_matched=true
             option.selected=true # note that this fires the onchange event on this SelectList 
@@ -348,14 +341,16 @@ module Watir
     alias_deprecated :isSet?, :checked
     alias_deprecated :getState, :checked
 
-    #   Unchecks the radio button or check box element.
-    #   Raises ObjectDisabledException exception if element is disabled.
+    # Unchecks the radio button or check box element.
+    # Raises ObjectDisabledException exception if element is disabled.
     def clear
       set(false)
     end
     
-    #   Checks the radio button or check box element.
-    #   Raises ObjectDisabledException exception if element is disabled.
+    # Checks the radio button or check box element.
+    # Raises ObjectDisabledException exception if element is disabled.
+    #
+    # todo: #click should also fire onchange, if changed. (unless the browser handles this? probably not. need to check at least.)
     def set(state=true)
       with_highlight do
         assert_enabled
@@ -401,10 +396,10 @@ module Watir
     default_how :name
 
     dom_attr :name, :action
+    inspect_these :name, :action
 
     # Submit the form. Equivalent to pressing Enter or Return to submit a form.
     dom_function :submit
-    inspect_these :name, :action
     
     private
     # these are kind of slow for large forms. 

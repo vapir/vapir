@@ -90,7 +90,7 @@ module Watir
     #       coordinates for mouse events.
     def fire_event(event, options={})
       options={:wait => true, :highlight => true}.merge(options)
-      with_highlight(options[:highlight]) do
+      with_highlight(options) do
 
         event = event.to_s.downcase # in case event was given as a symbol
         event =~ /\Aon(.*)\z/i
@@ -146,7 +146,7 @@ module Watir
     # - :highlight => true or false. Highlights the element while clicking if true. Default is true. 
     def click(options={})
       options={:wait => true, :highlight => true}.merge(options)
-      with_highlight(options[:highlight]) do
+      with_highlight(options) do
         assert_enabled if respond_to?(:assert_enabled)
         if element_object.respond_to?(:click)
           if options[:wait]

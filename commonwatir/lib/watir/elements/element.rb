@@ -586,19 +586,23 @@ module Watir
     #
     # the block is called within an assert_exists block, so for methods that highlight, the
     # assert_exists can generally be omitted from there. 
-    def with_highlight(do_highlight=true)
+    def with_highlight(options={})
+      highlight_option_keys=[:color]
+      #handle_options!(options, {:highlight => true}, highlight_option_keys)
+      options={:highlight => true}.merge(options)
+      highlight_options=options.reject{|(k,v)| !highlight_option_keys.include?(k) }
       assert_exists do
         was_highlighting=@highlighting
-        if (!@highlighting && do_highlight)
-          set_highlight
+        if (!@highlighting && options[:highlight])
+          set_highlight(highlight_options)
         end
         @highlighting=true
         begin
           result=yield
         ensure
           @highlighting=was_highlighting
-          if !@highlighting && do_highlight && exists? # if we stopped existing during the highlight, don't try to clear. 
-            clear_highlight
+          if !@highlighting && options[:highlight] && exists? # if we stopped existing during the highlight, don't try to clear. 
+            clear_highlight(highlight_options)
           end
         end
         result
@@ -625,13 +629,16 @@ module Watir
       end
     end
 
-    def set_highlight_color
+    def set_highlight_color(options={})
+      #handle_options!(options, :color => DEFAULT_HIGHLIGHT_COLOR)
+      options={:color => DEFAULT_HIGHLIGHT_COLOR}.merge(options)
       assert_exists do
         @original_color=element_object.style.backgroundColor
-        element_object.style.backgroundColor=DEFAULT_HIGHLIGHT_COLOR
+        element_object.style.backgroundColor=options[:color]
       end
     end
-    def clear_highlight_color
+    def clear_highlight_color(options={})
+      #handle_options!(options, {}) # no options yet
       begin
         element_object.style.background=@original_color
       ensure
@@ -639,7 +646,8 @@ module Watir
       end
     end
     # Highlights the image by adding a border 
-    def set_highlight_border
+    def set_highlight_border(options={})
+      #handle_options!(options, {}) # no options yet
       assert_exists do
         @original_border= element_object.border.to_i
         element_object.border= @original_border+1
@@ -647,7 +655,8 @@ module Watir
     end
     # restores the image to its original border 
     # TODO: and border color 
-    def clear_highlight_border
+    def clear_highlight_border(options={})
+      #handle_options!(options, {}) # no options yet
       assert_exists do
         begin
           element_object.border = @original_border
@@ -662,13 +671,19 @@ module Watir
     public
     # Flash the element the specified number of times.
     # Defaults to 10 flashes.
-    def flash number=10
+    def flash(options={})
+      if options.is_a?(Fixnum)
+        options={:count => options}
+        Kernel.warn "DEPRECATION WARNING: #{self.class.name}\#flash takes an options hash - passing a number is deprecated. Please use #{self.class.name}\#flash(:count => #{options[:count]})\n(called from #{caller.map{|c|"\n"+c}})"
+      end
+      options={:count => 10, :sleep => 0.05}.merge(options)
+      #handle_options!(options, {:count => 10, :sleep => 0.05}, [:color])
       assert_exists do
-        number.times do
-          highlight(:set)
-          sleep 0.05
-          highlight(:clear)
-          sleep 0.05
+        options[:count].times do
+          with_highlight(options) do
+            sleep options[:sleep]
+          end
+          sleep options[:sleep]
         end
       end
       nil

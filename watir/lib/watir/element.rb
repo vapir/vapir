@@ -110,7 +110,7 @@ module Watir
     #           ObjectDisabledException if the object is currently disabled
     def fire_event(event, options={})
       options={:highlight => true}.merge(options)
-      with_highlight(options[:highlight]) do
+      with_highlight(options) do
         assert_enabled if respond_to?(:assert_enabled)
         ole_object.fireEvent(event.to_s)
         wait
@@ -122,7 +122,7 @@ module Watir
     #           ObjectDisabledException if the object is currently disabled
     def fire_event_no_wait(event, options={})
       options={:highlight => true}.merge(options)
-      with_highlight(options[:highlight]) do
+      with_highlight(options) do
         assert_enabled if respond_to?(:assert_enabled)
         document_object.parentWindow.setTimeout("
           (function(tagName, uniqueNumber, event)
@@ -173,7 +173,11 @@ module Watir
     # if the ole's #exists? method returns false, then it doesn't exist. also, if 
     # the parentNode is nil, then the element no longer exists on the DOM. 
     def element_object_exists?
-      @element_object && @element_object.exists? && @element_object.parentNode
+      begin
+        @element_object && @element_object.parentNode ? true : false
+      rescue WIN32OLERuntimeError
+        false
+      end
     end
   end
   

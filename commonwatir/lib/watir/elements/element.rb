@@ -75,8 +75,9 @@ module Watir
           class_array_append 'dom_functions', dom_function
           ruby_method_names.each do |ruby_method_name|
             define_method ruby_method_name do |*args|
-              method_from_element_object(dom_function, *args)
+              result=method_from_element_object(dom_function, *args)
               wait
+              result
             end
           end
         end
@@ -161,12 +162,18 @@ module Watir
     end
     
     def class_array_append(name, *elements)
-      existing_array=if class_variable_defined?('@@'+name.to_s)
-        class_variable_get('@@'+name.to_s)
-      else
-        []
+      name='@@'+name.to_s
+      unless self.class_variable_defined?(name)
+        class_variable_set(name, [])
       end
-      class_variable_set('@@'+name.to_s, existing_array.push(*elements))
+      class_variable_get(name).push(*elements)
+=begin
+      name=name.to_s.capitalize
+      unless self.const_defined?(name)
+        self.const_set(name, [])
+      end
+      self.const_get(name).push(*elements)
+=end
     end
 
     def class_array_get(name)

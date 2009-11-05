@@ -64,7 +64,7 @@ class JsshSocket
 
   DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
-  SHORT_SOCKET_TIMEOUT=0.0#(2**-16).to_f
+  SHORT_SOCKET_TIMEOUT=(2**-8).to_f
 
   attr_reader :ip, :port, :prototype
   
@@ -460,25 +460,9 @@ class JsshObject
     @jssh_socket=jssh_socket
     @debug_name=other[:debug_name]
     @function_result=other[:function_result]
-    @cache={}
 #    logger.info { "#{self.class} initialized: #{debug_name} (type #{type})" }
   end
-  private
-  def cache_object(key, ref, other)
-    if @cache.key?(key)
-#      logger.add(-1) { "hit object cache for #{[key, ref, other].inspect}" }
-      @cache[key]
-    else
-#      logger.add(-1) { "adding object cache for #{[key, ref, other].inspect}" }
-      object=JsshObject.new(ref, jssh_socket, other)
-      if object.type!='undefined' # don't cache undefined stuff. 
-        @cache[key]=object
-      end
-      object
-    end
-  end
-  
-  public
+
   # returns the value, via JsshSocket#value_json
   def val
     jssh_socket.value_json(ref, :error_on_undefined => !function_result)
@@ -498,12 +482,9 @@ class JsshObject
   def type
     if function_result # don't get type for function results, causes function evaluations when you probably didn't want that. 
       nil
-    elsif @cache[:type]
-#      logger.add(-1) { "hit type cache for #{debug_name}" }
-      @cache[:type]
     else
-#      logger.add(-1) { "adding type cache for #{debug_name}" }
-      @cache[:type]= jssh_socket.typeof(ref)
+#      logger.add(-1) { "retrieving type for #{debug_name}" }
+      @type||= jssh_socket.typeof(ref)
     end
   end
   
@@ -590,7 +571,7 @@ class JsshObject
     unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
       raise JsshError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
     end
-    cache_object([:attr, attribute], "#{ref}.#{attribute}", :debug_name => "#{debug_name}.#{attribute}")
+    JsshObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
   end
 
   # assigns (via JsshSocket#assign) the given ruby value (converted to_json) to the reference
@@ -608,16 +589,13 @@ class JsshObject
     # don't want to use JsshSocket#assign because the result can be blank and cause send_and_read to wait for data that's not coming - also 
     # using a json function is better because it catches errors much more elegantly. 
     # so, wrap it in a function that returns nil. 
-    
-    # clear out the cache
-    @cache={}
     self
   end
   
   # returns a JsshObject for this object - assumes that this object is a function - passing 
   # this function the specified arguments, which are converted to_json
   def pass(*args)
-    cache_object([:pass, args], "#{ref}(#{args.map{|arg| arg.to_json}.join(', ')})", :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JsshObject) ? arg.debug_name : arg.to_json}.join(', ')})")
+    JsshObject.new("#{ref}(#{args.map{|arg| arg.to_json}.join(', ')})", jssh_socket, :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JsshObject) ? arg.debug_name : arg.to_json}.join(', ')})")
   end
   
   # returns the value (via JsshSocket#value_json) or a JsshObject (see #val_or_object) of the return 
@@ -677,7 +655,7 @@ class JsshObject
   # returns a JsshObject referring to a subscript of this object, specified as a ruby object converted to 
   # javascript via to_json 
   def sub(key)
-    cache_object([:sub, key], "#{ref}[#{key.to_json}]", :debug_name => "#{debug_name}[#{key.is_a?(JsshObject) ? key.debug_name : key.to_json}]")
+    JsshObject.new("#{ref}[#{key.to_json}]", jssh_socket, :debug_name => "#{debug_name}[#{key.is_a?(JsshObject) ? key.debug_name : key.to_json}]")
   end
 
   # returns a JsshObject referring to a subscript of this object, or a value if it is simple (see #val_or_object)

@@ -168,6 +168,13 @@ module Watir
         true
       end
     end
+    
+    private
+    # if the ole's #exists? method returns false, then it doesn't exist. also, if 
+    # the parentNode is nil, then the element no longer exists on the DOM. 
+    def element_object_exists?
+      @element_object && @element_object.exists? && @element_object.parentNode
+    end
   end
   
   class ElementMapper # Still to be used

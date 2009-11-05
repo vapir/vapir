@@ -434,11 +434,8 @@ module Watir
       if options[:relocate]==nil # don't override if it is set to false; only if it's nil 
         if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at # TODO: implement this for IE; only exists for Firefox now. 
           options[:relocate]=:recursive
-        end
-        if @element_object && Object.const_defined?('WIN32OLE') && @element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
-          if !@element_object.exists? || !@element_object.parentNode
-            options[:relocate]=true
-          end
+        elsif !element_object_exists?
+          options[:relocate]=true
         end
       end
       container_locate_options={}
@@ -452,7 +449,8 @@ module Watir
       @element_object||= begin
         case @how
         when :element_object
-          if options[:relocate]
+          @element_object=@what # this is needed for checking its existence 
+          if options[:relocate] && !element_object_exists?
             raise Watir::Exception::UnableToRelocateException, "This #{self.class.name} was specified using #{how.inspect} and cannot be relocated."
           end
           @what

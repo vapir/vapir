@@ -192,6 +192,31 @@ module Watir
 
     # Returns the text content of the element.
     dom_attr :textContent => :text
+    
+    private
+    def element_object_exists?
+#      parent=@element_object
+#      while true
+#        return false unless parent # if we encounter a parent such that parentNode is nil, we aren't on the document. 
+#        return true if parent==document_object # if we encounter the document as a parent, we are on the document. 
+#        new_parent=parent.parentNode
+#        raise(RuntimeError, "Circular reference in parents!") if new_parent==parent
+#        parent=new_parent
+#      end
+      # above is horrendously slow; optimized below. 
+      return false unless @element_object
+      return jssh_socket.object("(function(parent, document_object)
+      { while(true)
+        { if(!parent)
+          { return false;
+          }
+          if(parent==document_object)
+          { return true;
+          }
+          parent=parent.parentNode;
+        }
+      })").call(@element_object, document_object)
+    end
   
 #    def invoke(js_method)
 #      element_object.invoke(js_method)

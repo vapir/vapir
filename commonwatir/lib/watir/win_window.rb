@@ -94,6 +94,12 @@ class WinWindow
     Object.instance_method(:inspect).bind(self).call
   end
   
+  def pretty_print(pp)
+    retrieve_text
+    class_name
+    pp.pp_object(self)
+  end
+
   # retrieves the text of this window's title bar (if it has one). If this is a control, the text of the control is retrieved. 
   # However, #text cannot retrieve the text of a control in another application (see #retrieve_text) 
   #

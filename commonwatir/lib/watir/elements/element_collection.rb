@@ -1,6 +1,13 @@
 module Watir
   module ElementObjectCandidates
     private
+    def assert_container
+      unless @container
+        raise Watir::Exception::MissingContainerException, "No container is defined for this #{self.class.inspect}"
+      end
+      @container.locate!
+    end
+
     # this is used by #locate in Element and by ElementCollection. 
     def element_object_candidates(specifiers)
       case @extra[:candidates]
@@ -86,6 +93,7 @@ module Watir
     private
     include ElementObjectCandidates
     def candidates
+      assert_container
       matched_candidates(@collection_class.specifiers)
     end
     public

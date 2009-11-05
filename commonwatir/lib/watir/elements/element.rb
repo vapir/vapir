@@ -436,7 +436,7 @@ module Watir
           options[:relocate]=:recursive
         end
         if @element_object && Object.const_defined?('WIN32OLE') && @element_object.is_a?(WIN32OLE) # if we have a WIN32OLE element object 
-          if !@element_object.exists?
+          if !@element_object.exists? || !@element_object.parentNode
             options[:relocate]=true
           end
         end
@@ -566,14 +566,6 @@ module Watir
       result
     end
     
-    private
-    def assert_container
-      unless @container
-        raise Watir::Exception::MissingContainerException, "No container is defined on #{self.inspect}"
-      end
-      @container.locate!
-    end
-
     public
     # Returns whether this element actually exists.
     def exists?

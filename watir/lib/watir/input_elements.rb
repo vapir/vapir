@@ -78,6 +78,7 @@ module Watir
         self.value = ""
       end
     end
+    alias_deprecated :dragContentsTo, :drag_contents_to
     
     def requires_typing
     	@type_keys = true

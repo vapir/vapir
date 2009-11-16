@@ -89,7 +89,7 @@ class TC_Links < Test::Unit::TestCase
     assert_raises(UnknownObjectException) { browser.link!(:index, 199).class_name }  
     
     assert_match(/links2/ ,browser.link!(:index, 1).href )
-    assert_equal(""      , browser.link!(:index, 1).value)
+    #assert_equal(""      , browser.link!(:index, 1).value)
     assert_equal("test1" , browser.link!(:index, 1).text )
     assert_equal(""      , browser.link!(:index, 1).name )
     assert_equal(""      , browser.link!(:index, 1).id )

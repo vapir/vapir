@@ -48,7 +48,7 @@ class TC_Dd < Test::Unit::TestCase
   end
   
   def test_attribute_text
-    assert_equal  "John Doe", browser.dd!(:id, "someone").text
+    assert_equal "John Doe", browser.dd!(:id, "someone").text.strip
     assert_equal "", browser.dd!(:class, 'noop').text
     assert_raises(UnknownObjectException) do
       browser.dd!(:id, 'no_such_id').text

@@ -669,7 +669,7 @@ module Watir
     container_single_method :label
     container_collection_method :labels
     
-    dom_attr :htmlFor => [:html_for, :for]
+    dom_attr :htmlFor => [:html_for, :for, :htmlFor]
     inspect_these :for
 
     def for_element

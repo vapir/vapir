@@ -158,12 +158,12 @@ class TC_Fields < Test::Unit::TestCase
         browser.text_field!(:name, 'events_tester').set('p')
         
         # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
-        assert_equal(['keydown', 'keypress', 'keyup']*2, browser.text_field(:name, 'events_text').value.split("\n").reject{|v| v.blank?})
+        assert_equal(['keydown', 'keypress', 'keyup']*2, browser.text_field(:name, 'events_text').value.split("\n").reject{|v| v.empty?})
         browser.button!(:value , "Clear Events Box").click
         browser.text_field!(:name , 'events_tester').set('ab')
         
         # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
-        assert_equal(['keydown', 'keypress', 'keyup']*3, browser.text_field(:name, 'events_text').value.split("\n").reject{|v| v.blank?})
+        assert_equal(['keydown', 'keypress', 'keyup']*3, browser.text_field(:name, 'events_text').value.split("\n").reject{|v| v.empty?})
 
         browser.text_field!(:name, "events_text").set("angrez\nsingh")
         browser.text_field!(:name, "events_text").append("\n") 

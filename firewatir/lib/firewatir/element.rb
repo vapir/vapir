@@ -134,7 +134,6 @@ module Watir
         wait if options[:wait]
       end
     end
-    alias_deprecated :fireEvent, :fire_event
 
     # Fires the click event on this element. 
     #

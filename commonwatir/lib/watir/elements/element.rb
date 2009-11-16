@@ -390,6 +390,7 @@ module Watir
     # #text is defined on browser-specific Element classes 
     alias_deprecated :innerText, :text
     alias_deprecated :textContent, :text
+    alias_deprecated :fireEvent, :fire_event
     
     attr_reader :how
     attr_reader :what

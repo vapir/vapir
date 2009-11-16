@@ -56,19 +56,6 @@ class WIN32OLE
     respond_to_cache[method]
   end
   
-  def exists?
-    begin
-      invoke('id') # TODO/FIX: what if it just doesn't respond to id? 
-      true
-    rescue WIN32OLERuntimeError
-      expected_messages= [ ["unknown property or method `id'","HRESULT error code:0x800706ba","The RPC server is unavailable."],
-                           ["unknown property or method `id'","HRESULT error code:0x80070005","Access is denied."],
-                         ]
-      raise unless expected_messages.any?{|expected_message| $!.message.split("\n").map{|line| line.strip } == expected_message }
-      false
-    end
-  end
-  
   private
   def respond_to_cache
     @respond_to_cache||=Hash.new do |hash, key|

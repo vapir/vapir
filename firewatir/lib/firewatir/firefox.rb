@@ -172,7 +172,7 @@ module Watir
     #
     # Input:
     #   options  - Hash of any of the following options:
-    #     :waitTime - Time to wait for Firefox to start. By default it waits for 2 seconds.
+    #     :wait_time - Time to wait for Firefox to start. By default it waits for 2 seconds.
     #                 This is done because if Firefox is not started and we try to connect
     #                 to jssh on port 9997 an exception is thrown.
     #     :profile  - The Firefox profile to use. If none is specified, Firefox will use
@@ -181,10 +181,10 @@ module Watir
     # TODO: Start the firefox version given by user.
     def initialize(options = {})
       if(options.kind_of?(Integer))
-        options = {:waitTime => options}
-      else
-        options={:waitTime => 20}.merge(options)
+        options = {:wait_time => options}
+        Kernel.warn "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:wait_time => #{options[:wait_time]})\n(called from #{caller.map{|c|"\n"+c}})"
       end
+      handle_options!(options, {:wait_time => 20}, [:attach, :goto, :binary_path])
       if options[:binary_path]
         @binary_path=options[:binary_path]
       end
@@ -195,8 +195,16 @@ module Watir
       begin
         jssh_socket(:reset_if_dead => true).test_socket
       rescue JsshError
-        launch_browser
-        ::Waiter.try_for(options[:waitTime], :exception => Watir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:waitTime]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
+        # here we're going to assume that since it's not connecting, we need to launch firefox. 
+        if options[:attach]
+          raise Watir::Exception::NoBrowserException, "cannot attach using #{options[:attach].inspect} - could not connect to Firefox with JSSH"
+        else
+          launch_browser
+          unless options[:attach]==false # if options[:attach] is explicitly given as false (not nil), take that to mean we don't want to attach to the window launched when the process starts 
+            options[:attach]=[:title, //]
+          end
+        end
+        ::Waiter.try_for(options[:wait_time], :exception => Watir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:wait_time]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
           begin
             jssh_socket(:reset_if_dead => true).test_socket
             true
@@ -207,18 +215,16 @@ module Watir
       end
       @browser_jssh_objects = jssh_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
       
-      if current_os == :macosx && !%x{ps x | grep firefox-bin | grep -v grep}.empty?
-#        raise "Firefox is running without -jssh" if jssh_down
-        open_window unless options[:suppress_launch_process]
-      elsif not options[:suppress_launch_process]
-#        if firefox_is_running?
-          open_window
-#        else
-#          launch_browser
-#        end
-        set_browser_document
+      if options[:attach]
+        attach(*options[:attach])
+      else
+        open_window
       end
+      set_browser_document
       set_defaults
+      if options[:goto]
+        goto(options[:goto])
+      end
     end
     
 #    def self.firefox_is_running?
@@ -266,7 +272,7 @@ module Watir
     end
     
     def inspect
-      '#<%s:0x%x url=%s title=%s>' % [self.class, hash*2, url.inspect, title.inspect]
+      "#<#{self.class}:0x#{(self.hash*2).to_s(16)} " + (exists? ? "url=#{url.inspect} title=#{title.inspect}" : "exists?=false") + '>'
     end
 
     def exists?
@@ -297,16 +303,13 @@ module Watir
     # Input:
     #   url - url of the page to be loaded.
     def self.start(url)
-      ff = Firefox.new
-      ff.goto(url)
-      return ff
+      new(:goto => url)
     end
     
 
     # Loads the given url in the browser. Waits for the page to get loaded.
     def goto(url)
       assert_exists
-      #set_browser_document
       browser_object.loadURI url
       wait
     end
@@ -457,9 +460,7 @@ module Watir
     # Watir::Browser.attach(:url, 'http://www.google.com')
     # Watir::Browser.attach(:title, 'Google')
     def self.attach how, what
-      br = new :suppress_launch_process => true # don't create window
-      br.attach(how, what)
-      br
+      new(:attach => [how, what])
     end
 
     # loads up a new window in an existing process

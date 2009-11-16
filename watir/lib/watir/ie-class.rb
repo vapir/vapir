@@ -384,9 +384,24 @@ module Watir
 
     # Execute the given JavaScript string
     def execute_script(source)
-      document.parentWindow.eval(source.to_s)
-#    rescue WIN32OLERuntimeError
-#      document.parentWindow.execScript(source.to_s)
+      retried=false
+      result=nil
+      begin
+        result=document.parentWindow.eval(source)
+      rescue WIN32OLERuntimeError
+        # don't retry more than once; don't catch anything but the particular thing we're looking for 
+        if retried || $!.message.split("\n").map{|line| line.strip}!=["unknown property or method `eval'","HRESULT error code:0x80020006","Unknown name."]
+          raise
+        end
+        # this can happen if no scripts have executed at all - the 'eval' function doesn't exist. 
+        # execScript works, but behaves differently than eval (it doesn't return anything) - but 
+        # once an execScript has run, eval is subsequently defined. so, execScript a blank script, 
+        # and then try again with eval.
+        document.parentWindow.execScript('null')
+        retried=true
+        retry
+      end
+      return result
     end
     
     # clear the list of urls that we have visited

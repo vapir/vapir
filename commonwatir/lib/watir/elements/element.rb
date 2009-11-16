@@ -393,6 +393,7 @@ module Watir
     
     attr_reader :how
     attr_reader :what
+    attr_reader :index
     
     def html
       Kernel.warn "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)"
@@ -587,7 +588,18 @@ module Watir
         ensure
           @highlighting=was_highlighting
           if !@highlighting && options[:highlight] && exists? # if we stopped existing during the highlight, don't try to clear. 
-            clear_highlight(highlight_options)
+            if Object.const_defined?('WIN32OLE') # if WIN32OLE exists, calling clear_highlight may raise WIN32OLERuntimeError, even though we just checked existence. 
+              exception_to_rescue=WIN32OLERuntimeError
+            else # otherwise, make a dummy class, inheriting from Exception that won't ever be instantiated to be rescued. 
+              exception_to_rescue=(@@dummy_exception ||= Class.new(Exception))
+            end
+            begin
+              clear_highlight(highlight_options)
+            rescue exception_to_rescue
+              # apparently despite checking existence above, sometimes the element object actually disappears between checking its existence 
+              # and clear_highlight using it, raising WIN32OLERuntimeError. 
+              # don't actually do anything in the rescue block here. 
+            end
           end
         end
         result
@@ -694,6 +706,10 @@ module Watir
     def element_object
       assert_exists
       @element_object
+    end
+    def container
+      assert_container
+      @container
     end
     
     def browser

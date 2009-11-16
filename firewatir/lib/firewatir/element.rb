@@ -13,10 +13,7 @@ module Watir
       default_initialize(how, what, extra)
     end
 
-    attr_reader :browser
-    attr_reader :container
     attr_reader :jssh_socket
-    attr_reader :how, :what, :index
     
     def outer_html
       # in case doing appendChild of self on the temp_parent_element causes it to be removed from our parentNode, we first copy the list of parentNode's childNodes (our siblings)

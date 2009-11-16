@@ -22,27 +22,27 @@ class TC_Images < Test::Unit::TestCase
 #    end
     
     def test_imageExists
-        assert( !  browser.image(:name , "missing_name")  )
-        assert(    browser.image(:name , "circle").exists?  )
-        assert(    browser.image(:name , /circ/ ).exists?  )
+        assert(!browser.image(:name , "missing_name").exists?  )
+        assert(browser.image(:name , "circle").exists?  )
+        assert(browser.image(:name , /circ/ ).exists?  )
         
-        assert( !  browser.image(:id , "missing_id")  )
-        assert(    browser.image(:id , "square").exists?  )
-        assert(    browser.image(:id , /squ/ ).exists?  )
+        assert(!browser.image(:id , "missing_id").exists? )
+        assert(browser.image(:id , "square").exists?  )
+        assert(browser.image(:id , /squ/ ).exists?  )
         
-        assert( !  browser.image(:src, "missingsrc.gif")  )
+        assert(!browser.image(:src, "missingsrc.gif").exists?  )
          
-        assert(    browser.image(:src, /images\/triangle.jpg/).exists?  )
-        assert(    browser.image(:src , /triangle/ ).exists?  )
+        assert(browser.image(:src, /images\/triangle.jpg/).exists?  )
+        assert(browser.image(:src , /triangle/ ).exists?  )
         
-        assert(    browser.image(:alt , "circle" ).exists?  )
-        assert(    browser.image(:alt , /cir/ ).exists?  )
+        assert(browser.image(:alt , "circle" ).exists?  )
+        assert(browser.image(:alt , /cir/ ).exists?  )
         
-        assert( !  browser.image(:alt , "triangle" ))
-        assert( !  browser.image(:alt , /tri/ ))
+        assert(!browser.image(:alt , "triangle" ).exists?)
+        assert(!browser.image(:alt , /tri/ ).exists?)
         
-        assert(    browser.image(:title, 'square_image').exists? )
-        assert( !  browser.image(:title, 'pentagram'))
+        assert(browser.image(:title, 'square_image').exists? )
+        assert(!browser.image(:title, 'pentagram').exists?)
     end
     
     def test_image_click
@@ -58,11 +58,11 @@ class TC_Images < Test::Unit::TestCase
 
         # test for disabled button. Click the button to make it disabled
         browser.button!(:name , 'disable_img').click
-        #assert( browser.image!(:name , 'disabler_test').disabled )
+        #assert(browser.image!(:name , 'disabler_test').disabled )
         
         # Click button again to make it enabled.
         browser.button!(:name , 'disable_img').click
-        #assert( ! browser.image!(:name , 'disabler_test').disabled )
+        #assert(!browser.image!(:name , 'disabler_test').disabled )
         
         
         browser.image!(:src, /button/).click
@@ -77,11 +77,11 @@ class TC_Images < Test::Unit::TestCase
     #    assert_raises(UnknownObjectException ) { browser.image!(:src, "no_image_with_this").hasLoaded? }
     #    assert_raises(UnknownObjectException ) { browser.image!(:alt, "no_image_with_this").hasLoaded? }
     #    
-    #    assert( ! browser.image!(:name, "themissingimage").hasLoaded?  )
-    #    assert( browser.image!(:name, "circle").hasLoaded?  )
+    #    assert(!browser.image!(:name, "themissingimage").hasLoaded?  )
+    #    assert(browser.image!(:name, "circle").hasLoaded?  )
     #    
-    #    assert( browser.image!(:alt, "circle").hasLoaded?  )
-    #    assert( browser.image!(:alt, /cir/ ).hasLoaded?  )
+    #    assert(browser.image!(:alt, "circle").hasLoaded?  )
+    #    assert(browser.image!(:alt, /cir/ ).hasLoaded?  )
     #end
     
     def test_image_properties

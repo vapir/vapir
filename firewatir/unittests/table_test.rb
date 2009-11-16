@@ -231,7 +231,7 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     
     # expand the table
     t.each do |r|
-      r[1].image!(:src, /plus/).click if r[1].image(:src, /plus/)
+      r[1].image!(:src, /plus/).click if r[1].image(:src, /plus/).exists?
     end
     
     # shrink rows 1,2,3

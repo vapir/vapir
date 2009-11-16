@@ -5,6 +5,10 @@ module Watir
       unless @container
         raise Watir::Exception::MissingContainerException, "No container is defined for this #{self.class.inspect}"
       end
+    end
+    
+    def assert_container_exists
+      assert_container
       @container.locate!
     end
 
@@ -93,7 +97,7 @@ module Watir
     private
     include ElementObjectCandidates
     def candidates
-      assert_container
+      assert_container_exists
       matched_candidates(@collection_class.specifiers)
     end
     public

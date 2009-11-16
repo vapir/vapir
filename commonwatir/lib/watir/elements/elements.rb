@@ -318,7 +318,7 @@ module Watir
       raise ArgumentError, "no block given!" unless block_given?
       assert_enabled
       any_matched=false
-      with_highlight(method_options[:highlight]) do
+      with_highlight(method_options) do
         # using #each_with_index (rather than #each) because sometimes the OLE object goes away when a 
         # new option is selected (seems to be related to javascript events) and it has to be relocated. 
         # see documentation on ElementCollection#each_with_index vs. #each. 
@@ -403,19 +403,19 @@ module Watir
     
     private
     # these are kind of slow for large forms. 
-    def set_highlight
+    def set_highlight(options={})
       assert_exists do
         @elements_for_highlighting=self.input_elements.to_a
         @elements_for_highlighting.each do |element|
-          element.send(:set_highlight)
+          element.send(:set_highlight, options)
         end
       end
     end
-    def clear_highlight
+    def clear_highlight(options={})
       assert_exists do
         @elements_for_highlighting.each do |element|
           if element.exists?
-            element.send(:clear_highlight)
+            element.send(:clear_highlight, options)
           end
         end
       end
@@ -434,11 +434,11 @@ module Watir
     
     private
     # note: can't use alias here because set_highlight_border is defined in the Element module, which isn't included here (but it will be on the receiver) 
-    def set_highlight
-      set_highlight_border
+    def set_highlight(options={})
+      set_highlight_border(options)
     end
-    def clear_highlight
-      clear_highlight_border
+    def clear_highlight(options={})
+      clear_highlight_border(options)
     end
   end
   module HasRowsAndColumns
@@ -587,13 +587,13 @@ module Watir
     element_collection :rows, :rows, TableRow
     
     private
-    def set_highlight
-      set_highlight_color
-      set_highlight_border
+    def set_highlight(options={})
+      set_highlight_color(options)
+      set_highlight_border(options)
     end
-    def clear_highlight
-      clear_highlight_color
-      clear_highlight_border
+    def clear_highlight(options={})
+      clear_highlight_color(options)
+      clear_highlight_border(options)
     end
   end
   module Link

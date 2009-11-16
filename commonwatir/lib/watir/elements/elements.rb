@@ -326,6 +326,9 @@ module Watir
           if yield option
             any_matched=true
             option.selected=true # note that this fires the onchange event on this SelectList 
+            if !self.exists? # javascript events firing can cause us to stop existing at this point. we should not continue if we don't exist. 
+              break
+            end
           end
         end
         if !any_matched

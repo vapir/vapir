@@ -1,5 +1,3 @@
-require 'activesupport'
-
 module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
@@ -99,7 +97,7 @@ module Watir
               { candidate_elements[i].click();
               }
             }
-          })(#{self.tagName.to_json}, #{element_object.uniqueNumber.to_json})
+          })(#{self.tagName.inspect}, #{element_object.uniqueNumber.inspect})
         ", 0)
       end
     end
@@ -109,11 +107,24 @@ module Watir
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
     def fire_event(event, options={})
-      options={:highlight => true}.merge(options)
+      options={:highlight => true, :wait => true}.merge(options)
       with_highlight(options) do
         assert_enabled if respond_to?(:assert_enabled)
-        ole_object.fireEvent(event.to_s)
-        wait
+        if options[:wait]
+          ole_object.fireEvent(event.to_s)
+          wait
+        else
+          document_object.parentWindow.setTimeout("
+            (function(tagName, uniqueNumber, event)
+            { var candidate_elements=document.getElementsByTagName(tagName);
+              for(var i=0;i<candidate_elements.length;++i)
+              { if(candidate_elements[i].uniqueNumber==uniqueNumber)
+                 { candidate_elements[i].fireEvent(event);
+                }
+              }
+            })(#{self.tagName.inspect}, #{element_object.uniqueNumber.inspect}, #{event.to_s.inspect})
+          ", 0)
+        end
       end
     end
     # Executes a user defined "fireEvent" for objects with JavaScript events tied to them such as DHTML menus.
@@ -121,20 +132,7 @@ module Watir
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
     def fire_event_no_wait(event, options={})
-      options={:highlight => true}.merge(options)
-      with_highlight(options) do
-        assert_enabled if respond_to?(:assert_enabled)
-        document_object.parentWindow.setTimeout("
-          (function(tagName, uniqueNumber, event)
-          { var candidate_elements=document.getElementsByTagName(tagName);
-            for(var i=0;i<candidate_elements.length;++i)
-            { if(candidate_elements[i].uniqueNumber==uniqueNumber)
-               { candidate_elements[i].fireEvent(event);
-              }
-            }
-          })(#{self.tagName.to_json}, #{element_object.uniqueNumber.to_json}, #{event.to_s.to_json})
-        ", 0)
-      end
+      fire_event(event, options.merge(:wait => false))
     end
     
     def wait(options={})
@@ -149,20 +147,18 @@ module Watir
       # Now iterate up the DOM element tree and return false if any
       # parent element isn't visible or is disabled.
       assert_exists do
-        object = @element_object
+        object = element_object
         while object
-          begin
-            if object.currentstyle.invoke('visibility') =~ /^hidden$/i
+          if currentStyle=object.currentstyle
+            if currentStyle.invoke('visibility') =~ /^hidden$/i || currentStyle.invoke('display') =~ /^none$/i
               return false
             end
-            if object.currentstyle.invoke('display') =~ /^none$/i
-              return false
-            end
-            if object.invoke('isDisabled')
-              return false
-            end
-          rescue WIN32OLERuntimeError
-          end
+          end # i guess if there's no currentStyle we assume it is visible 
+          
+          # why would disabled affect visibility? 
+          #if object.invoke('isDisabled')
+          #  return false
+          #end
           object = object.parentElement
         end
         true

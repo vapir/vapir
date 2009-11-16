@@ -195,15 +195,20 @@ module Watir
     # if this Option is aware of its select list (this will generally be the case if you
     # got this Option from a SelectList container), will fire the onchange event on the 
     # select list if our state changes. 
-    def selected=(state)
-      assert_exists do
+    def set_selected(state, method_options={})
+      method_options={:highlight => true, :wait => true}.merge(method_options)
+      with_highlight(method_options) do
         state_was=element_object.selected
         element_object.selected=state
         if @extra[:select_list] && state_was != state
-          @extra[:select_list].fire_event(:onchange)
+          @extra[:select_list].fire_event(:onchange, method_options)
         end
-        wait
+        wait if method_options[:wait]
       end
+    end
+    
+    def selected=(state)
+      set_selected(state)
     end
     #dom_setter :selected
 
@@ -325,7 +330,7 @@ module Watir
         self.options.each_with_index do |option,i|
           if yield option
             any_matched=true
-            option.selected=true # note that this fires the onchange event on this SelectList 
+            option.set_selected(true, method_options) # note that this fires the onchange event on this SelectList 
             if !self.exists? # javascript events firing can cause us to stop existing at this point. we should not continue if we don't exist. 
               break
             end
@@ -350,24 +355,6 @@ module Watir
       set(false)
     end
     
-    # Checks the radio button or check box element.
-    # Raises ObjectDisabledException exception if element is disabled.
-    #
-    # todo: #click should also fire onchange, if changed. (unless the browser handles this? probably not. need to check at least.)
-    def set(state=true)
-      with_highlight do
-        assert_enabled
-        if checked!=state || self.is_a?(Radio) # don't click if it's already checked. but do anyway if it's a radio. 
-          if browser_class.name != 'Watir::Firefox'  # compare by name to not trigger autoload or raise NameError if not loaded 
-            # in firefox, firing the onclick event changes the state. in IE, it doesn't, so do that first 
-            element_object.checked=state
-          end
-          fire_event :onclick
-          fire_event :onchange
-        end
-        wait
-      end
-    end
   end
   
   module Radio
@@ -379,6 +366,26 @@ module Watir
 
     include RadioCheckBoxCommon
     inspect_these :checked
+    
+    # Checks this radio, or clears (defaults to setting if no argument is given)
+    # Raises ObjectDisabledException exception if element is disabled.
+    #
+    # Fires the onchange event if value changes. 
+    # Fires the onclick event the state is true. 
+    def set(state=true)
+      with_highlight do
+        assert_enabled
+        if checked!=state
+          element_object.checked=state
+          fire_event :onchange
+        end
+        if state
+          fire_event :onclick # fire this even if the state doesn't change; javascript can respond to clicking an already-checked radio. 
+        end
+        wait
+      end
+      return self
+    end
   end
   module CheckBox
     extend ElementHelper
@@ -390,6 +397,24 @@ module Watir
 
     include RadioCheckBoxCommon
     inspect_these :checked
+    # Checks this check box, or clears (defaults to setting if no argument is given)
+    # Raises ObjectDisabledException exception if element is disabled.
+    def set(state=true)
+      with_highlight do
+        assert_enabled
+        if checked!=state
+          if browser_class.name != 'Watir::Firefox'  # compare by name to not trigger autoload or raise NameError if not loaded 
+            # in firefox, firing the onclick event changes the state. in IE, it doesn't, so do that first 
+            # todo/fix: this is browser-specific stuff, shouldn't it be in the browser-specific class? 
+            element_object.checked=state
+          end
+          fire_event :onclick
+          fire_event :onchange
+        end
+        wait
+      end
+      return self
+    end
   end
   module Form
     extend ElementHelper

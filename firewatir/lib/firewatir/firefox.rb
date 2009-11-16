@@ -524,7 +524,6 @@ module Watir
     #   how - :url or :title
     #   what - string or regexp
     #
-    # TODO/FIX: doesn't do this:
     # Start searching windows in reverse order so that we attach/find the latest opened window.
     def find_window(how, what)
       orig_how=how
@@ -533,9 +532,12 @@ module Watir
            }
       how=hows.keys.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
       raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how
+      found_win=nil
       self.class.each_browser_window_object do |win|
-        return win if Watir::Specifier.fuzzy_match(hows[how].call(win.getBrowser.contentDocument),what)
+        found_win=win if Watir::Specifier.fuzzy_match(hows[how].call(win.getBrowser.contentDocument),what)
+        # we don't break here if found_win is set because we want the last match if there are multiple. 
       end
+      return found_win
     end
     private :find_window
 

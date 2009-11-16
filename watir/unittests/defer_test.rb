@@ -12,22 +12,20 @@ class TC_Defer < Test::Unit::TestCase
   tag_method :test_binding_to_newly_loaded_page, :fails_on_firefox, :attach
   def test_binding_to_newly_loaded_page
     @new_browser = Watir::Browser.new
-    #text_field = @new_browser.text_field!(:name, 'text1')
-    text_field=Watir::IETextField.new(:attributes, {:name => 'text1'}, :container => @new_browser, :browser => @new_browser, :locate => false)
-    #button = @new_browser.button!(:value, 'Clear Events Box')
-    button=Watir::IEButton.new(:attributes, {:value => 'Clear Events Box'}, :container => @new_browser, :browser => @new_browser, :locate => false)
-    #div = @new_browser.div!(:name, 'divvy')
-    div=Watir::IEDiv.new(:attributes, {:name => 'divvy'}, :container => @new_browser, :browser => @new_browser, :locate => false)
+    text_field = @new_browser.text_field(:name, 'text1')
+    button = @new_browser.button(:value, 'Clear Events Box')
+    div = @new_browser.div(:name, 'divvy')
     @new_browser.goto($htmlRoot + "textfields1.html")
     assert_equal('Hello World', text_field.value)
     assert_equal('Clear Events Box', button.value)
+    debugger
     assert_equal('Div Text', div.text)
   end
   def test_binding_to_refreshed_page
     goto_page "textfields1.html"
-    text_field = browser.text_field!(:name, 'text1')
-    button = browser.button!(:value, 'Clear Events Box')
-    div = browser.div!(:name, 'divvy')
+    text_field = browser.text_field(:name, 'text1')
+    button = browser.button(:value, 'Clear Events Box')
+    div = browser.div(:name, 'divvy')
     browser.refresh
     assert_equal('Hello World', text_field.value)
     assert(text_field.enabled?)
@@ -37,12 +35,9 @@ class TC_Defer < Test::Unit::TestCase
   tag_method :test_exists, :fails_on_firefox, :attach
   def test_exists
     @new_browser = Watir::Browser.new
-    #text_field = @new_browser.text_field!(:name, 'text1')
-    text_field=Watir::IETextField.new(:attributes, {:name => 'text1'}, :container => @new_browser, :browser => @new_browser, :locate => false)
-    #button = @new_browser.button!(:value, 'Clear Events Box')
-    button=Watir::IEButton.new(:attributes, {:value => 'Clear Events Box'}, :container => @new_browser, :browser => @new_browser, :locate => false)
-    #div = @new_browser.div!(:name, 'divvy')
-    div=Watir::IEDiv.new(:attributes, {:name => 'divvy'}, :container => @new_browser, :browser => @new_browser, :locate => false)
+    text_field = @new_browser.text_field(:name, 'text1')
+    button = @new_browser.button(:value, 'Clear Events Box')
+    div = @new_browser.div(:name, 'divvy')
     assert_false(text_field.exists?)
     assert_false(button.exists?)
     @new_browser.goto($htmlRoot + "textfields1.html")

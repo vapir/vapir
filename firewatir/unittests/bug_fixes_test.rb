@@ -66,7 +66,7 @@ class TC_Bugs< Test::Unit::TestCase
 
     def test_span_onclick_bug14
         goto_page("div.html")
-        browser.span!(:id, "span1").fireEvent("onclick")
+        browser.span!(:id, "span1").fire_event("onclick")
         assert(browser.text.include?("PASS") )
     end
 
@@ -182,7 +182,7 @@ class TC_Bugs< Test::Unit::TestCase
         assert("PASS", browser.text)
         goto_page("div.html")
         div = browser.div!(:id, "div1")
-        div.fireEvent("ondblclick")
+        div.fire_event("ondblclick")
         assert("PASS", browser.text)
     end
 

@@ -137,7 +137,7 @@ module Watir
         wait if options[:wait]
       end
     end
-    alias fireEvent fire_event
+    alias_deprecated :fireEvent, :fire_event
 
     # Fires the click event on this element. 
     #
@@ -217,7 +217,7 @@ module Watir
           }
           parent=parent.parentNode;
         }
-      })").call(@element_object, document_object)
+      })").call(@element_object, container.document_object) # use the container's document so that frames look at their parent document, not their own document 
     end
   
 #    def invoke(js_method)

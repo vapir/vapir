@@ -132,6 +132,10 @@ var Prototype = {
 
     return '{' + results.join(', ') + '}';
   }
+  function toJSON_length(object) {
+       var result_json=Object.toJSON(object);
+       return result_json.length.toString()+"\n"+result_json;
+  }
 
   function toQueryString(object) {
     return $H(object).toQueryString();
@@ -192,6 +196,7 @@ var Prototype = {
     extend:        extend,
     inspect:       inspect,
     toJSON:        toJSON,
+    toJSON_length: toJSON_length,
     toQueryString: toQueryString,
     toHTML:        toHTML,
     keys:          keys,

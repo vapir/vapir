@@ -64,7 +64,7 @@ class JsshSocket
 
   DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
-  SHORT_SOCKET_TIMEOUT=(2**-8).to_f
+  SHORT_SOCKET_TIMEOUT=(2**-4).to_f
 
   attr_reader :ip, :port, :prototype
   
@@ -85,18 +85,13 @@ class JsshSocket
       err.set_backtrace($!.backtrace)
       raise err
     end
-    eat="Welcome to the Mozilla JavaScript Shell!"
-    eaten=""
-    initial_timeout=LONG_SOCKET_TIMEOUT
-    while eat!=eaten
-      ret=read_value(initial_timeout).chomp
-      expect=eat[eaten.length...ret.length]
-      if !ret
-        raise JsshError, "Something went wrong initializing - no response (already received #{eaten.inspect})" 
-      elsif ret != expect
-        raise JsshError, "Something went wrong initializing - message #{ret.inspect} != #{expect.inspect}" 
-      end
-      eaten+=ret
+    @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
+    welcome="Welcome to the Mozilla JavaScript Shell!\n"
+    read=read_value(:timeout => LONG_SOCKET_TIMEOUT)
+    if !read
+      raise JsshError, "Something went wrong initializing - no response" 
+    elsif read != welcome
+      raise JsshError, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
     end
     if @prototype
       ret=send_and_read(File.read(PrototypeFile), :timeout => LONG_SOCKET_TIMEOUT)
@@ -105,30 +100,68 @@ class JsshSocket
     temp_object.assign({})
   end
 
-  def send(mesg, flags=0)
-    raise NotImplementedError, "send is gone. use send_and_read, or, preferably, something better"
-  end
-  
-  # reads data from the socket until it is done being ready. ("done being ready" is defined as Kernel.select saying
-  # it isn't ready immediately (zero timeout)).
-  # times out (waiting for an initial recv from the socket) after the given number 
-  # of seconds, default is DEFAULT_SOCKET_TIMEOUT. 
+  private
+  # reads from the socket and returns what seems to be the value that should be returned, by stripping prompts 
+  # from the beginning and end where appropriate. 
+  # 
+  # does not deal with prompts in between values, because attempting to parse those out is impossible, it being
+  # perfectly possible that a string the same as the prompt is part of actual data. (even stripping it from the 
+  # ends of the string is not entirely certain; data could have it at the ends too, but that's the best that can
+  # be done.) so, read_value should be called after every line, or you can end up with stuff like:
+  # >> @socket.send "3\n4\n5\n", 0
+  # => 6
+  # >> read_value
+  # => "3\n> 4\n> 5"
   #
-  # this does not remove the prompt (the "\n> ") in all cases, so you will want to gsub that out of results (or
-  # more likely you will want to use #read_value)
-  #
-  # usually you will want read_value though. or value, which takes an expression. or value_json, which actually
-  # deals with data types. 
-  def recv_socket(timeout=DEFAULT_SOCKET_TIMEOUT)
+  # by default, read_value reads until the socket is done being ready. "done being ready" is defined as Kernel.select 
+  # saying that the socket isn't ready after waiting for SHORT_SOCKET_TIMEOUT. usually this will be true after a 
+  # single read, as most things only take one #recv call to get the whole value. this waiting for SHORT_SOCKET_TIMEOUT
+  # can add up to being slow if you're doing a lot of socket activity.
+  # to solve this, performance can be improved significantly using the :length_before_value option. with this, you have
+  # to write your javascript to return the length of the value to be sent,  followed by a newline, followed by the actual
+  # value (which must be of the length it says it is, or this method will error). 
+  # if this option is set, this doesn't do any SHORT_SOCKET_TIMEOUT waiting once it gets the full value, it returns 
+  # immediately. 
+  def read_value(options={})
+    options={:timeout => DEFAULT_SOCKET_TIMEOUT, :length_before_value => false, :read_size => 65536}.merge(options)
     received_data = []
-    data = ""
+    value_string = ""
+    size_to_read=options[:read_size]
+    timeout=options[:timeout]
+    already_read_length=false
+    expected_size=nil
 #    logger.add(-1) { "RECV_SOCKET is starting. timeout=#{timeout}" }
-    while(s= Kernel.select([@socket] , nil , nil, timeout))
-      data = @socket.recv(1024)
-      unless data==PROMPT && received_data.empty? # if we recv PROMPT here (first thing recv'd), then switch to short timeout, then the value will probably get left on the socket 
-        timeout=SHORT_SOCKET_TIMEOUT
-      end
+    while size_to_read > 0 && (s= Kernel.select([@socket] , nil , nil, timeout))
+      data = @socket.recv(size_to_read)
       received_data << data
+      value_string << data
+      if @expecting_prompt && value_string.length > PROMPT.length
+        if value_string =~ /\A#{Regexp.escape(PROMPT)}/
+          value_string.sub!(/\A#{Regexp.escape(PROMPT)}/, '')
+          @expecting_prompt=false
+        else
+          raise JsshError, "Expected a prompt! received unexpected data #{value_string.inspect}. maybe left on the socket by last evaluated expression? last expression was:\n\n#{@last_expression}"
+        end
+      end
+      if !@expecting_prompt 
+        if options[:length_before_value] && !already_read_length && value_string.length > 0
+          if value_string =~ /\A(\d+)\n/
+            expected_size=$1.to_i
+            already_read_length=true
+            value_string.sub!(/\A\d+\n/, '')
+          elsif value_string =~ /\A\d+\z/ 
+            # rather unlikely, but maybe we just received part of the number so far - ignore
+          else
+            raise JsshError, "Expected length! unexpected data with no preceding length received: #{value_string.inspect}"
+          end
+        end
+        if expected_size
+          size_to_read = expected_size - value_string.length
+        end
+        unless value_string.empty? # switch to short timeout - unless we got a prompt (leaving value_string blank). switching to short timeout when all we got was a prompt would probably accidentally leave the value on the socket. 
+          timeout=SHORT_SOCKET_TIMEOUT
+        end
+      end
       
       # Kernel.select seems to indicate that a dead socket is ready to read, and returns endless blank strings to recv. rather irritating. 
       if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd==''}
@@ -136,66 +169,35 @@ class JsshSocket
       end
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end
-#    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}" }
-    received_data.pop if received_data.last==PROMPT
-    received_data.shift if received_data.first==PROMPT
-    received_data.empty? ? nil : received_data.join('')
-  end
-
-  # reads from the socket and returns what seems to be the value that should be returned, by stripping prompts 
-  # from the beginning and end. 
-  # 
-  # does not deal with prompts in between values, because attempting to parse those out is impossible, it being
-  # perfectly possible that a string the same as the prompt is part of actual data. (even stripping it from the 
-  # ends of the string is not entirely certain; data could have it at the ends too, but that's the best that can
-  # be done.) so, read_value should be called after every line, or you can end up with stuff like:
-  # >> jssh_socket.send "3\n4\n5\n"
-  # => 6
-  # >> jssh_socket.read_socket
-  # => "3\n> 4\n> 5"
-  def read_value(timeout=DEFAULT_SOCKET_TIMEOUT)
-    value=recv_socket(timeout)
-    if value
-      # Remove the command prompt. results returned from recv_socket may have a prompt at the beginning or the end.
-      value.sub!(/\A#{Regexp.escape(PROMPT)}/, '')
-      value.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
+#    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}; value_string=#{value_string.inspect}" }
+    if expected_size 
+      if value_string.length == expected_size
+        @expecting_prompt=true
+      elsif value_string.length == expected_size + PROMPT.length &&  value_string =~ /#{Regexp.escape(PROMPT)}\z/
+        value_string.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
+        @expecting_prompt=false
+      else
+        raise JsshError, "Expected a value of size #{expected_size}; received data of size #{value_string.length}: #{value_string.inspect}"
+      end
+    else
+       if value_string =~ /#{Regexp.escape(PROMPT)}\z/ # what if the value happens to end with the same string as the prompt? 
+        value_string.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
+        @expecting_prompt=false
+      else
+        @expecting_prompt=true
+      end
     end
-    return value
+    return value_string
   end
 
-  # DEPRECATED
-  # all js_eval did was send_and_read, but attempted unreliably to catch errors. use send_and_read if you
-  # want that, or, more preferably probably, use value_json if you want errors caught (which you probably should)
-  # also if you want actual data types (that json can handle anyway), which is nicer too. 
-  #
-  # (used to:
-  # Evaluate javascript and return result. Raise an exception if an error occurred.
-  # Takes one expression and strips out newlines so that only one value will be returned, so you're going to have to
-  # use semicolons, and no // style comments.)
-  def js_eval(str, timeout=DEFAULT_SOCKET_TIMEOUT)
-    raise NotImplementedError, "js_eval is gone"
-#    value= send_and_read(str.gsub("\n",""), :timeout => timeout)
-#    if md = /\A(\w+Error):(.*)/m.match(value)
-#      js_error(md[1], md[2], str)
-#    elsif md = /\Auncaught exception: (.*)/m.match(value)
-#      js_error(nil, md[1], str)
-#    end
-#    value
-  end
-
+  public
   def send_and_read(js_expr, options={})
-    options={:timeout=>DEFAULT_SOCKET_TIMEOUT}.merge(options)
 #    logger.add(-1) { "SEND_AND_READ is starting. options=#{options.inspect}" }
-#    logger.add(-1) { "SEND_AND_READ is checking for leftovers" }
-    if (leftover=recv_socket(SHORT_SOCKET_TIMEOUT)) && leftover != PROMPT
-      Kernel.warn("WARNING: value(s) #{leftover.inspect} left on #{self.inspect}. last evaluated thing was: #{@last_expression}")
-#      logger.warn { "SEND_AND_READ: value(s) #{leftover.inspect} left on jssh socket. last evaluated thing was: #{@last_expression}" }
-    end
     @last_expression=js_expr
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
 #    logger.debug { "SEND_AND_READ sending #{js_expr.inspect}" }
     @socket.send(js_expr, 0)
-    return read_value(options[:timeout])
+    return read_value(options)
   end
   
   def js_error(errclassname, message, source, stuff={})
@@ -279,11 +281,11 @@ class JsshSocket
       "try
        { var result_f=(function(){return #{js}});
          var result=result_f();
-         Object.toJSON(#{ref_error} [false, result]);
+         Object.toJSON_length(#{ref_error} [false, result]);
        }catch(e)
-       { Object.toJSON([true, e]);
+       { Object.toJSON_length([true, e]);
        }"
-    val=send_and_read(wrapped_js, options)
+    val=send_and_read(wrapped_js, options.merge(:length_before_value => true))
     error_or_val_json(val, js)
   end
   def error_or_val_json(val, js)
@@ -380,16 +382,16 @@ class JsshSocket
   def typeof(expression)
     ensure_prototype
     js="try
-{ Object.toJSON([false, (function(object){ return (object===null) ? 'null' : (typeof object); })(#{expression})]);
+{ Object.toJSON_length([false, (function(object){ return (object===null) ? 'null' : (typeof object); })(#{expression})]);
 } catch(e)
 { if(e.name=='ReferenceError')
-  { Object.toJSON([false, 'undefined']);
+  { Object.toJSON_length([false, 'undefined']);
   }
   else
-  { Object.toJSON([true, e]);
+  { Object.toJSON_length([true, e]);
   }
 }"
-    error_or_val_json(send_and_read(js),js)
+    error_or_val_json(send_and_read(js, :length_before_value => true),js)
   end
   
   def instanceof(js_expression, js_interface)

@@ -2,7 +2,7 @@ module Watir
   module Specifier
     # this is a list of what users can specify (there are additional possible hows that may be given
     # to the Element constructor, but not generally for use by users, such as :element_object or :label
-    HowList=[:attributes, :xpath, :custom]
+    HowList=[:attributes, :xpath, :custom, :element_object]
     LocateAliases=Hash.new{|hash,key| [] }.merge(
                   { :text => [:textContent, :innerText],
                     :class => [:className],

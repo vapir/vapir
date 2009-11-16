@@ -97,6 +97,15 @@ class JsshSocket
       ret=send_and_read(File.read(PrototypeFile), :timeout => LONG_SOCKET_TIMEOUT)
       raise JsshError, "Something went wrong loading Prototype - message #{ret.inspect}" if ret != "done!"
     end
+    ret=send_and_read("(function()
+    { nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
+      nativeJSON_encode_length=function(object)
+      { var encoded=nativeJSON.encode(object);
+        return encoded.length.toString()+\"\\n\"+encoded;
+      }
+      return 'done!';
+    })()")
+    raise JsshError, "Something went wrong initializing native JSON - message #{ret.inspect}" if ret != "done!"
     temp_object.assign({})
   end
 
@@ -171,13 +180,15 @@ class JsshSocket
     end
 #    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}; value_string=#{value_string.inspect}" }
     if expected_size 
-      if value_string.length == expected_size
+      value_string_length=value_string.unpack("U*").length # JSSH returns a utf-8 string, so unpack each character to get the right length 
+      
+      if value_string_length == expected_size
         @expecting_prompt=true
-      elsif value_string.length == expected_size + PROMPT.length &&  value_string =~ /#{Regexp.escape(PROMPT)}\z/
+      elsif value_string_length == expected_size + PROMPT.length &&  value_string =~ /#{Regexp.escape(PROMPT)}\z/
         value_string.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
         @expecting_prompt=false
       else
-        raise JsshError, "Expected a value of size #{expected_size}; received data of size #{value_string.length}: #{value_string.inspect}"
+        raise JsshError, "Expected a value of size #{expected_size}; received data of size #{value_string_length}: #{value_string.inspect}"
       end
     else
        if value_string =~ /#{Regexp.escape(PROMPT)}\z/ # what if the value happens to end with the same string as the prompt? 
@@ -276,14 +287,14 @@ class JsshSocket
   def value_json(js, options={})
     options={:error_on_undefined => true}.merge(options)
     ensure_prototype
-    ref_error=options[:error_on_undefined] ? "typeof(result)=='undefined' ? [true, {'name': 'ReferenceError', 'message': 'undefined expression in: '+result_f.toString()}] : " : ""
+    ref_error=options[:error_on_undefined] ? "typeof(result)=='undefined' ? {errored: true, value: {'name': 'ReferenceError', 'message': 'undefined expression in: '+result_f.toString()}} : " : ""
     wrapped_js=
       "try
        { var result_f=(function(){return #{js}});
          var result=result_f();
-         Object.toJSON_length(#{ref_error} [false, result]);
+         nativeJSON_encode_length(#{ref_error} {errored: false, value: result});
        }catch(e)
-       { Object.toJSON_length([true, e]);
+       { nativeJSON_encode_length({errored: true, value: e});
        }"
     val=send_and_read(wrapped_js, options.merge(:length_before_value => true))
     error_or_val_json(val, js)
@@ -293,11 +304,12 @@ class JsshSocket
     if val=="SyntaxError: syntax error"
       raise JsshSyntaxError, val
     end
-    errord_and_val=*parse_json(val)
-    unless errord_and_val.is_a?(Array) && errord_and_val.length==2
+    errord_and_val=parse_json(val)
+    unless errord_and_val.is_a?(Hash) && errord_and_val.keys.sort == ['errored', 'value'].sort
       raise RuntimeError, "unexpected result: \n\t#{errord_and_val.inspect} \nencountered parsing value: \n\t#{val.inspect} \nreturned from expression: \n\t#{js.inspect}"
     end
-    errord,val= *errord_and_val
+    errord=errord_and_val['errored']
+    val= errord_and_val['value']
     if errord
       case val
       when Hash
@@ -382,13 +394,13 @@ class JsshSocket
   def typeof(expression)
     ensure_prototype
     js="try
-{ Object.toJSON_length([false, (function(object){ return (object===null) ? 'null' : (typeof object); })(#{expression})]);
+{ nativeJSON_encode_length({errored: false, value: (function(object){ return (object===null) ? 'null' : (typeof object); })(#{expression})});
 } catch(e)
 { if(e.name=='ReferenceError')
-  { Object.toJSON_length([false, 'undefined']);
+  { nativeJSON_encode_length({errored: false, value: 'undefined'});
   }
   else
-  { Object.toJSON_length([true, e]);
+  { nativeJSON_encode_length({errored: true, value: e});
   }
 }"
     error_or_val_json(send_and_read(js, :length_before_value => true),js)
@@ -427,7 +439,8 @@ class JsshSocket
     @getwindows ||= object('getWindows()')
   end
   
-  def test_socket
+  # raises an informative error if the socket is down for some reason 
+  def assert_socket
     actual, expected=if prototype
       [value_json('["foo"]'), ["foo"]]
     else

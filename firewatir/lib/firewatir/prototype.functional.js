@@ -2,7 +2,7 @@ var Prototype = {
   Version: '1.6.1_rc3',
 
   ScriptFragment: '<script[^>]*>([\\S\\s]*?)<\/script>',
-  JSONFilter: /^\/\*-secure-([\s\S]*)\*\/\s*$/,
+  //JSONFilter: /^\/\*-secure-([\s\S]*)\*\/\s*$/,
 
   emptyFunction: function() { },
   K: function(x) { return x }
@@ -109,7 +109,7 @@ var Prototype = {
       throw e;
     }
   }
-
+/*
   function toJSON(object) {
     var type = typeof object;
     switch (type) {
@@ -135,7 +135,7 @@ var Prototype = {
   function toJSON_length(object) {
        var result_json=Object.toJSON(object);
        return result_json.length.toString()+"\n"+result_json;
-  }
+  }*/
 
   function toQueryString(object) {
     return $H(object).toQueryString();
@@ -195,8 +195,8 @@ var Prototype = {
   extend(Object, {
     extend:        extend,
     inspect:       inspect,
-    toJSON:        toJSON,
-    toJSON_length: toJSON_length,
+    //toJSON:        toJSON,
+    //toJSON_length: toJSON_length,
     toQueryString: toQueryString,
     toHTML:        toHTML,
     keys:          keys,
@@ -297,14 +297,14 @@ var Prototype = {
     wrap:                wrap,
     methodize:           methodize
   }
-})());Date.prototype.toJSON = function() {
+})());/*Date.prototype.toJSON = function() {
   return '"' + this.getUTCFullYear() + '-' +
     (this.getUTCMonth() + 1).toPaddedString(2) + '-' +
     this.getUTCDate().toPaddedString(2) + 'T' +
     this.getUTCHours().toPaddedString(2) + ':' +
     this.getUTCMinutes().toPaddedString(2) + ':' +
     this.getUTCSeconds().toPaddedString(2) + 'Z"';
-};RegExp.prototype.match = RegExp.prototype.test;RegExp.escape = function(str) {
+};*/RegExp.prototype.match = RegExp.prototype.test;RegExp.escape = function(str) {
   return String(str).replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
 };var PeriodicalExecuter = Class.create({
   initialize: function(callback, frequency) {
@@ -514,7 +514,7 @@ var Prototype = {
     return "'" + escapedString.replace(/'/g, '\\\'') + "'";
   }
 
-  function toJSON() {
+  /*function toJSON() {
     return this.inspect(true);
   }
 
@@ -535,7 +535,7 @@ var Prototype = {
       if (!sanitize || json.isJSON()) return eval('(' + json + ')');
     } catch (e) { }
     throw new SyntaxError('Badly formed JSON string: ' + this.inspect());
-  }
+  }*/
 
   function include(pattern) {
     return this.indexOf(pattern) > -1;
@@ -584,10 +584,10 @@ var Prototype = {
     underscore:     underscore,
     dasherize:      dasherize,
     inspect:        inspect,
-    toJSON:         toJSON,
-    unfilterJSON:   unfilterJSON,
-    isJSON:         isJSON,
-    evalJSON:       evalJSON,
+    //toJSON:         toJSON,
+    //unfilterJSON:   unfilterJSON,
+    //isJSON:         isJSON,
+    //evalJSON:       evalJSON,
     include:        include,
     startsWith:     startsWith,
     endsWith:       endsWith,
@@ -954,7 +954,7 @@ var Prototype = {
     return '[' + this.map(Object.inspect).join(', ') + ']';
   }
 
-  function toJSON() {
+  /*function toJSON() {
     var results = [];
     this.each(function(object) {
       var value = Object.toJSON(object );
@@ -964,7 +964,7 @@ var Prototype = {
         results.push('null');
     });
     return '[' + results.join(', ') + ']';
-  }
+  }*/
 
   function indexOf(item, i) {
     i || (i = 0);
@@ -1015,7 +1015,7 @@ var Prototype = {
     toArray:   clone,
     size:      size,
     inspect:   inspect,
-    toJSON:    toJSON
+    //toJSON:    toJSON
   });
 
   var CONCAT_ARGUMENTS_BUGGY = (function() {
@@ -1110,9 +1110,9 @@ var Prototype = {
     }).join(', ') + '}>';
   }
 
-  function toJSON() {
+  /*function toJSON() {
     return Object.toJSON(this.toObject());
-  }
+  }*/
 
   function clone() {
     return new Hash(this);
@@ -1133,7 +1133,7 @@ var Prototype = {
     update:                 update,
     toQueryString:          toQueryString,
     inspect:                inspect,
-    toJSON:                 toJSON,
+    //toJSON:                 toJSON,
     clone:                  clone
   };
 })());Hash.from = $H;Object.extend(Number.prototype, (function() {
@@ -1155,9 +1155,9 @@ var Prototype = {
     return '0'.times(length - string.length) + string;
   }
 
-  function toJSON() {
+  /*function toJSON() {
     return isFinite(this) ? this.toString() : 'null';
-  }
+  }*/
 
   function abs() {
     return Math.abs(this);
@@ -1180,7 +1180,7 @@ var Prototype = {
     succ:           succ,
     times:          times,
     toPaddedString: toPaddedString,
-    toJSON:         toJSON,
+    //toJSON:         toJSON,
     abs:            abs,
     round:          round,
     ceil:           ceil,

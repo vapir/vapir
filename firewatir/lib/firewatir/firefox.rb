@@ -156,8 +156,8 @@ module Watir
       end
       if options[:reset_if_dead]
         begin
-          @@jssh_socket.test_socket
-        rescue JsshError
+          @@jssh_socket.assert_socket
+        rescue JsshError, Errno::ECONNABORTED
           initialize_jssh_socket
         end
       end
@@ -194,7 +194,7 @@ module Watir
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
       begin
-        jssh_socket(:reset_if_dead => true).test_socket
+        jssh_socket(:reset_if_dead => true).assert_socket
       rescue JsshError
         # here we're going to assume that since it's not connecting, we need to launch firefox. 
         if options[:attach]
@@ -212,7 +212,7 @@ module Watir
         end
         ::Waiter.try_for(options[:wait_time], :exception => Watir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:wait_time]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
           begin
-            jssh_socket(:reset_if_dead => true).test_socket
+            jssh_socket(:reset_if_dead => true).assert_socket
             true
           rescue JsshError
             false
@@ -282,7 +282,8 @@ module Watir
     end
 
     def exists?
-      browser_window_object && jssh_socket.object('getWindows()').to_js_array.include(browser_window_object)
+      # jssh_socket may be nil if the window has closed 
+      jssh_socket && browser_window_object && jssh_socket.object('getWindows()').to_js_array.include(browser_window_object)
     end
     def assert_exists
       unless exists?
@@ -410,13 +411,12 @@ module Watir
     public
     #   Closes the window.
     def close
-      if exists?
-        begin
-          browser_window_object.close
-        rescue JsshError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
-          @@jssh_socket=nil
-          nil
-        end
+      assert_exists
+      begin
+        browser_window_object.close
+      rescue JsshError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
+        @@jssh_socket=nil
+        nil
       end
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
       if false #TODO/FIX: check here if we originally launched the browser process

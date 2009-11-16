@@ -638,7 +638,7 @@ module Watir
     def clear_highlight_color(options={})
       #options=handle_options(options, {}) # no options yet
       begin
-        element_object.style.background=@original_color
+        element_object.style.backgroundColor=@original_color
       ensure
         @original_color=nil
       end

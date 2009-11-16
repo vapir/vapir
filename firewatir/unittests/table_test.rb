@@ -12,15 +12,15 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_Table_Exists
-    assert_nil(browser.table(:id, 'missingTable'))
-    assert_nil(browser.table(:index, 33))
+    assert(!browser.table(:id, 'missingTable').exists?)
+    assert(!browser.table(:index, 33).exists?)
     
-    assert(browser.table!(:id, 't1').exists?)
-    assert(browser.table!(:id, /t/).exists?)
-    assert_nil(browser.table(:id, /missing_table/))
+    assert(browser.table(:id, 't1').exists?)
+    assert(browser.table(:id, /t/).exists?)
+    assert(!browser.table(:id, /missing_table/).exists?)
     
-    assert(browser.table!(:index, 1).exists?)
-    assert(browser.table!(:index, 2).exists?)
+    assert(browser.table(:index, 1).exists?)
+    assert(browser.table(:index, 2).exists?)
   end
   
   tag_method :test_rows, :fails_on_ie
@@ -81,8 +81,8 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_cell_directly
-    assert( browser.table_cell!(:id, 'cell1').exists? )
-    assert_nil( browser.table_cell(:id, 'no_exist'))
+    assert( browser.table_cell(:id, 'cell1').exists? )
+    assert(! browser.table_cell(:id, 'no_exist').exists?)
     assert_equal( "Row 1 Col1",  browser.table_cell!(:id, 'cell1').text.strip )
     
     # not really cell directly, but just to show another way of geting the cell
@@ -91,8 +91,8 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_row_directly
-    assert( browser.table_row!(:id, 'row1').exists? )  
-    assert_nil( browser.table_row(:id, 'no_exist'))
+    assert( browser.table_row(:id, 'row1').exists? )
+    assert(! browser.table_row(:id, 'no_exist').exists?)
     
     assert_equal('Row 2 Col1' ,  browser.table_row!(:id, 'row1')[1].text.strip )
   end

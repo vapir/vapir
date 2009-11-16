@@ -12,18 +12,18 @@ class TC_TextArea < Test::Unit::TestCase
   end
   
   def test_elements_exist_or_not
-    assert(browser.text_field!(:name,"txtMultiLine1").exists?)
-    assert(browser.text_field!(:name,"txtMultiLine2").exists?)
-    assert(browser.text_field!(:name,"txtMultiLine3").exists?)
-    assert(browser.text_field!(:name,"txtReadOnly").exists?)
+    assert(browser.text_field(:name,"txtMultiLine1").exists?)
+    assert(browser.text_field(:name,"txtMultiLine2").exists?)
+    assert(browser.text_field(:name,"txtMultiLine3").exists?)
+    assert(browser.text_field(:name,"txtReadOnly").exists?)
     
-    assert(browser.text_field!(:id,"txtMultiLine1").exists?)
-    assert(browser.text_field!(:id,"txtMultiLine2").exists?)
-    assert(browser.text_field!(:id,"txtMultiLine3").exists?)
-    assert(browser.text_field!(:id,"txtReadOnly").exists?)
+    assert(browser.text_field(:id,"txtMultiLine1").exists?)
+    assert(browser.text_field(:id,"txtMultiLine2").exists?)
+    assert(browser.text_field(:id,"txtMultiLine3").exists?)
+    assert(browser.text_field(:id,"txtReadOnly").exists?)
 
-    assert_nil(browser.text_field(:name, "missing"))   
-    assert_nil(browser.text_field(:name,"txtMultiLine4"))
+    assert(!browser.text_field(:name, "missing").exists?)
+    assert(!browser.text_field(:name,"txtMultiLine4").exists?)
   end
   
   def test_to_s_bug

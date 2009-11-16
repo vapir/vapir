@@ -37,13 +37,13 @@ class TC_Divs_XPath < Test::Unit::TestCase
   end
   
   def test_objects_in_div
-    assert(browser.div!(:xpath , "//div[@id='buttons1']/").button!(:index,1).exists? )
-    assert_nil(browser.div!(:xpath , "//div[@id='buttons1']/").button(:index,3) )
-    assert(browser.div!(:xpath , "//div[@id='buttons1']/").button!(:name,'b1').exists? )
+    assert(browser.div!(:xpath , "//div[@id='buttons1']/").button(:index,1).exists? )
+    assert(!browser.div!(:xpath , "//div[@id='buttons1']/").button(:index,3).exists?)
+    assert(browser.div!(:xpath , "//div[@id='buttons1']/").button(:name,'b1').exists? )
     
-    assert(browser.div!(:xpath , "//div[@id='buttons2']/").button!(:index,1).exists? )
-    assert(browser.div!(:xpath , "//div[@id='buttons2']/").button!(:index,2).exists? )
-    assert_nil(browser.div!(:xpath , "//div[@id='buttons1']/").button(:index,3) )
+    assert(browser.div!(:xpath , "//div[@id='buttons2']/").button(:index,1).exists? )
+    assert(browser.div!(:xpath , "//div[@id='buttons2']/").button(:index,2).exists? )
+    assert(!browser.div!(:xpath , "//div[@id='buttons1']/").button(:index,3).exists?)
     
     browser.div!(:xpath , "//div[@id='buttons1']/").button!(:index,1).click
     
@@ -65,13 +65,13 @@ class TC_Divs_XPath < Test::Unit::TestCase
   end
   
   def test_objects_in_span
-    assert(browser.span!(:xpath , "//span[@id='buttons1']/").button!(:index,1).exists? )
-    assert_nil(browser.span!(:xpath , "//span[@id='buttons1']/").button(:index,3) )
-    assert(browser.span!(:xpath , "//span[@id='buttons1']/").button!(:name,'b1').exists? )
+    assert(browser.span!(:xpath , "//span[@id='buttons1']/").button(:index,1).exists? )
+    assert(!browser.span!(:xpath , "//span[@id='buttons1']/").button(:index,3).exists?)
+    assert(browser.span!(:xpath , "//span[@id='buttons1']/").button(:name,'b1').exists? )
     
-    assert(browser.span!(:xpath , "//span[@id='buttons2']/").button!(:index,1).exists? )
-    assert(browser.span!(:xpath , "//span[@id='buttons2']/").button!(:index,2).exists? )
-    assert_nil(browser.span!(:xpath , "//span[@id='buttons1']/").button(:index,3) )
+    assert(browser.span!(:xpath , "//span[@id='buttons2']/").button(:index,1).exists? )
+    assert(browser.span!(:xpath , "//span[@id='buttons2']/").button(:index,2).exists? )
+    assert(!browser.span!(:xpath , "//span[@id='buttons1']/").button(:index,3).exists?)
     
     browser.span!(:xpath , "//span[@id='buttons1']/").button!(:index,1).click
     
@@ -81,11 +81,11 @@ class TC_Divs_XPath < Test::Unit::TestCase
   end
   
   def test_p
-    assert(browser.p!(:xpath , "//p[@id='number1']/").exists?)
-    assert(browser.p!(:xpath , "//p[@title='test_3']/").exists?)
+    assert(browser.p(:xpath , "//p[@id='number1']/").exists?)
+    assert(browser.p(:xpath , "//p[@title='test_3']/").exists?)
     
-    assert_nil(browser.p(:xpath , "//p[@id='missing']/"))
-    assert_nil(browser.p(:xpath , "//p[@title='test_55']/"))
+    assert(!browser.p(:xpath , "//p[@id='missing']/").exists?)
+    assert(!browser.p(:xpath , "//p[@title='test_55']/").exists?)
     
     assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/").class_name }
     assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/").text }

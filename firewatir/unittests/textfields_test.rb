@@ -12,18 +12,18 @@ class TC_Fields < Test::Unit::TestCase
     end
     
     def test_text_field_exists
-        assert(browser.text_field!(:name, "text1").exists?)   
-        assert_nil(browser.text_field(:name, "missing"))   
+        assert(browser.text_field(:name, "text1").exists?)
+        assert(!browser.text_field(:name, "missing").exists?)
         
-        assert(browser.text_field!(:id, "text2").exists?)   
-        assert_nil(browser.text_field(:id, "alsomissing"))   
+        assert(browser.text_field(:id, "text2").exists?)
+        assert(!browser.text_field(:id, "alsomissing").exists?)
         
         # TODO: Need to find an alternative to this in Mozilla
-        #assert(browser.text_field!(:beforeText, "This Text After").exists? )
-        #assert(browser.text_field!(:afterText, "This Text Before").exists? )
+        #assert(browser.text_field(:beforeText, "This Text After").exists? )
+        #assert(browser.text_field(:afterText, "This Text Before").exists? )
         
-        #assert(browser.text_field!(:beforeText, /after/i).exists? )
-        #assert(browser.text_field!(:afterText, /before/i).exists? )
+        #assert(browser.text_field(:beforeText, /after/i).exists? )
+        #assert(browser.text_field(:afterText, /before/i).exists? )
     end
     
     # Drag Contents to in not supported by Mozilla because onDragStart, onDragEnd etc are not
@@ -197,9 +197,9 @@ class TC_Fields < Test::Unit::TestCase
         assert_raises(UnknownObjectException) { browser.label!(:index,20).type } 
         assert_raises(UnknownObjectException) { browser.label!(:index,20).id } 
         
-        assert_nil(browser.label(:index,10)) 
-        assert_nil(browser.label(:id,'missing')) 
-        assert(browser.label!(:index,1).exists?) 
+        assert(!browser.label(:index,10).exists?)
+        assert(!browser.label(:id,'missing').exists?)
+        assert(browser.label(:index,1).exists?)
        
         assert_equal("", browser.label!(:index,1).id)
         #assert_false(    browser.label!(:index,1).disabled?) 

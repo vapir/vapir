@@ -13,17 +13,17 @@ class TC_Fields < Test::Unit::TestCase
   
   tag_method :test_text_field_exists, :fails_on_firefox
   def test_text_field_exists
-    assert(browser.text_field!(:name, "text1").exists?)   
-    assert_nil(browser.text_field(:name, "missing"))   
+    assert(browser.text_field(:name, "text1").exists?)
+    assert(!browser.text_field(:name, "missing").exists?)
     
-    assert(browser.text_field!(:id, "text2").exists?)   
-    assert_nil(browser.text_field(:id, "alsomissing"))   
+    assert(browser.text_field(:id, "text2").exists?)
+    assert(!browser.text_field(:id, "alsomissing").exists?)
     
-    assert(browser.text_field!(:beforeText, "This Text After").exists? )
-    assert(browser.text_field!(:afterText, "This Text Before").exists? )
+    assert(browser.text_field(:beforeText, "This Text After").exists? )
+    assert(browser.text_field(:afterText, "This Text Before").exists? )
     
-    assert(browser.text_field!(:beforeText, /after/i).exists? )
-    assert(browser.text_field!(:afterText, /before/i).exists? )
+    assert(browser.text_field(:beforeText, /after/i).exists? )
+    assert(browser.text_field(:afterText, /before/i).exists? )
   end
   
   tag_method :test_text_field_dragContentsTo, :fails_on_firefox
@@ -197,9 +197,9 @@ class TC_Fields < Test::Unit::TestCase
     assert_raises(UnknownObjectException) { browser.label!(:index,20).type } 
     assert_raises(UnknownObjectException) { browser.label!(:index,20).id } 
     
-    assert_nil(browser.label(:index,10)) 
-    assert_nil(browser.label(:id,'missing')) 
-    assert(browser.label!(:index,1).exists?) 
+    assert(!browser.label(:index,10).exists?)
+    assert(!browser.label(:id,'missing').exists?)
+    assert(browser.label(:index,1).exists?)
     
     assert_equal("", browser.label!(:index,1).id)
     #assert_false(browser.label!(:index,1).disabled?) 

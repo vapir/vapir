@@ -12,11 +12,11 @@ class TC_Radios < Test::Unit::TestCase
   end
   
   def test_Radio_Exists
-    assert(browser.radio!(:name, "box1").exists?)   
-    assert(browser.radio!(:id, "box5").exists?)   
+    assert(browser.radio(:name, "box1").exists?)
+    assert(browser.radio(:id, "box5").exists?)
     
-    assert_nil(browser.radio(:name, "missingname"))   
-    assert_nil(browser.radio(:id, "missingid"))   
+    assert(!browser.radio(:name, "missingname").exists?)
+    assert(!browser.radio(:id, "missingid").exists?)
   end
   
   def test_radio_class

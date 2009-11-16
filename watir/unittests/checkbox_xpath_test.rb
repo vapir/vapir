@@ -29,8 +29,8 @@ class TC_CheckBox_XPath < Test::Unit::TestCase
   end
   
   def test_CheckBox_Exists
-    assert(browser.checkbox!(:xpath , "//input[@name='box4' and @value='1']/").exists?)   
-    assert_nil(browser.checkbox(:xpath , "//input[@name='box4' and @value='22']/"))   
+    assert(browser.checkbox(:xpath , "//input[@name='box4' and @value='1']/").exists?)
+    assert(!browser.checkbox(:xpath , "//input[@name='box4' and @value='22']/").exists?)
   end
   
   def test_checkbox_Enabled

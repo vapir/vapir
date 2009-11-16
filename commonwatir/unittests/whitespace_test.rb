@@ -15,7 +15,7 @@ class TC_WhiteSpace < Test::Unit::TestCase
   end
 
   def test_nbsp_beginning_and_end
-    assert browser.link!(:text, /Login/).exists?
+    assert browser.link(:text, /Login/).exists?
   end
   
   def test_single_nbsp

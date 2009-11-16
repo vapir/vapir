@@ -17,26 +17,26 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_exists
-    assert browser.table!(:id, 't1').exists?
-    assert browser.table!(:id, /t/).exists?
+    assert browser.table(:id, 't1').exists?
+    assert browser.table(:id, /t/).exists?
     
-    assert !browser.table(:id, 'missingTable')
-    assert !browser.table(:id, /missing_table/)
+    assert !browser.table(:id, 'missingTable').exists?
+    assert !browser.table(:id, /missing_table/).exists?
     
-    assert browser.table!(:index, 1).exists?
-    assert !browser.table(:index, 33)
+    assert browser.table(:index, 1).exists?
+    assert !browser.table(:index, 33).exists?
   end
   
   tag_method :test_row_count_exceptions, :fails_on_firefox
   def test_row_count_exceptions
     assert_raises UnknownObjectException do
-      browser.table!(:id, 'missingTable').row_count
+      browser.table(:id, 'missingTable').row_count
     end
     assert_raises UnknownObjectException do
-      browser.table!(:index, 66).row_count
+      browser.table(:index, 66).row_count
     end
     assert_raises UnknownObjectException do
-      browser.table!(:bad_attribute, 99).row_count
+      browser.table(:bad_attribute, 99).row_count
     end
   end
   def test_rows
@@ -75,10 +75,10 @@ class TC_Tables < Test::Unit::TestCase
   
   def test_columns
     assert_raises UnknownObjectException do
-      browser.table!(:id, 'missingTable').column_count
+      browser.table(:id, 'missingTable').column_count
     end
     assert_raises UnknownObjectException do
-      browser.table!(:index, 77).column_count
+      browser.table(:index, 77).column_count
     end
     assert_equal(2, browser.table!(:index, 1).column_count)
     assert_equal(2, browser.table!(:id, 't1').column_count)   # row one has 1 cell with a colspan of 2
@@ -101,8 +101,8 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_cell_directly
-    assert browser.table_cell!(:id, 'cell1').exists?
-    assert_nil browser.table_cell(:id, 'no_exist')
+    assert browser.table_cell(:id, 'cell1').exists?
+    assert !browser.table_cell(:id, 'no_exist').exists?
     assert_equal("Row 1 Col1", browser.table_cell!(:id, 'cell1').text.strip)
   end
   
@@ -111,16 +111,16 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_row_directly
-    assert browser.table_row!(:id, 'row1').exists?
-    assert ! browser.table_row(:id, 'no_exist')
+    assert browser.row(:id, 'row1').exists?
+    assert !browser.row(:id, 'no_exist').exists?
   end
   def test_row_another_way
-    assert_equal('Row 2 Col1',  browser.table_row(:id, 'row1')[1].text.strip)
+    assert_equal('Row 2 Col1',  browser.table_row!(:id, 'row1')[1].text.strip)
   end
 
   tag_method :test_row_in_table, :fails_on_firefox
   def test_row_in_table
-    assert_equal 'Row 2 Col1 Row 2 Col2', browser.table!(:id, 't1').table_row(:id, 'row1').text.strip
+    assert_equal 'Row 2 Col1 Row 2 Col2', browser.table!(:id, 't1').table_row!(:id, 'row1').text.strip
   end
   
   def test_row_iterator
@@ -285,7 +285,7 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     
     # expand the table
     t.each do |r|
-      if image=r[1].image(:src, /plus/)
+      if image=r[1].image?(:src, /plus/)
         image.click 
       end
     end
@@ -293,10 +293,10 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     # shrink rows 1,2,3
     count = 1
     t.each do |r|
-      if (image=r[1].image(:src, /minus/)) and (1..3) === count 
+      if (image=r[1].image?(:src, /minus/)) and (1..3) === count 
         image.click
       end
-      count = 2
+      count += 1
     end
   end
   

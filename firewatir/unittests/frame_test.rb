@@ -17,7 +17,7 @@ class TC_Frames < Test::Unit::TestCase
 
   tag_method :test_exists, :fails_on_ie # related to bug WTR-268
   def test_exists
-    assert browser.frame!('buttonFrame2').exists?
+    assert browser.frame('buttonFrame2').exists?
   end
    
   def test_frame_no_what

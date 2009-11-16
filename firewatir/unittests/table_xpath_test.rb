@@ -12,8 +12,8 @@ class TC_Tables_XPath < Test::Unit::TestCase
   end
   
   def test_Table_Exists
-    assert_nil(browser.table(:xpath , "//table[@id = 'missingTable']"))
-    assert(browser.table!(:xpath, "//table[@id = 't1']").exists?)
+    assert(!browser.table(:xpath , "//table[@id = 'missingTable']").exists?)
+    assert(browser.table(:xpath, "//table[@id = 't1']").exists?)
   end
 
   tag_method :test_element_by_xpath_class, :fails_on_ie
@@ -28,8 +28,9 @@ class TC_Tables_XPath < Test::Unit::TestCase
   end
   
   def test_rows
-    assert_raises(UnknownObjectException ){ browser.table!(:xpath, "//table[@id = 'missingTable']").row_count }
-    assert_raises(UnknownObjectException){ browser.table!(:xpath, "//table[@bad_attribute = 99]").row_count }
+    assert_raises(UnknownObjectException ){ browser.table(:xpath, "//table[@id = 'missingTable']").row_count }
+    assert_raises(UnknownObjectException){ browser.table(:xpath, "//table[@bad_attribute = 99]").row_count }
+    assert_raises(UnknownObjectException){ browser.table!(:xpath, "//table[@bad_attribute = 99]") }
     
     assert_equal(5, browser.table!(:xpath, "//table[@id = 't1']").row_count)  # 4 rows and a header 
     assert_equal(5, browser.table!(:xpath, "//table[@id = 't1']").rows.length)   
@@ -78,7 +79,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
   
   #def test_cell_directly
   #  assert( browser.table_cell(:id, 'cell1').exists? )
-  #  assert_nil( browser.table_cell(:id, 'no_exist'))
+  #  assert(! browser.table_cell(:id, 'no_exist').exists?)
   #  assert_equal( "Row 1 Col1",  browser.table_cell(:id, 'cell1').text.strip )
   #  
   #  # not really cell directly, but just to show another way of geting the cell
@@ -86,8 +87,8 @@ class TC_Tables_XPath < Test::Unit::TestCase
   #end
   
   #def test_row_directly
-  #  assert( browser.row(:id, 'row1').exists? )  
-  #  assert_nil( browser.row(:id, 'no_exist'))
+  #  assert( browser.table_row(:id, 'row1').exists? )  
+  #  assert(! browser.table_row(:id, 'no_exist').exists?)
   #  
   #  assert_equal('Row 2 Col1' ,  browser.row(:id, 'row1')[1].text.strip )
   #end

@@ -17,25 +17,25 @@ class TC_Images_XPath < Test::Unit::TestCase
     end
 
     def test_imageExists
-        assert_nil( browser.image(:xpath , "//img[@name='missing_name']"))
-        assert(       browser.image!(:xpath , "//img[@name='circle']").exists?  )
-        assert(       browser.image!(:xpath , "//img[contains(@name , 'circ')]" ).exists?  )
+        assert(! browser.image(:xpath , "//img[@name='missing_name']").exists?)
+        assert(       browser.image(:xpath , "//img[@name='circle']").exists?  )
+        assert(       browser.image(:xpath , "//img[contains(@name , 'circ')]" ).exists?  )
         
-        assert_nil( browser.image(:xpath , "//img[@id='missing_id']"))
-        assert(       browser.image!(:xpath , "//img[@id='square']").exists?  )
-        assert(       browser.image!(:xpath , "//img[contains(@id, 'squ')]" ).exists?  )
+        assert(! browser.image(:xpath , "//img[@id='missing_id']").exists?)
+        assert(       browser.image(:xpath , "//img[@id='square']").exists?  )
+        assert(       browser.image(:xpath , "//img[contains(@id, 'squ')]" ).exists?  )
         
-        assert_nil( browser.image(:xpath , "//img[@src='missingsrc.gif']"))
+        assert(! browser.image(:xpath , "//img[@src='missingsrc.gif']").exists?)
         
         # BP -- This fails for me but not for Paul. It doesn't make sense to me that it should pass.  
-        # assert(       browser.image!(:src , "file:///#{$myDir}/html/images/triangle.jpg").exists?  )
-        assert(       browser.image!(:xpath , "//img[contains(@src , 'triangle')]" ).exists?  )
+        # assert(       browser.image(:src , "file:///#{$myDir}/html/images/triangle.jpg").exists?  )
+        assert(       browser.image(:xpath , "//img[contains(@src , 'triangle')]" ).exists?  )
         
-        assert(       browser.image!(:alt , "circle" ).exists?  )
-        assert(       browser.image!(:xpath , "//img[contains(@alt , 'cir')]" ).exists?  )
+        assert(       browser.image(:alt , "circle" ).exists?  )
+        assert(       browser.image(:xpath , "//img[contains(@alt , 'cir')]" ).exists?  )
         
-        assert_nil(  browser.image(:alt , "triangle" ))
-        assert_nil(  browser.image(:xpath , "//img[contains(@alt , 'tri')]" ))
+        assert(!  browser.image(:alt , "triangle" ).exists?)
+        assert(!  browser.image(:xpath , "//img[contains(@alt , 'tri')]" ).exists?)
     end
 
     tag_method :test_element_by_xpath_class, :fails_on_ie

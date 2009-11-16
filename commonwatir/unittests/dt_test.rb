@@ -11,14 +11,14 @@ class TC_Dt < Test::Unit::TestCase
   end
   
   def test_exists
-    assert browser.dt!(:id, "experience").exists?, "Could not find <dt> by :id"
-    assert browser.dt!(:class, "current-industry").exists?, "Could not find <dt> by :class"
-    assert browser.dt!(:xpath, "//dt[@id='experience']").exists?, "Could not find <dt> by :xpath"
-    assert browser.dt!(:index, 1).exists?, "Could not find <dt> by :index"
+    assert browser.dt(:id, "experience").exists?, "Could not find <dt> by :id"
+    assert browser.dt(:class, "current-industry").exists?, "Could not find <dt> by :class"
+    assert browser.dt(:xpath, "//dt[@id='experience']").exists?, "Could not find <dt> by :xpath"
+    assert browser.dt(:index, 1).exists?, "Could not find <dt> by :index"
   end
   
   def test_does_not_exist
-    assert !browser.dt(:id, 'no_such_id'), "Found non-existing <dt>"
+    assert !browser.dt?(:id, 'no_such_id'), "Found non-existing <dt>"
   end
   
   def test_attribute_class_name

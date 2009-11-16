@@ -12,8 +12,8 @@ class TC_Tables_XPath < Test::Unit::TestCase
   end
   
   def test_Table_Exists
-    assert_nil(browser.table(:xpath , "//table[@id='missingTable']/") )
-    assert(browser.table!(:xpath , "//table[@id='t1']/").exists? )
+    assert(!browser.table(:xpath , "//table[@id='missingTable']/").exists?)
+    assert(browser.table(:xpath , "//table[@id='t1']/").exists? )
   end
   
   def test_rows
@@ -56,14 +56,14 @@ class TC_Tables_XPath < Test::Unit::TestCase
   
   def test_cell_directly
     
-    assert( browser.table_cell!(:xpath , "//td[@id='cell1']/").exists? )
-    assert_nil( browser.table_cell(:xpath , "//td[@id='no_exist']/") )
+    assert( browser.table_cell(:xpath , "//td[@id='cell1']/").exists? )
+    assert(! browser.table_cell(:xpath , "//td[@id='no_exist']/").exists?)
     assert_equal( "Row 1 Col1",  browser.table_cell!(:xpath , "//td[@id='cell1']/").text.strip )
   end
   
   def test_row_directly
     assert( browser.table_row(:xpath , "//tr[@id='row1']/").exists? )  
-    assert_nil( browser.table_row(:xpath , "//tr[@id='no_exist']/") )
+    assert(! browser.table_row(:xpath , "//tr[@id='no_exist']/").exists?)
     
     assert_equal('Row 2 Col1' ,  browser.table_row(:xpath , "//tr[@id='row1']/")[1].text.strip )
   end

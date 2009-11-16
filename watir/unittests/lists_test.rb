@@ -8,16 +8,16 @@ class Lists_Tests < Watir::TestCase
   end        
 
   def test_list_items_exist
-    assert(browser.li!(:id, 'list1').exists?)
-    assert(browser.li!(:id, 'list2').exists?)
-    assert(browser.li!(:id, 'list3').exists?)    
-    assert(browser.li!(:id, 'ordered1').exists?)    
+    assert(browser.li(:id, 'list1').exists?)
+    assert(browser.li(:id, 'list2').exists?)
+    assert(browser.li(:id, 'list3').exists?)
+    assert(browser.li(:id, 'ordered1').exists?)
     assert_equal('Coffee', browser.li!(:index, 1).text.strip)
   end
 
   def test_list_item_exists_by_name
-    assert(browser.li!(:name, 'x1').exists?)
-    assert ! (browser.li(:name, 'maptest02'))
+    assert(browser.li(:name, 'x1').exists?)
+    assert(!browser.li(:name, 'maptest02').exists?)
   end  
   
   def test_li_length

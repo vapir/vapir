@@ -13,18 +13,18 @@ class TC_TextArea_XPath < Test::Unit::TestCase
   
   def test_textarea_field_exists
     #test for existance of 4 text area
-    assert(browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").exists?)
-    assert(browser.text_field!(:xpath , "//textarea[@name='txtMultiLine2']/").exists?)
-    assert(browser.text_field!(:xpath , "//textarea[@name='txtMultiLine3']/").exists?)
-    assert(browser.text_field!(:xpath , "//textarea[@name='txtReadOnly']/").exists?)
+    assert(browser.text_field(:xpath , "//textarea[@name='txtMultiLine1']/").exists?)
+    assert(browser.text_field(:xpath , "//textarea[@name='txtMultiLine2']/").exists?)
+    assert(browser.text_field(:xpath , "//textarea[@name='txtMultiLine3']/").exists?)
+    assert(browser.text_field(:xpath , "//textarea[@name='txtReadOnly']/").exists?)
     
-    assert(browser.text_field!(:xpath , "//textarea[@id='txtMultiLine1']/").exists?)
-    assert(browser.text_field!(:xpath , "//textarea[@id='txtMultiLine2']/").exists?)
-    assert(browser.text_field!(:xpath , "//textarea[@id='txtMultiLine3']/").exists?)
-    assert(browser.text_field!(:xpath , "//textarea[@id='txtReadOnly']/").exists?)
+    assert(browser.text_field(:xpath , "//textarea[@id='txtMultiLine1']/").exists?)
+    assert(browser.text_field(:xpath , "//textarea[@id='txtMultiLine2']/").exists?)
+    assert(browser.text_field(:xpath , "//textarea[@id='txtMultiLine3']/").exists?)
+    assert(browser.text_field(:xpath , "//textarea[@id='txtReadOnly']/").exists?)
     #test for missing 
-    assert_nil(browser.text_field(:xpath , "//textarea[@name='missing']/"))   
-    assert_nil(browser.text_field(:xpath , "//textarea[@name='txtMultiLine4']/"))
+    assert(!browser.text_field(:xpath , "//textarea[@name='missing']/").exists?)
+    assert(!browser.text_field(:xpath , "//textarea[@name='txtMultiLine4']/").exists?)
   end
   
   def xtest_textarea_to_s

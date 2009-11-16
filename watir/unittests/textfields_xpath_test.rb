@@ -11,14 +11,14 @@ class TC_Fields_XPath < Test::Unit::TestCase
   end
   
   def test_text_field_exists
-    assert(browser.text_field!(:xpath , "//input[@name='text1']/").exists?)   
-    assert_nil(browser.text_field(:xpath , "//input[@name='missing']/"))   
+    assert(browser.text_field(:xpath , "//input[@name='text1']/").exists?)
+    assert(!browser.text_field(:xpath , "//input[@name='missing']/").exists?)
     
-    assert(browser.text_field!(:xpath , "//input[@id='text2']/").exists?)   
-    assert_nil(browser.text_field(:xpath , "//input[@id='alsomissing']/"))   
+    assert(browser.text_field(:xpath , "//input[@id='text2']/").exists?)
+    assert(!browser.text_field(:xpath , "//input[@id='alsomissing']/").exists?)
     
-    #assert(browser.text_field!(:xpath , "//input[@beforeText='This Text After']/").exists? )
-    #assert(browser.text_field!(:xpath , "//input[@afterText='This Text Before']/").exists? )
+    #assert(browser.text_field(:xpath , "//input[@beforeText='This Text After']/").exists? )
+    #assert(browser.text_field(:xpath , "//input[@afterText='This Text Before']/").exists? )
   end
   
   def test_text_field_dragContentsTo

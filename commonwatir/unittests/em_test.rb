@@ -10,14 +10,14 @@ class TC_Em < Test::Unit::TestCase
   end
   
   def test_exists
-    assert browser.em!(:id, "em-one").exists?, "Could not find <em> by :id"
-    assert browser.em!(:class, "em-class-one").exists?, "Could not find <em> by :class"
-    assert browser.em!(:xpath, "//em[@id='em-one']").exists?, "Could not find <em> by :xpath"
-    assert browser.em!(:index, 1).exists?, "Could not find <em> by :index"
+    assert browser.em(:id, "em-one").exists?, "Could not find <em> by :id"
+    assert browser.em(:class, "em-class-one").exists?, "Could not find <em> by :class"
+    assert browser.em(:xpath, "//em[@id='em-one']").exists?, "Could not find <em> by :xpath"
+    assert browser.em(:index, 1).exists?, "Could not find <em> by :index"
   end
   
   def test_does_not_exist
-    assert !browser.em(:id, 'no_such_id'), "Found non-existing <em>"
+    assert !browser.em?(:id, 'no_such_id'), "Found non-existing <em>"
   end
   
   def test_attribute_class_name

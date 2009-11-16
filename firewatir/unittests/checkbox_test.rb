@@ -16,7 +16,7 @@ class TC_CheckBox < Test::Unit::TestCase
        assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").name   }  
        assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").disabled   }  
        assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").type   }  
-       assert_nil(browser.checkbox(:name, "noName"))
+       assert(!browser.checkbox(:name, "noName").exists?)
 
        assert_equal("box1"  , browser.checkbox!(:index, 1).name  ) 
        assert_class(browser.checkbox!(:index,1), 'Checkbox')
@@ -52,14 +52,14 @@ class TC_CheckBox < Test::Unit::TestCase
     end
 
     def test_CheckBox_Exists
-       assert(browser.checkbox!(:name, "box1").exists?)   
-       assert_nil(browser.checkbox(:name, "missing"))
+       assert(browser.checkbox(:name, "box1").exists?)   
+       assert(!browser.checkbox(:name, "missing").exists?)
     
-       assert(browser.checkbox!(:name, "box4" , '1').exists?)   
-       assert_nil(browser.checkbox(:name, "box4" , '22'))
+       assert(browser.checkbox(:name, "box4" , '1').exists?)   
+       assert(!browser.checkbox(:name, "box4" , '22').exists?)
 
-       assert(browser.checkbox!(:name, "box4" , /[0-9]/).exists?)   
-       assert_nil(browser.checkbox(:name, "box4" , /\d\d\d/))
+       assert(browser.checkbox(:name, "box4" , /[0-9]/).exists?)   
+       assert(!browser.checkbox(:name, "box4" , /\d\d\d/).exists?)
     end
 
     #def test_checkbox_Enabled

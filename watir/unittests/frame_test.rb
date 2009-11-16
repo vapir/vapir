@@ -71,7 +71,7 @@ class TC_Frames2 < Test::Unit::TestCase
   end
   
   def test_frame_by_src
-    assert(browser.frame!(:src, /pass/).button!(:value, 'Close Window').exists?)
+    assert(browser.frame!(:src, /pass/).button(:value, 'Close Window').exists?)
   end
   
 end

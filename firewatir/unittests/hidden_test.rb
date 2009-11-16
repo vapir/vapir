@@ -12,9 +12,9 @@ class TC_Hidden_Fields < Test::Unit::TestCase
     def test_hidden
         
         # test using index
-        assert( browser.hidden!(:index,1).exists? )
-        assert( browser.hidden!(:index,2).exists? )
-        assert_nil( browser.hidden(:index,3))
+        assert( browser.hidden(:index,1).exists? )
+        assert( browser.hidden(:index,2).exists? )
+        assert(! browser.hidden(:index,3).exists?)
         
         browser.hidden!(:index,1).value = 44
         browser.hidden!(:index,2).value = 55
@@ -25,10 +25,10 @@ class TC_Hidden_Fields < Test::Unit::TestCase
         assert_equal("55"  , browser.text_field!(:name , "vis2").value )
                         
         # test using name and ID
-        assert( browser.hidden!(:name ,"hid1").exists? )
-        assert( browser.hidden!(:id,"hidden_1").exists? )
-        assert_nil( browser.hidden(:name,"hidden_44"))
-        assert_nil( browser.hidden(:id,"hidden_55"))
+        assert( browser.hidden(:name ,"hid1").exists? )
+        assert( browser.hidden(:id,"hidden_1").exists? )
+        assert(! browser.hidden(:name,"hidden_44").exists?)
+        assert(! browser.hidden(:id,"hidden_55").exists?)
         
         browser.hidden!(:name ,"hid1").value = 444
         browser.hidden!(:id,"hidden_1").value = 555
@@ -51,10 +51,10 @@ class TC_Hidden_Fields < Test::Unit::TestCase
         assert_equal("555"  , browser.text_field!(:name ,"vis2").value )
         
         # test using a form
-        assert( browser.form!(:name , "has_a_hidden").hidden!(:name ,"hid1").exists? )
-        assert( browser.form!(:name , "has_a_hidden").hidden!(:id,"hidden_1").exists? )
-        assert_nil( browser.form!(:name , "has_a_hidden").hidden(:name,"hidden_44"))
-        assert_nil( browser.form!(:name , "has_a_hidden").hidden(:id,"hidden_55"))
+        assert( browser.form!(:name , "has_a_hidden").hidden(:name ,"hid1").exists? )
+        assert( browser.form!(:name , "has_a_hidden").hidden(:id,"hidden_1").exists? )
+        assert(! browser.form(:name , "has_a_hidden").hidden(:name,"hidden_44").exists?)
+        assert(! browser.form(:name , "has_a_hidden").hidden(:id,"hidden_55").exists?)
         
         browser.form!(:name , "has_a_hidden").hidden!(:name ,"hid1").value = 222
         browser.form!(:name , "has_a_hidden").hidden!(:id,"hidden_1").value = 333

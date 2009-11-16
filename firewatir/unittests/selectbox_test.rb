@@ -12,9 +12,9 @@ class TC_SelectList < Test::Unit::TestCase
     end
     
     def test_textBox_Exists
-        assert(browser.select_list!(:name, "sel1").exists?)   
-        assert_nil(browser.select_list(:name, "missing"))   
-        assert_nil(browser.select_list(:id, "missing"))   
+        assert(browser.select_list(:name, "sel1").exists?)
+        assert(!browser.select_list(:name, "missing").exists?)
+        assert(!browser.select_list(:id, "missing").exists?)
     end
 
     def test_select_list_enabled

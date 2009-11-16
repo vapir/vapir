@@ -10,11 +10,11 @@ class TC_Strong < Test::Unit::TestCase
   end
   
   def test_exists
-    assert browser.strong!(:id, "strong_id").exists?, "Could not find <strong> by :id"
-    assert browser.strong!(:class, "strong_class").exists?, "Could not find <strong> by :class"
-    assert browser.strong!(:xpath, "//strong[@id='strong_id']").exists?, "Could not find <strong> by :xpath"
-    assert browser.strong!(:index, 1).exists?, "Could not find <strong> by :index"
-    assert browser.strong!(:text, /this is a/).exists?, "Could not finr <strong> by :text"
+    assert browser.strong(:id, "strong_id").exists?, "Could not find <strong> by :id"
+    assert browser.strong(:class, "strong_class").exists?, "Could not find <strong> by :class"
+    assert browser.strong(:xpath, "//strong[@id='strong_id']").exists?, "Could not find <strong> by :xpath"
+    assert browser.strong(:index, 1).exists?, "Could not find <strong> by :index"
+    assert browser.strong(:text, /this is a/).exists?, "Could not finr <strong> by :text"
   end
   
   def test_strong_iterator

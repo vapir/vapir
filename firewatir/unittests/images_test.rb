@@ -23,25 +23,25 @@ class TC_Images < Test::Unit::TestCase
     
     def test_imageExists
         assert( !  browser.image(:name , "missing_name")  )
-        assert(    browser.image!(:name , "circle").exists?  )
-        assert(    browser.image!(:name , /circ/ ).exists?  )
+        assert(    browser.image(:name , "circle").exists?  )
+        assert(    browser.image(:name , /circ/ ).exists?  )
         
         assert( !  browser.image(:id , "missing_id")  )
-        assert(    browser.image!(:id , "square").exists?  )
-        assert(    browser.image!(:id , /squ/ ).exists?  )
+        assert(    browser.image(:id , "square").exists?  )
+        assert(    browser.image(:id , /squ/ ).exists?  )
         
         assert( !  browser.image(:src, "missingsrc.gif")  )
          
-        assert(    browser.image!(:src, /images\/triangle.jpg/).exists?  )
-        assert(    browser.image!(:src , /triangle/ ).exists?  )
+        assert(    browser.image(:src, /images\/triangle.jpg/).exists?  )
+        assert(    browser.image(:src , /triangle/ ).exists?  )
         
-        assert(    browser.image!(:alt , "circle" ).exists?  )
-        assert(    browser.image!(:alt , /cir/ ).exists?  )
+        assert(    browser.image(:alt , "circle" ).exists?  )
+        assert(    browser.image(:alt , /cir/ ).exists?  )
         
         assert( !  browser.image(:alt , "triangle" ))
         assert( !  browser.image(:alt , /tri/ ))
         
-        assert(    browser.image!(:title, 'square_image').exists? )
+        assert(    browser.image(:title, 'square_image').exists? )
         assert( !  browser.image(:title, 'pentagram'))
     end
     

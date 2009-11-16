@@ -32,7 +32,7 @@ class TC_CheckBox < Test::Unit::TestCase
     
     assert_equal("1", browser.checkbox!(:name, "box4").value )
     assert_equal("3", browser.checkbox!(:name, "box4", 3).value )
-    assert(browser.checkbox!(:name, "box6").exists?)    
+    assert(browser.checkbox(:name, "box6").exists?)
     assert_equal("checkbox", browser.checkbox!(:name, "box4", 3).type )
     assert_equal("checkbox", browser.checkbox!(:name, "box6", 'Milk').type )
     assert_equal(false, browser.checkbox!(:name, "box4", 3).disabled )
@@ -55,14 +55,14 @@ class TC_CheckBox < Test::Unit::TestCase
   end
   
   def test_CheckBox_Exists
-    assert(browser.checkbox!(:name, "box1").exists?)   
-    assert_nil(browser.checkbox(:name, "missing"))   
+    assert(browser.checkbox(:name, "box1").exists?)
+    assert(!browser.checkbox(:name, "missing").exists?)
     
-    assert(browser.checkbox!(:name, "box4", 1).exists?)   
-    assert_nil(browser.checkbox(:name, "box4", 22))   
+    assert(browser.checkbox(:name, "box4", 1).exists?)
+    assert(!browser.checkbox(:name, "box4", 22).exists?)
 
-    assert(browser.checkbox!(:name, "box4", /[0-9]/).exists?)   
-    assert_nil(browser.checkbox(:name, "box4", /\d\d\d/))   
+    assert(browser.checkbox(:name, "box4", /[0-9]/).exists?)
+    assert(!browser.checkbox(:name, "box4", /\d\d\d/).exists?)
   end
   
   def test_checkbox_Enabled

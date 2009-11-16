@@ -47,14 +47,14 @@ class TC_Buttons_XPath < Test::Unit::TestCase
   end
   
   def test_Button_Exists
-    assert(browser.button!(:xpath, "//input[@value='Click Me']/").exists?)   
-    assert(browser.button!(:xpath, "//input[@value='Submit']/").exists?)   
-    assert(browser.button!(:xpath, "//input[@name='b1']/").exists?)   
-    assert(browser.button!(:xpath, "//input[@id='b2']/").exists?)   
+    assert(browser.button(:xpath, "//input[@value='Click Me']/").exists?)
+    assert(browser.button(:xpath, "//input[@value='Submit']/").exists?)
+    assert(browser.button(:xpath, "//input[@name='b1']/").exists?)
+    assert(browser.button(:xpath, "//input[@id='b2']/").exists?)
     
-    assert_nil(browser.button(:xpath, "//input[@value='Missing Caption']/"))   
-    assert_nil(browser.button(:xpath, "//input[@name='missingname']/"))   
-    assert_nil(browser.button(:xpath, "//input[@id='missingid']/"))   
+    assert(!browser.button(:xpath, "//input[@value='Missing Caption']/").exists?)
+    assert(!browser.button(:xpath, "//input[@name='missingname']/").exists?)
+    assert(!browser.button(:xpath, "//input[@id='missingid']/").exists?)
   end
   
   def test_Button_Enabled

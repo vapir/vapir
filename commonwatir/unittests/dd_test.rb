@@ -10,17 +10,17 @@ class TC_Dd < Test::Unit::TestCase
   end
   
   def test_exists
-    assert browser.dd!(:id, "someone").exists?, "Could not find <dd> by :id"
-    assert browser.dd!(:class, "name").exists?, "Could not find <dd> by :class"
+    assert browser.dd(:id, "someone").exists?, "Could not find <dd> by :id"
+    assert browser.dd(:class, "name").exists?, "Could not find <dd> by :class"
     assert_nothing_raised do
-       browser.dd!(:xpath, "//dd[@id='someone']").locate
+       browser.dd!(:xpath, "//dd[@id='someone']").locate!
      end
-    assert browser.dd!(:xpath, "//dd[@id='someone']").exists?, "Could not find <dd> by :xpath"
-    assert browser.dd!(:index, 1).exists?, "Could not find <dd> by :index"
+    assert browser.dd(:xpath, "//dd[@id='someone']").exists?, "Could not find <dd> by :xpath"
+    assert browser.dd(:index, 1).exists?, "Could not find <dd> by :index"
   end
   
   def test_does_not_exist
-    assert !browser.dd(:id, 'no_such_id'), "Found non-existing <dd>"
+    assert !browser.dd?(:id, 'no_such_id'), "Found non-existing <dd>"
   end
   
   def test_attribute_class_name

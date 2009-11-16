@@ -11,14 +11,14 @@ class TC_Dl < Test::Unit::TestCase
   end
   
   def test_exists
-    assert browser.dl!(:id, "experience-list").exists?, "Could not find <dl> by :id"
-    assert browser.dl!(:class, "list").exists?, "Could not find <dl> by :class"
-    assert browser.dl!(:xpath, "//dl[@id='experience-list']").exists?, "Could not find <dl> by :xpath"
-    assert browser.dl!(:index, 1).exists?, "Could not find <dl> by :index"
+    assert browser.dl(:id, "experience-list").exists?, "Could not find <dl> by :id"
+    assert browser.dl(:class, "list").exists?, "Could not find <dl> by :class"
+    assert browser.dl(:xpath, "//dl[@id='experience-list']").exists?, "Could not find <dl> by :xpath"
+    assert browser.dl(:index, 1).exists?, "Could not find <dl> by :index"
   end
   
   def test_does_not_exist
-    assert !browser.dl(:id, 'no_such_id'), "Found non-existing <dl>"
+    assert !browser.dl?(:id, 'no_such_id'), "Found non-existing <dl>"
   end
   
   def test_attribute_class_name

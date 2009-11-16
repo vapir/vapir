@@ -472,7 +472,7 @@ module Watir
     def open_window
       begin
         @browser_window_name="firewatir_window_%.16x"%rand(2**64)
-      end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@browser_window_name.to_json}}) ? true : false")
+      end while jssh_socket.value_json("$A(getWindows()).detect(function(win){return win.name==#{@browser_window_name.to_jssh}}) ? true : false")
       watcher=jssh_socket.Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(jssh_socket.Components.interfaces.nsIWindowWatcher)
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
       

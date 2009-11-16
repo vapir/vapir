@@ -1,5 +1,7 @@
+require 'json'
 require 'activesupport'
 require 'socket'
+require 'timeout'
 #require 'logger'
 
 #class LoggerWithCallstack < Logger
@@ -34,6 +36,15 @@ require 'socket'
 #  end
 #end
 
+class Object
+  # this is like #to_json, but without the conflicting names between ActiveSupport and JSON gem,
+  # and also for JsshObject (which is a reference; not real json; see the overload in that class)
+  def to_jssh
+    ActiveSupport::JSON.encode(self)
+  end
+end
+  
+
 class JsshError < StandardError
   attr_accessor :source, :lineNumber, :stack, :fileName
 end
@@ -45,9 +56,11 @@ class JsshUndefinedValueError < JsshError; end
 class JsshSocket
 #  def self.logger
 #    @@logger||=begin
-#      logger=LoggerWithCallstack.new(File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::TRUNC|File::CREAT))
+#      logfile=File.open('c:/tmp/jssh_log.txt', File::WRONLY|File::TRUNC|File::CREAT)
+#      logfile.sync=true
+#      logger=Logger.new(logfile)
 #      logger.level = -1#Logger::DEBUG#Logger::INFO
-#      logger.formatter=LoggerWithCallstack::TimeElapsedFormatter.new
+#      #logger.formatter=LoggerWithCallstack::TimeElapsedFormatter.new
 #      logger
 #    end
 #  end
@@ -336,7 +349,7 @@ class JsshSocket
   # Uses #value_json; see its documentation.
   def assign_json(js_left, rb_right)
     ensure_prototype
-    js_right=rb_right.to_json
+    js_right=rb_right.to_jssh
     value_json("#{js_left}=#{js_right}")
   end
   
@@ -347,7 +360,7 @@ class JsshSocket
   # Uses #value_json; see its documentation.
   def call_json(js_function, *rb_args)
     ensure_prototype
-    js_args=rb_args.map{|arg| arg.to_json}
+    js_args=rb_args.map{|arg| arg.to_jssh}
     value_json("#{js_function}(#{js_args.join(', ')})")
   end
 
@@ -414,11 +427,15 @@ class JsshSocket
   # Raises ActiveSupport::JSON::ParseError if given a blank string, something that is not a string, or 
   # a string that contains invalid JSON
   def parse_json(json)
-    raise ActiveSupport::JSON::ParseError, "Not a string! got: #{json.inspect}" unless json.is_a?(String)
-    raise ActiveSupport::JSON::ParseError, "Blank string!" if json==''
+    err_class=JSON::ParserError
+    decoder=JSON.method(:parse)
+    # err_class=ActiveSupport::JSON::ParseError
+    # decoder=ActiveSupport::JSON.method(:decode)
+    raise err_class, "Not a string! got: #{json.inspect}" unless json.is_a?(String)
+    raise err_class, "Blank string!" if json==''
     begin
-      return ActiveSupport::JSON.decode(json)
-    rescue ActiveSupport::JSON::ParseError
+      return decoder.call(json)
+    rescue err_class
       err=$!.class.new($!.message+"\nParsing: #{json.inspect}")
       err.set_backtrace($!.backtrace)
       raise err
@@ -563,7 +580,7 @@ class JsshObject
   
   # returns a JsshObject representing the given attribute. Checks the type, and if 
   # it is a function, references the _return value_ of the function (with the given
-  # arguments, if any, which are in ruby, converted to_json). If the type of the 
+  # arguments, if any, which are in ruby, converted to_jssh). If the type of the 
   # expression is undefined, raises an error (if you want an attribute even if it's 
   # undefined, use #attr). 
   def invoke(attribute, *args)
@@ -589,18 +606,19 @@ class JsshObject
     JsshObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
   end
 
-  # assigns (via JsshSocket#assign) the given ruby value (converted to_json) to the reference
+  # assigns (via JsshSocket#assign) the given ruby value (converted to_jssh) to the reference
   # for this object. returns self. 
   def assign(val)
-    @debug_name="(#{debug_name}=#{val.is_a?(JsshObject) ? val.debug_name : val.to_json})"
-    result=assign_expr val.to_json
+    @debug_name="(#{debug_name}=#{val.is_a?(JsshObject) ? val.debug_name : val.to_jssh})"
+    result=assign_expr val.to_jssh
 #    logger.info { "#{self.class} assigned: #{debug_name} (type #{type})" }
     result
   end
   # assigns the given javascript expression (string) to the reference for this object 
   def assign_expr(val)
     jssh_socket.value_json("(function(val){#{ref}=val; return null;}(#{val}))")
-    # don't want to use JsshSocket#assign_json because converting the assignment to json is error-prone and we don't really care. 
+    @type=nil # uncache this 
+    # don't want to use JsshSocket#assign_json because converting the result of the assignment (that is, the expression assigned) to json is error-prone and we don't really care about the result. 
     # don't want to use JsshSocket#assign because the result can be blank and cause send_and_read to wait for data that's not coming - also 
     # using a json function is better because it catches errors much more elegantly. 
     # so, wrap it in a function that returns nil. 
@@ -608,14 +626,14 @@ class JsshObject
   end
   
   # returns a JsshObject for this object - assumes that this object is a function - passing 
-  # this function the specified arguments, which are converted to_json
+  # this function the specified arguments, which are converted to_jssh
   def pass(*args)
-    JsshObject.new("#{ref}(#{args.map{|arg| arg.to_json}.join(', ')})", jssh_socket, :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JsshObject) ? arg.debug_name : arg.to_json}.join(', ')})")
+    JsshObject.new("#{ref}(#{args.map{|arg| arg.to_jssh}.join(', ')})", jssh_socket, :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JsshObject) ? arg.debug_name : arg.to_jssh}.join(', ')})")
   end
   
   # returns the value (via JsshSocket#value_json) or a JsshObject (see #val_or_object) of the return 
   # value of this function (assumes this object is a function) passing it the given arguments (which 
-  # are converted to_json). 
+  # are converted to_jssh). 
   # simply, it just calls self.pass(*args).val_or_object
   def call(*args)
     pass(*args).val_or_object
@@ -662,31 +680,31 @@ class JsshObject
   end
 
   # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
-  # (doesn't use to_json) 
+  # (doesn't use to_jssh) 
 #  def sub_expr(key_expr)
 #    JsshObject.new("#{ref}[#{key_expr}]", jssh_socket, :debug_name => "#{debug_name}[#{}]")
 #  end
   
   # returns a JsshObject referring to a subscript of this object, specified as a ruby object converted to 
-  # javascript via to_json 
+  # javascript via to_jssh 
   def sub(key)
-    JsshObject.new("#{ref}[#{key.to_json}]", jssh_socket, :debug_name => "#{debug_name}[#{key.is_a?(JsshObject) ? key.debug_name : key.to_json}]")
+    JsshObject.new("#{ref}[#{key.to_jssh}]", jssh_socket, :debug_name => "#{debug_name}[#{key.is_a?(JsshObject) ? key.debug_name : key.to_jssh}]")
   end
 
   # returns a JsshObject referring to a subscript of this object, or a value if it is simple (see #val_or_object)
-  # subscript is specified as ruby (converted to_json). 
+  # subscript is specified as ruby (converted to_jssh). 
   def [](key)
     sub(key).val_or_object(:error_on_undefined => false)
   end
   # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the given subscript
-  # (key is converted to_json). 
+  # (key is converted to_jssh). 
   def []=(key, value)
     self.sub(key).assign(value)
   end
 
   # calls a binary operator with self and another operand 
   def binary_operator(operator, operand)
-    JsshObject.new("(#{ref}#{operator}#{operand.to_json})", jssh_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JsshObject) ? operand.debug_name : operand.to_json})").val_or_object
+    JsshObject.new("(#{ref}#{operator}#{operand.to_jssh})", jssh_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JsshObject) ? operand.debug_name : operand.to_jssh})").val_or_object
   end
   def +(operand)
     binary_operator('+', operand)
@@ -844,8 +862,14 @@ class JsshObject
     invoke :id, *args
   end
   
-  # okay, so it's not actually json, but it makes it so that when #to_json is called, it gets the reference
-  # instead of '#<JsshObject:0x2de5524>'
+  # gives a reference  for this object. this is the only class for which to_jssh doesn't
+  # convert the object to json. 
+  def to_jssh
+    ref
+  end
+  # this still needs to be defined because when ActiveSupport::JSON.encode is called by to_jssh
+  # on an array or hash containing a JsshObject, it calls to_json. which apparently just freezes. 
+  # I guess that's because JsshSocket circularly references itself with its instance variables. 
   def to_json(options={})
     ref
   end

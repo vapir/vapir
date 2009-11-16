@@ -272,7 +272,7 @@ module Watir
           container_module.module_eval do
             define_method('show_'+container_multiple_method.to_s) do |*io|
               io=io.first||$stdout # io is a *array so that you don't have to give an arg (since procs don't do default args)
-              element_collection=element_collection(including_class)
+              element_collection=ElementCollection.new(self, including_class, extra_for_contained)
               io.write("There are #{element_collection.length} #{container_multiple_method}\n")
               element_collection.each do |element|
                 io.write(element.to_s)
@@ -498,7 +498,7 @@ module Watir
           matched_count=0
           matched_candidates(self.class.specifiers) do |match|
             matched_count+=1
-            if @extra[:index]==matched_count
+            if @index==matched_count
               matched_candidate=match
               break
             end

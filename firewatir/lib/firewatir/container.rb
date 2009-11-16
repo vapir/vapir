@@ -68,14 +68,16 @@ module Watir
 
     # Returns the first element that matches the given xpath expression or query.
     def element_by_xpath(xpath)
-      base_element_class.factory(element_object_by_xpath(xpath))
+      # TODO: move this to common; should work the same for IE 
+      base_element_class.factory(element_object_by_xpath(xpath), extra_for_contained)
     end
 
     # Returns the array of elements that match the given xpath query.
     def elements_by_xpath(xpath)
       # TODO/FIX: shouldn't this return an ElementCollection? tests seem to expect it not to, addressing it with 0-based indexing, but that seems insconsistent with everything else. 
+      # TODO: move this to common; should work the same for IE 
       element_objects_by_xpath(xpath).map do |element_object|
-        base_element_class.factory(element_object)
+        base_element_class.factory(element_object, extra_for_contained)
       end
     end
 

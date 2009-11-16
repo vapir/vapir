@@ -582,7 +582,7 @@ module Watir
     # returns #modal_dialog if it exists; otherwise, errors. use this with the expectation that the dialog does exist. 
     # use #modal_dialog when you will check if it exists. 
     def modal_dialog!
-      modal_dialog || raise(NoMatchingWindowFoundException, "No modal dialog found on this browser")
+      modal_dialog || raise(Exception::NoMatchingWindowFoundException, "No modal dialog found on this browser")
     end
     
     def click_modal_button(button_text)

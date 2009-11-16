@@ -110,7 +110,7 @@ module Watir
       else
         raise RuntimeError, "unknown element object list #{element_object_arr.inspect} (#{element_object_arr.class})"
       end
-      elements=element_objects.map{|el| base_element_class.factory(el)}
+      elements=element_objects.map{|el| base_element_class.factory(el, extra_for_contained)}
       elements.each do |element|
         write_to.write element.to_s+"\n"
         write_to.write "------------------------------------------\n"

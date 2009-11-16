@@ -588,7 +588,7 @@ module Watir
     # assert_exists can generally be omitted from there. 
     def with_highlight(options={})
       highlight_option_keys=[:color]
-      #handle_options!(options, {:highlight => true}, highlight_option_keys)
+      #options=handle_options(options, {:highlight => true}, highlight_option_keys)
       options={:highlight => true}.merge(options)
       highlight_options=options.reject{|(k,v)| !highlight_option_keys.include?(k) }
       assert_exists do
@@ -630,7 +630,7 @@ module Watir
     end
 
     def set_highlight_color(options={})
-      #handle_options!(options, :color => DEFAULT_HIGHLIGHT_COLOR)
+      #options=handle_options(options, :color => DEFAULT_HIGHLIGHT_COLOR)
       options={:color => DEFAULT_HIGHLIGHT_COLOR}.merge(options)
       assert_exists do
         @original_color=element_object.style.backgroundColor
@@ -638,7 +638,7 @@ module Watir
       end
     end
     def clear_highlight_color(options={})
-      #handle_options!(options, {}) # no options yet
+      #options=handle_options(options, {}) # no options yet
       begin
         element_object.style.background=@original_color
       ensure
@@ -647,7 +647,7 @@ module Watir
     end
     # Highlights the image by adding a border 
     def set_highlight_border(options={})
-      #handle_options!(options, {}) # no options yet
+      #options=handle_options(options, {}) # no options yet
       assert_exists do
         @original_border= element_object.border.to_i
         element_object.border= @original_border+1
@@ -656,7 +656,7 @@ module Watir
     # restores the image to its original border 
     # TODO: and border color 
     def clear_highlight_border(options={})
-      #handle_options!(options, {}) # no options yet
+      #options=handle_options(options, {}) # no options yet
       assert_exists do
         begin
           element_object.border = @original_border
@@ -677,7 +677,7 @@ module Watir
         Kernel.warn "DEPRECATION WARNING: #{self.class.name}\#flash takes an options hash - passing a number is deprecated. Please use #{self.class.name}\#flash(:count => #{options[:count]})\n(called from #{caller.map{|c|"\n"+c}})"
       end
       options={:count => 10, :sleep => 0.05}.merge(options)
-      #handle_options!(options, {:count => 10, :sleep => 0.05}, [:color])
+      #options=handle_options(options, {:count => 10, :sleep => 0.05}, [:color])
       assert_exists do
         options[:count].times do
           with_highlight(options) do

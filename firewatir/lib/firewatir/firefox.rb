@@ -142,7 +142,8 @@ module Watir
     include Watir::FFHasDocument
                     
     def self.initialize_jssh_socket
-      if class_variable_defined?('@@jssh_socket') # if it already exists, then a new socket will not have any objects of the old one
+      # if it already exists and is not nil, then we are clobbering an existing one, presumably dead. but a new socket will not have any objects of the old one, so warn 
+      if class_variable_defined?('@@jssh_socket') && @@jssh_socket 
         Kernel.warn "WARNING: JSSH_SOCKET RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
       end
       @@jssh_socket=JsshSocket.new
@@ -150,7 +151,7 @@ module Watir
       @@jssh_socket
     end
     def self.jssh_socket(options={})
-      if options[:reset] || !class_variable_defined?('@@jssh_socket')
+      if options[:reset] || !(class_variable_defined?('@@jssh_socket') && @@jssh_socket)
         initialize_jssh_socket
       end
       if options[:reset_if_dead]
@@ -184,7 +185,7 @@ module Watir
         options = {:wait_time => options}
         Kernel.warn "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:wait_time => #{options[:wait_time]})\n(called from #{caller.map{|c|"\n"+c}})"
       end
-      handle_options!(options, {:wait_time => 20}, [:attach, :goto, :binary_path])
+      options=handle_options(options, {:wait_time => 20}, [:attach, :goto, :binary_path])
       if options[:binary_path]
         @binary_path=options[:binary_path]
       end
@@ -200,7 +201,12 @@ module Watir
           raise Watir::Exception::NoBrowserException, "cannot attach using #{options[:attach].inspect} - could not connect to Firefox with JSSH"
         else
           launch_browser
-          unless options[:attach]==false # if options[:attach] is explicitly given as false (not nil), take that to mean we don't want to attach to the window launched when the process starts 
+          # if we just launched a the browser process, attach to the window
+          # that opened when we did that. 
+          # but if options[:attach] is explicitly given as false (not nil), 
+          # take that to mean we don't want to attach to the window launched 
+          # when the process starts. 
+          unless options[:attach]==false
             options[:attach]=[:title, //]
           end
         end
@@ -408,6 +414,7 @@ module Watir
         begin
           browser_window_object.close
         rescue JsshError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
+          @@jssh_socket=nil
           nil
         end
       end

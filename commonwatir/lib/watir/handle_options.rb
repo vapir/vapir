@@ -3,7 +3,8 @@
 # clobber that function's default) 
 # raises ArgumentError if the given options have an invalid key (defined as one not
 # specified in default options or other_allowed_keys), and sets default values in given options where nothing is set.
-def handle_options!(given_options, default_options, other_allowed_keys=[])
+def handle_options(given_options, default_options, other_allowed_keys=[])
+  given_options=given_options.dup
   unless (unknown_keys=(given_options.keys-default_options.keys-other_allowed_keys)).empty?
     raise ArgumentError, "Unknown options: #{(given_options.keys-default_options.keys).map(&:inspect).join(', ')}. Known options are #{(default_options.keys+other_allowed_keys).map(&:inspect).join(', ')}"
   end

@@ -557,7 +557,7 @@ class WinWindow
   # Raises ArgumentError if invalid options are given. 
   # Raises a WinWindow::NotExistsError if the button doesn't exist, or if this window doesn't exist, or a WinWindow::SystemError if a System Error occurs (from #each_child)
   def click_child_button_try_for!(button_text, time, options={})
-    handle_options!(options, {:set_foreground => true, :exception => nil, :interval => 0.05})
+    options=handle_options(options, {:set_foreground => true, :exception => nil, :interval => 0.05})
     button=child_button(button_text) || (raise WinWindow::NotExistsError, "Button #{button_text.inspect} not found")
     waiter_options={}
     waiter_options[:condition]=proc{!button.exists? || (block_given? && yield)}
@@ -589,7 +589,7 @@ class WinWindow
   # - :control_class_name is the class name of the control you are looking for. Defaults to nil, which accepts any class name. 
   # - :label_class_name is the class name of the label preceding the control you are looking for. Defaults to 'Static'
   def child_control_with_preceding_label(preceding_label_text, options={})
-    handle_options!(options, :control_class_name => nil, :label_class_name => "Static")
+    options=handle_options(options, :control_class_name => nil, :label_class_name => "Static")
     
     prev_was_label=false
     control=self.children.detect do |child|

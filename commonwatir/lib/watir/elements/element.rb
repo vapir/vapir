@@ -431,7 +431,7 @@ module Watir
     #   - false: no relocating is done even if the browser is updated or the element_object stops existing. 
     #   - true: this Element is relocated. the container is relocated only if the browser is updated or the element_object stops existing. 
     def locate(options={})
-      if options[:relocate]==nil # don't override if it is set to false; only if it's nil 
+      if options[:relocate]==nil && @element_object # don't override if it is set to false; only if it's nil, and don't set :relocate there's no @element_object (that's an initial locate, not a relocate) 
         if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at # TODO: implement this for IE; only exists for Firefox now. 
           options[:relocate]=:recursive
         elsif !element_object_exists?
@@ -530,7 +530,7 @@ module Watir
           end
           by_custom
         else
-          raise Watir::Exception::MissingWayOfFindingObjectException, "Unkwon 'how' given: #{@how.inspect} (#{@how.class}). 'what' was #{@what.inspect} (#{@what.class})"
+          raise Watir::Exception::MissingWayOfFindingObjectException, "Unknown 'how' given: #{@how.inspect} (#{@how.class}). 'what' was #{@what.inspect} (#{@what.class})"
         end
       end
       if !element_object_existed && @element_object
@@ -569,9 +569,7 @@ module Watir
     def exists?
       begin
         !!locate
-      rescue Watir::Exception::UnknownObjectException, Watir::Exception::UnknownFrameException
-        # if the container (or some parent container) stopped existing, then these may be raised on any of those. 
-        # in which case self may be assumed not to exist. 
+      rescue Watir::Exception::UnknownObjectException
         false
       end
     end
@@ -625,7 +623,7 @@ module Watir
       elsif set_or_clear==:clear
         clear_highlight
       else
-        raise ArgumentError, "argument must me :set or :clear; got #{set_or_clear.inspect}"
+        raise ArgumentError, "argument must be :set or :clear; got #{set_or_clear.inspect}"
       end
     end
 

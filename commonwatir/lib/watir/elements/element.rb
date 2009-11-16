@@ -148,6 +148,7 @@ module Watir
         class_array_append 'attributes_to_inspect', attribute_to_inspect
       end
     end
+    alias inspect_this inspect_these
     # inspect_this_if(inspect_this, &block) is shorthand for 
     # inspect_this({:label => inspect_this, :value => inspect_this, :if => block)
     # if a block isn't given, the :if proc is the result of sending the inspect_this symbol to the element.
@@ -372,7 +373,11 @@ module Watir
     public
     
     dom_attr :tagName, :id
-    inspect_these(:how, :what, {:label => :index, :value => proc{ @index }, :if => proc{ @index }})
+    inspect_this :how
+    inspect_this_if(:what) do |element|
+      element.how != :element_object # don't show the element object in inspect
+    end
+    inspect_this_if(:index) # uses the default 'if'; shows index if it's not nil 
     inspect_these :tagName, :id
     dom_attr :title, :tagName => [:tagName, :tag_name], :innerHTML => [:innerHTML, :inner_html], :className => [:className, :class_name]
     dom_attr :style

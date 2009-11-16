@@ -9,10 +9,8 @@ class TC_SelectLists < Test::Unit::TestCase
   end 
 
   def test_select_by_numeric
-    # make sure we don't find an option if passed a number
-    #  as matching goes by equality and the number 2011 is not the same as the string '2011'.
-    browser.select_list!(:id, 'year').select('2011')
-    assert_raises(NoValueFoundException) { browser.select_list!(:id, "year").select(2011) }  
+    # make sure we still find the right option if passed a number
+    browser.select_list!(:id, 'year').select(2011)
     assert_equal(['2011'], browser.select_list!(:id, 'year').selected_option_texts)
   end
 

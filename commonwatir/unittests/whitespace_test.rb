@@ -11,7 +11,8 @@ class TC_WhiteSpace < Test::Unit::TestCase
   end 
 
   def test_text_with_nbsp
-    assert_match(/\A\s*Login\s*\z/, browser.link!(:index => 1).text)
+    # firefox returns the unicode \302\240 whereas ie returns a space. 
+    assert_match(/\A[\302\240 ]Login[\302\240 ]\z/u, browser.link!(:index => 1).text)
   end
 
   def test_nbsp_beginning_and_end
@@ -19,7 +20,8 @@ class TC_WhiteSpace < Test::Unit::TestCase
   end
   
   def test_single_nbsp
-    assert_match(/\A\s*Test for nbsp\.\s*\z/, browser.span!(:id, 'single_nbsp').text)
+    # firefox returns the unicode \302\240 whereas ie returns a space. 
+    assert_match(/\A\s*Test for[\302\240 ]nbsp\.\s*\z/u, browser.span!(:id, 'single_nbsp').text)
   end
   
   def test_multiple_spaces

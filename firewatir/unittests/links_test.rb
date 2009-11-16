@@ -24,7 +24,7 @@ class TC_Links < Test::Unit::TestCase
         begin
             browser.link!(:bad_attribute, 199).click 
         rescue UnknownObjectException => e           
-            assert_equal "Unable to locate element, using attributes, {:bad_attribute=>199}", e.message
+            assert_match(/^Unable to locate Watir::.*Link, using attributes: \{:bad_attribute=>199\}$/, e.message)
         end
     end
 
@@ -51,10 +51,10 @@ class TC_Links < Test::Unit::TestCase
         assert(!browser.link(:id, "alsomissing").exists?)
         
         assert(browser.link(:id, /_id/).exists?)
-        assert(!browser.link(:id, /alsomissing/))   
+        assert(!browser.link(:id, /alsomissing/).exists?)
         
         assert(browser.link(:name, "link_name").exists?)
-        assert(!browser.link(:name, "alsomissing"))   
+        assert(!browser.link(:name, "alsomissing").exists?)
         
         assert(browser.link(:name, /_n/).exists?)
         assert(!browser.link(:name, /missing/).exists?)

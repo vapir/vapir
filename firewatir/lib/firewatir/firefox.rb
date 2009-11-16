@@ -285,11 +285,6 @@ module Watir
       # jssh_socket may be nil if the window has closed 
       jssh_socket && browser_window_object && jssh_socket.object('getWindows()').to_js_array.include(browser_window_object)
     end
-    def assert_exists
-      unless exists?
-        raise Watir::Exception::NoMatchingWindowFoundException, "The window no longer exists!"
-      end
-    end
     
     # Launches firebox browser
     # options as .new

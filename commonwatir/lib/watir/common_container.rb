@@ -71,6 +71,24 @@ module Watir
       end
     end
 
+    # asserts that this element exists - optionally, takes a block, and other calls to assert_exists
+    # over the course of the block will not cause redundant assertions. 
+    def assert_exists(options={})
+      was_asserting_exists=@asserting_exists
+      if (!@asserting_exists || options[:force])
+        locate!
+      end
+      @asserting_exists=true
+      begin
+        if block_given?
+          result=yield
+        end
+      ensure
+        @asserting_exists=was_asserting_exists
+      end
+      result
+    end
+    
     # shows the available objects on the current container.
     # This is usually only used for debugging or writing new test scripts.
     # This is a nice feature to help find out what HTML objects are on a page

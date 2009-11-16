@@ -14,15 +14,17 @@ module Watir
 
     # this is used by #locate in Element and by ElementCollection. 
     def element_object_candidates(specifiers)
-      case @extra[:candidates]
-      when nil
-        Watir::Specifier.specifier_candidates(@container, specifiers)
-      when Symbol
-        Watir::Element.object_collection_to_enumerable(@container.element_object.send(@extra[:candidates]))
-      when Proc
-        @extra[:candidates].call(@container)
-      else
-        raise Watir::Exception::MissingWayOfFindingObjectException, "Unknown method of specifying candidates: #{@extra[:candidates].inspect} (#{@extra[:candidates].class})"
+      @container.assert_exists(:force => true) do
+        case @extra[:candidates]
+        when nil
+          Watir::Specifier.specifier_candidates(@container, specifiers)
+        when Symbol
+          Watir::Element.object_collection_to_enumerable(@container.element_object.send(@extra[:candidates]))
+        when Proc
+          @extra[:candidates].call(@container)
+        else
+          raise Watir::Exception::MissingWayOfFindingObjectException, "Unknown method of specifying candidates: #{@extra[:candidates].inspect} (#{@extra[:candidates].class})"
+        end
       end
     end
     def matched_candidates(specifiers, &block)

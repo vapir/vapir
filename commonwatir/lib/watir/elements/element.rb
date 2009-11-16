@@ -546,24 +546,6 @@ module Watir
       end
     end
     
-    # asserts that this element exists - optionally, takes a block, and other calls to assert_exists
-    # over the course of the block will not cause redundant assertions. 
-    def assert_exists(options={})
-      was_asserting_exists=@asserting_exists
-      if (!@asserting_exists || options[:force])
-        locate!
-      end
-      @asserting_exists=true
-      begin
-        if block_given?
-          result=yield
-        end
-      ensure
-        @asserting_exists=was_asserting_exists
-      end
-      result
-    end
-    
     public
     # Returns whether this element actually exists.
     def exists?

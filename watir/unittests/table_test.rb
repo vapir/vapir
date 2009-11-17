@@ -111,8 +111,8 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_row_directly
-    assert browser.row(:id, 'row1').exists?
-    assert !browser.row(:id, 'no_exist').exists?
+    assert browser.table_row(:id, 'row1').exists?
+    assert !browser.table_row(:id, 'no_exist').exists?
   end
   def test_row_another_way
     assert_equal('Row 2 Col1',  browser.table_row!(:id, 'row1')[1].text.strip)
@@ -334,7 +334,7 @@ class TC_Table_Columns < Test::Unit::TestCase
   tag_method :test_get_columnvalues_with_colspan, :fails_on_firefox
   def test_get_columnvalues_with_colspan
     assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], browser.table!(:index, 3).column_texts_at(1))
-     (2..4).each{|x|assert_raises(IndexError){browser.table!(:index, 3).column_texts_at(x)}}
+     (2..4).each{|x|assert_raises(UnknownObjectException){browser.table!(:index, 3).column_texts_at(x)}}
   end
   
   def test_get_rowvalues_full_row

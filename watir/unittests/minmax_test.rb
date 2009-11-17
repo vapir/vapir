@@ -19,6 +19,7 @@ class TC_MinMax< Test::Unit::TestCase
     browser.maximize
   end
   def test_front
+    browser.bring_to_front
     assert browser.front?
     ie2 = Watir::IE.start($htmlRoot + 'blankpage.html')
     assert ie2.front?

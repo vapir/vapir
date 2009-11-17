@@ -28,7 +28,7 @@ class TC_Fields < Test::Unit::TestCase
   
   tag_method :test_text_field_dragContentsTo, :fails_on_firefox
   def test_text_field_dragContentsTo
-    browser.text_field!(:name, "text1").dragContentsTo(:id, "text2")
+    browser.text_field!(:name, "text1").drag_contents_to(:id, "text2")
     assert_equal(browser.text_field!(:name, "text1").value, "") 
     assert_equal(browser.text_field!(:id, "text2").value, "goodbye allHello World") 
   end

@@ -66,16 +66,20 @@ module Watir
         element_object.select
         value = self.value
         
-        element_object.fireEvent("onSelect")
-        element_object.fireEvent("ondragstart")
-        element_object.fireEvent("ondrag")
-        destination.fireEvent("onDragEnter")
-        destination.fireEvent("onDragOver")
-        destination.fireEvent("ondrop")
+        with_highlight do
+          fire_event("onSelect")
+          fire_event("ondragstart")
+          fire_event("ondrag")
+          destination.with_highlight do
+            destination.fire_event("onDragEnter")
+            destination.fire_event("onDragOver")
+            destination.fire_event("ondrop")
+            destination.value = destination.value + value.to_s
+          end
+          fire_event("ondragend")
+          self.value = ""
+        end
         
-        element_object.fireEvent("ondragend")
-        destination.value = destination.value + value.to_s
-        self.value = ""
       end
     end
     alias_deprecated :dragContentsTo, :drag_contents_to

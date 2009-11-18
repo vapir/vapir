@@ -5,16 +5,9 @@ module Watir
     include IEContainer # presumes @container is defined
     include Element
     include Watir::Exception
-    attr_accessor :container
     
-    # number of spaces that separate the property from the value in the to_s method
-    TO_S_SIZE = 14
-    
-    alias ole_object element_object 
     alias containing_object element_object
-    #def ole_object=(o)
-    #  @element_object = o
-    #end
+    alias ole_object element_object # TODO: deprecate this? 
     
     dom_attr :currentStyle
     dom_attr :disabled => [:disabled, :disabled?] # this applies to all elements for IE, apparently. 
@@ -38,18 +31,13 @@ module Watir
     dom_attr :outerHTML => :outer_html
 
     # return the text before the element
-    # TODO/FIX: ?
-    def before_text # label only
-      assert_exists do
-        ole_object.getAdjacentText("afterEnd").strip
-      end
+    def before_text
+      element_object.getAdjacentText("afterEnd")
     end
     
     # return the text after the element
-    def after_text # label only
-      assert_exists do
-        ole_object.getAdjacentText("beforeBegin").strip
-      end
+    def after_text
+      element_object.getAdjacentText("beforeBegin")
     end
     
     # Returns the text content of the element.
@@ -174,22 +162,6 @@ module Watir
       rescue WIN32OLERuntimeError
         false
       end
-    end
-  end
-  
-  class ElementMapper # Still to be used
-    include IEContainer
-    
-    def initialize wrapper_class, container, how, what
-      @wrapper_class = wrapper_class
-      set_container
-      @how = how
-      @what = what
-    end
-    
-    def method_missing method, *args
-      locate
-      @wrapper_class.new(@element_object).send(method, *args)
     end
   end
 end  

@@ -237,7 +237,7 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     # shrink rows 1,2,3
     count=1
     t.each do |r|
-      r[1].image!(:src, /minus/).click if r[1].image(:src, /minus/) and (1..3) === count 
+      r[1].image!(:src, /minus/).click if r[1].image(:src, /minus/).exists? and (1..3) === count 
       count=2
     end
   end

@@ -38,10 +38,10 @@ class TC_Fields < Test::Unit::TestCase
     assert(browser.text_field!(:name, "text1").verify_contains(/Hello\sW/))  
     assert_false(browser.text_field!(:name, "text1").verify_contains("Ruby"))  
     assert_false(browser.text_field!(:name, "text1").verify_contains(/R/))  
-    assert_raises(UnknownObjectException) { browser.text_field!(:name, "NoName").verify_contains("No field to get a value of") } 
+    assert_raises(UnknownObjectException) { browser.text_field(:name, "NoName").verify_contains("No field to get a value of") }
     
     assert(browser.text_field!(:id, "text2").verify_contains("goodbye all") )  
-    assert_raises(UnknownObjectException) { browser.text_field!(:id, "noID").verify_contains("No field to get a value of") }          
+    assert_raises(UnknownObjectException) { browser.text_field(:id, "noID").verify_contains("No field to get a value of") }
   end
   
   def test_text_field_enabled
@@ -57,7 +57,7 @@ class TC_Fields < Test::Unit::TestCase
   end
   
   def test_text_field_get_contents
-    assert_raises(UnknownObjectException) { browser.text_field!(:name, "missing_field").append("Some Text") }  
+    assert_raises(UnknownObjectException) { browser.text_field(:name, "missing_field").append("Some Text") }
     assert_equal("Hello World", browser.text_field!(:name, "text1").value)  
   end
   
@@ -83,7 +83,7 @@ class TC_Fields < Test::Unit::TestCase
 #    items = browser.text_field!(:index, 2).to_s.split(/\n/)
 #    expected.each_with_index{|regex, x| assert_match(regex, items[x]) }
     assert_match(/Watir::\w*TextField.*?/m, browser.text_field!(:index, 1).to_s)
-    assert_raises(UnknownObjectException) { browser.text_field!(:index, 999).to_s }  
+    assert_raises(UnknownObjectException) { browser.text_field(:index, 999).to_s }
   end
   
 #  def build_to_s_regex(lhs, rhs)
@@ -94,7 +94,7 @@ class TC_Fields < Test::Unit::TestCase
   def test_text_field_append
     assert_raises(ObjectReadOnlyException) { browser.text_field!(:id, "readOnly2").append("Some Text") }  
     assert_raises(ObjectDisabledException) { browser.text_field!(:name, "disabled").append("Some Text") }  
-    assert_raises(UnknownObjectException) { browser.text_field!(:name, "missing_field").append("Some Text") }  
+    assert_raises(UnknownObjectException) { browser.text_field(:name, "missing_field").append("Some Text") }
     
     prev_value=browser.text_field!(:name, "text1").value
     text_to_append=" Some Text"
@@ -116,11 +116,11 @@ class TC_Fields < Test::Unit::TestCase
   end
   
   def test_text_field_properties
-    assert_raises(UnknownObjectException) { browser.text_field!(:index, 199).value }  
-    assert_raises(UnknownObjectException) { browser.text_field!(:index, 199).name }  
-    assert_raises(UnknownObjectException) { browser.text_field!(:index, 199).id }  
-    assert_raises(UnknownObjectException) { browser.text_field!(:index, 199).disabled }  
-    assert_raises(UnknownObjectException) { browser.text_field!(:index, 199).type }  
+    assert_raises(UnknownObjectException) { browser.text_field(:index, 199).value }
+    assert_raises(UnknownObjectException) { browser.text_field(:index, 199).name }
+    assert_raises(UnknownObjectException) { browser.text_field(:index, 199).id }
+    assert_raises(UnknownObjectException) { browser.text_field(:index, 199).disabled }
+    assert_raises(UnknownObjectException) { browser.text_field(:index, 199).type }
     
     assert_equal("Hello World" , browser.text_field!(:index, 1).value) 
     assert_equal("text"        , browser.text_field!(:index, 1).type)
@@ -191,11 +191,11 @@ class TC_Fields < Test::Unit::TestCase
   end
   
   def test_label_properties
-    assert_raises(UnknownObjectException) { browser.label!(:index,20).text } 
-    assert_raises(UnknownObjectException) { browser.label!(:index,20).for } 
-    assert_raises(UnknownObjectException) { browser.label!(:index,20).name } 
-    assert_raises(UnknownObjectException) { browser.label!(:index,20).type } 
-    assert_raises(UnknownObjectException) { browser.label!(:index,20).id } 
+    assert_raises(UnknownObjectException) { browser.label(:index,20).text }
+    assert_raises(UnknownObjectException) { browser.label(:index,20).for }
+    assert_raises(UnknownObjectException) { browser.label(:index,20).name }
+    assert_raises(UnknownObjectException) { browser.label(:index,20).type }
+    assert_raises(UnknownObjectException) { browser.label(:index,20).id }
     
     assert(!browser.label(:index,10).exists?)
     assert(!browser.label(:id,'missing').exists?)

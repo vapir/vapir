@@ -24,7 +24,7 @@ class TC_Em < Test::Unit::TestCase
     assert_equal "em-class-one", browser.em!(:id, "em-one").class_name
     assert_equal "", browser.em!(:id, 'em-two').class_name
     assert_raises(UnknownObjectException) do
-      browser.em!(:id, 'no_such_id').class_name
+      browser.em(:id, 'no_such_id').class_name
     end
   end
   
@@ -32,7 +32,7 @@ class TC_Em < Test::Unit::TestCase
     assert_equal "em-one", browser.em!(:class, 'em-class-one').id
     assert_equal "", browser.em!(:class, 'em-class-two').id
     assert_raises(UnknownObjectException) do
-      browser.em!(:id, 'no_such_id').id
+      browser.em(:id, 'no_such_id').id
     end
   end
   
@@ -40,7 +40,7 @@ class TC_Em < Test::Unit::TestCase
     assert_equal "one", browser.em!(:class, 'em-class-one').title
     assert_equal "", browser.em!(:id, 'em-two').title
     assert_raises(UnknownObjectException) do
-      browser.em!(:id, 'no_such_id').title
+      browser.em(:id, 'no_such_id').title
     end
   end
   
@@ -48,7 +48,7 @@ class TC_Em < Test::Unit::TestCase
     assert_equal  "one text", browser.em!(:id, "em-one").text
     assert_equal "", browser.em!(:class, 'em-class-two').text
     assert_raises(UnknownObjectException) do
-      browser.em!(:id, 'no_such_id').text
+      browser.em(:id, 'no_such_id').text
     end
   end
   

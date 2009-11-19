@@ -20,15 +20,15 @@ class TC_Radios < Test::Unit::TestCase
   end
   
   def test_radio_class
-    assert_raises(UnknownObjectException) { browser.radio!(:name, "noName").class_name }  
+    assert_raises(UnknownObjectException) { browser.radio(:name, "noName").class_name }
     assert_equal("radio_style", browser.radio!(:name, "box1").class_name)   
     assert_equal("", browser.radio!(:id, "box5").class_name)   
   end
   
   def test_Radio_Enabled
-    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.radio!(:name, "noName").enabled?  }  
-    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.radio!(:id, "noName").enabled?  }  
-    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.radio!(:name, "box4" , 6).enabled?  }  
+    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.radio(:name, "noName").enabled? }
+    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.radio(:id, "noName").enabled? }
+    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.radio(:name, "box4" , 6).enabled? }
     
     assert_false(browser.radio!(:name, "box2").enabled?)   
     assert(browser.radio!(:id, "box5").enabled?)   
@@ -72,7 +72,7 @@ class TC_Radios < Test::Unit::TestCase
   end
   
   def test_Radio_isSet
-    assert_raises(UnknownObjectException) { browser.radio!(:name, "noName").checked?  }  
+    assert_raises(UnknownObjectException) { browser.radio(:name, "noName").checked? }
     
     assert_false(browser.radio!(:name, "box1").checked?)   
     assert( browser.radio!(:name, "box3").checked?)   
@@ -88,7 +88,7 @@ class TC_Radios < Test::Unit::TestCase
   end
   
   def test_radio_clear
-    assert_raises(UnknownObjectException) {   browser.radio!(:name, "noName").clear  }  
+    assert_raises(UnknownObjectException) { browser.radio(:name, "noName").clear }
     
     browser.radio!(:name, "box1").clear
     assert_false(browser.radio!(:name, "box1").checked?)   
@@ -104,7 +104,7 @@ class TC_Radios < Test::Unit::TestCase
   end
   
   def test_radio_checked?
-    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.radio!(:name, "noName").checked?  }  
+    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) { browser.radio(:name, "noName").checked? }
     
     assert_equal( false , browser.radio!(:name, "box1").checked? )   
     assert_equal( true , browser.radio!(:name, "box3").checked?)   
@@ -115,7 +115,7 @@ class TC_Radios < Test::Unit::TestCase
   end
   
   def test_radio_set
-    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.radio!(:name, "noName").set  }  
+    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) { browser.radio(:name, "noName").set }
     browser.radio!(:name, "box1").set
     assert(browser.radio!(:name, "box1").checked?)   
     
@@ -131,11 +131,11 @@ class TC_Radios < Test::Unit::TestCase
   
   def test_radio_properties
     
-    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) {   browser.radio!(:index, 199).value}  
-    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) {   browser.radio!(:index, 199).name }  
-    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) {   browser.radio!(:index, 199).id }  
-    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) {   browser.radio!(:index, 199).disabled }  
-    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) {   browser.radio!(:index, 199).type }  
+    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.radio(:index, 199).value }
+    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.radio(:index, 199).name }
+    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.radio(:index, 199).id }
+    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.radio(:index, 199).disabled }
+    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.radio(:index, 199).type }
     
     assert_equal("on"   ,    browser.radio!(:index, 1).value)  
     assert_equal("box1" ,    browser.radio!(:index, 1).name )  

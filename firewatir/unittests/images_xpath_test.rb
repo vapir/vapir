@@ -65,10 +65,10 @@ class TC_Images_XPath < Test::Unit::TestCase
     end
     
     def test_image_click
-        assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@name='no_image_with_this']").click }
-        assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@id='no_image_with_this']").click }
-        assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@src='no_image_with_this']").click}
-        assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@alt='no_image_with_this']").click}
+        assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@name='no_image_with_this']").click }
+        assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@id='no_image_with_this']").click }
+        assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@src='no_image_with_this']").click}
+        assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@alt='no_image_with_this']").click}
 
         # test for bug 1882
         browser.text_field!(:name , "text1").clear
@@ -92,10 +92,10 @@ class TC_Images_XPath < Test::Unit::TestCase
 
     # TODO: Need to see alternative for this in Mozilla
     #def test_imageHasLoaded
-    #    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@name='no_image_with_this']").hasLoaded? }
-    #    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@id='no_image_with_this']").hasLoaded? }
-    #    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@src='no_image_with_this']").hasLoaded? }
-    #    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@alt='no_image_with_this']").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@name='no_image_with_this']").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@id='no_image_with_this']").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@src='no_image_with_this']").hasLoaded? }
+    #    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@alt='no_image_with_this']").hasLoaded? }
     #    
     #    assert_false( browser.image!(:xpath , "//img[@name='themissingimage']").hasLoaded?  )
     #    assert( browser.image!(:xpath , "//img[@name='circle']").hasLoaded?  )
@@ -106,9 +106,9 @@ class TC_Images_XPath < Test::Unit::TestCase
     
     def test_image_properties
         # TODO: Need to see alternative for this in Mozilla
-        #assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@name='no_image_with_this']").hasLoaded? }
-        #assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@id='no_image_with_this']").hasLoaded? }
-        #assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@src='no_image_with_this']").hasLoaded? }
+        #assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@name='no_image_with_this']").hasLoaded? }
+        #assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@id='no_image_with_this']").hasLoaded? }
+        #assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@src='no_image_with_this']").hasLoaded? }
         
         # to string tests -- output should be verified!
         # TODO/FIX: this

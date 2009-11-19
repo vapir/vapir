@@ -25,7 +25,7 @@ class TC_Dt < Test::Unit::TestCase
     assert_equal "industry", browser.dt!(:id, "experience").class_name
     assert_equal "", browser.dt!(:id, 'education').class_name
     assert_raises(UnknownObjectException) do
-      browser.dt!(:id, 'no_such_id').class_name
+      browser.dt(:id, 'no_such_id').class_name
     end
   end
   
@@ -33,7 +33,7 @@ class TC_Dt < Test::Unit::TestCase
     assert_equal "experience", browser.dt!(:class, 'industry').id
     assert_equal "", browser.dt!(:class, 'current-industry').id
     assert_raises(UnknownObjectException) do
-      browser.dt!(:id, 'no_such_id').id
+      browser.dt(:id, 'no_such_id').id
     end
   end
   
@@ -41,7 +41,7 @@ class TC_Dt < Test::Unit::TestCase
     assert_equal "experience", browser.dt!(:id, 'experience').title
     assert_equal "", browser.dt!(:class, 'noop').title
     assert_raises(UnknownObjectException) do
-      browser.dt!(:id, 'no_such_id').title
+      browser.dt(:id, 'no_such_id').title
     end
   end
   
@@ -49,7 +49,7 @@ class TC_Dt < Test::Unit::TestCase
     assert_equal "Experience", browser.dt!(:id, "experience").text.strip
     assert_equal "", browser.dt!(:class, 'noop').text
     assert_raises(UnknownObjectException) do
-      browser.dt!(:id, 'no_such_id').text
+      browser.dt(:id, 'no_such_id').text
     end
   end
   

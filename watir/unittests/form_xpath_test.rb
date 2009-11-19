@@ -93,7 +93,7 @@ class TC_Forms3_XPath < Test::Unit::TestCase
   
   def test_flash2
     browser.button!(:value, 'Click Me').flash
-    assert_raises( Watir::UnknownObjectException ) { browser.text_field!( :name , 'g177').flash }
+    assert_raises(Watir::UnknownObjectException) { browser.text_field(:name , 'g177').flash }
   end
   
 #  def test_showElements # add verification!

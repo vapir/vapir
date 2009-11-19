@@ -19,19 +19,19 @@ class TC_SelectList < Test::Unit::TestCase
 
     def test_select_list_enabled
         assert(browser.select_list!(:name, "sel1").enabled?)   
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "NoName").enabled? }  
+        assert_raises(UnknownObjectException) { browser.select_list(:name, "NoName").enabled? }  
     end
 
     def test_select_list_option_texts
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "NoName").option_texts }  
+        assert_raises(UnknownObjectException) { browser.select_list(:name, "NoName").option_texts }  
         assert_equal( ["Option 1" ,"Option 2" , "Option 3" , "Option 4"] , 
         browser.select_list!(:name, "sel1").option_texts)   
     end
 
     def test_Option_text_select
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "sel1").option!(:text, "missing item").select }  
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "sel1").option!(:text, /missing/).select }  
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "sel1").option!(:missing, "Option 1").select }
+        assert_raises(UnknownObjectException) { browser.select_list(:name, "sel1").option!(:text, "missing item").select }
+        assert_raises(UnknownObjectException) { browser.select_list(:name, "sel1").option!(:text, /missing/).select }
+        assert_raises(UnknownObjectException) { browser.select_list(:name, "sel1").option!(:missing, "Option 1").select }
 
         # the select method keeps any currently selected items - use the clear selection method first
         browser.select_list!( :name , "sel1").clear
@@ -44,14 +44,14 @@ class TC_SelectList < Test::Unit::TestCase
     def test_option_class_name
 
         # the option object doesnt inherit from element, so this doesnt work
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "sel1").option!(:text, "missing item").class_name }  
-        assert_equal("option_style" , browser.select_list!(:name, "sel2").option!(:value , 'o2').class_name)   
+        assert_raises(UnknownObjectException) { browser.select_list(:name, "sel1").option!(:text, "missing item").class_name }
+        assert_equal("option_style" , browser.select_list!(:name, "sel2").option!(:value , 'o2').class_name)
         assert_equal("" , browser.select_list!(:name, "sel2").option!(:value , 'o1').class_name)   
 
     end
 
     def test_selectBox_select_using_value
-        assert_raises(UnknownObjectException) { browser.select_list!(:name, "NoName").selected_option_texts }  
+        assert_raises(UnknownObjectException) { browser.select_list(:name, "NoName").selected_option_texts }
         assert_raises(NoValueFoundException) { browser.select_list!(:name, "sel1").select_value("missing item") }  
         assert_raises(NoValueFoundException) { browser.select_list!(:name, "sel1").select_value(/missing/) }  
         
@@ -83,11 +83,11 @@ class TC_SelectList < Test::Unit::TestCase
     end
     
     def test_select_list_properties
-        assert_raises(UnknownObjectException) { browser.select_list!(:index, 199).value }  
-        assert_raises(UnknownObjectException) { browser.select_list!(:index, 199).name }  
-        assert_raises(UnknownObjectException) { browser.select_list!(:index, 199).id }  
-        assert_raises(UnknownObjectException) { browser.select_list!(:index, 199).disabled }  
-        assert_raises(UnknownObjectException) { browser.select_list!(:index, 199).type }  
+        assert_raises(UnknownObjectException) { browser.select_list(:index, 199).value }
+        assert_raises(UnknownObjectException) { browser.select_list(:index, 199).name }
+        assert_raises(UnknownObjectException) { browser.select_list(:index, 199).id }
+        assert_raises(UnknownObjectException) { browser.select_list(:index, 199).disabled }
+        assert_raises(UnknownObjectException) { browser.select_list(:index, 199).type }
         
         assert_equal("o3"   ,    browser.select_list!(:index, 1).value)  
         assert_equal("sel1" ,    browser.select_list!(:index, 1).name )  

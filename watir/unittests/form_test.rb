@@ -130,7 +130,7 @@ class TC_Forms3 < Test::Unit::TestCase
   
   def test_flash2
     browser.button!(:value, 'Click Me').flash
-    assert_raises(UnknownObjectException) { browser.text_field!( :name , 'g177').flash }
+    assert_raises(UnknownObjectException) { browser.text_field( :name , 'g177').flash }
   end
   
   def test_submitWithImage

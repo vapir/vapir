@@ -12,10 +12,10 @@ class TC_CheckBox < Test::Unit::TestCase
     end
     
     def test_checkbox_properties
-       assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").id   }  
-       assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").name   }  
-       assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").disabled   }  
-       assert_raises(UnknownObjectException) {   browser.checkbox!(:name, "noName").type   }  
+       assert_raises(UnknownObjectException) { browser.checkbox(:name, "noName").id }
+       assert_raises(UnknownObjectException) { browser.checkbox(:name, "noName").name }
+       assert_raises(UnknownObjectException) { browser.checkbox(:name, "noName").disabled }
+       assert_raises(UnknownObjectException) { browser.checkbox(:name, "noName").type }
        assert(!browser.checkbox(:name, "noName").exists?)
 
        assert_equal("box1"  , browser.checkbox!(:index, 1).name  ) 
@@ -63,19 +63,19 @@ class TC_CheckBox < Test::Unit::TestCase
     end
 
     #def test_checkbox_Enabled
-    #  assert_raises(UnknownObjectException) { browser.checkbox!(:name, "noName").enabled? }  
-    #   assert_raises(UnknownObjectException) { browser.checkbox!(:id, "noName").enabled? }  
-    #  assert_raises(UnknownObjectException) { browser.checkbox!(:name, "box4" , 6).enabled? }  
+    #   assert_raises(UnknownObjectException) { browser.checkbox(:name, "noName").enabled? }
+    #   assert_raises(UnknownObjectException) { browser.checkbox(:id, "noName").enabled? }
+    #   assert_raises(UnknownObjectException) { browser.checkbox(:name, "box4" , 6).enabled? }
     #
     #   assert(browser.checkbox!(:name, "box1").enabled?)   
-    #    assert_false(browser.checkbox!(:name, "box2").enabled?)   
+    #   assert_false(browser.checkbox!(:name, "box2").enabled?)   
     #
     #   assert(browser.checkbox!(:name, "box4", 4).enabled?)   
-    #  assert_false(browser.checkbox!(:name, "box4" , 5 ).enabled?)   
+    #   assert_false(browser.checkbox!(:name, "box4" , 5 ).enabled?)   
     #end
 
     def test_checkbox_isSet
-       assert_raises(UnknownObjectException ) { browser.checkbox!(:name, "noName").checked? }  
+       assert_raises(UnknownObjectException ) { browser.checkbox(:name, "noName").checked? }  
 
        assert_false(browser.checkbox!(:name, "box1").checked?)   
        assert_false(browser.checkbox!(:name, "box2").checked?)   
@@ -86,7 +86,7 @@ class TC_CheckBox < Test::Unit::TestCase
     end
 
     def test_checkbox_clear
-       assert_raises(UnknownObjectException) { browser.checkbox!(:name, "noName").clear }  
+       assert_raises(UnknownObjectException) { browser.checkbox(:name, "noName").clear }  
        browser.checkbox!(:name, "box1").clear
        assert_false(browser.checkbox!(:name, "box1").checked?)   
 
@@ -101,7 +101,7 @@ class TC_CheckBox < Test::Unit::TestCase
     end
 
     def test_checkbox_getState
-       assert_raises(UnknownObjectException) { browser.checkbox!(:name, "noName").checked? }  
+       assert_raises(UnknownObjectException) { browser.checkbox(:name, "noName").checked? }  
        assert_equal( false , browser.checkbox!(:name, "box1").checked? )   
        assert_equal( true , browser.checkbox!(:name, "box3").checked?)   
 
@@ -111,7 +111,7 @@ class TC_CheckBox < Test::Unit::TestCase
     end
 
     def test_checkbox_set
-       assert_raises(UnknownObjectException) { browser.checkbox!(:name, "noName").set }  
+       assert_raises(UnknownObjectException) { browser.checkbox(:name, "noName").set }  
        browser.checkbox!(:name, "box1").set
        assert(browser.checkbox!(:name, "box1").checked?)   
 

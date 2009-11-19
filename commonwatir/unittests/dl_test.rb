@@ -25,7 +25,7 @@ class TC_Dl < Test::Unit::TestCase
     assert_equal "list", browser.dl!(:id, "experience-list").class_name
     assert_equal "", browser.dl!(:id, 'noop').class_name
     assert_raises(UnknownObjectException) do
-      browser.dl!(:id, 'no_such_id').class_name
+      browser.dl(:id, 'no_such_id').class_name
     end
   end
   
@@ -33,7 +33,7 @@ class TC_Dl < Test::Unit::TestCase
     assert_equal "experience-list", browser.dl!(:class, 'list').id
     assert_equal "", browser.dl!(:class, 'personalia').id
     assert_raises(UnknownObjectException) do
-      browser.dl!(:id, 'no_such_id').id
+      browser.dl(:id, 'no_such_id').id
     end
   end
   
@@ -41,7 +41,7 @@ class TC_Dl < Test::Unit::TestCase
     assert_equal "experience", browser.dl!(:class, 'list').title
     assert_equal "", browser.dl!(:id, 'noop').title
     assert_raises(UnknownObjectException) do
-      browser.dl!(:id, 'no_such_id').title
+      browser.dl(:id, 'no_such_id').title
     end
   end
   
@@ -49,7 +49,7 @@ class TC_Dl < Test::Unit::TestCase
     assert_match /11 years/, browser.dl!(:id, "experience-list").text
     assert_match /\A\s*\z/, browser.dl!(:id, 'noop').text # check this contains only whitespace
     assert_raises(UnknownObjectException) do
-      browser.dl!(:id, 'no_such_id').text
+      browser.dl(:id, 'no_such_id').text
     end
   end
   

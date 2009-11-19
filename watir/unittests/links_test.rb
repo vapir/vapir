@@ -14,7 +14,7 @@ class TC_Links < Test::Unit::TestCase
   
   #tag_method :test_bad_attribute, :fails_on_firefox
   def test_bad_attribute
-    assert_raises(UnknownObjectException) { browser.link!(:bad_attribute, 199).click }  
+    assert_raises(UnknownObjectException) { browser.link(:bad_attribute, 199).click }
     begin
       browser.link!(:bad_attribute, 199).click
     rescue UnknownObjectException => e           
@@ -75,18 +75,18 @@ class TC_Links < Test::Unit::TestCase
     assert( browser.text.include?("Links2-Pass") ) 
   end
   def test_link4_click        
-    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) {   browser.link!(:index, 199).click }  
+    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.link(:index, 199).click }
   end
   
   def test_link_properties
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).href }  
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).value}  
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).text }  
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).name }  
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).id }  
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).disabled }  
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).type }  
-    assert_raises(UnknownObjectException) { browser.link!(:index, 199).class_name }  
+    assert_raises(UnknownObjectException) { browser.link(:index, 199).href }
+    assert_raises(UnknownObjectException) { browser.link(:index, 199).value}
+    assert_raises(UnknownObjectException) { browser.link(:index, 199).text }
+    assert_raises(UnknownObjectException) { browser.link(:index, 199).name }
+    assert_raises(UnknownObjectException) { browser.link(:index, 199).id }
+    assert_raises(UnknownObjectException) { browser.link(:index, 199).disabled }
+    assert_raises(UnknownObjectException) { browser.link(:index, 199).type }
+    assert_raises(UnknownObjectException) { browser.link(:index, 199).class_name }
     
     assert_match(/links2/ ,browser.link!(:index, 1).href )
     #assert_equal(""      , browser.link!(:index, 1).value)
@@ -136,7 +136,7 @@ class TC_Frame_Links < Test::Unit::TestCase
     assert(browser.frame!("linkFrame").link(:text, "test1").exists?)
     assert(!browser.frame!("linkFrame").link(:text, "missing").exists?)
     
-    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.frame!("linkFrame").link!(:index, 199).href }  
+    assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.frame!("linkFrame").link(:index, 199).href }
     assert_match(/links2/, browser.frame!("linkFrame").link!(:index, 1).href)
     
     count =0

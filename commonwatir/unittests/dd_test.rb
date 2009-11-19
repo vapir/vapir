@@ -27,7 +27,7 @@ class TC_Dd < Test::Unit::TestCase
     assert_equal "name", browser.dd!(:id, "someone").class_name
     assert_equal "", browser.dd!(:id, 'city').class_name
     assert_raises(UnknownObjectException) do
-      browser.dd!(:id, 'no_such_id').class_name
+      browser.dd(:id, 'no_such_id').class_name
     end
   end
   
@@ -35,7 +35,7 @@ class TC_Dd < Test::Unit::TestCase
     assert_equal "someone", browser.dd!(:class, 'name').id
     assert_equal "", browser.dd!(:class, 'address').id
     assert_raises(UnknownObjectException) do
-      browser.dd!(:id, 'no_such_id').id
+      browser.dd(:id, 'no_such_id').id
     end
   end
   
@@ -43,7 +43,7 @@ class TC_Dd < Test::Unit::TestCase
     assert_equal "someone", browser.dd!(:class, 'name').title
     assert_equal "", browser.dd!(:class, 'noop').title
     assert_raises(UnknownObjectException) do
-      browser.dd!(:id, 'no_such_id').title
+      browser.dd(:id, 'no_such_id').title
     end
   end
   
@@ -51,7 +51,7 @@ class TC_Dd < Test::Unit::TestCase
     assert_equal "John Doe", browser.dd!(:id, "someone").text.strip
     assert_equal "", browser.dd!(:class, 'noop').text
     assert_raises(UnknownObjectException) do
-      browser.dd!(:id, 'no_such_id').text
+      browser.dd(:id, 'no_such_id').text
     end
   end
   

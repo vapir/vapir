@@ -12,8 +12,8 @@ class TC_Divs_XPath < Test::Unit::TestCase
   end
   
   def test_divs
-    assert_raises(UnknownObjectException) {browser.div!(:xpath , "//div[@id='div77']/").click }
-    assert_raises(UnknownObjectException) {browser.div!(:xpath , "//div[@title='div77']/").click }
+    assert_raises(UnknownObjectException) {browser.div(:xpath , "//div[@id='div77']/").click }
+    assert_raises(UnknownObjectException) {browser.div(:xpath , "//div[@title='div77']/").click }
     
     assert(browser.text_field!(:xpath, "//input[@name='text1']/").verify_contains("0") )  
     browser.div!(:xpath , "//div[@id='div3']/").click
@@ -23,15 +23,15 @@ class TC_Divs_XPath < Test::Unit::TestCase
   end
   
   def test_div_properties
-    assert_raises(UnknownObjectException) {browser.div!(:xpath , "//div[@id='div77']/").text }
-    assert_raises(UnknownObjectException) {browser.div!(:xpath , "//div[@title='div77']/").text }
+    assert_raises(UnknownObjectException) {browser.div(:xpath , "//div[@id='div77']/").text }
+    assert_raises(UnknownObjectException) {browser.div(:xpath , "//div[@title='div77']/").text }
     
     assert_equal("This div has an onClick that increments text1", 
     browser.div!(:xpath , "//div[@id='div3']/").text.strip )
     assert_equal("This text is in a div with an id of div1 and title of test1",   
     browser.div!(:xpath , "//div[@title='Test1']/").text.strip )
     
-    assert_raises(UnknownObjectException) {browser.div!(:xpath , "//div[@id='div77']/").class_name }
+    assert_raises(UnknownObjectException) {browser.div(:xpath , "//div[@id='div77']/").class_name }
     assert_equal("blueText" ,   browser.div!(:xpath , "//div[@id='div2']/").class_name )
     assert_equal("" ,   browser.div!(:xpath , "//div[@id='div1']/").class_name )
   end
@@ -53,13 +53,13 @@ class TC_Divs_XPath < Test::Unit::TestCase
   end
   
   def test_span_properties
-    assert_raises(UnknownObjectException) {browser.span!(:xpath , "//span[@id='span77']/").text }
-    assert_raises(UnknownObjectException) {browser.span!(:xpath , "//span[@title='span77']/").text }
+    assert_raises(UnknownObjectException) {browser.span(:xpath , "//span[@id='span77']/").text }
+    assert_raises(UnknownObjectException) {browser.span(:xpath , "//span[@title='span77']/").text }
     
     assert_equal("This span has an onClick that increments text2" ,   browser.span!(:xpath , "//span[@id='span3']/").text.strip )
     assert_equal("This text is in a span with an id of span1 and title of test2" ,   browser.span!(:xpath , "//span[@title='Test2']/").text.strip )
     
-    assert_raises(UnknownObjectException) {browser.span!(:xpath , "//span[@id='span77']/").class_name }
+    assert_raises(UnknownObjectException) {browser.span(:xpath , "//span[@id='span77']/").class_name }
     assert_equal("blueText" ,   browser.span!(:xpath , "//span[@id='span2']/").class_name )
     assert_equal("" ,   browser.span!(:xpath , "//span[@id='span1']/").class_name )
   end
@@ -87,10 +87,10 @@ class TC_Divs_XPath < Test::Unit::TestCase
     assert(!browser.p(:xpath , "//p[@id='missing']/").exists?)
     assert(!browser.p(:xpath , "//p[@title='test_55']/").exists?)
     
-    assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/").class_name }
-    assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/").text }
-    assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/").title }
-    assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/").to_s }
-    assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/").disabled }        
+    assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").class_name }
+    assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").text }
+    assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").title }
+    assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").to_s }
+    assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").disabled }        
   end
 end

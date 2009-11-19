@@ -53,13 +53,13 @@ class TC_TextArea < Test::Unit::TestCase
   
   def test_no_such_element
     assert_raises(UnknownObjectException) do
-      browser.text_field!(:name, "NoName").verify_contains("de nada")
+      browser.text_field(:name, "NoName").verify_contains("de nada")
     end  
     assert_raises(UnknownObjectException) do
-      browser.text_field!(:id, "noID").verify_contains("de nada")
+      browser.text_field(:id, "noID").verify_contains("de nada")
     end
     assert_raises(UnknownObjectException) do
-      browser.text_field!(:name, "txtNone").append("de nada")
+      browser.text_field(:name, "txtNone").append("de nada")
     end  
   end
   def test_readonly_and_disabled_errors

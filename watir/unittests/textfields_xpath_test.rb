@@ -32,10 +32,10 @@ class TC_Fields_XPath < Test::Unit::TestCase
     assert(browser.text_field!(:xpath , "//input[@name='text1']/").verify_contains(/Hello\sW/ ) )  
     assert_false(browser.text_field!(:xpath , "//input[@name='text1']/").verify_contains("Ruby") )  
     assert_false(browser.text_field!(:xpath , "//input[@name='text1']/").verify_contains(/R/) )  
-    assert_raises(UnknownObjectException) {   browser.text_field!(:xpath , "//input[@name='NoName']/").verify_contains("No field to get a value of") }  
+    assert_raises(UnknownObjectException) { browser.text_field(:xpath , "//input[@name='NoName']/").verify_contains("No field to get a value of") }
     
     assert(browser.text_field!(:xpath , "//input[@id='text2']/").verify_contains("goodbye all") )  
-    assert_raises(UnknownObjectException) {   browser.text_field!(:xpath , "//input[@id='noID']/").verify_contains("No field to get a value of") }  
+    assert_raises(UnknownObjectException) { browser.text_field(:xpath , "//input[@id='noID']/").verify_contains("No field to get a value of") }
   end
   
   def test_text_field_enabled
@@ -51,7 +51,7 @@ class TC_Fields_XPath < Test::Unit::TestCase
   end
   
   def test_text_field_value
-    assert_raises(UnknownObjectException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='missing_field']/").append("Some Text") }  
+    assert_raises(UnknownObjectException, "UnknownObjectException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='missing_field']/").append("Some Text") }  
     assert_equal(  "Hello World" , browser.text_field!(:xpath , "//input[@name='text1']/").value )  
   end
   
@@ -60,27 +60,27 @@ class TC_Fields_XPath < Test::Unit::TestCase
   end
   
   def test_text_field_Append
-    assert_raises(ObjectReadOnlyException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@id='readOnly2']/").append("Some Text") }  
-    assert_raises(ObjectDisabledException   , "ObjectDisabledException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='disabled']/").append("Some Text") }  
-    assert_raises(UnknownObjectException  , "UnknownObjectException  was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='missing_field']/").append("Some Text") }  
+    assert_raises(ObjectReadOnlyException, "ObjectReadOnlyException was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@id='readOnly2']/").append("Some Text") }
+    assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='disabled']/").append("Some Text") }
+    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) {   browser.text_field(:xpath , "//input[@name='missing_field']/").append("Some Text") }
     browser.text_field!(:xpath , "//input[@name='text1']/").append(" Some Text")
     assert_equal("Hello World Some Tex", browser.text_field!(:xpath , "//input[@name='text1']/").value) # note, not "Hello World Some Text" because maxlength is 20
   end
   
   
   def test_text_field_Clear
-    assert_raises(ObjectReadOnlyException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@id='readOnly2']/").append("Some Text") }  
-    assert_raises(ObjectDisabledException   , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='disabled']/").append("Some Text") }  
-    assert_raises(UnknownObjectException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='missing_field']/").append("Some Text") }  
+    assert_raises(ObjectReadOnlyException, "ObjectReadOnlyException was supposed to be thrown") { browser.text_field!(:xpath , "//input[@id='readOnly2']/").append("Some Text") }
+    assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown") { browser.text_field!(:xpath , "//input[@name='disabled']/").append("Some Text") }
+    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown") { browser.text_field(:xpath , "//input[@name='missing_field']/").append("Some Text") }
     
     browser.text_field!(:xpath , "//input[@name='text1']/").clear
     assert_equal(  "" , browser.text_field!(:xpath , "//input[@name='text1']/").value )  
   end
   
   def test_text_field_Set
-    assert_raises(ObjectReadOnlyException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@id='readOnly2']/").append("Some Text") }  
-    assert_raises(ObjectDisabledException   , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='disabled']/").append("Some Text") }  
-    assert_raises(UnknownObjectException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//input[@name='missing_field']/").append("Some Text") }  
+    assert_raises(ObjectReadOnlyException, "ObjectReadOnlyException was supposed to be thrown" ) { browser.text_field!(:xpath , "//input[@id='readOnly2']/").append("Some Text") }
+    assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) { browser.text_field!(:xpath , "//input[@name='disabled']/").append("Some Text") }
+    assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) { browser.text_field(:xpath , "//input[@name='missing_field']/").append("Some Text") }
     
     browser.text_field!(:xpath , "//input[@name='text1']/").set("watir IE Controller")
     assert_equal(  "watir IE Controller" , browser.text_field!(:xpath , "//input[@name='text1']/").value )  

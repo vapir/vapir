@@ -46,10 +46,10 @@ class TC_Images < Test::Unit::TestCase
   end
   
   def test_image_click
-    assert_raises(UnknownObjectException) { browser.image!(:name, "no_image_with_this").click }
-    assert_raises(UnknownObjectException) { browser.image!(:id, "no_image_with_this").click }
-    assert_raises(UnknownObjectException) { browser.image!(:src, "no_image_with_this").click}
-    assert_raises(UnknownObjectException) { browser.image!(:alt, "no_image_with_this").click}
+    assert_raises(UnknownObjectException) { browser.image(:name, "no_image_with_this").click }
+    assert_raises(UnknownObjectException) { browser.image(:id, "no_image_with_this").click }
+    assert_raises(UnknownObjectException) { browser.image(:src, "no_image_with_this").click}
+    assert_raises(UnknownObjectException) { browser.image(:alt, "no_image_with_this").click}
     
     # test for bug 1882
     browser.text_field!(:name , "text1").clear
@@ -68,10 +68,10 @@ class TC_Images < Test::Unit::TestCase
   end
   
   def test_imageHasLoaded
-    assert_raises(UnknownObjectException) { browser.image!(:name, "no_image_with_this").loaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:id, "no_image_with_this").loaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:src, "no_image_with_this").loaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:alt, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image(:name, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image(:id, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image(:src, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image(:alt, "no_image_with_this").loaded? }
     
     assert( ! browser.image!(:name, "themissingimage").hasLoaded?  )
     assert( browser.image!(:name, "circle").hasLoaded?  )
@@ -81,21 +81,21 @@ class TC_Images < Test::Unit::TestCase
   end
   
   def test_image_properties
-    assert_raises(UnknownObjectException) { browser.image!(:name, "no_image_with_this").loaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:id, "no_image_with_this").loaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:src, "no_image_with_this").loaded? }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).loaded? }
+    assert_raises(UnknownObjectException) { browser.image(:name, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image(:id, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image(:src, "no_image_with_this").loaded? }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).loaded? }
     
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).name }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).id }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).src }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).value }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).height }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).width }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).fileCreatedDate }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).fileSize }
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).alt}
-    assert_raises(UnknownObjectException) { browser.image!(:index, 82).title}
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).name }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).id }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).src }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).value }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).height }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).width }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).fileCreatedDate }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).fileSize }
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).alt}
+    assert_raises(UnknownObjectException) { browser.image(:index, 82).title}
     
     assert_equal( ""       , browser.image!(:index, 2).name ) 
     assert_equal( "square" , browser.image!(:index, 2).id )

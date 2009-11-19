@@ -25,9 +25,9 @@ class TC_Tables < Test::Unit::TestCase
   
   tag_method :test_rows, :fails_on_ie
   def test_rows
-    assert_raises(UnknownObjectException ){ browser.table!(:id, 'missingTable').row_count }
-    assert_raises(UnknownObjectException ){ browser.table!(:index, 66).row_count }
-    assert_raises(UnknownObjectException){ browser.table!(:bad_attribute, 99).row_count }
+    assert_raises(UnknownObjectException){ browser.table(:id, 'missingTable').row_count }
+    assert_raises(UnknownObjectException){ browser.table(:index, 66).row_count }
+    assert_raises(UnknownObjectException){ browser.table(:bad_attribute, 99).row_count }
     
     assert_equal(2, browser.table!(:index, 1).row_count)
     assert_equal(2, browser.table!(:index, 1).rows.length)
@@ -60,8 +60,8 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_columns
-    assert_raises(UnknownObjectException  ){ browser.table!(:id, 'missingTable').column_count }
-    assert_raises(UnknownObjectException  ){ browser.table!(:index, 77).column_count }
+    assert_raises(UnknownObjectException){ browser.table(:id, 'missingTable').column_count }
+    assert_raises(UnknownObjectException){ browser.table(:index, 77).column_count }
     assert_equal(2, browser.table!(:index, 1).column_count)
     assert_equal(2, browser.table!(:id, 't1').column_count)   # row one has 1 cell with a colspan of 2
   end
@@ -183,7 +183,7 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     table[1][1].button!(:id,'b1').click
     assert(browser.text_field!(:name,"confirmtext").verify_contains(/CLICK1/i))
     
-    assert_raises(UnknownObjectException   ) { table[1][1].button!(:id,'b_missing').click }
+    assert_raises(UnknownObjectException) { table[1][1].button(:id,'b_missing').click }
     
     table[3][1].button!(:index,2).click
     assert(browser.text_field!(:name,"confirmtext").verify_contains(/TOO/i))

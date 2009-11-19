@@ -41,10 +41,10 @@ class TC_Images_XPath < Test::Unit::TestCase
   end
   
   def test_image_click
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@name='no_image_with_this']/").click }
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@id='no_image_with_this']/").click }
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@src='no_image_with_this']/").click}
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@alt='no_image_with_this']/").click}
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@name='no_image_with_this']/").click }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@id='no_image_with_this']/").click }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@src='no_image_with_this']/").click}
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@alt='no_image_with_this']/").click}
     
     # test for bug 1882
     browser.text_field!(:name , "text1").clear
@@ -66,10 +66,10 @@ class TC_Images_XPath < Test::Unit::TestCase
   
   
   def test_imageHasLoaded
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@name='no_image_with_this']/").loaded? }
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@id='no_image_with_this']/").loaded? }
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@src='no_image_with_this']/").loaded? }
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@alt='no_image_with_this']/").loaded? }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@name='no_image_with_this']/").loaded? }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@id='no_image_with_this']/").loaded? }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@src='no_image_with_this']/").loaded? }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@alt='no_image_with_this']/").loaded? }
     
     assert_false( browser.image!(:xpath , "//img[@name='themissingimage']/").loaded?  )
     assert( browser.image!(:xpath , "//img[@name='circle']/").loaded?  )
@@ -79,9 +79,9 @@ class TC_Images_XPath < Test::Unit::TestCase
   end
   
   def test_image_properties
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@name='no_image_with_this']/").loaded? }
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@id='no_image_with_this']/").loaded? }
-    assert_raises(UnknownObjectException ) { browser.image!(:xpath , "//img[@src='no_image_with_this']/").loaded? }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@name='no_image_with_this']/").loaded? }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@id='no_image_with_this']/").loaded? }
+    assert_raises(UnknownObjectException ) { browser.image(:xpath , "//img[@src='no_image_with_this']/").loaded? }
     
     # to string tests -- output should be verified!
     #puts browser.image!(:xpath , "//img[@name='circle']/").to_s

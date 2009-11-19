@@ -19,17 +19,17 @@ class TC_Selectbox_XPath < Test::Unit::TestCase
   
   def test_select_list_enabled
     assert(browser.select_list!(:xpath, "//select[@name='sel1']/").enabled?)   
-    assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']/").enabled? }  
+    assert_raises(UnknownObjectException) { browser.select_list(:xpath, "//select[@name='NoName']/").enabled? }
   end
   
   def test_select_list_option_texts
-    assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']/").option_texts }  
+    assert_raises(UnknownObjectException) { browser.select_list(:xpath, "//select[@name='NoName']/").option_texts }
     assert_equal( ["Option 1" ,"Option 2" , "Option 3" , "Option 4"] , 
     browser.select_list!(:xpath, "//select[@name='sel1']/").option_texts)   
   end
   
   def test_select_list_selected_option_texts
-    assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']/").selected_option_texts }  
+    assert_raises(UnknownObjectException) { browser.select_list(:xpath, "//select[@name='NoName']/").selected_option_texts }
     assert_equal( ["Option 3" ] , 
     browser.select_list!(:xpath, "//select[@name='sel1']/").selected_option_texts)   
     assert_equal( ["Option 3" , "Option 6" ] , 
@@ -37,7 +37,7 @@ class TC_Selectbox_XPath < Test::Unit::TestCase
   end
   
   def test_clearSelection
-    assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']/").clearSelection }  
+    assert_raises(UnknownObjectException) { browser.select_list(:xpath, "//select[@name='NoName']/").clearSelection }
     browser.select_list!(:xpath, "//select[@name='sel1']/").clearSelection
     
     # the box sel1 has no ability to have a de-selected item
@@ -48,7 +48,7 @@ class TC_Selectbox_XPath < Test::Unit::TestCase
   end
   
   def test_select_list_select
-    assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']/").selected_option_texts }  
+    assert_raises(UnknownObjectException) { browser.select_list(:xpath, "//select[@name='NoName']/").selected_option_texts }
     assert_raises(NoValueFoundException) { browser.select_list!(:xpath, "//select[@name='sel1']/").select("missing item") }  
     assert_raises(NoValueFoundException) { browser.select_list!(:xpath, "//select[@name='sel1']/").select(/missing/) }  
     
@@ -80,7 +80,7 @@ class TC_Selectbox_XPath < Test::Unit::TestCase
   end
   
   def test_select_list_select_using_value
-    assert_raises(UnknownObjectException) { browser.select_list!(:xpath, "//select[@name='NoName']/").selected_option_texts }  
+    assert_raises(UnknownObjectException) { browser.select_list(:xpath, "//select[@name='NoName']/").selected_option_texts }
     assert_raises(NoValueFoundException) { browser.select_list!(:xpath, "//select[@name='sel1']/").select_value("missing item") }  
     assert_raises(NoValueFoundException) { browser.select_list!(:xpath, "//select[@name='sel1']/").select_value(/missing/) }  
     

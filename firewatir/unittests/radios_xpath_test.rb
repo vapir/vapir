@@ -20,9 +20,9 @@ class TC_Radios_XPath < Test::Unit::TestCase
     end
 
     def test_Radio_Enabled
-       assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']").enabled?  }  
-       assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@id='noName']").enabled?  }  
-       assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='box4' and @value='6']").enabled?  }  
+       assert_raises(UnknownObjectException) { browser.radio(:xpath, "//input[@name='noName']").enabled? }
+       assert_raises(UnknownObjectException) { browser.radio(:xpath, "//input[@id='noName']").enabled? }
+       assert_raises(UnknownObjectException) { browser.radio(:xpath, "//input[@name='box4' and @value='6']").enabled? }
 
        assert_false(browser.radio!(:xpath, "//input[@name='box2']").enabled?)   
        assert(browser.radio!(:xpath, "//input[@id='box5']").enabled?)   
@@ -43,7 +43,7 @@ class TC_Radios_XPath < Test::Unit::TestCase
     end
 
     def test_Radio_checked
-       assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']").checked?  }  
+       assert_raises(UnknownObjectException) { browser.radio(:xpath, "//input[@name='noName']").checked? }
 
        #puts "radio 1 is set : #{ browser.radio!(:xpath, "//input[@name='box1']").checked? } "
        assert_false(browser.radio!(:xpath, "//input[@name='box1']").checked?)   
@@ -56,7 +56,7 @@ class TC_Radios_XPath < Test::Unit::TestCase
     end
 
     def test_radio_clear
-       assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']").clear  }  
+       assert_raises(UnknownObjectException) { browser.radio(:xpath, "//input[@name='noName']").clear }
 
        browser.radio!(:xpath, "//input[@name='box1']").clear
        assert_false(browser.radio!(:xpath, "//input[@name='box1']").checked?)   
@@ -72,7 +72,7 @@ class TC_Radios_XPath < Test::Unit::TestCase
     end
 
     def test_radio_getState
-       assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']").checked?  }  
+       assert_raises(UnknownObjectException) { browser.radio(:xpath, "//input[@name='noName']").checked? }
 
        assert_equal( false , browser.radio!(:xpath, "//input[@name='box1']").checked? )   
        assert_equal( true , browser.radio!(:xpath, "//input[@name='box3']").checked?)   
@@ -83,7 +83,7 @@ class TC_Radios_XPath < Test::Unit::TestCase
     end
 
     def test_radio_set
-       assert_raises(UnknownObjectException) {   browser.radio!(:xpath, "//input[@name='noName']").set  }  
+       assert_raises(UnknownObjectException) { browser.radio(:xpath, "//input[@name='noName']").set }
        browser.radio!(:xpath, "//input[@name='box1']").set
        assert(browser.radio!(:xpath, "//input[@name='box1']").checked?)   
 

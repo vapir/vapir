@@ -12,11 +12,11 @@ class TC_CheckBox_XPath < Test::Unit::TestCase
   end
   
   def test_checkbox_properties
-    assert_raises(UnknownObjectException) {   browser.checkbox!(:xpath , "//input[@name='noName']/").id   }  
-    assert_raises(UnknownObjectException) {   browser.checkbox!(:xpath , "//input[@name='noName']/").name   }  
-    assert_raises(UnknownObjectException) {   browser.checkbox!(:xpath , "//input[@name='noName']/").disabled   }  
-    assert_raises(UnknownObjectException) {   browser.checkbox!(:xpath , "//input[@name='noName']/").type   }  
-    assert_raises(UnknownObjectException) {   browser.checkbox!(:xpath , "//input[@name='noName']/").value   }  
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").id }
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").name }
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").disabled }
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").type }
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").value }
     
     assert_equal("1" , browser.checkbox!(:xpath , "//input[@name='box4']/").value )
     assert_equal("3" , browser.checkbox!(:xpath , "//input[@name='box4' and @value='3']/").value )
@@ -34,9 +34,9 @@ class TC_CheckBox_XPath < Test::Unit::TestCase
   end
   
   def test_checkbox_Enabled
-    assert_raises(UnknownObjectException) { browser.checkbox!(:xpath , "//input[@name='noName']/").enabled? }  
-    assert_raises(UnknownObjectException) { browser.checkbox!(:xpath , "//input[@id='noName']/").enabled? }  
-    assert_raises(UnknownObjectException) { browser.checkbox!(:xpath , "//input[@name='box4' and @value='6']/").enabled? }  
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").enabled? }
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@id='noName']/").enabled? }
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='box4' and @value='6']/").enabled? }
     
     assert(browser.checkbox!(:xpath , "//input[@name='box1']/").enabled?)   
     assert_false(browser.checkbox!(:xpath , "//input[@name='box2']/").enabled?)   
@@ -46,7 +46,7 @@ class TC_CheckBox_XPath < Test::Unit::TestCase
   end
   
   def test_checkbox_isSet
-    assert_raises(UnknownObjectException ) { browser.checkbox!(:xpath , "//input[@name='noName']/").checked? }  
+    assert_raises(UnknownObjectException ) { browser.checkbox(:xpath , "//input[@name='noName']/").checked? }
     
     assert_false(browser.checkbox!(:xpath , "//input[@name='box1']/").checked?)   
     assert_false(browser.checkbox!(:xpath , "//input[@name='box2']/").checked?)   
@@ -57,7 +57,7 @@ class TC_CheckBox_XPath < Test::Unit::TestCase
   end
   
   def test_checkbox_clear
-    assert_raises(UnknownObjectException) { browser.checkbox!(:xpath , "//input[@name='noName']/").clear }  
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").clear }
     browser.checkbox!(:xpath , "//input[@name='box1']/").clear
     assert_false(browser.checkbox!(:xpath , "//input[@name='box1']/").checked?)   
     
@@ -72,7 +72,7 @@ class TC_CheckBox_XPath < Test::Unit::TestCase
   end
   
   def test_checkbox_checked?
-    assert_raises(UnknownObjectException) { browser.checkbox!(:xpath , "//input[@name='noName']/").checked? }  
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").checked? }
     assert_equal( false , browser.checkbox!(:xpath , "//input[@name='box1']/").checked? )   
     assert_equal( true , browser.checkbox!(:xpath , "//input[@name='box3']/").checked?)   
     
@@ -82,7 +82,7 @@ class TC_CheckBox_XPath < Test::Unit::TestCase
   end
   
   def test_checkbox_set
-    assert_raises(UnknownObjectException) { browser.checkbox!(:xpath , "//input[@name='noName']/").set }  
+    assert_raises(UnknownObjectException) { browser.checkbox(:xpath , "//input[@name='noName']/").set }
     browser.checkbox!(:xpath , "//input[@name='box1']/").set
     assert(browser.checkbox!(:xpath , "//input[@name='box1']/").checked?)   
     

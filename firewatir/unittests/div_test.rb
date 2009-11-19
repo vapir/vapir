@@ -12,8 +12,8 @@ class TC_Divs < Test::Unit::TestCase
   end
   
   def test_divs
-    assert_raises(UnknownObjectException) {browser.div!(:id , "div77").click }
-    assert_raises(UnknownObjectException) {browser.div!(:title , "div77").click }
+    assert_raises(UnknownObjectException) {browser.div(:id , "div77").click }
+    assert_raises(UnknownObjectException) {browser.div(:title , "div77").click }
     
     assert(browser.text_field!(:name, "text1").verify_contains("0") )  
     browser.div!(:id , "div3").click
@@ -33,17 +33,17 @@ class TC_Divs < Test::Unit::TestCase
   end
   
   def test_div_properties
-    assert_raises(UnknownObjectException) {browser.div!(:id , "div77").text }
-    assert_raises(UnknownObjectException) {browser.div!(:title , "div77").text }
+    assert_raises(UnknownObjectException) { browser.div(:id , "div77").text }
+    assert_raises(UnknownObjectException) { browser.div(:title , "div77").text }
     
     assert_equal("This div has an onClick that increments text1", browser.div!(:id , "div3").text.strip )
     assert_equal("This text is in a div with an id of div1 and title of test1",browser.div!(:title , "Test1").text.strip )
     
-    assert_raises(UnknownObjectException) {browser.div!(:id , "div77").class_name }
+    assert_raises(UnknownObjectException) { browser.div(:id , "div77").class_name }
     assert_equal("blueText" ,   browser.div!(:id , "div2").class_name )
     assert_equal("" ,   browser.div!(:id , "div1").class_name )
     
-    assert_raises(UnknownObjectException) {browser.div!(:index , 44).class_name }
+    assert_raises(UnknownObjectException) {browser.div(:index , 44).class_name }
     assert_equal("div1" ,      browser.div!(:index , 1).id )
     assert_equal("" ,          browser.div!(:index , 1).class_name )
     assert_equal("blueText" ,  browser.div!(:index , 2).class_name )
@@ -90,8 +90,8 @@ class TC_Divs < Test::Unit::TestCase
   
   #---- Span Tests ---
   def test_spans
-    assert_raises(UnknownObjectException) {browser.span!(:id , "span77").click }
-    assert_raises(UnknownObjectException) {browser.span!(:title , "span77").click }
+    assert_raises(UnknownObjectException) {browser.span(:id , "span77").click }
+    assert_raises(UnknownObjectException) {browser.span(:title , "span77").click }
     
     assert(browser.text_field!(:name, "text2").verify_contains("0") )  
     browser.span!(:id , "span3").click
@@ -104,17 +104,17 @@ class TC_Divs < Test::Unit::TestCase
   end
   
   def test_span_properties
-    assert_raises(UnknownObjectException) {browser.span!(:id , "span77").text }
-    assert_raises(UnknownObjectException) {browser.span!(:title , "span77").text }
+    assert_raises(UnknownObjectException) {browser.span(:id , "span77").text }
+    assert_raises(UnknownObjectException) {browser.span(:title , "span77").text }
     
     assert_equal("This span has an onClick that increments text2" ,   browser.span!(:id , "span3").text.strip )
     assert_equal("This text is in a span with an id of span1 and title of test2" ,   browser.span!(:title , "Test2").text.strip )
     
-    assert_raises(UnknownObjectException) {browser.span!(:id , "span77").class_name }
+    assert_raises(UnknownObjectException) {browser.span(:id , "span77").class_name }
     assert_equal("blueText" ,   browser.span!(:id , "span2").class_name )
     assert_equal("" ,   browser.span!(:id , "span1").class_name )
     
-    assert_raises(UnknownObjectException) {browser.span!(:index , 44).class_name }
+    assert_raises(UnknownObjectException) {browser.span(:index , 44).class_name }
     assert_equal("span1" ,     browser.span!(:index , 1).id )
     assert_equal("" ,          browser.span!(:index , 1).class_name )
     assert_equal("blueText" ,  browser.span!(:index , 2).class_name )
@@ -166,11 +166,11 @@ class TC_Divs < Test::Unit::TestCase
     assert(!browser.p(:index, 8).exists?)
     assert(!browser.p(:title, 'test_55').exists?)
     
-    assert_raises( UnknownObjectException) {browser.p!(:id , 'missing').class_name }
-    assert_raises( UnknownObjectException) {browser.p!(:id , 'missing').text }
-    assert_raises( UnknownObjectException) {browser.p!(:id , 'missing').title }
-    assert_raises( UnknownObjectException) {browser.p!(:id , 'missing').to_s }
-    assert_raises( UnknownObjectException) {browser.p!(:id , 'missing').disabled }
+    assert_raises( UnknownObjectException) {browser.p(:id , 'missing').class_name }
+    assert_raises( UnknownObjectException) {browser.p(:id , 'missing').text }
+    assert_raises( UnknownObjectException) {browser.p(:id , 'missing').title }
+    #assert_raises( UnknownObjectException) {browser.p(:id , 'missing').disabled }
+    assert_raises( UnknownObjectException) {browser.p!(:id , 'missing') }
     
     assert_equal(  'redText' , browser.p!(:index,1).class_name)
     assert_equal(  'P_tag_1' , browser.p!(:index,1).title)

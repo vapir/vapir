@@ -17,7 +17,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
   end
   
   def test_rows
-    assert_raises( UnknownObjectException  ){ browser.table!(:xpath , "//table[@id='missingTable']/").row_count }
+    assert_raises( UnknownObjectException  ){ browser.table(:xpath , "//table[@id='missingTable']/").row_count }
     assert_equal( 5 , browser.table!(:xpath , "//table[@id='t1']/").row_count)   # 4 rows and a header 
   end
   
@@ -30,7 +30,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
   end
   
   def test_columns
-    assert_raises( UnknownObjectException  ){ browser.table!(:xpath , "//table[@id='missingTable']/").column_count }
+    assert_raises( UnknownObjectException  ){ browser.table(:xpath , "//table[@id='missingTable']/").column_count }
     assert_equal(2, browser.table!(:xpath , "//table[@id='t1']/").column_count)   # row one has 1 cell with a colspan of 2
     assert_equal(1, browser.table!(:xpath , "//table[@id='t1']/").rows[1].cells.length)
   end

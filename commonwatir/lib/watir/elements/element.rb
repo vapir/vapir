@@ -592,7 +592,7 @@ module Watir
             if Object.const_defined?('WIN32OLE') # if WIN32OLE exists, calling clear_highlight may raise WIN32OLERuntimeError, even though we just checked existence. 
               exception_to_rescue=WIN32OLERuntimeError
             else # otherwise, make a dummy class, inheriting from Exception that won't ever be instantiated to be rescued. 
-              exception_to_rescue=(@@dummy_exception ||= Class.new(Exception))
+              exception_to_rescue=(@@dummy_exception ||= Class.new(::Exception))
             end
             begin
               clear_highlight(highlight_options)

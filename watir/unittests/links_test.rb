@@ -80,12 +80,12 @@ class TC_Links < Test::Unit::TestCase
   
   def test_link_properties
     assert_raises(UnknownObjectException) { browser.link(:index, 199).href }
-    assert_raises(UnknownObjectException) { browser.link(:index, 199).value}
+    #assert_raises(UnknownObjectException) { browser.link(:index, 199).value }
     assert_raises(UnknownObjectException) { browser.link(:index, 199).text }
     assert_raises(UnknownObjectException) { browser.link(:index, 199).name }
     assert_raises(UnknownObjectException) { browser.link(:index, 199).id }
     assert_raises(UnknownObjectException) { browser.link(:index, 199).disabled }
-    assert_raises(UnknownObjectException) { browser.link(:index, 199).type }
+    #assert_raises(UnknownObjectException) { browser.link(:index, 199).type }
     assert_raises(UnknownObjectException) { browser.link(:index, 199).class_name }
     
     assert_match(/links2/ ,browser.link!(:index, 1).href )

@@ -90,7 +90,7 @@ class TC_Divs_XPath < Test::Unit::TestCase
     assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").class_name }
     assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").text }
     assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").title }
-    assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").to_s }
     assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").disabled }        
+    assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/") }
   end
 end

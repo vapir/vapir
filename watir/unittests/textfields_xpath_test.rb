@@ -22,7 +22,7 @@ class TC_Fields_XPath < Test::Unit::TestCase
   end
   
   def test_text_field_dragContentsTo
-    browser.text_field!(:xpath , "//input[@name='text1']/").dragContentsTo(:xpath , "//input[@id='text2']/")
+    browser.text_field!(:xpath , "//input[@name='text1']/").drag_contents_to(:xpath , "//input[@id='text2']/")
     assert_equal(browser.text_field!(:xpath , "//input[@name='text1']/").value, "" ) 
     assert_equal(browser.text_field!(:xpath , "//input[@id='text2']/").value, "goodbye allHello World" ) 
   end

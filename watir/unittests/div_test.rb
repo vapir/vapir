@@ -166,8 +166,8 @@ class TC_Divs < Test::Unit::TestCase
     assert_raises( UnknownObjectException) {browser.p(:id , 'missing').class_name }
     assert_raises( UnknownObjectException) {browser.p(:id , 'missing').text }
     assert_raises( UnknownObjectException) {browser.p(:id , 'missing').title }
-    assert_raises( UnknownObjectException) {browser.p(:id , 'missing').to_s }
     assert_raises( UnknownObjectException) {browser.p(:id , 'missing').disabled }
+    assert_raises( UnknownObjectException) {browser.p!(:id , 'missing') }
     
     assert_equal('redText' , browser.p!(:index,1).class_name)
     assert_equal('P_tag_1' , browser.p!(:index,1).title)

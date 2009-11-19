@@ -25,7 +25,7 @@ class Map_Tests < Watir::TestCase
     assert(browser.area(:url, /pass.html/).exists?)
     assert(browser.area(:url, /simple_table_buttons.html/).exists?)
     assert(browser.area(:url, /images1.html/).exists?)
-    assert_raises(UnknownObjectException){ browser.area(:url, /blobs.html/) }
+    assert_raises(UnknownObjectException){ browser.area!(:url, /blobs.html/) }
     assert(browser.map!(:name, 'maptest01').area(:url, /pass.html/).exists?)
     assert(browser.map!(:id, 'maptestid01').area(:url, /images1.html/).exists?)
   end

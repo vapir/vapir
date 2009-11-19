@@ -83,7 +83,7 @@ class TC_Fields < Test::Unit::TestCase
 #    items = browser.text_field!(:index, 2).to_s.split(/\n/)
 #    expected.each_with_index{|regex, x| assert_match(regex, items[x]) }
     assert_match(/Watir::\w*TextField.*?/m, browser.text_field!(:index, 1).to_s)
-    assert_raises(UnknownObjectException) { browser.text_field(:index, 999).to_s }
+    assert_raises(UnknownObjectException) { browser.text_field!(:index, 999) }
   end
   
 #  def build_to_s_regex(lhs, rhs)
@@ -193,8 +193,8 @@ class TC_Fields < Test::Unit::TestCase
   def test_label_properties
     assert_raises(UnknownObjectException) { browser.label(:index,20).text }
     assert_raises(UnknownObjectException) { browser.label(:index,20).for }
-    assert_raises(UnknownObjectException) { browser.label(:index,20).name }
-    assert_raises(UnknownObjectException) { browser.label(:index,20).type }
+    #assert_raises(UnknownObjectException) { browser.label(:index,20).name }
+    #assert_raises(UnknownObjectException) { browser.label(:index,20).type }
     assert_raises(UnknownObjectException) { browser.label(:index,20).id }
     
     assert(!browser.label(:index,10).exists?)

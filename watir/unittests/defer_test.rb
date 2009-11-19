@@ -18,7 +18,6 @@ class TC_Defer < Test::Unit::TestCase
     @new_browser.goto($htmlRoot + "textfields1.html")
     assert_equal('Hello World', text_field.value)
     assert_equal('Clear Events Box', button.value)
-    debugger
     assert_equal('Div Text', div.text)
   end
   def test_binding_to_refreshed_page

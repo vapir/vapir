@@ -157,7 +157,7 @@ class JsshSocket
       data = @socket.recv(size_to_read)
       received_data << data
       value_string << data
-      if @expecting_prompt && value_string.unpack("U*").length > PROMPT.length
+      if @expecting_prompt && utf8_length_safe(value_string) > PROMPT.length
         if value_string =~ /\A#{Regexp.escape(PROMPT)}/
           value_string.sub!(/\A#{Regexp.escape(PROMPT)}/, '')
           @expecting_prompt=false
@@ -178,7 +178,7 @@ class JsshSocket
           end
         end
         if expected_size
-          size_to_read = expected_size - value_string.unpack("U*").length
+          size_to_read = expected_size - utf8_length_safe(value_string)
         end
         unless value_string.empty? # switch to short timeout - unless we got a prompt (leaving value_string blank). switching to short timeout when all we got was a prompt would probably accidentally leave the value on the socket. 
           timeout=SHORT_SOCKET_TIMEOUT
@@ -212,6 +212,21 @@ class JsshSocket
       end
     end
     return value_string
+  end
+  
+  private
+  def utf8_length_safe(string)
+    string=string.dup
+    begin
+      string.unpack("U*").length
+    rescue ArgumentError # this happens when the socket receive gets split across a utf8 character. we drop the incomplete character from the end. 
+      if $!.message =~ /malformed UTF-8 character \(expected \d+ bytes, given (\d+) bytes\)/
+        given=$1.to_i
+        string[0...(-given)].unpack("U*").length
+      else # otherwise, this is some other issue we weren't expecting; we will not rescue it. 
+        raise
+      end
+    end
   end
 
   public

@@ -77,7 +77,7 @@ class JsshSocket
 
   DEFAULT_SOCKET_TIMEOUT=8
   LONG_SOCKET_TIMEOUT=32
-  SHORT_SOCKET_TIMEOUT=(2**-4).to_f
+  SHORT_SOCKET_TIMEOUT=(2**-2).to_f
 
   attr_reader :ip, :port, :prototype
   
@@ -157,7 +157,7 @@ class JsshSocket
       data = @socket.recv(size_to_read)
       received_data << data
       value_string << data
-      if @expecting_prompt && value_string.length > PROMPT.length
+      if @expecting_prompt && value_string.unpack("U*").length > PROMPT.length
         if value_string =~ /\A#{Regexp.escape(PROMPT)}/
           value_string.sub!(/\A#{Regexp.escape(PROMPT)}/, '')
           @expecting_prompt=false
@@ -178,7 +178,7 @@ class JsshSocket
           end
         end
         if expected_size
-          size_to_read = expected_size - value_string.length
+          size_to_read = expected_size - value_string.unpack("U*").length
         end
         unless value_string.empty? # switch to short timeout - unless we got a prompt (leaving value_string blank). switching to short timeout when all we got was a prompt would probably accidentally leave the value on the socket. 
           timeout=SHORT_SOCKET_TIMEOUT

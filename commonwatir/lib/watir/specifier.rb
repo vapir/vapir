@@ -11,7 +11,7 @@ module Watir
                     :url => [:href],
                   })
     module_function
-    def specifier_candidates(container, specifiers)
+    def specifier_candidates(container, specifiers, want_first=false)
       if container.nil?
         raise ArgumentError, "no container specified!"
       end
@@ -33,12 +33,6 @@ module Watir
       names=attributes_in_specifiers.call(:name)
       classNames=attributes_in_specifiers.call(:className)
 
-      # TODO/FIX: account for IE's getElementById / getElementsByName bug? 
-      # - http://www.romantika.name/v2/javascripts-getelementsbyname-ie-vs-firefox/
-      # - http://jszen.blogspot.com/2004/07/whats-in-name.html
-      # - http://webbugtrack.blogspot.com/2007/08/bug-411-getelementsbyname-doesnt-work.html
-      # - http://webbugtrack.blogspot.com/2007/08/bug-152-getelementbyid-returns.html
-
       # we can only use getElementById if:
       # - id is a string, as getElementById doesn't do regexp
       # - index is 1 or nil; otherwise even though it's not really valid, other identical ids won't get searched
@@ -49,13 +43,35 @@ module Watir
       # since this is almost always called with specifiers including tag name, input type, etc, getElementById is basically never used. 
       # TODO: have a user-settable flag somewhere that specifies that IDs are unique in pages they use. then getElementById 
       # could be used a lot more than it is limited to here, and stuff would be faster. 
-      if ids.size==1 && ids.first.is_a?(String) && (!@index || @index==1) && !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && container.containing_object.object_respond_to?(:getElementById)
+      can_use_getElementById= ids.size==1 && 
+                                ids.first.is_a?(String) && 
+                                want_first && 
+                                !specifiers.any?{|s| s.keys.any?{|k|k!=:id}} && 
+                                container.containing_object.object_respond_to?(:getElementById)
+
+      # we can only use getElementsByName if:
+      # - name is a string; getElementsByName doesn't do regexp
+      # - we're only looking for elements that have a valid name attribute. those are BUTTON TEXTAREA APPLET SELECT FORM FRAME IFRAME IMG A INPUT OBJECT MAP PARAM META
+      #   getElementsByTagName doesn't return elements that have a name attribute if name isn't supported on that type of element; 
+      #   it's treated as expando. see http://jszen.blogspot.com/2004/07/whats-in-name.html
+      #   and http://www.w3.org/TR/html401/index/attributes.html
+      #   this only applies to IE, and firefox could use getElementsByName more liberally, but not going to bother detecting that here. 
+      #
+      # TODO/FIX: account for other bugginess in IE's getElementById / getElementsByName ? 
+      # - http://www.romantika.name/v2/javascripts-getelementsbyname-ie-vs-firefox/
+      # - http://webbugtrack.blogspot.com/2007/08/bug-411-getelementsbyname-doesnt-work.html
+      # - http://webbugtrack.blogspot.com/2007/08/bug-152-getelementbyid-returns.html
+      can_use_getElementsByName=names.size==1 && 
+                                  names.first.is_a?(String) && 
+                                  container.containing_object.object_respond_to?(:getElementsByName) &&
+                                  specifiers.all?{|specifier| specifier[:tagName].is_a?(String) && %w(BUTTON TEXTAREA APPLET SELECT FORM FRAME IFRAME IMG A INPUT OBJECT MAP PARAM META).include?(specifier[:tagName].upcase) }
+      if can_use_getElementById
         candidates= if by_id=container.containing_object.getElementById(ids.first)
           [by_id]
         else
           []
         end
-      elsif names.size==1 && names.first.is_a?(String) && container.containing_object.object_respond_to?(:getElementsByName)
+      elsif can_use_getElementsByName
         candidates=container.containing_object.getElementsByName(names.first)#.to_array
       elsif classNames.size==1 && classNames.first.is_a?(String) && container.containing_object.object_respond_to?(:getElementsByClassName)
         candidates=container.containing_object.getElementsByClassName(classNames.first)

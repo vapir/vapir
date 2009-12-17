@@ -17,7 +17,7 @@ module Watir
       @container.assert_exists(:force => true) do
         case @extra[:candidates]
         when nil
-          Watir::Specifier.specifier_candidates(@container, specifiers)
+          Watir::Specifier.specifier_candidates(@container, specifiers, [nil, :first, 1].include?(@index))
         when Symbol
           Watir::Element.object_collection_to_enumerable(@container.containing_object.send(@extra[:candidates]))
         when Proc

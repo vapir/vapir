@@ -550,6 +550,7 @@ module Watir
       locate(options) || begin
         klass=self.is_a?(Frame) ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException
         message="Unable to locate #{self.class}, using #{@how}"+(@what ? ": "+@what.inspect : '')+(@index ? ", index #{@index}" : "")
+        message+="\non container: #{@container.inspect}" if @container
         raise(klass, message)
       end
     end

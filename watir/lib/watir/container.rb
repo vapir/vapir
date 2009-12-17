@@ -20,7 +20,9 @@ module Watir
     include Watir::Exception
     
     def extra_for_contained
-      {:container => self, :browser => self.browser}
+      extra={:container => self}
+      extra[:browser]= @browser if @browser
+      extra
     end
 
     # Note: @container is the container of this object, i.e. the container

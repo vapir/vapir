@@ -345,6 +345,7 @@ module Watir
         # new option is selected (seems to be related to javascript events) and it has to be relocated. 
         # see documentation on ElementCollection#each_with_index vs. #each. 
         self.options.each_with_index do |option,i|
+          break unless option.exists? # javascript events on previous option selections can cause the select list or its options to change, so this may not actually exist. 
           if yield option
             any_matched=true
             option.set_selected(true, method_options) # note that this fires the onchange event on this SelectList 

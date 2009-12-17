@@ -395,9 +395,9 @@ module Watir
         assert_enabled
         if checked!=state
           element_object.checked=state
-          fire_event :onchange
+          fire_event :onchange if exists? # don't fire event if we stopped existing due to change in state 
         end
-        if state
+        if state && exists?
           fire_event :onclick # fire this even if the state doesn't change; javascript can respond to clicking an already-checked radio. 
         end
         wait

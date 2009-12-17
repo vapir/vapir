@@ -45,11 +45,11 @@ module Watir
     def normalize_howwhat_index(how, what, default_how=nil)
       case how
       when nil
-        raise ArgumentError, "no how was given!"
+        raise Watir::Exception::MissingWayOfFindingObjectException, "no how was given!"
       when Hash
         how=how.dup
         index=how.delete(:index)
-        what==nil ? [:attributes, how, index] : raise(ArgumentError, "'how' was given as a Hash, so assumed to be the 'what' for :attributes, but 'what' was also given. how=#{how.inspect}, what=#{what.inspect}")
+        what==nil ? [:attributes, how, index] : raise(ArgumentError, "first argument was given as a Hash, so assumed to be the 'what' for how=:attributes, but 'what' was also given. how=#{how.inspect}, what=#{what.inspect}")
       when String, Symbol
         if Watir::Specifier::HowList.include?(how)
           [how, what, nil]
@@ -60,14 +60,14 @@ module Watir
             else
               raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search using how=#{how.inspect} (#{how.class}), what=#{what.inspect} (#{what.class}), default_how=#{default_how.inspect} (#{default_how.class})"
             end
-          elsif how==:index # this is different because the index number doesn't go in the 'how'
+          elsif how==:index # this is different because the index number doesn't go in the 'what'
             [:index, nil, what]
           else
             [:attributes, {how.to_sym => what}, nil]
           end
         end
       else
-        raise ArgumentError, "Locating with how=#{how.inspect} is not recognized or supported. Also given what=#{what.inspect}"
+        raise Watir::Exception::MissingWayOfFindingObjectException, "Locating with how=#{how.inspect} is not recognized or supported. Also given what=#{what.inspect}"
       end
     end
 

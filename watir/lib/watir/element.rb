@@ -158,7 +158,18 @@ module Watir
     # the parentNode is nil, then the element no longer exists on the DOM. 
     def element_object_exists?
       begin
-        @element_object && @element_object.parentNode ? true : false
+        document_object=container.document_object.parentWindow.document # I don't know why document_object != document_object.parentWindow.document 
+        win=document_object.parentWindow
+        # we need a javascript function to test equality because comparing two WIN32OLEs always returns false (unless they have the same object_id, which these don't) 
+        win.execScript("__watir_javascript_equals__=function(a, b){return a==b;}")
+        current_node=@element_object
+        while current_node
+          if win.__watir_javascript_equals__(current_node, document_object)
+            return true
+          end
+          current_node=current_node.parentNode
+        end
+        return false
       rescue WIN32OLERuntimeError
         false
       end

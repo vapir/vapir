@@ -77,16 +77,10 @@ module Watir
       @collection_class.new(:index, nil, @extra.merge(:index => index))
     end
     def first
-      at(1)
+      at(:first)
     end
     def last
-      if @extra[:candidates]
-        raise NotImplementedError, "Cannot return the last element for #{self.inspect}"
-      end
-      specifiers=@collection_class.specifiers
-      element=@collection_class.new(:custom, proc{true}, @extra.merge(:candidates => proc do |container|
-        [Watir::Specifier.match_candidates(Watir::Specifier.specifier_candidates(container, specifiers), specifiers).to_a.last]
-      end))
+      at(:last)
     end
     
     def find(&block)

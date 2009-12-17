@@ -376,7 +376,7 @@ module Watir
     dom_attr :tagName, :id
     inspect_this :how
     inspect_this_if(:what) do |element|
-      element.how != :element_object # don't show the element object in inspect
+      ![:element_object, :index].include?(element.how) # if how==:element_object, don't show the element object in inspect. if how==:index, what is nil. 
     end
     inspect_this_if(:index) # uses the default 'if'; shows index if it's not nil 
     inspect_these :tagName, :id
@@ -412,7 +412,15 @@ module Watir
       @how, @what=how, what
       raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
       @extra=extra
-      @index=extra[:index] && Integer(extra[:index])
+      if extra[:index]
+        if [:first, :last].include?(extra[:index]) || (extra[:index].is_a?(Integer) && extra[:index] > 0)
+          @index=extra[:index]
+        elsif extra[:index] =~ /\A\d+\z/
+          @index=Integer(extra[:index])
+        else
+          raise ArgumentError, "expected extra[:index] to be a positive integer, a string that looks like a positive integer, :first, or :last. received #{extra[:index]} (#{extra[:index].class})"
+        end
+      end
       @container=extra[:container]
       @browser=extra[:browser]
       extra[:locate]=true unless @extra.key?(:locate) # set default 
@@ -491,9 +499,9 @@ module Watir
           matched_count=0
           matched_candidates(specifiers) do |match|
             matched_count+=1
-            if !@index || @index==matched_count
+            if !@index || @index==:first || @index==:last || @index==matched_count
               matched_candidate=match
-              break
+              break unless @index==:last
             end
           end
           matched_candidate
@@ -502,13 +510,16 @@ module Watir
           unless @what.nil?
             raise ArgumentError, "'what' was specified, but when 'how'=:index, no 'what' is used (just extra[:index])"
           end
+          unless @index
+            raise ArgumentError, "'how' was given as :index but no index was given"
+          end
           matched_candidate=nil
           matched_count=0
           matched_candidates(self.class.specifiers) do |match|
             matched_count+=1
-            if @index==matched_count
+            if @index==matched_count || @index==:first || @index==:last
               matched_candidate=match
-              break
+              break unless @index==:last
             end
           end
           matched_candidate

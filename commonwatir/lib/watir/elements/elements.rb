@@ -68,13 +68,19 @@ module Watir
     alias_deprecated :getContents, :value
     
     # Clears the contents of the text field.
+    # 
+    # takes options: 
+    # :blur => true/false; whether or not to fire the onblur event when done.
+    # :highlight => true/false
+    #
     #   Raises UnknownObjectException if the object can't be found
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
-    def clear
+    def clear(options={})
+      options={:blur => true}.merge(options)
       assert_enabled
       assert_not_readonly
-      with_highlight do
+      with_highlight(options) do
         element_object.focus
         fire_event('onFocus')
         element_object.select
@@ -83,19 +89,25 @@ module Watir
         fire_event :onKeyDown
         fire_event :onKeyPress
         fire_event :onKeyUp
-#        fire_event('onBlur')
+        fire_event('onBlur') if options[:blur]
         fire_event("onChange")
       end
     end
     # Appends the specified string value to the contents of the text box.
+    # 
+    # takes options: 
+    # :blur => true/false; whether or not to file the onblur event when done.
+    # :highlight => true/false
+    #
     #   Raises UnknownObjectException if the object cant be found
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
-    def append(value)
+    def append(value, options={})
+      options={:blur => true}.merge(options)
       assert_enabled
       assert_not_readonly
       
-      with_highlight do
+      with_highlight(options) do
         existing_value_chars=element_object.value.split(//)
         new_value_chars=existing_value_chars+value.split(//)
         #value_chars=value.split(//) # split on blank regexp (rather than iterating over each byte) for multibyte chars
@@ -117,7 +129,7 @@ module Watir
             fire_event :onKeyPress
             fire_event :onKeyUp
           end
-#          fire_event('onBlur')
+          fire_event('onBlur') if options[:blur]
           fire_event("onChange")
         else
           element_object.value = element_object.value + value
@@ -126,13 +138,18 @@ module Watir
       end
     end
     # Sets the contents of the text field to the given value
+    # 
+    # takes options: 
+    # :blur => true/false; whether or not to file the onblur event when done.
+    # :highlight => true/false
+    #
     #   Raises UnknownObjectException if the object cant be found
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
-    def set(value)
-      with_highlight do
-        clear
-        append(value)
+    def set(value, options={})
+      with_highlight(options) do
+        clear(options.merge(:blur => false))
+        append(value, options)
       end
     end
   end
@@ -677,7 +694,7 @@ module Watir
       if for_object=document_object.getElementById(element_object.htmlFor)
         base_element_class.factory(for_object, extra_for_contained, :label, self)
       else
-        raise UnknownObjectException, "no element found that #{self.inspect} is for!"
+        raise Exception::UnknownObjectException, "no element found that #{self.inspect} is for!"
       end
     end
   end

@@ -534,7 +534,7 @@ module Watir
       raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how
       found_win=nil
       self.class.each_browser_window_object do |win|
-        found_win=win if Watir::Specifier.fuzzy_match(hows[how].call(win.getBrowser.contentDocument),what)
+        found_win=win if Watir::fuzzy_match(hows[how].call(win.getBrowser.contentDocument),what)
         # we don't break here if found_win is set because we want the last match if there are multiple. 
       end
       return found_win
@@ -594,7 +594,7 @@ module Watir
       xul_buttons=[]
       anonymous_dialog_nodes.to_array.each do |node|
         xul_buttons+=node.getElementsByTagName('xul:button').to_array.select do |button|
-          Watir::Specifier.fuzzy_match(button.label, button_text)
+          Watir::fuzzy_match(button.label, button_text)
         end
       end
       raise("Found #{xul_buttons.size} buttons which match #{button_text} - expected to find 1") unless xul_buttons.size==1

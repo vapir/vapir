@@ -1,5 +1,4 @@
 require 'watir/specifier'
-require 'watir/elements/element_collection'
 
 module Watir
   module Container
@@ -41,7 +40,7 @@ module Watir
     end
     
     # takes how and what in the form that users use, and translates it to a standard form 
-    # where how is one of Watir::Specifier::HowList and what corresponds. 
+    # where how is one of Watir::ElementObjectCandidates::HowList and what corresponds. 
     def normalize_howwhat_index(how, what, default_how=nil)
       case how
       when nil
@@ -51,7 +50,7 @@ module Watir
         index=how.delete(:index)
         what==nil ? [:attributes, how, index] : raise(ArgumentError, "first argument was given as a Hash, so assumed to be the 'what' for how=:attributes, but 'what' was also given. how=#{how.inspect}, what=#{what.inspect}")
       when String, Symbol
-        if Watir::Specifier::HowList.include?(how)
+        if Watir::ElementObjectCandidates::HowList.include?(how)
           [how, what, nil]
         else
           if what.nil?

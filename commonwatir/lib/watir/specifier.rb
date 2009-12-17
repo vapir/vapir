@@ -1,5 +1,53 @@
 module Watir
-  module Specifier
+  # This module is included in ElementCollection and Element. it 
+  # it expects the includer to have defined:
+  # - @container
+  # - @extra
+  module ElementObjectCandidates
+    private
+    
+    # raises an error unless @container is set 
+    def assert_container
+      unless @container
+        raise Watir::Exception::MissingContainerException, "No container is defined for this #{self.class.inspect}"
+      end
+    end
+    
+    # raises an error unless @container is set and exists 
+    def assert_container_exists
+      assert_container
+      @container.locate!
+    end
+
+    # this returns an Enumerable of element objects that _may_ (not necessarily do) match the
+    # the given specifier. sometimes specifier is completely ignored. behavor depends on
+    # @extra[:candidates]. when the value of @extra[:candidates] is:
+    # - nil (default), this uses #specifier_candidates which uses one of getElementById, 
+    #   getElementsByTagName, getElementsByName, getElementsByClassName. 
+    # - a symbol - this is assumed to be a method of the containing_object (@container.containing_object). 
+    #   this is called, made to be an enumerable, and returned. 
+    # - a proc - this is yielded @container and the proc is trusted to return an enumerable
+    #   of whatever candidate element objects are desired. 
+    # this is used by #locate in Element, and by ElementCollection. 
+    def element_object_candidates(specifiers)
+      @container.assert_exists(:force => true) do
+        case @extra[:candidates]
+        when nil
+          get_elements_by_specifiers(@container, specifiers, respond_to?(:index_is_first) ? index_is_first : false)
+        when Symbol
+          Watir::Element.object_collection_to_enumerable(@container.containing_object.send(@extra[:candidates]))
+        when Proc
+          @extra[:candidates].call(@container)
+        else
+          raise Watir::Exception::MissingWayOfFindingObjectException, "Unknown method of specifying candidates: #{@extra[:candidates].inspect} (#{@extra[:candidates].class})"
+        end
+      end
+    end
+    # returns an enumerable of 
+    def matched_candidates(specifiers, &block)
+      match_candidates(element_object_candidates(specifiers), specifiers, &block)
+    end
+    
     # this is a list of what users can specify (there are additional possible hows that may be given
     # to the Element constructor, but not generally for use by users, such as :element_object or :label
     HowList=[:attributes, :xpath, :custom, :element_object]
@@ -10,8 +58,10 @@ module Watir
                     :caption => [:textContent, :value], # this is used for buttons so you can get whatever text is on the button, be it value or inner text. 
                     :url => [:href],
                   })
-    module_function
-    def specifier_candidates(container, specifiers, want_first=false)
+    # returns an Enumerable of element objects that _may_ match (note, not do match, necessarily)
+    # the given specifiers on the given container. these are obtained from the container's containing_object
+    # using one of getElementById, getElementsByName, getElementsByClassName, or getElementsByTagName. 
+    def get_elements_by_specifiers(container, specifiers, want_first=false)
       if container.nil?
         raise ArgumentError, "no container specified!"
       end
@@ -21,7 +71,7 @@ module Watir
       attributes_in_specifiers=proc do |attr|
         specifiers.inject([]) do |arr, spec|
           spec.each_pair do |spec_attr, spec_val|
-            if (spec_attr==attr || Watir::Specifier::LocateAliases[spec_attr].include?(attr)) && !arr.include?(spec_val)
+            if (spec_attr==attr || LocateAliases[spec_attr].include?(attr)) && !arr.include?(spec_val)
               arr << spec_val
             end
           end
@@ -80,6 +130,7 @@ module Watir
       else # would be nice to use getElementsByTagName for each tag name, but we can't because then we don't know the ordering for index
         candidates=container.containing_object.getElementsByTagName('*')
       end
+      # return:
       if candidates.is_a?(Array)
         candidates
       elsif Object.const_defined?('JsshObject') && candidates.is_a?(JsshObject)
@@ -87,7 +138,7 @@ module Watir
       elsif Object.const_defined?('WIN32OLE') && candidates.is_a?(WIN32OLE)
         candidates.send :extend, Enumerable
       else
-        raise RuntimeError # this shouldn't happen
+        raise RuntimeError, "candidates ended up unexpectedly being #{candidates.inspect} (#{candidates.class}) - don't know what to do with this" # this shouldn't happen
       end
     end
     
@@ -221,11 +272,11 @@ module Watir
             specifier.all? do |(how, what)|
               if how==:types
                 what.any? do |type|
-                  candidate_attributes.call(:type).any?{|attr| Watir::Specifier.fuzzy_match(attr, type)}
+                  candidate_attributes.call(:type).any?{|attr| Watir::fuzzy_match(attr, type)}
                 end
               else
                 ([how]+LocateAliases[how]).any? do |how_alias|
-                  candidate_attributes.call(how_alias).any?{|attr| Watir::Specifier.fuzzy_match(attr, what)}
+                  candidate_attributes.call(how_alias).any?{|attr| Watir::fuzzy_match(attr, what)}
                 end
               end
             end
@@ -240,28 +291,31 @@ module Watir
         return matched_candidates
       end
     end
-    module_function
-    def fuzzy_match(attr, what)
-      case what
+  end
+
+  # This is on the Watir module itself because it's used in a number of other places, should be in a broad namespace. 
+  module_function
+  def fuzzy_match(attr, what)
+    # IF YOU CHANGE THIS, CHANGE THE JAVASCRIPT REIMPLEMENTATION IN match_candidates
+    case what
+    when String, Symbol
+      case attr
       when String, Symbol
-        case attr
-        when String, Symbol
-          attr.to_s.downcase.strip==what.to_s.downcase.strip
-        else
-          attr==what
-        end
-      when Regexp
-        case attr
-        when Regexp
-          attr==what
-        else
-         attr =~ what
-        end
-      when Numeric
-        attr==what || attr==what.to_s
+        attr.to_s.downcase.strip==what.to_s.downcase.strip
       else
         attr==what
       end
+    when Regexp
+      case attr
+      when Regexp
+        attr==what
+      else
+       attr =~ what
+      end
+    when Numeric
+      attr==what || attr==what.to_s
+    else
+      attr==what
     end
   end
 end

@@ -308,7 +308,7 @@ module Watir
     # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
     #   used for the onchange event. 
     def select_text(option_text, method_options={})
-      select_options_if(method_options) {|option| Watir::Specifier.fuzzy_match(option.text, option_text) }
+      select_options_if(method_options) {|option| Watir::fuzzy_match(option.text, option_text) }
     end
     alias select select_text
     alias set select_text
@@ -320,7 +320,7 @@ module Watir
     # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
     #   used for the onchange event. 
     def select_value(option_value, method_options={})
-      select_options_if(method_options) {|option| Watir::Specifier.fuzzy_match(option.value, option_value) }
+      select_options_if(method_options) {|option| Watir::fuzzy_match(option.value, option_value) }
     end
 
     # Does the SelectList have an option whose text matches the given text or regexp? 

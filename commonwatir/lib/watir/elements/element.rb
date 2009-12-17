@@ -36,7 +36,7 @@ module Watir
       end
       ObjectSpace.each_object(Class) do |klass|
         if klass < curr_klass
-          Watir::Specifier.match_candidates([element_object], klass.specifiers) do |match|
+          Watir::ElementObjectCandidates.match_candidates([element_object], klass.specifiers) do |match|
             curr_klass=klass
             break
           end
@@ -397,6 +397,11 @@ module Watir
     attr_reader :what
     attr_reader :index
     
+    # returns whether the specified index for this element is equivalent to finding the first element 
+    def index_is_first
+      [nil, :first, 1].include?(index)
+    end
+    
     def html
       Kernel.warn "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)"
       outer_html
@@ -412,13 +417,16 @@ module Watir
       @how, @what=how, what
       raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
       @extra=extra
-      if extra[:index]
-        if [:first, :last].include?(extra[:index]) || (extra[:index].is_a?(Integer) && extra[:index] > 0)
-          @index=extra[:index]
-        elsif extra[:index] =~ /\A\d+\z/
-          @index=Integer(extra[:index])
+      @index=begin
+        valid_symbols=[:first, :last]
+        if valid_symbols.include?(@extra[:index]) || @extra[:index].nil? || (@extra[:index].is_a?(Integer) && @extra[:index] > 0)
+          @extra[:index]
+        elsif valid_symbols.map{|sym| sym.to_s}.include?(@extra[:index])
+          @extra[:index].to_sym
+        elsif @extra[:index] =~ /\A\d+\z/
+          Integer(@extra[:index])
         else
-          raise ArgumentError, "expected extra[:index] to be a positive integer, a string that looks like a positive integer, :first, or :last. received #{extra[:index]} (#{extra[:index].class})"
+          raise ArgumentError, "expected extra[:index] to be a positive integer, a string that looks like a positive integer, :first, or :last. received #{@extra[:index]} (#{@extra[:index].class})"
         end
       end
       @container=extra[:container]
@@ -476,9 +484,12 @@ module Watir
           unless @container.respond_to?(:element_object_by_xpath)
             raise Watir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
           end
+          # todo/fix: implement index for this, using element_objects_by_xpath ? 
+          unless index_is_first
+            raise NotImplementedError, "Specifying an index is not supported for locating by xpath"
+          end
           by_xpath=@container.element_object_by_xpath(@what)
-          # todo/fix: implement @index for this, using element_objects_by_xpath ? 
-          Watir::Specifier.match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers).first
+          match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers).first
         when :label
           unless document_object
             raise "No document object found for this #{self.inspect} - needed to search by id for label from #{@container.inspect}"
@@ -488,7 +499,7 @@ module Watir
           end
           what.locate!(container_locate_options) # the what Label is functionally synonymous with the @container. actually it is currently always the same as the @container. 
           by_label=document_object.getElementById(@container.for)
-          Watir::Specifier.match_candidates(by_label ? [by_label] : [], self.class.specifiers).first
+          match_candidates(by_label ? [by_label] : [], self.class.specifiers).first
         when :attributes
           assert_container
           @container.locate!(container_locate_options)
@@ -499,7 +510,7 @@ module Watir
           matched_count=0
           matched_candidates(specifiers) do |match|
             matched_count+=1
-            if !@index || @index==:first || @index==:last || @index==matched_count
+            if @index==matched_count || index_is_first || @index==:last
               matched_candidate=match
               break unless @index==:last
             end
@@ -517,7 +528,7 @@ module Watir
           matched_count=0
           matched_candidates(self.class.specifiers) do |match|
             matched_count+=1
-            if @index==matched_count || @index==:first || @index==:last
+            if @index==matched_count || index_is_first || @index==:last
               matched_candidate=match
               break unless @index==:last
             end

@@ -19,7 +19,7 @@ module Watir
         when nil
           Watir::Specifier.specifier_candidates(@container, specifiers)
         when Symbol
-          Watir::Element.object_collection_to_enumerable(@container.element_object.send(@extra[:candidates]))
+          Watir::Element.object_collection_to_enumerable(@container.containing_object.send(@extra[:candidates]))
         when Proc
           @extra[:candidates].call(@container)
         else
@@ -80,6 +80,9 @@ module Watir
       at(1)
     end
     def last
+      if @extra[:candidates]
+        raise NotImplementedError, "Cannot return the last element for #{self.inspect}"
+      end
       specifiers=@collection_class.specifiers
       element=@collection_class.new(:custom, proc{true}, @extra.merge(:candidates => proc do |container|
         [Watir::Specifier.match_candidates(Watir::Specifier.specifier_candidates(container, specifiers), specifiers).to_a.last]

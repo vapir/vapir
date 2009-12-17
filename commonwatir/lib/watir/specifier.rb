@@ -125,7 +125,9 @@ module Watir
                 }
                 return $A(attrs);
               };
-              var match= specifiers_list.any(function(specifier)
+              var match=true;
+              match= match && candidate.nodeType==1;
+              match= match && specifiers_list.any(function(specifier)
               { return $H(specifier).all(function(howwhat)
                 { how=howwhat.key;
                   what=howwhat.value;
@@ -185,7 +187,21 @@ module Watir
             end
             attrs
           end
-          match= specifiers_list.any? do |specifier|
+          match=true
+          if Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE)
+            begin
+              match &&= candidate.nodeType==1
+            rescue WIN32OLERuntimeError
+              match=false
+            end
+          else
+            if candidate.object_respond_to?(:nodeType)
+              match &&= candidate.candidate.nodeType==1
+            else
+              match=false
+            end
+          end
+          match &&= specifiers_list.any? do |specifier|
             specifier.all? do |(how, what)|
               if how==:types
                 what.any? do |type|

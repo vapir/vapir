@@ -262,15 +262,16 @@ module Watir
           end
         end
         class_array_get('container_collection_methods').each do |container_multiple_method|
-          unless container_module.method_defined?(container_multiple_method)
-            container_module.module_eval do
-              # returns an ElementCollection of Elements that are instances of the including class 
-              define_method(container_multiple_method) do
-                ElementCollection.new(self, including_class, extra_for_contained)
-              end
+          container_module.module_eval do
+            # returns an ElementCollection of Elements that are instances of the including class 
+            define_method(container_multiple_method) do
+              ElementCollection.new(self, including_class, extra_for_contained)
             end
           end
           container_module.module_eval do
+            define_method('child_'+container_multiple_method.to_s) do
+              ElementCollection.new(self, including_class, extra_for_contained.merge(:candidates => :childNodes))
+            end
             define_method('show_'+container_multiple_method.to_s) do |*io|
               io=io.first||$stdout # io is a *array so that you don't have to give an arg (since procs don't do default args)
               element_collection=ElementCollection.new(self, including_class, extra_for_contained)

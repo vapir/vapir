@@ -576,6 +576,23 @@ module Watir
       end
     end
     alias :exist? :exists?
+    
+    # returns an Element that represents the same object as self, but is an instance of the 
+    # most-specific class < self.class that can represent that object. 
+    #
+    # For example, if we have a table, get its first element, and call #to_factory on it:
+    #
+    # a_table=browser.tables.first
+    # => #<Watir::IETable:0x071bc70c how=:index index=:first tagName="TABLE">
+    # a_element=a_table.elements.first
+    # => #<Watir::IEElement:0x071b856c how=:index index=:first tagName="TBODY" id="">
+    # a_element.to_factory
+    # => #<Watir::IETableBody:0x071af78c how=:index index=:first tagName="TBODY" id="">
+    #
+    # we get back a Watir::TableBody. 
+    def to_factory
+      self.class.factory(element_object, @extra, @how, @what)
+    end
 
     # takes a block. sets highlight on this element; calls the block; clears the highlight.
     # the clear is in an ensure block so that you can call return from the given block. 

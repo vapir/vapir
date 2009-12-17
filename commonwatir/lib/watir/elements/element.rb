@@ -381,7 +381,7 @@ module Watir
     inspect_these :tagName, :id
     dom_attr :title, :tagName => [:tagName, :tag_name], :innerHTML => [:innerHTML, :inner_html], :className => [:className, :class_name]
     dom_attr :style
-    dom_function :scrollIntoView
+    dom_function :scrollIntoView => [:scrollIntoView, :scroll_into_view]
 
     # Get attribute value for any attribute of the element.
     # Returns null if attribute doesn't exist.

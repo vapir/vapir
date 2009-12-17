@@ -425,8 +425,8 @@ module Watir
             # todo/fix: this is browser-specific stuff, shouldn't it be in the browser-specific class? 
             element_object.checked=state
           end
-          fire_event :onclick
-          fire_event :onchange
+          fire_event :onclick if exists?  # sometimes previous actions can cause self to stop existing 
+          fire_event :onchange if exists? 
         end
         wait
       end

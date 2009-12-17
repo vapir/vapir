@@ -77,20 +77,33 @@ module Watir
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
     def clear(options={})
-      options={:blur => true}.merge(options)
+      options={:blur => true, :change => true, :select => true, :focus => true}.merge(options)
       assert_enabled
       assert_not_readonly
       with_highlight(options) do
-        element_object.focus
-        fire_event('onFocus')
-        element_object.select
-        fire_event("onSelect")
+        if options[:focus]
+          element_object.focus
+          fire_event('onFocus')
+          assert_exists(:force => true)
+        end
+        if options[:select]
+          element_object.select
+          fire_event("onSelect")
+          assert_exists(:force => true)
+        end
         element_object.value = ''
         fire_event :onKeyDown
+        assert_exists(:force => true)
         fire_event :onKeyPress
+        assert_exists(:force => true)
         fire_event :onKeyUp
-        fire_event('onBlur') if options[:blur]
-        fire_event("onChange")
+        assert_exists(:force => true)
+        if options[:change] && exists?
+          fire_event("onChange")
+        end
+        if options[:blur] && exists?
+          fire_event('onBlur')
+        end
       end
     end
     # Appends the specified string value to the contents of the text box.
@@ -103,7 +116,7 @@ module Watir
     #   Raises ObjectDisabledException if the object is disabled
     #   Raises ObjectReadOnlyException if the object is read only
     def append(value, options={})
-      options={:blur => true}.merge(options)
+      options={:blur => true, :change => true, :select => true, :focus => true}.merge(options)
       assert_enabled
       assert_not_readonly
       
@@ -118,19 +131,32 @@ module Watir
         type_keys=respond_to?(:type_keys) ? self.type_keys : true # TODO: FIX
         typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0 # TODO: FIX
         if type_keys
-          element_object.focus
-          fire_event('onFocus')
-          element_object.select
-          fire_event("onSelect")
+          if options[:focus]
+            element_object.focus
+            fire_event('onFocus')
+            assert_exists(:force => true)
+          end
+          if options[:select]
+            element_object.select
+            fire_event("onSelect")
+            assert_exists(:force => true)
+          end
           ((existing_value_chars.length)...new_value_chars.length).each do |i|   
 #            sleep typingspeed
             element_object.value = new_value_chars[0..i].join('')
             fire_event :onKeyDown
+            assert_exists(:force => true)
             fire_event :onKeyPress
+            assert_exists(:force => true)
             fire_event :onKeyUp
+            assert_exists(:force => true)
           end
-          fire_event('onBlur') if options[:blur]
-          fire_event("onChange")
+          if options[:change] && exists?
+            fire_event("onChange")
+          end
+          if options[:blur] && exists?
+            fire_event('onBlur')
+          end
         else
           element_object.value = element_object.value + value
         end
@@ -148,8 +174,9 @@ module Watir
     #   Raises ObjectReadOnlyException if the object is read only
     def set(value, options={})
       with_highlight(options) do
-        clear(options.merge(:blur => false))
-        append(value, options)
+        clear(options.merge(:blur => false, :change => false))
+        assert_exists(:force => true)
+        append(value, options.merge(:focus => false, :select => false))
       end
     end
   end

@@ -163,18 +163,18 @@ module Watir
     end
     
     def class_array_append(name, *elements)
+=begin
       name='@@'+name.to_s
       unless self.class_variable_defined?(name)
         class_variable_set(name, [])
       end
       class_variable_get(name).push(*elements)
-=begin
+=end
       name=name.to_s.capitalize
       unless self.const_defined?(name)
         self.const_set(name, [])
       end
       self.const_get(name).push(*elements)
-=end
     end
 
     def class_array_get(name)

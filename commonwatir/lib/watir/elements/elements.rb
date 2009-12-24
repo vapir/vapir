@@ -732,6 +732,12 @@ module Watir
     container_single_method :ul
     container_collection_method :uls
   end
+  module Ol
+    extend ElementHelper
+    add_specifier :tagName => 'ol'
+    container_single_method :ol
+    container_collection_method :ols
+  end
   module Li
     extend ElementHelper
     add_specifier :tagName => 'LI'

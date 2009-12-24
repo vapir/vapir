@@ -27,6 +27,10 @@ module Watir
     include Ul
   end
 
+  class FFOl < FFElement
+    include Ol
+  end
+
   class FFLi < FFElement
     include Li
   end

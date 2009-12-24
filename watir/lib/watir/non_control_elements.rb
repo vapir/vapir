@@ -38,6 +38,9 @@ module Watir
   class IEUl < IEElement
     include Ul
   end
+  class IEOl < IEElement
+    include Ol
+  end
   class IEH1 < IEElement
     include H1
   end

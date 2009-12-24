@@ -15,8 +15,8 @@ class TC_Radios < Test::Unit::TestCase
        assert(browser.radio(:name, "box1").exists?)
        assert(browser.radio(:id, "box5").exists?)
 
-       assert(!browser.radio(:name, "missingname").exists?)
-       assert(!browser.radio(:id, "missingid").exists?)
+       assert_false(browser.radio(:name, "missingname").exists?)
+       assert_false(browser.radio(:id, "missingid").exists?)
     end
 
     def test_radio_class
@@ -45,24 +45,24 @@ class TC_Radios < Test::Unit::TestCase
        assert_false(browser.button!(:value , "foo").enabled?)
 
        # first click the button is enabled and the radio is set
-       browser.radio!(:name, "box5" , '1').click
-       assert(browser.radio!(:name, "box5",'1').checked?)
+       browser.radio!(:name, "box5" , 1).click
+       assert(browser.radio!(:name, "box5",1).checked?)
        #assert(browser.button!(:value , "foo").enabled?)
 
        # second click the button is disabled and the radio is still set
-       browser.radio!(:name, "box5", '1').click
-       assert(browser.radio!(:name, "box5",'1').checked?)
+       browser.radio!(:name, "box5", 1).click
+       assert(browser.radio!(:name, "box5",1).checked?)
        assert_false(browser.button!(:value , "foo").enabled?)
 
        # third click the button is enabled and the radio is still set
-       browser.radio!(:name, "box5", '1').click
-       assert(browser.radio!(:name, "box5",'1' ).checked?)
+       browser.radio!(:name, "box5", 1).click
+       assert(browser.radio!(:name, "box5",1 ).checked?)
        assert(browser.button!(:value , "foo").enabled?)
 
        # click the radio with a value of 2 , button is disabled and the radio is still set
-       browser.radio!(:name, "box5", '2').click
-       assert_false(browser.radio!(:name, "box5" ,'1').checked?)
-       assert(browser.radio!(:name, "box5" ,'2').checked?)
+       browser.radio!(:name, "box5", 2).click
+       assert_false(browser.radio!(:name, "box5" ,1).checked?)
+       assert(browser.radio!(:name, "box5" ,2).checked?)
        assert_false(browser.button!(:value , "foo").enabled?)
     end
 
@@ -72,8 +72,8 @@ class TC_Radios < Test::Unit::TestCase
        assert_false(browser.radio!(:name, "box1").checked?)   
        assert( browser.radio!(:name, "box3").checked?)   
        assert_false(browser.radio!(:name, "box2").checked?)   
-       assert( browser.radio!(:name, "box4" , '1' ).checked?)   
-       assert_false(browser.radio!(:name, "box4" , '2' ).checked?)   
+       assert( browser.radio!(:name, "box4" , 1 ).checked?)   
+       assert_false(browser.radio!(:name, "box4" , 2 ).checked?)   
     end
 
     def test_radio_clear
@@ -88,8 +88,8 @@ class TC_Radios < Test::Unit::TestCase
        browser.radio!(:name, "box3").clear
        assert_false(browser.radio!(:name, "box3").checked?)   
 
-       browser.radio!(:name, "box4" , '1').clear
-       assert_false(browser.radio!(:name, "box4" , '1').checked?)   
+       browser.radio!(:name, "box4" , 1).clear
+       assert_false(browser.radio!(:name, "box4" , 1).checked?)   
     end
 
     def test_radio_getState
@@ -99,8 +99,8 @@ class TC_Radios < Test::Unit::TestCase
        assert_equal( true , browser.radio!(:name, "box3").checked?)   
 
        # radios that have the same name but different values
-       assert_equal( false , browser.radio!(:name, "box4" , '2').checked? )   
-       assert_equal( true , browser.radio!(:name, "box4" , '1').checked?)   
+       assert_equal( false , browser.radio!(:name, "box4" , 2).checked? )   
+       assert_equal( true , browser.radio!(:name, "box4" , 1).checked?)   
     end
 
     def test_radio_set
@@ -108,14 +108,14 @@ class TC_Radios < Test::Unit::TestCase
        browser.radio!(:name, "box1").set
        assert(browser.radio!(:name, "box1").checked?)   
 
-       assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) {   browser.radio!(:name, "box2").set  }  
+       assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) {   browser.radio(:name, "box2").set  }  
 
        browser.radio!(:name, "box3").set
        assert(browser.radio!(:name, "box3").checked?)   
 
        # radioes that have the same name but different values
-       browser.radio!(:name, "box4" , '3').set
-       assert(browser.radio!(:name, "box4" , '3').checked?)   
+       browser.radio!(:name, "box4" , 3).set
+       assert(browser.radio!(:name, "box4" , 3).checked?)   
     end
 
     def test_radio_properties
@@ -137,8 +137,8 @@ class TC_Radios < Test::Unit::TestCase
         assert_equal("box5"  ,    browser.radio!(:index, 2).id )  
         assert_equal(""      ,    browser.radio!(:index, 2).name )  
 
-        assert_equal("box4-value5", browser.radio!(:name , "box4" , '5' ).title  )
-        assert_equal("", browser.radio!(:name , "box4" , '4' ).title  )
+        assert_equal("box4-value5", browser.radio!(:name , "box4" , 5 ).title  )
+        assert_equal("", browser.radio!(:name , "box4" , 4 ).title  )
 
 
     end

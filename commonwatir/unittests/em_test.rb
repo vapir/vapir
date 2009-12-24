@@ -17,7 +17,7 @@ class TC_Em < Test::Unit::TestCase
   end
   
   def test_does_not_exist
-    assert !browser.em?(:id, 'no_such_id'), "Found non-existing <em>"
+    assert !browser.em(:id, 'no_such_id').exists?, "Found non-existing <em>"
   end
   
   def test_attribute_class_name

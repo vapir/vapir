@@ -12,7 +12,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
   end
   
   def test_Table_Exists
-    assert(!browser.table(:xpath , "//table[@id='missingTable']/").exists?)
+    assert_false(browser.table(:xpath , "//table[@id='missingTable']/").exists?)
     assert(browser.table(:xpath , "//table[@id='t1']/").exists? )
   end
   
@@ -48,7 +48,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
     goto_page "simple_table_buttons.html"
     
     button = browser.button!(:xpath , "//input[@id='b1']/")
-    table = Watir::IETable.create_from_element(browser,button)
+    table = Watir::Table.create_from_element(browser,button)
     
     table[2][1].button!(:index,1).click
     assert(browser.text_field!(:name,"confirmtext").verify_contains(/CLICK2/i))
@@ -63,7 +63,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
   
   def test_row_directly
     assert( browser.table_row(:xpath , "//tr[@id='row1']/").exists? )  
-    assert(! browser.table_row(:xpath , "//tr[@id='no_exist']/").exists?)
+    assert_false( browser.table_row(:xpath , "//tr[@id='no_exist']/").exists?)
     
     assert_equal('Row 2 Col1' ,  browser.table_row(:xpath , "//tr[@id='row1']/")[1].text.strip )
   end

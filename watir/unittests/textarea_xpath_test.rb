@@ -23,8 +23,8 @@ class TC_TextArea_XPath < Test::Unit::TestCase
     assert(browser.text_field(:xpath , "//textarea[@id='txtMultiLine3']/").exists?)
     assert(browser.text_field(:xpath , "//textarea[@id='txtReadOnly']/").exists?)
     #test for missing 
-    assert(!browser.text_field(:xpath , "//textarea[@name='missing']/").exists?)
-    assert(!browser.text_field(:xpath , "//textarea[@name='txtMultiLine4']/").exists?)
+    assert_false(browser.text_field(:xpath , "//textarea[@name='missing']/").exists?)
+    assert_false(browser.text_field(:xpath , "//textarea[@name='txtMultiLine4']/").exists?)
   end
   
   def xtest_textarea_to_s

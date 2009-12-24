@@ -35,7 +35,7 @@ class TC_Tables < Test::Unit::TestCase
     assert_raises UnknownObjectException do
       browser.table(:index, 66).row_count
     end
-    assert_raises UnknownObjectException do
+    assert_raises MissingWayOfFindingObjectException do
       browser.table(:bad_attribute, 99).row_count
     end
   end
@@ -303,7 +303,7 @@ class TC_Tables_Buttons < Test::Unit::TestCase
   tag_method :test_table_from_element, :fails_on_firefox
   def test_table_from_element
     button = browser.button!(:id, "b1")
-    table = Watir::IETable.create_from_element(browser, button)
+    table = Watir::Table.create_from_element(browser, button)
     
     table[2][1].button!(:index, 1).click
     assert(browser.text_field!(:name, "confirmtext").verify_contains(/CLICK2/i))
@@ -334,7 +334,7 @@ class TC_Table_Columns < Test::Unit::TestCase
   tag_method :test_get_columnvalues_with_colspan, :fails_on_firefox
   def test_get_columnvalues_with_colspan
     assert_equal(["R1C1", "R2C1", "R3C1", "R4C1", "R5C1", "R6C2"], browser.table!(:index, 3).column_texts_at(1))
-     (2..4).each{|x| assert_raises(UnknownObjectException){ browser.table!(:index, 3).column_texts_at(x) } }
+     (2..4).each{|x| assert_raises(UnknownCellException){ browser.table!(:index, 3).column_texts_at(x) } }
   end
   
   def test_get_rowvalues_full_row

@@ -13,7 +13,7 @@ class Map_Tests < Watir::TestCase
   
   def test_map_exists_by_name
     assert(browser.map(:name, 'maptest01').exists?)
-    assert(!browser.map(:name, 'maptest03').exists?)
+    assert_false(browser.map(:name, 'maptest03').exists?)
   end  
   
   def test_map_exists_by_id
@@ -25,9 +25,9 @@ class Map_Tests < Watir::TestCase
     assert(browser.area(:url, /pass.html/).exists?)
     assert(browser.area(:url, /simple_table_buttons.html/).exists?)
     assert(browser.area(:url, /images1.html/).exists?)
-    assert_raises(UnknownObjectException){ browser.area!(:url, /blobs.html/) }
-    assert(browser.map!(:name, 'maptest01').area(:url, /pass.html/).exists?)
-    assert(browser.map!(:id, 'maptestid01').area(:url, /images1.html/).exists?)
+    assert_false(browser.area(:url, /blobs.html/).exists?)
+    assert(browser.map(:name, 'maptest01').area(:url, /pass.html/).exists?)
+    assert(browser.map(:id, 'maptestid01').area(:url, /images1.html/).exists?)
   end
   
   def test_map_area_exists_by_alt
@@ -35,8 +35,8 @@ class Map_Tests < Watir::TestCase
     assert(browser.area(:alt, 'Table Buttons').exists?)
     assert(browser.area(:alt, 'Images').exists?)
     assert_false(browser.area(:alt, 'Blobs').exists?)
-    assert(browser.map!(:name, 'maptest01').area(:alt, 'Pass').exists?)
-    assert(browser.map!(:id, 'maptestid01').area(:alt, 'Table Buttons').exists?)
+    assert(browser.map(:name, 'maptest01').area(:alt, 'Pass').exists?)
+    assert(browser.map(:id, 'maptestid01').area(:alt, 'Table Buttons').exists?)
   end
   
   def test_map_area_click

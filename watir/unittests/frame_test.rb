@@ -39,7 +39,7 @@ class TC_Frames < Test::Unit::TestCase
   
   #tag_method :test_frame_with_invalid_attribute, :fails_on_firefox
   def test_frame_with_invalid_attribute
-    assert_raises(Watir::Exception::UnknownFrameException) { browser.frame(:blah, 'no_such_thing').button!(:id, "b2").enabled? }
+    assert_raises(ArgumentError) { browser.frame(:blah, 'no_such_thing').button(:id, "b2").enabled?  }  
   end
   
   def test_preset_frame

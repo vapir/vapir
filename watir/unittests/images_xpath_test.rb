@@ -19,15 +19,15 @@ class TC_Images_XPath < Test::Unit::TestCase
   end
   
   def test_imageExists
-    assert(! browser.image(:xpath , "//img[@name='missing_name']/").exists?)
+    assert_false( browser.image(:xpath , "//img[@name='missing_name']/").exists?)
     assert(       browser.image(:xpath , "//img[@name='circle']/").exists?  )
     # assert(       browser.image(:name , /circ/ ).exists?  )
     
-    assert(! browser.image(:xpath , "//img[@id='missing_id']/").exists?)
+    assert_false( browser.image(:xpath , "//img[@id='missing_id']/").exists?)
     assert(       browser.image(:xpath , "//img[@id='square']/").exists?  )
     # assert(       browser.image(:id , /squ/ ).exists?  )
     
-    assert(! browser.image(:xpath , "//img[@src='missingsrc.gif']/").exists?)
+    assert_false( browser.image(:xpath , "//img[@src='missingsrc.gif']/").exists?)
     
     # BP -- This fails for me but not for Paul. It doesn't make sense to me that it should pass.  
     # assert(       browser.image(:src , "file:///#{$myDir}/html/images/triangle.jpg").exists?  )
@@ -36,8 +36,8 @@ class TC_Images_XPath < Test::Unit::TestCase
     assert(       browser.image(:alt , "circle" ).exists?  )
     # assert(       browser.image(:alt , /cir/ ).exists?  )
     
-    assert(!  browser.image(:alt , "triangle" ).exists?)
-    # assert(!  browser.image(:alt , /tri/ ).exists?)
+    assert_false(  browser.image(:alt , "triangle" ).exists?)
+    # assert_false(  browser.image(:alt , /tri/ ).exists?)
   end
   
   def test_image_click

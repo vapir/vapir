@@ -14,7 +14,7 @@ class TC_Hidden_Fields < Test::Unit::TestCase
         # test using index
         assert( browser.hidden(:index,1).exists? )
         assert( browser.hidden(:index,2).exists? )
-        assert(! browser.hidden(:index,3).exists?)
+        assert_false( browser.hidden(:index,3).exists?)
         
         browser.hidden!(:index,1).value = 44
         browser.hidden!(:index,2).value = 55
@@ -27,8 +27,8 @@ class TC_Hidden_Fields < Test::Unit::TestCase
         # test using name and ID
         assert( browser.hidden(:name ,"hid1").exists? )
         assert( browser.hidden(:id,"hidden_1").exists? )
-        assert(! browser.hidden(:name,"hidden_44").exists?)
-        assert(! browser.hidden(:id,"hidden_55").exists?)
+        assert_false( browser.hidden(:name,"hidden_44").exists?)
+        assert_false( browser.hidden(:id,"hidden_55").exists?)
         
         browser.hidden!(:name ,"hid1").value = 444
         browser.hidden!(:id,"hidden_1").value = 555
@@ -53,8 +53,8 @@ class TC_Hidden_Fields < Test::Unit::TestCase
         # test using a form
         assert( browser.form!(:name , "has_a_hidden").hidden(:name ,"hid1").exists? )
         assert( browser.form!(:name , "has_a_hidden").hidden(:id,"hidden_1").exists? )
-        assert(! browser.form(:name , "has_a_hidden").hidden(:name,"hidden_44").exists?)
-        assert(! browser.form(:name , "has_a_hidden").hidden(:id,"hidden_55").exists?)
+        assert_false( browser.form(:name , "has_a_hidden").hidden(:name,"hidden_44").exists?)
+        assert_false( browser.form(:name , "has_a_hidden").hidden(:id,"hidden_55").exists?)
         
         browser.form!(:name , "has_a_hidden").hidden!(:name ,"hid1").value = 222
         browser.form!(:name , "has_a_hidden").hidden!(:id,"hidden_1").value = 333

@@ -35,6 +35,10 @@ class TC_Button < Test::Unit::TestCase
     assert_raises(ObjectDisabledException) { browser.button!(:caption, "Disabled Button").click }  
   end
   
+  def test_exception_with_enabled
+    assert_raises(UnknownObjectException) { browser.button(:name, "noName").enabled?  }  
+  end
+
   def test_properties
     assert_equal("b1", browser.button!(:index, 1).name) 
     assert_equal("b2", browser.button!(:index, 1).id) 

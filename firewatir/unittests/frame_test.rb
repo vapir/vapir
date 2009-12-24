@@ -10,9 +10,9 @@ class TC_Frames < Test::Unit::TestCase
     goto_page("frame_buttons.html")
   end
 
-  tag_method :test_doesnt_exist, :fails_on_firefox, :fails_on_ie # bug WTR-268
+  #tag_method :test_doesnt_exist, :fails_on_firefox, :fails_on_ie # bug WTR-268
   def test_doesnt_exist
-    assert_nil browser.frame("missingFrame")
+    assert_false browser.frame("missingFrame").exists?
   end
 
   tag_method :test_exists, :fails_on_ie # related to bug WTR-268

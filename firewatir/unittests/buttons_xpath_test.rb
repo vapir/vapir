@@ -52,9 +52,9 @@ class TC_Buttons_XPath < Test::Unit::TestCase
         assert(browser.button(:xpath, "//input[@name='b1']").exists?)   
         assert(browser.button(:xpath, "//input[@id='b2']").exists?)   
         
-        assert_raises(UnknownObjectException) { browser.button!(:xpath, "//input[@value='Missing Caption']")}
-        assert_raises(UnknownObjectException) { browser.button!(:xpath, "//input[@name='missingname']") }
-        assert_raises(UnknownObjectException) { browser.button!(:xpath, "//input[@id='missingid']") }
+        assert_false(browser.button(:xpath, "//input[@value='Missing Caption']").exists?)
+        assert_false(browser.button(:xpath, "//input[@name='missingname']").exists?)
+        assert_false(browser.button(:xpath, "//input[@id='missingid']").exists?)
     end
 
     tag_method :test_element_by_xpath_class, :fails_on_ie

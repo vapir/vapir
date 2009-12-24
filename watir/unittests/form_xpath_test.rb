@@ -11,13 +11,13 @@ class TC_Forms2_XPath < Test::Unit::TestCase
   
   def test_Form_Exists
     assert(browser.form(:xpath , "//form[@name='test2']/").exists?)
-    assert(!browser.form(:xpath , "//form[@name='missing']/").exists?)
+    assert_false(browser.form(:xpath , "//form[@name='missing']/").exists?)
     
     assert(browser.form(:xpath , "//form[@method='get']/").exists?)
-    assert(!browser.form(:xpath , "//form[@method='missing']/").exists?)
+    assert_false(browser.form(:xpath , "//form[@method='missing']/").exists?)
     
     assert(browser.form(:xpath , "//form[@action='pass.html']/").exists?)
-    assert(!browser.form(:xpath , "//form[@action='missing']/").exists?)
+    assert_false(browser.form(:xpath , "//form[@action='missing']/").exists?)
   end
   
   def test_ButtonInForm
@@ -40,13 +40,13 @@ class TC_Forms3_XPath < Test::Unit::TestCase
   
   def test_Form_Exists
     assert(browser.form(:xpath , "//form[@name='test2']/").exists?)
-    assert(!browser.form(:xpath , "//form[@name='missing']/").exists?)
+    assert_false(browser.form(:xpath , "//form[@name='missing']/").exists?)
     
     assert(browser.form(:xpath , "//form[@method='get']/").exists?)
-    assert(!browser.form(:xpath , "//form[@method='missing']/").exists?)
+    assert_false(browser.form(:xpath , "//form[@method='missing']/").exists?)
     
     assert(browser.form(:xpath , "//form[@action='pass.html']/").exists?)
-    assert(!browser.form(:xpath , "//form[@action='missing']/").exists?)
+    assert_false(browser.form(:xpath , "//form[@action='missing']/").exists?)
   end
   
   def test_getObject_when_non_watir_object_before_it
@@ -54,6 +54,7 @@ class TC_Forms3_XPath < Test::Unit::TestCase
     assert_equal("check1" , browser.checkbox!(:index,1).name )
   end
   
+
 #  def test_showforms # add verification of output!
 #    browser.show_forms
 #  end
@@ -112,14 +113,14 @@ class TC_Forms3_XPath < Test::Unit::TestCase
     assert( browser.button(:alt , "submit").exists? )
     assert( browser.button(:alt , /sub/).exists? )
     
-    assert(! browser.button(:alt , "missing").exists?)
-    assert(! browser.button(:alt , /missing/).exists?)
+    assert_false( browser.button(:alt , "missing").exists?)
+    assert_false( browser.button(:alt , /missing/).exists?)
     
     #assert( browser.button(:src , "file:///#{$myDir}/html/images/button.jpg").exists? )    # this doesnt work for everybody
     assert( browser.button(:src , /button/).exists? )
     
-    assert(! browser.button(:src , "missing").exists?)
-    assert(! browser.button(:src , /missing/).exists?)
+    assert_false( browser.button(:src , "missing").exists?)
+    assert_false( browser.button(:src , /missing/).exists?)
     assert_nothing_raised("raised an exception when it shouldnt have") { browser.button!(:src , /button/).click }
     
     assert( browser.contains_text("PASS") )
@@ -161,7 +162,7 @@ class TC_Hidden_Fields_XPath < Test::Unit::TestCase
     # test using index
     assert( browser.hidden(:index,1).exists? )
     assert( browser.hidden(:index,2).exists? )
-    assert(! browser.hidden(:index,3).exists?)
+    assert_false( browser.hidden(:index,3).exists?)
     
     browser.hidden!(:index,1).value = 44
     browser.hidden!(:index,2).value = 55
@@ -174,8 +175,8 @@ class TC_Hidden_Fields_XPath < Test::Unit::TestCase
     # test using name and ID
     assert( browser.hidden(:name ,"hid1").exists? )
     assert( browser.hidden(:id,"hidden_1").exists? )
-    assert(! browser.hidden(:name,"hidden_44").exists?)
-    assert(! browser.hidden(:id,"hidden_55").exists?)
+    assert_false( browser.hidden(:name,"hidden_44").exists?)
+    assert_false( browser.hidden(:id,"hidden_55").exists?)
     
     browser.hidden!(:name ,"hid1").value = 444
     browser.hidden!(:id,"hidden_1").value = 555
@@ -200,8 +201,8 @@ class TC_Hidden_Fields_XPath < Test::Unit::TestCase
     # test using a form
     assert( browser.form!(:xpath , "//form[@name='has_a_hidden']/").hidden(:name ,"hid1").exists? )
     assert( browser.form!(:xpath , "//form[@name='has_a_hidden']/").hidden(:id,"hidden_1").exists? )
-    assert(! browser.form!(:xpath , "//form[@name='has_a_hidden']/").hidden(:name,"hidden_44").exists?)
-    assert(! browser.form!(:xpath , "//form[@name='has_a_hidden']/").hidden(:id,"hidden_55").exists?)
+    assert_false( browser.form(:xpath , "//form[@name='has_a_hidden']/").hidden(:name,"hidden_44").exists?)
+    assert_false( browser.form(:xpath , "//form[@name='has_a_hidden']/").hidden(:id,"hidden_55").exists?)
     
     browser.form!(:xpath , "//form[@name='has_a_hidden']/").hidden!(:name ,"hid1").value = 222
     browser.form!(:xpath , "//form[@name='has_a_hidden']/").hidden!(:id,"hidden_1").value = 333

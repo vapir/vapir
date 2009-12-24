@@ -12,12 +12,12 @@ class TC_Tables < Test::Unit::TestCase
   end
   
   def test_Table_Exists
-    assert(!browser.table(:id, 'missingTable').exists?)
-    assert(!browser.table(:index, 33).exists?)
+    assert_false(browser.table(:id, 'missingTable').exists?)
+    assert_false(browser.table(:index, 33).exists?)
     
     assert(browser.table(:id, 't1').exists?)
     assert(browser.table(:id, /t/).exists?)
-    assert(!browser.table(:id, /missing_table/).exists?)
+    assert_false(browser.table(:id, /missing_table/).exists?)
     
     assert(browser.table(:index, 1).exists?)
     assert(browser.table(:index, 2).exists?)

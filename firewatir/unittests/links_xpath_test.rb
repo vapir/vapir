@@ -39,15 +39,15 @@ class TC_Links_XPath < Test::Unit::TestCase
     def test_Link_Exists
        assert(browser.link(:xpath , "//a[contains(.,'test1')]").exists?)
        assert(browser.link(:xpath, "//a[contains(., /TEST/i)]").exists?)
-       assert(!browser.link(:xpath , "//a[contains(.,'missing')]").exists?)
+       assert_false(browser.link(:xpath , "//a[contains(.,'missing')]").exists?)
 
-       assert(!browser.link(:xpath , "//a[@url='alsomissing.html']").exists?)
+       assert_false(browser.link(:xpath , "//a[@url='alsomissing.html']").exists?)
 
        assert(browser.link(:xpath , "//a[@id='link_id']").exists?)
-       assert(!browser.link(:xpath , "//a[@id='alsomissing']").exists?)
+       assert_false(browser.link(:xpath , "//a[@id='alsomissing']").exists?)
 
        assert(browser.link(:xpath , "//a[@name='link_name']").exists?)
-       assert(!browser.link(:xpath , "//a[@name='alsomissing']").exists?)
+       assert_false(browser.link(:xpath , "//a[@name='alsomissing']").exists?)
        assert(browser.link(:xpath , "//a[@title='link_title']").exists?)
 
     end

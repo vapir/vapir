@@ -13,10 +13,10 @@ class TC_Fields < Test::Unit::TestCase
     
     def test_text_field_exists
         assert(browser.text_field(:name, "text1").exists?)
-        assert(!browser.text_field(:name, "missing").exists?)
+        assert_false(browser.text_field(:name, "missing").exists?)
         
         assert(browser.text_field(:id, "text2").exists?)
-        assert(!browser.text_field(:id, "alsomissing").exists?)
+        assert_false(browser.text_field(:id, "alsomissing").exists?)
         
         # TODO: Need to find an alternative to this in Mozilla
         #assert(browser.text_field(:beforeText, "This Text After").exists? )
@@ -116,38 +116,34 @@ class TC_Fields < Test::Unit::TestCase
         assert_raises(UnknownObjectException) { browser.text_field(:index, 199).disabled }  
         assert_raises(UnknownObjectException) { browser.text_field(:index, 199).type }  
         
-        text_field_1=browser.text_field!(:index, 1)
+        assert_equal("Hello World" , browser.text_field(:index, 1).value) 
+        assert_equal("text"        , browser.text_field(:index, 1).type)
+        assert_equal("text1"       , browser.text_field(:index, 1).name)
+        assert_equal(""            , browser.text_field(:index, 1).id)
+        assert_equal(false         , browser.text_field(:index, 1).disabled)
         
-        assert_equal("Hello World" , text_field_1.value) 
-        assert_equal("text"        , text_field_1.type)
-        assert_equal("text1"       , text_field_1.name)
-        assert_equal(""            , text_field_1.id)
-        assert_equal(false         , text_field_1.disabled)
+        assert_equal(""            , browser.text_field(:index, 2).name)
+        assert_equal("text2"       , browser.text_field(:index, 2).id)
         
-        assert_equal(""            , browser.text_field!(:index, 2).name)
-        assert_equal("text2"       , browser.text_field!(:index, 2).id)
+        assert(browser.text_field(:index, 3).disabled)
         
-        assert(browser.text_field!(:index, 3).disabled)
-        
-        assert_equal("This used to test :afterText", browser.text_field!(:name, "aftertest").title)
-        assert_equal("", browser.text_field!(:index, 1).title)
+        assert_equal("This used to test :afterText", browser.text_field(:name, "aftertest").title)
+        assert_equal("", browser.text_field(:index, 1).title)
     end
     
     def test_text_field_iterators
-        text_fields=browser.text_fields
-        assert_equal(12, text_fields.length)
+        assert_equal(12, browser.text_fields.length)
         
         # watir is 1 based, so this is the first text field
-        assert_equal("Hello World" , text_fields[1].value)
-        assert_equal("text1" , text_fields[1].name)
-        assert_equal("password" , text_fields[text_fields.length].type)
+        assert_equal("Hello World" , browser.text_fields[1].value)
+        assert_equal("text1" , browser.text_fields[1].name)
+        assert_equal("password" , browser.text_fields[browser.text_fields.length].type)
         
         index = 1
-        text_fields.each do |t|
-            text_field_index=browser.text_field!(:index, index)
-            assert_equal(text_field_index.value, t.value) 
-            assert_equal(text_field_index.id,    t.id)
-            assert_equal(text_field_index.name,  t.name)
+        browser.text_fields.each do |t|
+            assert_equal(browser.text_field(:index, index).value, t.value) 
+            assert_equal(browser.text_field(:index, index).id,    t.id)
+            assert_equal(browser.text_field(:index, index).name,  t.name)
             index += 1
         end
         assert_equal(index - 1, browser.text_fields.length)         
@@ -197,8 +193,8 @@ class TC_Fields < Test::Unit::TestCase
         #assert_raises(UnknownObjectException) { browser.label(:index,20).type } 
         assert_raises(UnknownObjectException) { browser.label(:index,20).id } 
         
-        assert(!browser.label(:index,10).exists?)
-        assert(!browser.label(:id,'missing').exists?)
+        assert_false(browser.label(:index,10).exists?)
+        assert_false(browser.label(:id,'missing').exists?)
         assert(browser.label(:index,1).exists?)
        
         assert_equal("", browser.label!(:index,1).id)

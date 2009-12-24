@@ -15,16 +15,16 @@ class TC_Pre < Test::Unit::TestCase
   end
   
   def test_Pre_Exists
-    assert(! browser.pre( :index, 33 ).exists?)
+    assert_false( browser.pre( :index, 33 ).exists?)
     assert( browser.pre( :index, 3 ).exists? )
     
     assert( browser.pre( :id, '1' ).exists? )
     assert( browser.pre( :id, /[3-9]/ ).exists? )
-    assert(! browser.pre( :id, /missing_pre/ ).exists?)
-    assert(! browser.pre( :id, 'missingPre' ).exists?)
+    assert_false( browser.pre( :id, /missing_pre/ ).exists?)
+    assert_false( browser.pre( :id, 'missingPre' ).exists?)
         
     assert( browser.pre( :name, '3' ).exists? )
-    assert(! browser.pre( :name, "name_missing" ).exists?)
+    assert_false( browser.pre( :name, "name_missing" ).exists?)
   end
     
   def test_simple_access

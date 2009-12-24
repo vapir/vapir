@@ -13,8 +13,8 @@ class TC_Selectbox_XPath < Test::Unit::TestCase
   
   def test_textBox_Exists
     assert(browser.select_list(:xpath, "//select[@name='sel1']/").exists?)
-    assert(!browser.select_list(:xpath, "//select[@name='missing']/").exists?)
-    assert(!browser.select_list(:xpath, "//select[@id='missing']/").exists?)
+    assert_false(browser.select_list(:xpath, "//select[@name='missing']/").exists?)
+    assert_false(browser.select_list(:xpath, "//select[@id='missing']/").exists?)
   end
   
   def test_select_list_enabled

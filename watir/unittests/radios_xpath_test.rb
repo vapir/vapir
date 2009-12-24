@@ -15,8 +15,8 @@ class TC_Radios_XPath < Test::Unit::TestCase
     assert(browser.radio(:xpath, "//input[@name='box1']/").exists?)
     assert(browser.radio(:xpath, "//input[@id='box5']/").exists?)
     
-    assert(!browser.radio(:xpath, "//input[@name='missingname']/").exists?)
-    assert(!browser.radio(:xpath, "//input[@id='missingid']/").exists?)
+    assert_false(browser.radio(:xpath, "//input[@name='missingname']/").exists?)
+    assert_false(browser.radio(:xpath, "//input[@id='missingid']/").exists?)
   end
   
   def test_Radio_Enabled

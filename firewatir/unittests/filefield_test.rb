@@ -16,8 +16,8 @@ class TC_FileField < Test::Unit::TestCase
     assert(browser.file_field(:name,"file1").exists?)
     assert(browser.file_field(:id,"file2").exists?)
     #test for missing
-    assert(!browser.file_field(:name, "missing").exists?)
-    assert(!browser.file_field(:name,"totallybogus").exists?)
+    assert_false(browser.file_field(:name, "missing").exists?)
+    assert_false(browser.file_field(:name,"totallybogus").exists?)
     #pop one open and put something in it.
     browser.file_field!(:name,"file3").set($htmlRoot + "fileupload.html")
     #click the upload button

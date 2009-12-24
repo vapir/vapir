@@ -17,14 +17,14 @@ class TC_FileField < Test::Unit::TestCase
     assert(browser.file_field(:id,"file2").exists?)
 
     # test for missing 
-    assert(!browser.file_field(:name, "missing").exists?)
-    assert(!browser.file_field(:name,"totallybogus").exists?)
+    assert_false(browser.file_field(:name, "missing").exists?)
+    assert_false(browser.file_field(:name,"totallybogus").exists?)
 
     # pop one open and put something in it.
     file = $htmlRoot + "fileupload.html"
     file.gsub! 'file:///', ''
     file.gsub! '/', '\\'
-    browser.file_field!(:name,"file1").set(file)	
+    browser.file_field!(:name,"file1").set(file)
     assert_equal file, browser.file_field!(:name,"file1").value
 
     # click the upload button

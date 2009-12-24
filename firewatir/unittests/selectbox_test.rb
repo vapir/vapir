@@ -13,8 +13,8 @@ class TC_SelectList < Test::Unit::TestCase
     
     def test_textBox_Exists
         assert(browser.select_list(:name, "sel1").exists?)
-        assert(!browser.select_list(:name, "missing").exists?)
-        assert(!browser.select_list(:id, "missing").exists?)
+        assert_false(browser.select_list(:name, "missing").exists?)
+        assert_false(browser.select_list(:id, "missing").exists?)
     end
 
     def test_select_list_enabled
@@ -31,7 +31,7 @@ class TC_SelectList < Test::Unit::TestCase
     def test_Option_text_select
         assert_raises(UnknownObjectException) { browser.select_list(:name, "sel1").option!(:text, "missing item").select }
         assert_raises(UnknownObjectException) { browser.select_list(:name, "sel1").option!(:text, /missing/).select }
-        assert_raises(UnknownObjectException) { browser.select_list(:name, "sel1").option!(:missing, "Option 1").select }
+        assert_raises(MissingWayOfFindingObjectException) { browser.select_list(:name, "sel1").option(:missing, "Option 1").select }
 
         # the select method keeps any currently selected items - use the clear selection method first
         browser.select_list!( :name , "sel1").clear

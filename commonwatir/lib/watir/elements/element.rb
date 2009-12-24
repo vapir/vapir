@@ -304,6 +304,10 @@ module Watir
           super_attrs=superclass.respond_to?(:attributes_to_inspect) ? superclass.attributes_to_inspect : []
           super_attrs + class_array_get('attributes_to_inspect')
         end
+        def all_dom_attrs
+          super_attrs=superclass.respond_to?(:all_dom_attrs) ? superclass.all_dom_attrs : []
+          super_attrs + class_array_get('dom_attrs')
+        end
       end
     end
     

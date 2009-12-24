@@ -19,7 +19,7 @@ module Watir
     # element, in terms of browser, container, other things each element uses. 
     def element_by_howwhat(klass, how, what, other={})
       other={:other_attributes => nil}.merge(other)
-      how, what, index=*normalize_howwhat_index(how, what, klass.default_how)
+      how, what, index=*normalize_howwhat_index(how, what, klass.default_how, klass.all_dom_attrs)
       if other[:other_attributes]
         if how==:attributes
           what.merge!(other[:other_attributes])
@@ -41,7 +41,7 @@ module Watir
     
     # takes how and what in the form that users use, and translates it to a standard form 
     # where how is one of Watir::ElementObjectCandidates::HowList and what corresponds. 
-    def normalize_howwhat_index(how, what, default_how=nil)
+    def normalize_howwhat_index(how, what, default_how, valid_attr_hows)
       case how
       when nil
         raise Watir::Exception::MissingWayOfFindingObjectException, "no how was given!"
@@ -62,7 +62,11 @@ module Watir
           elsif how==:index # this is different because the index number doesn't go in the 'what'
             [:index, nil, what]
           else
-            [:attributes, {how.to_sym => what}, nil]
+            if valid_attr_hows.detect{|attr| attr==how.to_sym || Watir::ElementObjectCandidates::LocateAliases[how.to_sym].include?(attr) }
+              [:attributes, {how.to_sym => what}, nil]
+            else
+              raise Watir::Exception::MissingWayOfFindingObjectException, how.inspect
+            end
           end
         end
       else

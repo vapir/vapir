@@ -70,9 +70,7 @@ end
 
 require 'logger'
 require 'watir/common_elements'
-require 'watir/winClicker'
 require 'watir/exceptions'
-require 'watir/utils'
 require 'watir/close_all'
 require 'watir/ie-process'
 
@@ -98,12 +96,10 @@ $FAST_SPEED = ARGV.delete('-f')
 # Eat the -s command line switch (deprecated)
 ARGV.delete('-s')
 
-require 'watir/core_ext'
 require 'watir/ie-class'
 require 'watir/logger'
 require 'watir/win32'
 require 'watir/container'
-require 'watir/locator'
 require 'watir/page-container'
 require 'watir/version'
 require 'watir/popup'
@@ -160,5 +156,3 @@ def _code_that_copies_readonly_array(array, name)
   raise NotImplementedError
     "temp = Array.new(#{array.inspect}); #{name}.clear; temp.each {|element| #{name} << element}"
 end
-
-require 'watir/camel_case'

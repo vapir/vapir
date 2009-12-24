@@ -489,11 +489,6 @@ module Watir
       return @ie.LocationURL
     end
         
-    #
-    # Synchronization
-    #
-    include Watir::Utils
-    
     # Block execution until the page has loaded.
     # =nodoc
     # Note: This code needs to be prepared for the ie object to be closed at 

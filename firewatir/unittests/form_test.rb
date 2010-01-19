@@ -82,7 +82,7 @@ class TC_Forms3 < Test::Unit::TestCase
     assert(browser.form(:method, "get").exists?)
     assert_false(browser.form(:method, "missing").exists?)
     
-    assert(browser.form(:action, /pass.html/).exists?)
+    assert(browser.form(:action, /pass\.html$/).exists?)
     assert_false(browser.form(:action, "missing").exists?)
   end
   

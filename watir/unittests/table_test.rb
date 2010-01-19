@@ -367,8 +367,8 @@ class TC_Tables_Complex < Test::Unit::TestCase
   def test_each_itterator
     # for WTR-324: keep Watir::Table.each from crashing when run on nested tables
     table = browser.table(:index,1)
-    assert_equal(table.row_count, 4)
-    assert_equal(table.row_count_excluding_nested_tables, 2)
+    assert_equal(2, table.row_count)
+    assert_equal(4, table.table_rows.length)
     example_row_count = 0
     assert_nothing_thrown do 
       table.each do

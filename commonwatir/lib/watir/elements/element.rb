@@ -783,6 +783,47 @@ module Watir
       end
     end
     
+    # Checks this element and its parents for display: none or visibility: hidden, these are 
+    # the most common methods to hide an html element. Returns false if this seems to be hidden
+    # or a parent is hidden. 
+    def visible? 
+      assert_exists do
+        element_to_check=element_object
+        #nsIDOMDocument=jssh_socket.Components.interfaces.nsIDOMDocument
+        really_visible=nil
+        while element_to_check #&& !element_to_check.instanceof(nsIDOMDocument)
+          if (style=element_object_style(element_to_check, document_object))
+            # only pay attention to the innermost definition that really defines visibility - one of 'hidden', 'collapse' (only for table elements), 
+            # or 'visible'. ignore 'inherit'; keep looking upward. 
+            # this makes it so that if we encounter an explicit 'visible', we don't pay attention to any 'hidden' further up. 
+            # this style is inherited - may be pointless for firefox, but IE uses the 'inherited' value. not sure if/when ff does.
+            if really_visible==nil && (visibility=style.invoke('visibility'))
+              visibility=visibility.strip.downcase
+              if visibility=='hidden' || visibility=='collapse'
+                really_visible=false
+                return false # don't need to continue knowing it's not visible. 
+              elsif visibility=='visible'
+                really_visible=true # we don't return true yet because a parent with display of 'none' can override 
+              end
+            end
+            # check for display property. this is not inherited, and a parent with display of 'none' overrides an immediate visibility='visible' 
+            display=style.invoke('display')
+            if display && display.strip.downcase=='none'
+              return false  
+            end
+          end
+          element_to_check=element_to_check.parentNode
+        end
+      end
+      return true
+    end
+    private
+    # this is defined on each class to reflect the browser's particular implementation. 
+    def element_object_style(element_object, document_object)
+      self.class.element_object_style(element_object, document_object)
+    end
+    
+    public
     # returns a Vector with two elements, the x,y 
     # coordinates of this element (its top left point)
     # from the top left edge of the window

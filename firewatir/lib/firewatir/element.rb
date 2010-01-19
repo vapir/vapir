@@ -233,21 +233,13 @@ module Watir
     def wait(options={})
       @container.wait(options)
     end
-    # Checks this element and its parents for display: none or visibility: hidden, these are 
-    # the most common methods to hide an html element. Returns false if this seems to be hidden
-    # or a parent is hidden. 
-    def visible? 
-      assert_exists do
-        element_to_check=element_object
-        while element_to_check && !element_to_check.instanceof(jssh_socket.Components.interfaces.nsIDOMDocument)
-          style=document_object.defaultView.getComputedStyle(element_to_check, nil)
-          if style.visibility =~ /\Ahidden\z/i || style[:display] =~ /\Anone\z/i
-            return false
-          end
-          element_to_check=element_to_check.parentNode
-        end
+
+    def self.element_object_style(element_object, document_object)
+      if element_object.nodeType==1 #element_object.instanceof(element_object.jssh_socket.Components.interfaces.nsIDOMDocument)
+        document_object.defaultView.getComputedStyle(element_object, nil)
+      else
+        nil
       end
-      return true
     end
 
     # Returns the text content of the element.

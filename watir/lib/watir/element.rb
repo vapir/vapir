@@ -286,29 +286,11 @@ module Watir
       @container.wait(options)
     end
 
-    # If any parent element isn't visible then we cannot write to the
-    # element. The only realiable way to determine this is to iterate
-    # up the DOM element tree checking every element to make sure it's
-    # visible.
-    def visible?
-      # Now iterate up the DOM element tree and return false if any
-      # parent element isn't visible or is disabled.
-      assert_exists do
-        object = element_object
-        while object
-          if currentStyle=object.currentstyle
-            if currentStyle.invoke('visibility') =~ /^hidden$/i || currentStyle.invoke('display') =~ /^none$/i
-              return false
-            end
-          end # i guess if there's no currentStyle we assume it is visible 
-          
-          # why would disabled affect visibility? 
-          #if object.invoke('isDisabled')
-          #  return false
-          #end
-          object = object.parentElement
-        end
-        true
+    def self.element_object_style(element_object, document_object)
+      if element_object.nodeType==1
+        element_object.currentStyle
+      else
+        nil
       end
     end
     

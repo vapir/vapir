@@ -24,7 +24,7 @@ class TC_Links < Test::Unit::TestCase
         begin
             browser.link!(:bad_attribute, 199).click 
         rescue MissingWayOfFindingObjectException => e           
-            assert_match(/^Unable to locate Watir::.*Link, using attributes: \{:bad_attribute=>199\}$/, e.message)
+            assert_match(/^Cannot search for a Watir::.*Link using the given argument/, e.message)
         end
     end
 

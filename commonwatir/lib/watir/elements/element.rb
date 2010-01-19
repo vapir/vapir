@@ -620,7 +620,7 @@ module Watir
     def exists?
       begin
         !!locate
-      rescue Watir::Exception::UnknownObjectException
+      rescue Watir::Exception::UnknownObjectException, Exception::NoMatchingWindowFoundException # if the window itself is gone, certainly we don't exist. 
         false
       end
     end

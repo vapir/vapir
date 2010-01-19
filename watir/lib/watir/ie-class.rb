@@ -503,15 +503,19 @@ module Watir
       start_load_time = Time.now
       
       ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser was still busy at the end of the specified interval") do
+        return unless exists?
         !@ie.busy
       end
       ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's readyState was still not READYSTATE_COMPLETE at the end of the specified interval") do
+        return unless exists?
         @ie.readyState == READYSTATE_COMPLETE
       end
       ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's document was still not defined at the end of the specified interval") do
+        return unless exists?
         @ie.document
       end
       ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "A frame on the browser did not come into readyState complete by the end of the specified interval") do
+        return unless exists?
         all_frames_complete?(@ie.document)
       end
       

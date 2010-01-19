@@ -402,13 +402,16 @@ module Watir
     end
     public
     
-    dom_attr :tagName, :id
+    dom_attr :id
     inspect_this :how
     inspect_this_if(:what) do |element|
       ![:element_object, :index].include?(element.how) # if how==:element_object, don't show the element object in inspect. if how==:index, what is nil. 
     end
     inspect_this_if(:index) # uses the default 'if'; shows index if it's not nil 
     inspect_these :tagName, :id
+
+    dom_attr :name # this isn't really valid on elements but is used so much that we define it here. (it may be repeated on elements where it is actually is valid)
+
     dom_attr :title, :tagName => [:tagName, :tag_name], :innerHTML => [:innerHTML, :inner_html], :className => [:className, :class_name]
     dom_attr :style
     dom_function :scrollIntoView => [:scrollIntoView, :scroll_into_view]

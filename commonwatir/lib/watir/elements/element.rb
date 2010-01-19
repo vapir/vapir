@@ -407,7 +407,7 @@ module Watir
     end
     
     def html
-      Kernel.warn "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)"
+      Kernel.warn "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)\n(called from #{caller.map{|c|"\n"+c}})"
       outer_html
     end
 

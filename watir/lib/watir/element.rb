@@ -312,6 +312,25 @@ module Watir
       end
     end
     
+    
+    # returns a two-element Vector containing the current scroll offset of this element relative
+    # to any scrolling parents. 
+    # this is basically stolen from prototype - see http://www.prototypejs.org/api/element/cumulativescrolloffset
+    def scroll_offset
+      # override the #scroll_offset defined in commonwatir because it calls #respond_to? which is very slow on WIN32OLE 
+      xy=Vector[0,0]
+      el=element_object
+      begin
+        begin
+          xy+=Vector[el.scrollLeft, el.scrollTop]
+        rescue WIN32OLERuntimeError
+          # doesn't respnd to those; do nothing. 
+        end
+        el=el.parentNode
+      end while el
+      xy
+    end
+    
     private
     def element_object_exists?
       return nil if !@element_object

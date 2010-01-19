@@ -23,11 +23,10 @@ class TC_FirefoxBrowser < Test::Unit::TestCase
             result = true
         end
         assert_true(result)
+        $browser = Watir::Browser.new # restore a browser for subsequent tests. 
     end
  
     def test_status
-        # Create the browser as all browsers are closed in above test case.
-        browser = Watir::Browser.new
         goto_page("radioButtons1.html")
         status = browser.status
         assert_equal(status, "Done")

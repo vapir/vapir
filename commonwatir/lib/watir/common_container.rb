@@ -14,17 +14,22 @@ module Watir
     #      successful - returns nil otherwise. 
     # - :other_attributes => Hash, attributes other than the given how/what to look for. This is
     #    used by radio and checkbox to specify :value (the third argument). 
+    #
+    # the arguments 'first' and 'second' (they are the first and second arguments given
+    # to the container method, not to this method) correspond to 'how' and 'what, after a fashion. 
     # 
     # see also #extra_for_contained on inheriting classes (IEElement, FFElement) for what this passes to the created 
     # element, in terms of browser, container, other things each element uses. 
-    def element_by_howwhat(klass, how, what, other={})
+    def element_by_howwhat(klass, first, second, other={})
       other={:other_attributes => nil}.merge(other)
-      how, what, index=*normalize_howwhat_index(how, what, klass.default_how, klass.all_dom_attrs)
+      
+      how, what, index= *normalize_how_what_index(first, second, klass)
+
       if other[:other_attributes]
         if how==:attributes
           what.merge!(other[:other_attributes])
         else
-          raise ArgumentError, ":other_attributes option was given, but we are not locating by attributes. We are locating by how=#{how.inspect} what=#{what.inspect}. :other_attributes option was #{other[:other_attributes].inspect}"
+          raise ArgumentError, "other attributes were given, but we are not locating by attributes. We are locating by how=#{how.inspect} what=#{what.inspect}. other attributes given were #{other[:other_attributes].inspect}"
         end
       end
       extra=extra_for_contained.merge(:index => index)
@@ -39,39 +44,53 @@ module Watir
       end
     end
     
-    # takes how and what in the form that users use, and translates it to a standard form 
-    # where how is one of Watir::ElementObjectCandidates::HowList and what corresponds. 
-    def normalize_howwhat_index(how, what, default_how, valid_attr_hows)
-      case how
+    # figure out how and what from the form(s) that users give to the container methods, and translate 
+    # that to real how and what where 'how' is one of Watir::ElementObjectCandidates::HowList and 
+    # 'what' corresponds. 
+    # this also determines index, when appropriate. 
+    def normalize_how_what_index(first, second, klass)
+      case first
       when nil
-        raise Watir::Exception::MissingWayOfFindingObjectException, "no how was given!"
+        raise Watir::Exception::MissingWayOfFindingObjectException, "no first argument (how) was given!"
       when Hash
-        how=how.dup
-        index=how.delete(:index)
-        what==nil ? [:attributes, how, index] : raise(ArgumentError, "first argument was given as a Hash, so assumed to be the 'what' for how=:attributes, but 'what' was also given. how=#{how.inspect}, what=#{what.inspect}")
+        how=:attributes
+        what=first.dup
+        index=what.delete(:index)
+        unless second==nil
+          raise(ArgumentError, "first argument was given as a Hash, so assumed to be the 'what' for how=:attributes, but a second argument was also given. arguments were #{first.inspect}, #{second.inspect}")
+        end
       when String, Symbol
-        if Watir::ElementObjectCandidates::HowList.include?(how)
-          [how, what, nil]
+        if Watir::ElementObjectCandidates::HowList.include?(first)
+          how=first
+          what=second
+          index=nil
         else
-          if what.nil?
-            if default_how
-              [:attributes, {default_how => how}, nil]
+          if second.nil?
+            if klass.default_how
+              how=:attributes
+              what={klass.default_how => first}
+              index=nil
             else
-              raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search using how=#{how.inspect} (#{how.class}), what=#{what.inspect} (#{what.class}), default_how=#{default_how.inspect} (#{default_how.class})"
+              raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search using arguments #{first.inspect}, (#{first.class}) and #{second.inspect} (#{second.class}), default_how=#{default_how.inspect} (#{default_how.class})"
             end
-          elsif how==:index # this is different because the index number doesn't go in the 'what'
-            [:index, nil, what]
+          elsif first==:index # this is different because the index number doesn't go in the 'what'
+            how=first
+            what=nil
+            index=second
           else
-            if valid_attr_hows.detect{|attr| attr==how.to_sym || Watir::ElementObjectCandidates::LocateAliases[how.to_sym].include?(attr) }
-              [:attributes, {how.to_sym => what}, nil]
+            if klass.all_dom_attrs.detect{|attr| attr==first.to_sym || Watir::ElementObjectCandidates::LocateAliases[first.to_sym].include?(attr) }
+              how=:attributes
+              what={first.to_sym => second}
+              index=nil
             else
-              raise Watir::Exception::MissingWayOfFindingObjectException, how.inspect
+              raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search for a #{klass} using the given argument: #{first.inspect} (other argument was #{second.inspect})"
             end
           end
         end
       else
-        raise Watir::Exception::MissingWayOfFindingObjectException, "Locating with how=#{how.inspect} is not recognized or supported. Also given what=#{what.inspect}"
+        raise Watir::Exception::MissingWayOfFindingObjectException, "Locating with the given arguments is not recognized or supported: #{first.inspect}, #{second.inspect}"
       end
+      return [how, what, index]
     end
 
     # asserts that this element exists - optionally, takes a block, and other calls to assert_exists

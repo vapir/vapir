@@ -248,7 +248,7 @@ class JsshSocket
     else
       JsshError
     end
-    err=errclass.new(message+"\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
+    err=errclass.new("#{message}\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
     err.source=source
     ["lineNumber", "stack", "fileName"].each do |attr|
       if stuff.key?(attr)

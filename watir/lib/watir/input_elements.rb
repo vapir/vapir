@@ -26,6 +26,7 @@ module Watir
   # Returned by the Watir::Container#button method
   class IEButton < IEInputElement
     include Button
+    dom_attr :value => :caption
   end
 
   #

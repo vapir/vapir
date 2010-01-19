@@ -675,7 +675,7 @@ module Watir
     container_single_method :a, :link
     container_collection_method :as, :links
 
-    dom_attr :href, :name
+    dom_attr :name, :href => [:href, :url]
     inspect_these :href, :name
   end
   module Pre
@@ -810,7 +810,7 @@ module Watir
     container_single_method :area
     container_collection_method :areas
     
-    dom_attr :href, :alt
+    dom_attr :alt, :href => [:url, :href]
   end
   module Em
     extend ElementHelper

@@ -66,7 +66,7 @@ module Watir
     include ElementObjectCandidates
     def candidates
       assert_container_exists
-      matched_candidates(@collection_class.specifiers)
+      matched_candidates(@collection_class.specifiers, @collection_class.all_dom_attr_aliases)
     end
     public
     def pretty_print(pp)

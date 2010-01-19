@@ -78,7 +78,7 @@ module Watir
             what=nil
             index=second
           else
-            if klass.all_dom_attrs.detect{|attr| attr==first.to_sym || Watir::ElementObjectCandidates::LocateAliases[first.to_sym].include?(attr) }
+            if klass.all_dom_attr_aliases.any?{|(dom_attr, aliases)| aliases.include?(first.to_sym) || dom_attr==first.to_sym}
               how=:attributes
               what={first.to_sym => second}
               index=nil

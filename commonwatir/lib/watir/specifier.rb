@@ -22,18 +22,18 @@ module Watir
     # this returns an Enumerable of element objects that _may_ (not necessarily do) match the
     # the given specifier. sometimes specifier is completely ignored. behavor depends on
     # @extra[:candidates]. when the value of @extra[:candidates] is:
-    # - nil (default), this uses #specifier_candidates which uses one of getElementById, 
+    # - nil (default), this uses #get_elements_by_specifiers which uses one of getElementById, 
     #   getElementsByTagName, getElementsByName, getElementsByClassName. 
     # - a symbol - this is assumed to be a method of the containing_object (@container.containing_object). 
     #   this is called, made to be an enumerable, and returned. 
     # - a proc - this is yielded @container and the proc is trusted to return an enumerable
     #   of whatever candidate element objects are desired. 
     # this is used by #locate in Element, and by ElementCollection. 
-    def element_object_candidates(specifiers)
+    def element_object_candidates(specifiers, aliases)
       @container.assert_exists(:force => true) do
         case @extra[:candidates]
         when nil
-          get_elements_by_specifiers(@container, specifiers, respond_to?(:index_is_first) ? index_is_first : false)
+          get_elements_by_specifiers(@container, specifiers, aliases, respond_to?(:index_is_first) ? index_is_first : false)
         when Symbol
           Watir::Element.object_collection_to_enumerable(@container.containing_object.send(@extra[:candidates]))
         when Proc
@@ -44,24 +44,18 @@ module Watir
       end
     end
     # returns an enumerable of 
-    def matched_candidates(specifiers, &block)
-      match_candidates(element_object_candidates(specifiers), specifiers, &block)
+    def matched_candidates(specifiers, aliases, &block)
+      match_candidates(element_object_candidates(specifiers, aliases), specifiers, aliases, &block)
     end
     
     # this is a list of what users can specify (there are additional possible hows that may be given
     # to the Element constructor, but not generally for use by users, such as :element_object or :label
     HowList=[:attributes, :xpath, :custom, :element_object]
-    LocateAliases=Hash.new{|hash,key| [] }.merge(
-                  { :text => [:textContent, :innerText],
-                    :class => [:className],
-                    :class_name => [:className],
-                    :caption => [:textContent, :value], # this is used for buttons so you can get whatever text is on the button, be it value or inner text. 
-                    :url => [:href],
-                  })
+
     # returns an Enumerable of element objects that _may_ match (note, not do match, necessarily)
     # the given specifiers on the given container. these are obtained from the container's containing_object
     # using one of getElementById, getElementsByName, getElementsByClassName, or getElementsByTagName. 
-    def get_elements_by_specifiers(container, specifiers, want_first=false)
+    def get_elements_by_specifiers(container, specifiers, aliases, want_first=false)
       if container.nil?
         raise ArgumentError, "no container specified!"
       end
@@ -71,7 +65,7 @@ module Watir
       attributes_in_specifiers=proc do |attr|
         specifiers.inject([]) do |arr, spec|
           spec.each_pair do |spec_attr, spec_val|
-            if (spec_attr==attr || LocateAliases[spec_attr].include?(attr)) && !arr.include?(spec_val)
+            if (aliases[attr] || []).include?(spec_attr) && !arr.include?(spec_val)
               arr << spec_val
             end
           end
@@ -143,7 +137,7 @@ module Watir
     end
     
     module_function
-    def match_candidates(candidates, specifiers_list)
+    def match_candidates(candidates, specifiers_list, aliases)
       unless specifiers_list.is_a?(Enumerable) && specifiers_list.all?{|spec| spec.is_a?(Hash)}
         raise ArgumentError, "specifiers_list should be a list of Hashes!"
       end
@@ -156,7 +150,7 @@ module Watir
         # socket activity. 
         jssh_socket= candidates.is_a?(JsshObject) ? candidates.jssh_socket : candidates.first.jssh_socket
         match_candidates_js=JsshObject.new("
-          (function(candidates, specifiers_list, LocateAliases)
+          (function(candidates, specifiers_list, aliases)
           { candidates=$A(candidates);
             specifiers_list=$A(specifiers_list);
             var matched_candidates=[];
@@ -204,7 +198,11 @@ module Watir
                     });
                   }
                   else
-                  { return $A([how].concat(LocateAliases[how] || [])).any(function(how_alias)
+                  { var matched_aliases=$H(aliases).reject(function(dom_attr_alias_list)
+                    { var alias_list=$A(dom_attr_alias_list.value);
+                      return !alias_list.include(how);
+                    }).pluck('key');
+                    return $A([how].concat(matched_aliases)).any(function(how_alias)
                     { return candidate_attributes(how_alias).any(function(attr){ return fuzzy_match(attr, what); });
                     });
                   }
@@ -217,7 +215,7 @@ module Watir
             return matched_candidates;
           })
         ", jssh_socket, :debug_name => 'match_candidates_function')
-        matched_candidates=match_candidates_js.call(candidates, specifiers_list, LocateAliases)
+        matched_candidates=match_candidates_js.call(candidates, specifiers_list, aliases)
         if block_given?
           matched_candidates.to_array.each do |matched_candidate|
             yield matched_candidate
@@ -275,7 +273,10 @@ module Watir
                   candidate_attributes.call(:type).any?{|attr| Watir::fuzzy_match(attr, type)}
                 end
               else
-                ([how]+LocateAliases[how]).any? do |how_alias|
+                matched_aliases = aliases.reject do |(dom_attr, alias_list)|
+                  !alias_list.include?(how)
+                end.keys
+                (matched_aliases+[how]).any? do |how_alias|
                   candidate_attributes.call(how_alias).any?{|attr| Watir::fuzzy_match(attr, what)}
                 end
               end

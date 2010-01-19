@@ -37,7 +37,7 @@ module Watir
       end
       ObjectSpace.each_object(Class) do |klass|
         if klass < curr_klass
-          Watir::ElementObjectCandidates.match_candidates([element_object], klass.specifiers) do |match|
+          Watir::ElementObjectCandidates.match_candidates([element_object], klass.specifiers, klass.all_dom_attr_aliases) do |match|
             curr_klass=klass
             break
           end
@@ -56,16 +56,21 @@ module Watir
         hash.each_pair do |dom_attr, ruby_method_names|
           ruby_method_names= ruby_method_names.is_a?(Array) ? ruby_method_names : [ruby_method_names]
           class_array_append 'dom_attrs', dom_attr
-          dom_attr_aliases=class_hash_get('dom_attr_aliases')
-          dom_attr_aliases[dom_attr] ||= Set.new
           ruby_method_names.each do |ruby_method_name|
-            dom_attr_aliases[dom_attr] << ruby_method_name
+            dom_attr_locate_alias(dom_attr, ruby_method_name)
             define_method ruby_method_name do
               method_from_element_object(dom_attr)
             end
           end
         end
       end
+    end
+    
+    # creates aliases for locating by 
+    def dom_attr_locate_alias(dom_attr, alias_name)
+      dom_attr_aliases=class_hash_get('dom_attr_aliases')
+      dom_attr_aliases[dom_attr] ||= Set.new
+      dom_attr_aliases[dom_attr] << alias_name
     end
     
     # dom_function is about the same as dom_attr, but dom_attr doesn't take arguments. 
@@ -329,7 +334,7 @@ module Watir
           aliases=class_hash_get('dom_attr_aliases').dup
           super_aliases=superclass.respond_to?(:all_dom_attr_aliases) ? superclass.all_dom_attr_aliases : {}
           super_aliases.each_pair do |attr, alias_list|
-            aliases[attr] = (super_aliases[attr] || Set.new) + alias_list
+            aliases[attr] = (aliases[attr] || Set.new) + alias_list
           end
           aliases
         end
@@ -413,6 +418,7 @@ module Watir
     dom_attr :name # this isn't really valid on elements but is used so much that we define it here. (it may be repeated on elements where it is actually is valid)
 
     dom_attr :title, :tagName => [:tagName, :tag_name], :innerHTML => [:innerHTML, :inner_html], :className => [:className, :class_name]
+    dom_attr_locate_alias :className, :class # this isn't defined as a dom_attr because we don't want to clobber ruby's #class method 
     dom_attr :style
     dom_function :scrollIntoView => [:scrollIntoView, :scroll_into_view]
 
@@ -521,7 +527,7 @@ module Watir
             raise NotImplementedError, "Specifying an index is not supported for locating by xpath"
           end
           by_xpath=@container.element_object_by_xpath(@what)
-          match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers).first
+          match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers, self.class.all_dom_attr_aliases).first
         when :label
           unless document_object
             raise "No document object found for this #{self.inspect} - needed to search by id for label from #{@container.inspect}"
@@ -531,7 +537,7 @@ module Watir
           end
           what.locate!(container_locate_options) # the what Label is functionally synonymous with the @container. actually it is currently always the same as the @container. 
           by_label=document_object.getElementById(@container.for)
-          match_candidates(by_label ? [by_label] : [], self.class.specifiers).first
+          match_candidates(by_label ? [by_label] : [], self.class.specifiers, self.class.all_dom_attr_aliases).first
         when :attributes
           assert_container
           @container.locate!(container_locate_options)
@@ -540,7 +546,7 @@ module Watir
           
           matched_candidate=nil
           matched_count=0
-          matched_candidates(specifiers) do |match|
+          matched_candidates(specifiers, self.class.all_dom_attr_aliases) do |match|
             matched_count+=1
             if @index==matched_count || index_is_first || @index==:last
               matched_candidate=match
@@ -558,7 +564,7 @@ module Watir
           end
           matched_candidate=nil
           matched_count=0
-          matched_candidates(self.class.specifiers) do |match|
+          matched_candidates(self.class.specifiers, self.class.all_dom_attr_aliases) do |match|
             matched_count+=1
             if @index==matched_count || index_is_first || @index==:last
               matched_candidate=match
@@ -584,7 +590,7 @@ module Watir
           # the proc should return true (that is, not false or nil) when it likes the given Element - 
           # when it matches what it expects of this Element. 
           by_custom=nil
-          matched_candidates(self.class.specifiers) do |match|
+          matched_candidates(self.class.specifiers, self.class.all_dom_attr_aliases) do |match|
             if what.call(self.class.new(:element_object, match, @extra))
               by_custom=match
               break

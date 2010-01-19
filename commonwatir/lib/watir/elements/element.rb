@@ -291,12 +291,16 @@ module Watir
       # returns true, and so that the constants defined here clobber any inherited stuff from superclasses
       # which is unwanted. 
       self.constants.each do |const| # copy all of its constants onto wherever it was included
-        including_class.const_set(const, self.const_get(const))
+        to_copy=self.const_get(const)
+        to_copy=to_copy.dup if [Hash, Array, Set].any?{|klass| to_copy.is_a?(klass) }
+        including_class.const_set(const, to_copy)
       end
       
       # now the constants (above) have switched away from constants to class variables, pretty much, so copy those.
       self.class_variables.each do |class_var|
-        including_class.send(:class_variable_set, class_var, class_variable_get(class_var))
+        to_copy=class_variable_get(class_var)
+        to_copy=to_copy.dup if [Hash, Array, Set].any?{|klass| to_copy.is_a?(klass) }
+        including_class.send(:class_variable_set, class_var, to_copy)
       end
       
       class << including_class

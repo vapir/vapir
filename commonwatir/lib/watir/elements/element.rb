@@ -782,6 +782,71 @@ module Watir
       end
     end
     
+    # returns a Vector with two elements, the x,y 
+    # coordinates of this element (its top left point)
+    # from the top left edge of the window
+    def document_offset
+      require 'matrix'
+      xy=Vector[0,0]
+      el=element_object
+      begin
+        xy+=Vector[el.offsetLeft, el.offsetTop]
+        el=el.offsetParent
+      end while el.offsetParent
+      xy
+    end
+    
+    # returns a two-element Vector containing the offset of this element on the client area. 
+    # see also #client_center
+    def client_offset
+      document_offset-scroll_offset
+    end
+
+    # returns a two-element Vector with the position of the center of this element
+    # on the client area. 
+    # intended to be used with mouse events' clientX and clientY. 
+    # https://developer.mozilla.org/en/DOM/event.clientX
+    # https://developer.mozilla.org/en/DOM/event.clientY
+    def client_center
+      client_offset+dimensions.map{|dim| dim/2}
+    end
+
+    # returns a two-element Vector containing the current scroll offset of the page
+    # this element is on. this is not really a property of this element - it is a property
+    # of the body element that contains it (which may be a frame), but this is a handy 
+    # function to have here anyway. 
+    def scroll_offset
+      Vector[document_object.body.scrollLeft, document_object.body.scrollTop]
+    end
+
+    # returns a two-element Vector containing the position of this element on the screen.
+    # see also #screen_center
+    # not yet implemented. 
+    def screen_offset
+      raise NotImplementedError
+    end
+    
+    # returns a two-element Vector containing the current position of the center of
+    # this element on the screen. 
+    # intended to be used with mouse events' screenX and screenY. 
+    # https://developer.mozilla.org/en/DOM/event.screenX
+    # https://developer.mozilla.org/en/DOM/event.screenY
+    #
+    # not yet implemented.
+    def screen_center
+      screen_offset+dimensions.map{|dim| dim/2}
+    end
+
+    # returns a two-element Vector with the width and height of this element. 
+    def dimensions
+      Vector[element_object.offsetWidth, element_object.offsetHeight]
+    end
+    # returns a two-element Vector with the position of the center of this element
+    # on the document. 
+    def document_center
+      document_offset+dimensions.map{|dim| dim/2}
+    end
+
     # accesses the object representing this Element in the DOM. 
     def element_object
       assert_exists

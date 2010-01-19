@@ -811,12 +811,19 @@ module Watir
       client_offset+dimensions.map{|dim| dim/2}
     end
 
-    # returns a two-element Vector containing the current scroll offset of the page
-    # this element is on. this is not really a property of this element - it is a property
-    # of the body element that contains it (which may be a frame), but this is a handy 
-    # function to have here anyway. 
+    # returns a two-element Vector containing the current scroll offset of this element relative
+    # to any scrolling parents. 
+    # this is basically stolen from prototype - see http://www.prototypejs.org/api/element/cumulativescrolloffset
     def scroll_offset
-      Vector[document_object.body.scrollLeft, document_object.body.scrollTop]
+      xy=Vector[0,0]
+      el=element_object
+      begin
+        if el.respond_to?(:scrollLeft)
+          xy+=Vector[el.scrollLeft, el.scrollTop]
+        end
+        el=el.parentNode
+      end while el
+      xy
     end
 
     # returns a two-element Vector containing the position of this element on the screen.

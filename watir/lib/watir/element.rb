@@ -154,25 +154,30 @@ module Watir
     end
     
     private
-    # if the ole's #exists? method returns false, then it doesn't exist. also, if 
-    # the parentNode is nil, then the element no longer exists on the DOM. 
     def element_object_exists?
-      begin
-        document_object=container.document_object.parentWindow.document # I don't know why document_object != document_object.parentWindow.document 
-        win=document_object.parentWindow
-        # we need a javascript function to test equality because comparing two WIN32OLEs always returns false (unless they have the same object_id, which these don't) 
-        win.execScript("__watir_javascript_equals__=function(a, b){return a==b;}")
-        current_node=@element_object
-        while current_node
-          if win.__watir_javascript_equals__(current_node, document_object)
-            return true
-          end
-          current_node=current_node.parentNode
+      return nil if !@element_object
+
+      win=container.document_object.parentWindow
+      document_object=win.document # I don't know why container.document_object != container.document_object.parentWindow.document 
+
+      # we need a javascript function to test equality because comparing two WIN32OLEs always returns false (unless they have the same object_id, which these don't) 
+      win.execScript("__watir_javascript_equals__=function(a, b){return a==b;}")
+
+      current_node=@element_object
+      while current_node
+        if win.__watir_javascript_equals__(current_node, document_object)
+          # if we encounter the correct current document going up the parentNodes, @element_object does exist. 
+          return true
         end
-        return false
-      rescue WIN32OLERuntimeError
-        false
+        begin
+          current_node=current_node.parentNode
+        rescue WIN32OLERuntimeError
+          # if we encounter an error trying to access parentNode before reaching the current document, @element_object doesn't exist. 
+          return false
+        end
       end
+      # if we escaped that loop, parentNode returned nil without encountering the current document; @element_object doesn't exist. 
+      return false
     end
   end
 end  

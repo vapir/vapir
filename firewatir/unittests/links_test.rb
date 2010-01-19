@@ -20,10 +20,10 @@ class TC_Links < Test::Unit::TestCase
     # for the element. So there is no way to find out about missinwayoffindingobject exp.
     tag_method :test_bad_attribute, :fails_on_ie
     def test_bad_attribute
-        assert_raises(UnknownObjectException) { browser.link(:bad_attribute, 199).click }  
+        assert_raises(MissingWayOfFindingObjectException) { browser.link(:bad_attribute, 199).click }  
         begin
             browser.link!(:bad_attribute, 199).click 
-        rescue UnknownObjectException => e           
+        rescue MissingWayOfFindingObjectException => e           
             assert_match(/^Unable to locate Watir::.*Link, using attributes: \{:bad_attribute=>199\}$/, e.message)
         end
     end

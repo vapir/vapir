@@ -27,7 +27,7 @@ class TC_Tables < Test::Unit::TestCase
   def test_rows
     assert_raises(UnknownObjectException){ browser.table(:id, 'missingTable').row_count }
     assert_raises(UnknownObjectException){ browser.table(:index, 66).row_count }
-    assert_raises(UnknownObjectException){ browser.table(:bad_attribute, 99).row_count }
+    assert_raises(MissingWayOfFindingObjectException){ browser.table(:bad_attribute, 99).row_count }
     
     assert_equal(2, browser.table!(:index, 1).row_count)
     assert_equal(2, browser.table!(:index, 1).rows.length)

@@ -141,7 +141,10 @@ class TC_Bugs< Test::Unit::TestCase
     tag_method :test_element_using_any_attribute2, :fails_on_ie
     def test_element_using_any_attribute2
         goto_page("div.html")
-        div = browser.div!(:attribute, "attribute")
+        
+        # we can't search using how=:attribute because that raises MissingWayOfFindingException on non-standard attributes like 'attribute'
+        # but we can specify it in the 'attributes' hash. 
+        div = browser.div!(:attributes, {:attribute => "attribute"})
         assert_equal("div1", div.id)
     end
 
@@ -177,7 +180,7 @@ class TC_Bugs< Test::Unit::TestCase
     tag_method :test_fire_event_bug31, :fails_on_ie
     def test_fire_event_bug31
         goto_page("div.html")
-        div = browser.div!(:attribute, "attribute")
+        div = browser.div!(:attributes, {:attribute => "attribute"})
         div.fire_event("ondblclick")
         assert("PASS", browser.text)
         goto_page("div.html")

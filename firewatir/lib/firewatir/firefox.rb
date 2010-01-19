@@ -374,7 +374,8 @@ module Watir
       # or browser loads on its own after some time. Useful when you are searching for flight results etc and
       # page goes to search page after that it goes automatically to results page.
       # Details : http://zenit.senecac.on.ca/wiki/index.php/Mozilla.dev.tech.xul#What_is_an_example_of_addProgressListener.3F
-      listener_object=@browser_jssh_objects.attr(:listener_object).assign({})
+      @browser_jssh_objects[:listener_object]={}
+      listener_object=@browser_jssh_objects[:listener_object]
       listener_object[:QueryInterface]=jssh_socket.object(
         "function(aIID)
          { if(aIID.equals(Components.interfaces.nsIWebProgressListener) || aIID.equals(Components.interfaces.nsISupportsWeakReference) || aIID.equals(Components.interfaces.nsISupports))

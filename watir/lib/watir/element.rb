@@ -85,28 +85,40 @@ module Watir
     end
     
     def create_event_object_hash(event_type, options)
-      client_center=self.client_center
-      button_code=options[:button_code] || 
-        MouseButtonCodes[options[:button]] || 
-        (['onclick', 'onmousedown', 'onmouseup'].include?(event_type) ? MouseButtonCodes[:left] : 0)
       event_stuff=
         { :type => event_type,
-          :screenX => options[:screenX] || 0, # TODO/fix: use screen_center when implemented
-          :screenY => options[:screenY] || 0,
-          :clientX => options[:clientX] || client_center[0],
-          :clientY => options[:clientY] || client_center[1],
-          :offsetX => 0, # TODO/fix: dimensions / 2 here for center? 
-          :offsetY => 0,
-          :x => 0, # TODO/fix: ?? offset from the closest relatively positioned parent element of the element that fired the event
-          :y => 0,
-          :button => button_code,
           :keyCode => 0, # TODO/fix, implement this
           :ctrlKey => false,
           :ctrlLeft => false,
           :altKey => false,
+          :altLeft => false,
           :shiftKey => false,
           :shiftLeft => false,
         }
+
+      if %w(onclick onmousedown onmouseup ondblclick onmouseover onmouseout).include?(event_type)
+        client_center=self.client_center
+
+        button_code=options[:button_code] || 
+          MouseButtonCodes[options[:button]] || 
+          (%w(onclick onmousedown onmouseup ondblclick).include?(event_type) ? MouseButtonCodes[:left] : 0)
+
+        event_stuff.merge!(
+          { :screenX => 0, # TODO/fix: use screen_center when implemented
+            :screenY => 0,
+            :clientX => client_center[0],
+            :clientY => client_center[1],
+            #:offsetX => , # if set this will clobber clientX/clientY. is itself set from clientX/Y when not set. 
+            #:offsetY => ,
+            #:x => , # these also seem to get set from clientX/Y 
+            #:y => ,
+            :button => button_code,
+          })
+      end
+      relevant_options=options.reject do |optkey,optv|
+        !%w(type keyCode ctrlKey ctrlLeft altKey altLeft shiftKey shiftLeft screenX screenY clientX clientY offsetX offsetY x y).detect{|keystr| keystr.to_sym==optkey}
+      end
+      return event_stuff.merge(relevant_options)
     end
     
     # makes json for an event object from the given options. 

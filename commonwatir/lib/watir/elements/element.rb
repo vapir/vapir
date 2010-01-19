@@ -66,7 +66,6 @@ module Watir
     
     # dom_function is about the same as dom_attr, but dom_attr doesn't take arguments. 
     # also, dom_function methods call #wait; dom_attr ones don't. 
-    alias dom_function dom_attr
     def dom_function(*dom_functions)
       dom_functions.each do |arg|
         hash=arg.is_a?(Hash) ? arg : arg.is_a?(Symbol) || arg.is_a?(String) ? {arg => arg} : raise(ArgumentError, "don't know what to do with arg #{arg.inspect} (#{arg.class})")

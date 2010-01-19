@@ -217,7 +217,7 @@ module Watir
     container_collection_method :buttons
     default_how :value
 
-    dom_attr :src, :height, :width # these are used on <input type=image>
+    dom_attr :src, :height, :width, :alt # these are used on <input type=image>
   end
   module FileField
     extend ElementHelper
@@ -468,7 +468,7 @@ module Watir
     container_collection_method :forms
     default_how :name
 
-    dom_attr :name, :action
+    dom_attr :name, :action, :method
     inspect_these :name, :action
 
     # Submit the form. Equivalent to pressing Enter or Return to submit a form.
@@ -809,6 +809,8 @@ module Watir
     add_specifier :tagName => 'AREA'
     container_single_method :area
     container_collection_method :areas
+    
+    dom_attr :href, :alt
   end
   module Em
     extend ElementHelper

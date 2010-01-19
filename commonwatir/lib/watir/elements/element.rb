@@ -1,5 +1,6 @@
 require 'watir/elements/element_collection'
 require 'set'
+require 'matrix'
 
 class Module
   def alias_deprecated(to, from)
@@ -786,13 +787,12 @@ module Watir
     # coordinates of this element (its top left point)
     # from the top left edge of the window
     def document_offset
-      require 'matrix'
       xy=Vector[0,0]
       el=element_object
       begin
         xy+=Vector[el.offsetLeft, el.offsetTop]
         el=el.offsetParent
-      end while el.offsetParent
+      end while el
       xy
     end
     

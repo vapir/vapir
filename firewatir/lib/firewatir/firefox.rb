@@ -627,7 +627,8 @@ module Watir
     #   Status of the page.
     #
     def status
-      content_window_object.status #|| browser_window_object.XULBrowserWindow.statusText
+      #content_window_object.status
+      browser_window_object.XULBrowserWindow.statusText
     end
 
     # Returns the text of the page currently loaded in the browser.

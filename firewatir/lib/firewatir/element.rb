@@ -7,7 +7,11 @@ module Watir
 
     # Creates new instance of FFElement. 
     def initialize(how, what, extra={})
-      unless @jssh_socket=extra[:jssh_socket]
+      @jssh_socket=extra[:jssh_socket]
+      @jssh_socket||= (extra[:browser].jssh_socket if extra[:browser])
+      @jssh_socket||= (extra[:container].jssh_socket if extra[:container])
+      @jssh_socket||= (what.jssh_socket if how==:element_object)
+      unless @jssh_socket
         raise RuntimeError, "No JSSH socket given! Firefox elements need this (specified in the :jssh_socket key of the extra hash)"
       end
       default_initialize(how, what, extra)

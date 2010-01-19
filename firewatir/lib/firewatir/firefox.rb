@@ -409,49 +409,38 @@ module Watir
       assert_exists
       begin
         browser_window_object.close
+        @@jssh_socket.assert_socket
       rescue JsshError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
         @@jssh_socket=nil
         nil
       end
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
-      if false #TODO/FIX: check here if we originally launched the browser process
-        #TODO/FIX: exit firefox. check if there are any windows still open
+@launched_browser_process=false #TODO/FIX: check here if we originally launched the browser process
+      if @launched_browser_process && @@jssh_socket
+        quit_browser(:force => false)
       end
-#      if jssh_socket.js_eval("getWindows().length").to_i == 1
-#        jssh_socket.js_eval("getWindows()[0].close()")
-#        
-#        if current_os == :macosx
-#          %x{ osascript -e 'tell application "Firefox" to quit' }
-#        end
-#
-#        # wait for the app to close properly
-#        @t.join if @t
-#      else
-        # Check if window exists, because there may be the case that it has been closed by click event on some element.
-        # For e.g: Close Button, Close this Window link etc.
-#        if exists?
-#          browser_window_object.close
-#        end
-#      end
     end
 
-    # Closes all firefox windows
+    # Closes all firefox windows by quitting the browser 
     def close_all
-        total_windows = js_eval("getWindows().length").to_i
+      quit_browser(:force => false)
+    end
 
-        # start from last window  
-        while(total_windows > 0) do
-            js_eval "getWindows()[#{total_windows - 1}].close()"
-            total_windows = total_windows - 1
-        end    
-
-        if current_os == :macosx
-            %x{ osascript -e 'tell application "Firefox" to quit' }
-        end  
-
-        if current_os == :windows
-            system("taskkill /im Firefox.exe /f /t >nul 2>&1")
-        end
+    # quits the browser. 
+    # quit_browser(:force => true) will force the browser to quit. 
+    def quit_browser(options={})
+      options=handle_options(options, :force => false)
+      # from https://developer.mozilla.org/en/How_to_Quit_a_XUL_Application
+      appStartup= jssh_socket.Components.classes['@mozilla.org/toolkit/app-startup;1'].getService(jssh_socket.Components.interfaces.nsIAppStartup)
+      quitSeverity = options[:force] ? jssh_socket.Components.interfaces.nsIAppStartup.eForceQuit : jssh_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
+      begin
+        appStartup.quit(quitSeverity)
+        @@jssh_socket.assert_socket
+      rescue JsshError
+        @@jssh_socket=nil
+      end
+      @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
+      nil
     end
 
     #   Used for attaching pop up window to an existing Firefox window, either by url or title.

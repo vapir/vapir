@@ -1,4 +1,5 @@
 require 'watir/elements/element_collection'
+require 'set'
 
 class Module
   def alias_deprecated(to, from)
@@ -55,7 +56,10 @@ module Watir
         hash.each_pair do |dom_attr, ruby_method_names|
           ruby_method_names= ruby_method_names.is_a?(Array) ? ruby_method_names : [ruby_method_names]
           class_array_append 'dom_attrs', dom_attr
+          dom_attr_aliases=class_hash_get('dom_attr_aliases')
+          dom_attr_aliases[dom_attr] ||= Set.new
           ruby_method_names.each do |ruby_method_name|
+            dom_attr_aliases[dom_attr] << ruby_method_name
             define_method ruby_method_name do
               method_from_element_object(dom_attr)
             end
@@ -179,6 +183,16 @@ module Watir
     def class_array_get(name)
       # just return the value of appending nothing
       class_array_append(name) 
+    end
+    def class_hash_merge(name, hash)
+      name=name.to_s.capitalize
+      unless self.const_defined?(name)
+        self.const_set(name, {})
+      end
+      self.const_get(name).merge!(hash)
+    end
+    def class_hash_get(name)
+      class_hash_merge(name, {})
     end
     def set_or_get_class_var(class_var, *arg)
       if arg.length==0
@@ -310,6 +324,14 @@ module Watir
         def all_dom_attrs
           super_attrs=superclass.respond_to?(:all_dom_attrs) ? superclass.all_dom_attrs : []
           super_attrs + class_array_get('dom_attrs')
+        end
+        def all_dom_attr_aliases
+          aliases=class_hash_get('dom_attr_aliases').dup
+          super_aliases=superclass.respond_to?(:all_dom_attr_aliases) ? superclass.all_dom_attr_aliases : {}
+          super_aliases.each_pair do |attr, alias_list|
+            aliases[attr] = (super_aliases[attr] || Set.new) + alias_list
+          end
+          aliases
         end
       end
     end

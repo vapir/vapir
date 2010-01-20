@@ -9,19 +9,11 @@ module Watir
     
     # if an image is used as part of the link, this will return true
     def link_has_image
-      assert_exists
-      return true if element_object.getElementsByTagName("IMG").length > 0
-      return false
+      images.length > 0
     end
     
-    # this method returns the src of an image, if an image is used as part of the link
-    def src # BUG?
-      assert_exists
-      if element_object.getElementsByTagName("IMG").length > 0
-        return element_object.getElementsByTagName("IMG")[0.to_s].src
-      else
-        return ""
-      end
+    def src
+      raise NotImplementedError, "Link#src is gone. use Link#images to get a collection of images from which you may get the #src attribute"
     end
   end
   

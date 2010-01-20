@@ -28,6 +28,5 @@ module Watir
     def text
       document_object.body.textContent
     end
-    alias textContent text
   end # Frame
 end # FireWatir

@@ -71,7 +71,7 @@ module Watir
               what={klass.default_how => first}
               index=nil
             else
-              raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search using arguments #{first.inspect}, (#{first.class}) and #{second.inspect} (#{second.class}), default_how=#{default_how.inspect} (#{default_how.class})"
+              raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search using arguments #{first.inspect} (#{first.class}) and #{second.inspect} (#{second.class})"
             end
           elsif first==:index # this is different because the index number doesn't go in the 'what'
             how=first

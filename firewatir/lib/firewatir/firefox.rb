@@ -436,8 +436,11 @@ module Watir
       quitSeverity = options[:force] ? jssh_socket.Components.interfaces.nsIAppStartup.eForceQuit : jssh_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
       begin
         appStartup.quit(quitSeverity)
-        @@jssh_socket.assert_socket
-      rescue JsshError
+        ::Waiter.try_for(8, :exception => Exception::WatirException.new("The browser did not quit")) do
+          @@jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
+          false
+        end
+      rescue JsshError, Errno::ECONNRESET, Errno::ECONNABORTED
         @@jssh_socket=nil
       end
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
@@ -647,9 +650,10 @@ module Watir
       browser_window_object.minimize
     end
 
-    ARBITRARY_TIMEOUT=300 # seconds 
+    ARBITRARY_TIMEOUT=30 # seconds 
     # Waits for the page to get loaded.
     def wait(options={})
+      return unless exists?
       unless options.is_a?(Hash)
         raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
       end

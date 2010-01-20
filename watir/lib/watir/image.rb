@@ -17,7 +17,7 @@ module Watir
     # If the Disk cache is full (tools menu -> Internet options -> Temporary Internet Files), it may produce incorrect responses.
     def loaded?
       assert_exists do
-        element_object.fileCreatedDate == "" and element_object.fileSize.to_i == -1
+        !(element_object.fileCreatedDate == "" and element_object.fileSize.to_i == -1)
       end
     end
     alias_deprecated :hasLoaded?, :loaded?

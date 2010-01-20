@@ -68,6 +68,8 @@ module Watir
     alias_deprecated :getContents, :value
     
     # Clears the contents of the text field.
+    #
+    # to be consistent with similar methods #set and #append, returns the new value, though this will always be a blank string. 
     # 
     # takes options: 
     # :blur => true/false; whether or not to fire the onblur event when done.
@@ -92,7 +94,7 @@ module Watir
           assert_exists(:force => true)
         end
         element_object.value = ''
-        fire_event :onKeyDown
+        fire_event :onKeyDown # TODO/fix - keyCode for 'delete' key 
         assert_exists(:force => true)
         fire_event :onKeyPress
         assert_exists(:force => true)
@@ -104,10 +106,13 @@ module Watir
         if options[:blur] && exists?
           fire_event('onBlur')
         end
+        self.value
       end
     end
     # Appends the specified string value to the contents of the text box.
     # 
+    # returns the new value of the text field. this may not include all of what is given if there is a maxlength on the field. 
+    #
     # takes options: 
     # :blur => true/false; whether or not to file the onblur event when done.
     # :highlight => true/false
@@ -142,9 +147,9 @@ module Watir
             assert_exists(:force => true)
           end
           ((existing_value_chars.length)...new_value_chars.length).each do |i|   
-#            sleep typingspeed
+#            sleep typingspeed # TODO/FIX
             element_object.value = new_value_chars[0..i].join('')
-            fire_event :onKeyDown
+            fire_event :onKeyDown # TODO/fix - keyCode for character typed 
             assert_exists(:force => true)
             fire_event :onKeyPress
             assert_exists(:force => true)
@@ -161,9 +166,12 @@ module Watir
           element_object.value = element_object.value + value
         end
         wait
+        self.value
       end
     end
     # Sets the contents of the text field to the given value
+    #
+    # returns the new value of the text field. this may be shorter than what is given if there is a maxlength on the field. 
     # 
     # takes options: 
     # :blur => true/false; whether or not to file the onblur event when done.
@@ -177,6 +185,7 @@ module Watir
         clear(options.merge(:blur => false, :change => false))
         assert_exists(:force => true)
         append(value, options.merge(:focus => false, :select => false))
+        self.value
       end
     end
   end
@@ -286,6 +295,7 @@ module Watir
     #   Clears the selected items in the select box.
     def clear
       with_highlight do
+        assert_enabled
         changed=false
         options.each do |option|
           if option.selected
@@ -535,7 +545,10 @@ module Watir
     end
     
     # Returns the number of rows inside the table. does not recurse through
-    # nested tables. 
+    # nested tables. same as (object).rows.length
+    #
+    # if you want the row count including nested tables (which this brokenly used to return)
+    # use (object).table_rows.length 
     def row_count
       element_object.rows.length
     end

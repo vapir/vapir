@@ -414,7 +414,7 @@ module Watir
       ![:element_object, :index].include?(element.how) # if how==:element_object, don't show the element object in inspect. if how==:index, what is nil. 
     end
     inspect_this_if(:index) # uses the default 'if'; shows index if it's not nil 
-    inspect_these :tagName, :id
+    inspect_these :tag_name, :id
 
     dom_attr :name # this isn't really valid on elements but is used so much that we define it here. (it may be repeated on elements where it is actually is valid)
 
@@ -923,10 +923,11 @@ module Watir
     end
     
     def attributes_for_stringifying
+      attributes_to_inspect=self.class.attributes_to_inspect
       unless exists?
-        return [['exists?', false]]
+        attributes_to_inspect=[{:value => :exists?, :label => :exists?}]+attributes_to_inspect.select{|inspect_hash| [:how, :what, :index].include?(inspect_hash[:label]) }
       end
-      self.class.attributes_to_inspect.map do |inspect_hash|
+      attributes_to_inspect.map do |inspect_hash|
         if !inspect_hash[:if] || inspect_hash[:if].call(self)
           value=case inspect_hash[:value]
           when /\A@/ # starts with @, look for instance variable

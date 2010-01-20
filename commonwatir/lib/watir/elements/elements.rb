@@ -540,6 +540,10 @@ module Watir
       element_object.rows.length
     end
     
+    def row_count_excluding_nested_tables
+      raise NotImplementedError, "the method \#row_count_excluding_nested_tables is gone. the \#row_count method now returns the number of rows in this #{self.class}. for the number of rows including nested tables, use [this object].table_rows.length"
+    end
+    
     # returns all of the cells of this table. to get the cells including nested tables, 
     # use #table_cells, which is defined on all containers (including Table) 
     def cells

@@ -47,47 +47,6 @@ module Watir
       page.innerText
     end
 
-#    def eval_in_spawned_process(command)
-#      raise NotImplementedError
-#      command.strip!
-#      load_path_code = _code_that_copies_readonly_array($LOAD_PATH, '$LOAD_PATH')
-#      ruby_code = "require 'watir/ie'; "
-##      ruby_code = "$HIDE_IE = #{$HIDE_IE};" # This prevents attaching to a window from setting it visible. However modal dialogs cannot be attached to when not visible.
-#      ruby_code << "pc = #{attach_command}; " # pc = page container
-#      # IDEA: consider changing this to not use instance_eval (it makes the code hard to understand)
-#      ruby_code << "pc.instance_eval(#{command.inspect})"
-#      exec_string = "start rubyw -e #{(load_path_code + '; ' + ruby_code).inspect}"
-#      system(exec_string)
-#    end
-    
-#    def set_container container
-#      @container = container
-#      @page_container = self
-#    end
-    
-    # This method is used to display the available html frames that Internet Explorer currently has loaded.
-    # This method is usually only used for debugging test scripts.
-#    def show_frames
-#      if allFrames = document.frames
-#        count = allFrames.length
-#        puts "there are #{count} frames"
-#        for i in 0..count-1 do
-#          begin
-#            fname = allFrames.item(i).name.to_s
-#            puts "frame  index: #{i + 1} name: #{fname}"
-#          rescue => e
-#            if e.to_s.match(/Access is denied/)
-#              puts "frame  index: #{i + 1} Access Denied, see http://wiki.openqa.org/display/WTR/FAQ#access-denied"
-#            else
-#              raise
-#            end
-#          end
-#        end
-#      else
-#        puts "no frames"
-#      end
-#    end
-
     # Search the current page for specified text or regexp.
     # Returns the index if the specified text was found.
     # Returns matchdata object if the specified regexp was found.

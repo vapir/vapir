@@ -134,9 +134,6 @@ module Watir
     end
   end
   
-  #--
-  #  this class makes the docs better
-  #++
   # This class is the watir representation of a radio button.
   class IERadio < IEInputElement
     include Radio

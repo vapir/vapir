@@ -48,7 +48,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
     goto_page "simple_table_buttons.html"
     
     button = browser.button!(:xpath , "//input[@id='b1']/")
-    table = Watir::Table.create_from_element(browser,button)
+    table = button.parent_table
     
     table[2][1].button!(:index,1).click
     assert(browser.text_field!(:name,"confirmtext").verify_contains(/CLICK2/i))

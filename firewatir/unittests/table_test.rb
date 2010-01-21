@@ -242,13 +242,13 @@ class TC_Tables_Buttons < Test::Unit::TestCase
     end
   end
   
-#  def test_table_from_element
-#    button = browser.button!(:id, "b1")
-#    table = Table.create_from_element(browser, button)
+  def test_table_from_element
+    button = browser.button!(:id, "b1")
+    table = button.parent_table
     
-#    table[2][1].button!(:index, 1).click
-#    assert(browser.textField(:name, "confirmtext").verify_contains(/CLICK2/i))
-#  end
+    table[2][1].button!(:index, 1).click
+    assert(browser.text_field(:name, "confirmtext").verify_contains(/CLICK2/i))
+  end
 end
 
 class TC_Table_Columns < Test::Unit::TestCase

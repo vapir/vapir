@@ -18,7 +18,7 @@ class TC_Links < Test::Unit::TestCase
     begin
       browser.link(:bad_attribute, 199).click
     rescue MissingWayOfFindingObjectException => e           
-      assert_equal "bad_attribute is an unknown way of finding a <A> element (199)", e.to_s
+      assert_match(/\ACannot search for a Watir::\w*Link using the given argument: :bad_attribute \(other argument was 199\)\z/, e.message)
     end
   end
   

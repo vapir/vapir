@@ -51,10 +51,14 @@ module Watir
 #    end
     dom_attr :sourceIndex => :source_index
 
-#    # Return true if self is contained earlier in the html than other. 
-#    alias :before? :< 
-#    # Return true if self is contained later in the html than other. 
-#    alias :after? :> 
+    # Return true if self is contained earlier in the html than other. 
+    def before?(other)
+      source_index < other.source_index
+    end
+    # Return true if self is contained later in the html than other. 
+    def after?(other)
+      source_index > other.source_index
+    end
       
     def typingspeed
       @container.typingspeed

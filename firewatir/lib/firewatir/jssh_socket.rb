@@ -93,21 +93,21 @@ class JsshSocket
     begin
       @socket = TCPSocket::new(@ip, @port)
       @socket.sync = true
-    rescue Errno::ECONNREFUSED
+      @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
+      @expecting_extra_maybe=false
+      welcome="Welcome to the Mozilla JavaScript Shell!\n"
+      read=read_value(:timeout => LONG_SOCKET_TIMEOUT)
+      if !read
+        @expecting_extra_maybe=true
+        raise JsshError, "Something went wrong initializing - no response" 
+      elsif read != welcome
+        @expecting_extra_maybe=true
+        raise JsshError, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
+      end
+    rescue Errno::ECONNREFUSED, Errno::ECONNRESET
       err=JsshUnableToStart.new("Could not connect to JSSH sever #{@ip}:#{@port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
       err.set_backtrace($!.backtrace)
       raise err
-    end
-    @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
-    @expecting_extra_maybe=false
-    welcome="Welcome to the Mozilla JavaScript Shell!\n"
-    read=read_value(:timeout => LONG_SOCKET_TIMEOUT)
-    if !read
-      @expecting_extra_maybe=true
-      raise JsshError, "Something went wrong initializing - no response" 
-    elsif read != welcome
-      @expecting_extra_maybe=true
-      raise JsshError, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
     end
     if @prototype
       ret=send_and_read(File.read(PrototypeFile), :timeout => LONG_SOCKET_TIMEOUT)
@@ -197,8 +197,7 @@ class JsshSocket
       end
       
       # Kernel.select seems to indicate that a dead socket is ready to read, and returns endless blank strings to recv. rather irritating. 
-      consider_dead_after=3 # number of blank strings to get before we decide it's dead 
-      if received_data.length >= consider_dead_after && received_data[-consider_dead_after..-1].all?{|rd| rd==''}
+      if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd==''}
         raise JsshError, "Socket seems to no longer be connected"
       end
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }

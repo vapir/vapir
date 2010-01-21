@@ -214,7 +214,7 @@ module Watir
           begin
             jssh_socket(:reset_if_dead => true).assert_socket
             true
-          rescue JsshError
+          rescue JsshUnableToStart
             false
           end
         end

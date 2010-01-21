@@ -99,16 +99,22 @@ class JsshSocket
       raise err
     end
     @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
+    @expecting_extra_maybe=false
     welcome="Welcome to the Mozilla JavaScript Shell!\n"
     read=read_value(:timeout => LONG_SOCKET_TIMEOUT)
     if !read
+      @expecting_extra_maybe=true
       raise JsshError, "Something went wrong initializing - no response" 
     elsif read != welcome
+      @expecting_extra_maybe=true
       raise JsshError, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
     end
     if @prototype
       ret=send_and_read(File.read(PrototypeFile), :timeout => LONG_SOCKET_TIMEOUT)
-      raise JsshError, "Something went wrong loading Prototype - message #{ret.inspect}" if ret != "done!"
+      if ret != "done!"
+        @expecting_extra_maybe=true
+        raise JsshError, "Something went wrong loading Prototype - message #{ret.inspect}"
+      end
     end
     ret=send_and_read("(function()
     { nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
@@ -118,7 +124,10 @@ class JsshSocket
       }
       return 'done!';
     })()")
-    raise JsshError, "Something went wrong initializing native JSON - message #{ret.inspect}" if ret != "done!"
+    if ret != "done!"
+      @expecting_extra_maybe=true
+      raise JsshError, "Something went wrong initializing native JSON - message #{ret.inspect}"
+    end
     temp_object.assign({})
   end
 
@@ -153,7 +162,7 @@ class JsshSocket
     already_read_length=false
     expected_size=nil
 #    logger.add(-1) { "RECV_SOCKET is starting. timeout=#{timeout}" }
-    while size_to_read > 0 && (s= Kernel.select([@socket] , nil , nil, timeout))
+    while size_to_read > 0 && Kernel.select([@socket] , nil , nil, timeout)
       data = @socket.recv(size_to_read)
       received_data << data
       value_string << data
@@ -162,6 +171,7 @@ class JsshSocket
           value_string.sub!(/\A#{Regexp.escape(PROMPT)}/, '')
           @expecting_prompt=false
         else
+          value_string << clear_error
           raise JsshError, "Expected a prompt! received unexpected data #{value_string.inspect}. maybe left on the socket by last evaluated expression? last expression was:\n\n#{@last_expression}"
         end
       end
@@ -174,6 +184,7 @@ class JsshSocket
           elsif value_string =~ /\A\d+\z/ 
             # rather unlikely, but maybe we just received part of the number so far - ignore
           else
+            @expecting_extra_maybe=true
             raise JsshError, "Expected length! unexpected data with no preceding length received: #{value_string.inspect}"
           end
         end
@@ -186,12 +197,26 @@ class JsshSocket
       end
       
       # Kernel.select seems to indicate that a dead socket is ready to read, and returns endless blank strings to recv. rather irritating. 
-      if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd==''}
+      consider_dead_after=3 # number of blank strings to get before we decide it's dead 
+      if received_data.length >= consider_dead_after && received_data[-consider_dead_after..-1].all?{|rd| rd==''}
         raise JsshError, "Socket seems to no longer be connected"
       end
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end
 #    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}; value_string=#{value_string.inspect}" }
+    if @expecting_extra_maybe
+      if Kernel.select([@socket] , nil , nil, SHORT_SOCKET_TIMEOUT)
+        cleared_error=clear_error
+        if cleared_error==PROMPT
+          # if all we got was the prompt, just stick it on the value here so that the code below will deal with setting @execting_prompt correctly 
+          value_string << cleared_error
+        else
+          raise JsshError, "We finished receiving but the socket was still ready to send! extra data received was: #{cleared_error}"
+        end
+      end
+      @expecting_extra_maybe=false
+    end
+    
     if expected_size 
       value_string_length=value_string.unpack("U*").length # JSSH returns a utf-8 string, so unpack each character to get the right length 
       
@@ -201,6 +226,7 @@ class JsshSocket
         value_string.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
         @expecting_prompt=false
       else
+        @expecting_extra_maybe=true if value_string_length < expected_size
         raise JsshError, "Expected a value of size #{expected_size}; received data of size #{value_string_length}: #{value_string.inspect}"
       end
     else
@@ -227,6 +253,19 @@ class JsshSocket
         raise
       end
     end
+  end
+  # this should be called when an error occurs and we want to clear the socket of any value remaining on it. 
+  # this will continue trying for DEFAULT_SOCKET_TIMEOUT until 
+  def clear_error
+    data=""
+    while Kernel.select([@socket], nil, nil, SHORT_SOCKET_TIMEOUT)
+      # clear any other crap left on the socket 
+      data << @socket.recv(65536)
+    end
+    if data =~ /#{Regexp.escape(PROMPT)}\z/
+      @expecting_prompt=false
+    end
+    data
   end
 
   public
@@ -314,6 +353,7 @@ class JsshSocket
   # value. Will raise an error if the javascript errors. 
   def value_json(js, options={})
     options={:error_on_undefined => true}.merge(options)
+    raise ArgumentError, "Expected a string containing a javascript expression! received #{js.inspect} (#{js.class})" unless js.is_a?(String)
     ensure_prototype
     ref_error=options[:error_on_undefined] ? "typeof(result)=='undefined' ? {errored: true, value: {'name': 'ReferenceError', 'message': 'undefined expression in: '+result_f.toString()}} : " : ""
     wrapped_js=
@@ -328,7 +368,10 @@ class JsshSocket
     error_or_val_json(val, js)
   end
   def error_or_val_json(val, js)
-    raise JsshError, "received no value! may have timed out waiting for a value that was not coming." if !val
+    if !val || val==''
+      @expecting_extra_maybe=true
+      raise JsshError, "received no value! may have timed out waiting for a value that was not coming."
+    end
     if val=="SyntaxError: syntax error"
       raise JsshSyntaxError, val
     end
@@ -933,7 +976,20 @@ class JsshObject
   end
   
   def inspect
-    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :debug_name].map{|attr| attr.to_s+'='+send(attr).inspect}.join(', ')}>"
+    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :debug_name].map{|attr| attr.to_s+'='+send(attr)}.join(', ')}>"
+  end
+  def pretty_print(pp)
+    pp.object_address_group(self) do
+      pp.seplist([:type, :debug_name], lambda { pp.text ',' }) do |attr|
+        pp.breakable ' '
+        pp.group(0) do
+          pp.text attr.to_s
+          pp.text ': '
+          #pp.breakable
+          pp.text send(attr)
+        end
+      end
+    end
   end
 end
 

@@ -666,6 +666,11 @@ module Watir
     element_collection :rows, :rows, TableRow
   end
   module Table
+    def self.create_from_element(container, element)
+      Kernel.warn "DEPRECATION WARNING: create_from_element is deprecated. Please use (element).parent_table (element being the second argument to this function)\n(called from #{caller.map{|c|"\n"+c}})"
+      element.parent_table
+    end
+
     extend ElementHelper
     add_specifier :tagName => 'TABLE'
     container_single_method :table

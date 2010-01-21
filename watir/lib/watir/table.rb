@@ -9,16 +9,8 @@ module Watir
     include Table
     include IEContainer
     
-    # Returns the table object containing the element
-    #   * container  - an instance of an IE object
-    #   * anElement  - a Watir object (TextField, Button, etc.)
-    # TODO: look at this - seems to be named wrong; it locates, doesn't create anything. also uses the wrong constructor. 
     def self.create_from_element(container, element)
-      raise NotImplementedError
-      element.locate if element.respond_to?(:locate)
-      o = element.ole_object.parentElement
-      o = o.parentElement until o.tagName == 'TABLE'
-      new container, :ole_object, o 
+      Watir::Table.create_from_element(container, element)
     end
   end
   

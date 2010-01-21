@@ -235,6 +235,29 @@ module Watir
 
     def container_single_method(*method_names)
       class_array_append 'container_single_methods', *method_names
+      element_module=self
+      method_names.each do |method_name|
+        Watir::Element.module_eval do
+          # these methods (Element#parent_table, Element#parent_div, etc)
+          # iterate through parent nodes looking for a parent of the specified
+          # type. if no element of that type is found which is a parent of
+          # self, returns nil. 
+          define_method("parent_#{method_name}") do
+            element_class=element_class_for(element_module)
+            parentNode=element_object
+            while true
+              parentNode=parentNode.parentNode
+              unless parentNode && parentNode != document_object # don't ascend up to the document. #TODO/Fix - for IE, comparing WIN32OLEs doesn't really work, this comparison is pointless. 
+                return nil
+              end
+              matched=Watir::ElementObjectCandidates.match_candidates([parentNode], element_class.specifiers, element_class.all_dom_attr_aliases)
+              if matched.size > 0
+                return element_class.new(:element_object, parentNode, extra_for_contained) # this is a little weird, passing extra_for_contained so that this is the container of its parent. 
+              end
+            end
+          end
+        end
+      end
     end
     def container_collection_method(*method_names)
       class_array_append 'container_collection_methods', *method_names

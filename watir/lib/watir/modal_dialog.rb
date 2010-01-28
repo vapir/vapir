@@ -26,10 +26,22 @@ module Watir
       value
     end
     
-    def click_button(button_text)
-      @popup_win.click_child_button_try_for!(button_text, DEFAULT_MODAL_TIMEOUT)
+    def click_button(button_text, options={})
+      options=handle_options(options, :timeout => DEFAULT_MODAL_TIMEOUT)
+      @popup_win.click_child_button_try_for!(button_text, options[:timeout])
     end
     
+    def close
+      if (document=IEModalDialogDocument.new(self, :error => false, :timeout => 0)) && document.exists?
+        document.close
+      else
+        @popup_win.send_close!
+      end
+    end
+    
+    attr_reader :browser
+    attr_reader :browser_win
+
     def hwnd
       @popup_win.hwnd
     end
@@ -47,25 +59,44 @@ module Watir
     @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/watir/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
 
     GetUnknown = Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
-    def initialize(modal_dialog)
-      @modal_dialog=modal_dialog
-      options={:timeout => DEFAULT_MODAL_TIMEOUT}
+    def initialize(containing_modal_dialog, options={})
+      options=handle_options(options, :timeout => DEFAULT_MODAL_TIMEOUT, :error => true)
+      @containing_modal_dialog=containing_modal_dialog
       
       intUnknown = nil
-      ::Waiter.try_for(options[:timeout], :exception => "Unable to attach to Modal Window after #{options[:timeout]} seconds.") do
+      ::Waiter.try_for(options[:timeout], :exception => (options[:error] && "Unable to attach to Modal Window after #{options[:timeout]} seconds.")) do
         intPointer = [0].pack("L") # will contain the int value of the IUnknown*
-        GetUnknown.call(@modal_dialog.hwnd, intPointer)
+        GetUnknown.call(@containing_modal_dialog.hwnd, intPointer)
         intArray = intPointer.unpack('L')
         intUnknown = intArray.first
         intUnknown > 0
       end
-      
-      @document_object = WIN32OLE.connect_unknown(intUnknown)
+      if intUnknown && intUnknown > 0
+        @document_object = WIN32OLE.connect_unknown(intUnknown)
+      end
     end
+    attr_reader :containing_modal_dialog
     attr_reader :document_object
     alias containing_object document_object
-    def locate!
-      true
+    def locate!(options={})
+      exists? || raise(Watir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
+    end
+    
+    def exists?
+      # todo/fix: will the document object change / become invalid / need to be relocated? 
+      @document_object && @containing_modal_dialog.exists?
+    end
+    
+    # this looks for a modal dialog on this modal dialog. but really it's modal to the same browser window
+    # that this is modal to, so we will check for the modal on the browser, see if it isn't the same as our
+    # self, and return it if so. 
+    def modal_dialog
+      ::Waiter.try_for(DEFAULT_MODAL_TIMEOUT, 
+                        :exception => NoMatchingWindowFoundException.new("No other modal dialog was found on the browser."),
+                        :condition => proc{|md| md.hwnd != containing_modal_dialog.hwnd }
+                      ) do
+        modal_dialog=containing_modal_dialog.browser.modal_dialog
+      end
     end
   end
 end
@@ -172,10 +203,6 @@ module Watir
     # Return the title of the document
     def title
       document.title
-    end
-
-    def close
-      document.parentWindow.close
     end
 
     def attach_command

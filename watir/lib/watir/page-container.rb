@@ -113,12 +113,12 @@ module Watir
         return unless exists?
         document_object
       end
+      urls=[]
       ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "A frame on the browser did not come into readyState complete by the end of the specified interval") do
         return unless exists?
-        all_frames_complete?(document_object)
+        all_frames_complete?(document_object, urls)
       end
-      
-      # TODO/FIX: this dropped the @url_list stuff. restore that. 
+      @url_list=(@url_list || [])+urls
       
       @down_load_time= Time.now - start_load_time
       run_error_checks if respond_to?(:run_error_checks)
@@ -127,8 +127,11 @@ module Watir
     end
     
     private
-    def all_frames_complete?(document)
+    def all_frames_complete?(document, urls=nil)
       begin
+        if urls && !urls.include?(document.location.href)
+          urls << document.location.href
+        end
         frames=document.frames
         return document.readyState=='complete' && (0...frames.length).all? do |i|
           frame=document.frames[i.to_s]
@@ -143,7 +146,7 @@ module Watir
             false
           when WIN32OLE
             # frame has a document - check recursively 
-            all_frames_complete?(frame_document)
+            all_frames_complete?(frame_document, urls)
           when WIN32OLERuntimeError 
             # if we get a WIN32OLERuntimeError with access denied, that is probably a 404 and it's not going 
             # to load, so no reason to keep waiting for it - consider it 'complete' and return true. 

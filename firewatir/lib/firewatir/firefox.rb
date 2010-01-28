@@ -109,7 +109,7 @@ module Watir
       if options[:reset_if_dead]
         begin
           @@jssh_socket.assert_socket
-        rescue JsshError, Errno::ECONNABORTED
+        rescue JsshError, Errno::ECONNABORTED, Errno::ECONNRESET
           initialize_jssh_socket
         end
       end

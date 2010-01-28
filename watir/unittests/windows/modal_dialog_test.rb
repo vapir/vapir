@@ -26,7 +26,7 @@ class TC_ModalDialog < Watir::TestCase
     IE.attach_timeout = 0.2 
     begin
       assert_raises(NoMatchingWindowFoundException) do
-        browser.modal_dialog
+        browser.modal_dialog!
       end
     ensure
       IE.attach_timeout = @original_timeout

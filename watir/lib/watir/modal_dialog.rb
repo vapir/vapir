@@ -1,3 +1,75 @@
+require 'watir/win_window'
+
+module Watir
+  DEFAULT_MODAL_TIMEOUT=4
+  class IEModalDialog
+    def initialize(browser, options={})
+      options={:timeout => DEFAULT_MODAL_TIMEOUT}.merge(options)
+      @browser=browser
+      @browser_win=browser.win_window
+      @popup_win=::Waiter.try_for(options[:timeout], :exception => Watir::Exception::NoMatchingWindowFoundException.new("No popup was found on the browser")) do
+        @browser_win.enabled_popup
+      end
+    end
+    
+    def exists?
+      @popup_win.exists?
+    end
+    
+    def text
+      @popup_win.children.select{|child| child.class_name.downcase=='static' && child.text!=''}.map{|c| c.text }.join(' ')
+    end
+    
+    def set_text_field(value)
+      edit_field=@popup_win.children.detect{|child| child.class_name=='Edit'} || (raise "No Edit field in the popup!")
+      edit_field.send_set_text!(value)
+      value
+    end
+    
+    def click_button(button_text)
+      @popup_win.click_child_button_try_for!(button_text, DEFAULT_MODAL_TIMEOUT)
+    end
+    
+    def hwnd
+      @popup_win.hwnd
+    end
+    def win_window
+      @popup_win
+    end
+    
+    def document
+      IEModalDialogDocument.new(self)
+    end
+  end
+  class IEModalDialogDocument
+    include IEContainer
+    include IEPageContainer
+    @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/watir/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
+
+    GetUnknown = Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
+    def initialize(modal_dialog)
+      @modal_dialog=modal_dialog
+      options={:timeout => DEFAULT_MODAL_TIMEOUT}
+      
+      intUnknown = nil
+      ::Waiter.try_for(options[:timeout], :exception => "Unable to attach to Modal Window after #{options[:timeuot]} seconds.") do
+        intPointer = [0].pack("L") # will contain the int value of the IUnknown*
+        GetUnknown.call(@modal_dialog.hwnd, intPointer)
+        intArray = intPointer.unpack('L')
+        intUnknown = intArray.first
+        intUnknown > 0
+      end
+      
+      @document_object = WIN32OLE.connect_unknown(intUnknown)
+    end
+    attr_reader :document_object
+    alias containing_object document_object
+    def locate!
+      true
+    end
+  end
+end
+=begin
 module Watir
   class IEModalDialog
     include IEContainer
@@ -121,3 +193,4 @@ module Watir
     alias :exist? :exists?
   end
 end
+=end

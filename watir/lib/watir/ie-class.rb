@@ -309,6 +309,15 @@ module Watir
     end
     attr_writer :hwnd
     
+    def win_window
+      hwnd=self.hwnd
+      @win_window||= WinWindow.new(hwnd)
+    end
+    
+    def modal_dialog
+      IEModalDialog.new(self)
+    end
+    
     include Watir::Win32
 
   	# Are we attached to an open browser?

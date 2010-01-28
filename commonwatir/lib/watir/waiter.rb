@@ -114,6 +114,9 @@ class Waiter
   # Complains to STDERR for one year, every tenth of a second, as long as 2+2 does not equal 5. Does not 
   # raise an exception if 2+2 does not become equal to 5. 
   def self.try_for(time, options={})
+    unless time.is_a?(Numeric) && options.is_a?(Hash)
+      raise TypeError, "expected arguments are time (a numeric) and, optionally, options (a Hash). received arguments #{time.inspect} (#{time.class}), #{options.inspect} (#{options.class})"
+    end
     options=handle_options(options, {:interval => 0.5, :condition => proc{|_ret| _ret}, :exception => WaiterError})
     started=Time.now
     begin

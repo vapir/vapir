@@ -7,7 +7,6 @@ require 'watir/win32'
 module Watir
   class IE < Browser
     include Watir::Exception
-    include IEContainer
     include IEPageContainer
     
     # Maximum number of seconds to wait when attaching to a window
@@ -54,9 +53,6 @@ module Watir
 			@@visible = x
 		end
 		    
-    # Used internally to determine when IE has finished loading a page
-    READYSTATE_COMPLETE = 4
-       
     # IE inserts some element whose tagName is empty and just acts as block level element
     # Probably some IE method of cleaning things
     # To pass the same to the xml parser we need to give some name to empty tagName
@@ -302,6 +298,10 @@ module Watir
     end
     private :attach_browser_window
     
+    def browser_object
+      @ie
+    end
+    
     # Return the current window handle
     def hwnd
       raise "Not attached to a browser" if @ie.nil? 
@@ -391,28 +391,6 @@ module Watir
       '#<%s:0x%x url=%s title=%s>' % [self.class, hash*2, url.inspect, title.inspect]
     end
 
-    # Execute the given JavaScript string
-    def execute_script(source)
-      retried=false
-      result=nil
-      begin
-        result=document.parentWindow.eval(source)
-      rescue WIN32OLERuntimeError
-        # don't retry more than once; don't catch anything but the particular thing we're looking for 
-        if retried || $!.message.split("\n").map{|line| line.strip}!=["unknown property or method `eval'","HRESULT error code:0x80020006","Unknown name."]
-          raise
-        end
-        # this can happen if no scripts have executed at all - the 'eval' function doesn't exist. 
-        # execScript works, but behaves differently than eval (it doesn't return anything) - but 
-        # once an execScript has run, eval is subsequently defined. so, execScript a blank script, 
-        # and then try again with eval.
-        document.parentWindow.execScript('null')
-        retried=true
-        retry
-      end
-      return result
-    end
-    
     # clear the list of urls that we have visited
     def clear_url_list
       @url_list.clear
@@ -487,8 +465,6 @@ module Watir
     end
     alias document_object document
     
-    alias containing_object document_object
-    
     def browser
       self
     end
@@ -497,77 +473,7 @@ module Watir
     def url
       return @ie.LocationURL
     end
-        
-    # Block execution until the page has loaded.
-    # =nodoc
-    # Note: This code needs to be prepared for the ie object to be closed at 
-    # any moment!
-    def wait(options={})
-      unless options.is_a?(Hash)
-        raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
-      end
-      options={:sleep => false, :interval => 0.1, :timeout => 120}.merge(options)
-      @xml_parser_doc = nil
-      @down_load_time = nil
-      start_load_time = Time.now
-      
-      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser was still busy at the end of the specified interval") do
-        return unless exists?
-        !@ie.busy
-      end
-      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's readyState was still not READYSTATE_COMPLETE at the end of the specified interval") do
-        return unless exists?
-        @ie.readyState == READYSTATE_COMPLETE
-      end
-      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's document was still not defined at the end of the specified interval") do
-        return unless exists?
-        @ie.document
-      end
-      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "A frame on the browser did not come into readyState complete by the end of the specified interval") do
-        return unless exists?
-        all_frames_complete?(@ie.document)
-      end
-      
-      # TODO/FIX: this dropped the @url_list stuff. restore that. 
-      
-      @down_load_time= Time.now - start_load_time
-      run_error_checks
-      sleep @pause_after_wait if options[:sleep]
-      @down_load_time
-    end
-    
-    private
-    def all_frames_complete?(document)
-      begin
-        frames=document.frames
-        return document.readyState=='complete' && (0...frames.length).all? do |i|
-          frame=document.frames[i.to_s]
-          frame_document=begin
-            frame.document
-          rescue WIN32OLERuntimeError
-            $!
-          end
-          case frame_document
-          when nil
-            # frame hasn't loaded to the point where it has a document yet 
-            false
-          when WIN32OLE
-            # frame has a document - check recursively 
-            all_frames_complete?(frame_document)
-          when WIN32OLERuntimeError 
-            # if we get a WIN32OLERuntimeError with access denied, that is probably a 404 and it's not going 
-            # to load, so no reason to keep waiting for it - consider it 'complete' and return true. 
-            # there's probably a better method of determining this but I haven't found it yet. 
-            true
-          else # don't know what we'd have here 
-            raise RuntimeError, "unknown frame.document: #{frame_document.inspect} (#{frame_document.class})"
-          end
-        end
-      rescue WIN32OLERuntimeError
-        false
-      end
-    end
-    
+
     # Error checkers
     
     # this method runs the predefined error checks

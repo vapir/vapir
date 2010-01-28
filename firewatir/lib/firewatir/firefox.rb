@@ -519,15 +519,20 @@ module Watir
       end
     end
 
-    def modal_dialog
-      modal=FFModalDialog.new(self, :error => false)
+    # returns a FFModalDialog. 
+    #
+    # you may specify an options hash. keys supported are those supported by the second argument
+    # to FFModalDialog#initialize, except that :error is overridden to false (use #modal_dialog!)
+    # if you want an exception to raise) 
+    def modal_dialog(options={})
+      modal=FFModalDialog.new(self, options.merge(:error => false))
       modal.exists? ? modal : nil
     end
     
     # returns #modal_dialog if it exists; otherwise, errors. use this with the expectation that the dialog does exist. 
     # use #modal_dialog when you will check if it exists. 
-    def modal_dialog!
-      FFModalDialog.new(self, :error => true)
+    def modal_dialog!(options={})
+      FFModalDialog.new(self, options.merge(:error => true))
     end
 
     #   Returns the Status of the page currently loaded in the browser from statusbar.

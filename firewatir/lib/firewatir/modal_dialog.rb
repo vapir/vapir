@@ -96,13 +96,13 @@ module Watir
     # this looks for a modal dialog on this modal dialog. but really it's modal to the same browser window
     # that this is modal to, so we will check for the modal on the browser, see if it isn't the same as our
     # self, and return it if so. 
-    def modal_dialog
+    def modal_dialog(options={})
       raise NotImplementedError
       ::Waiter.try_for(ModalDialog::DEFAULT_TIMEOUT, 
                         :exception => NoMatchingWindowFoundException.new("No other modal dialog was found on the browser."),
                         :condition => proc{|md| md.hwnd != containing_modal_dialog.hwnd }
                       ) do
-        modal_dialog=containing_modal_dialog.browser.modal_dialog
+        modal_dialog=containing_modal_dialog.browser.modal_dialog(options)
       end
     end
     

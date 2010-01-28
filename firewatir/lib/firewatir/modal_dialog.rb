@@ -1,8 +1,10 @@
 require 'watir/win_window'
+require 'firewatir/firefox.rb'
 require 'watir/common_modal_dialog'
 module Watir
   class FFModalDialog
     include ModalDialog
+    include FFWindow
     def locate
       candidates=[]
       @browser.class.each_window_object do |win|
@@ -63,6 +65,12 @@ module Watir
     
     def document
       FFModalDialogDocument.new(self)
+    end
+    def browser_window_object
+      modal_window
+    end
+    def mozilla_window_class_name
+      'MozillaDialogClass'
     end
   end
   class FFModalDialogDocument

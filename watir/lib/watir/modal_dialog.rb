@@ -52,7 +52,7 @@ module Watir
       options={:timeout => DEFAULT_MODAL_TIMEOUT}
       
       intUnknown = nil
-      ::Waiter.try_for(options[:timeout], :exception => "Unable to attach to Modal Window after #{options[:timeuot]} seconds.") do
+      ::Waiter.try_for(options[:timeout], :exception => "Unable to attach to Modal Window after #{options[:timeout]} seconds.") do
         intPointer = [0].pack("L") # will contain the int value of the IUnknown*
         GetUnknown.call(@modal_dialog.hwnd, intPointer)
         intArray = intPointer.unpack('L')

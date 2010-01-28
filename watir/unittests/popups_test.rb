@@ -10,34 +10,24 @@ class TC_PopUps < Test::Unit::TestCase
     browser.goto("file://#{$myDir}/html/popups1.html")
   end
   
-  def startClicker( button , waitTime = 0.5)
-    w = WinClicker.new
-    longName = browser.dir.gsub("/" , "\\" )
-    shortName = w.getShortFileName(longName)
-    c = "start rubyw #{shortName }\\watir\\clickJSDialog.rb #{button } #{ waitTime} "
-    puts "Starting #{c}"
-    w.winsystem(c )   
-    w = nil
-  end
-  
   def test_simple
-    startClicker("OK")
-    browser.button!("Alert").click
+    browser.button!("Alert").click_no_wait
+    browser.modal_dialog.click_button('OK')
   end
   
   def test_confirm
-    startClicker("OK")
-    browser.button!("Confirm").click
-    assert( browser.text_field!(:name , "confirmtext").verify_contains("OK") )
+    browser.button!("Confirm").click_no_wait
+    browser.modal_dialog.click_button('OK')
+    assert(browser.text_field!(:name , "confirmtext").verify_contains("OK"))
     
-    startClicker("Cancel")
-    browser.button!("Confirm").click
-    assert( browser.text_field!(:name , "confirmtext").verify_contains("Cancel") )
+    browser.button!("Confirm").click_no_wait
+    browser.modal_dialog.click_button('Cancel')
+    assert(browser.text_field!(:name , "confirmtext").verify_contains("Cancel"))
   end
   
   def xtest_Prompt
-    startClicker("OK")
     browser.button!("Prompt").click
+    browser.modal_dialog.click_button('OK')
   end
 end
 

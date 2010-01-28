@@ -23,6 +23,9 @@ class TC_IEDialog < Test::Unit::TestCase
     goto_page "pass.html"
     fnFindWindow = Win32API.new('user32.dll', 'FindWindow', ['p', 'p'], 'l')
     hwnd = fnFindWindow.call(nil, "Pass Page - Microsoft Internet Explorer")
+    if hwnd==0
+      hwnd = fnFindWindow.call(nil, "Pass Page - Windows Internet Explorer")
+    end
     assert(hwnd != 0)
   end
 
@@ -31,6 +34,9 @@ class TC_IEDialog < Test::Unit::TestCase
 
     fnFindWindow = Win32API.new('user32.dll', 'FindWindow', ['p', 'p'], 'l')
     hwnd = fnFindWindow.call(nil, "Pass Page - Microsoft Internet Explorer")
+    if hwnd==0
+      hwnd = fnFindWindow.call(nil, "Pass Page - Windows Internet Explorer")
+    end
 
     fnGetUnknown = Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
     intPointer = " " * 4 # will contain the int value of the IUnknown*

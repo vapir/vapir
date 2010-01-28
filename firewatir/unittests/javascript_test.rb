@@ -16,7 +16,6 @@ class TC_JavaScript_Test < Test::Unit::TestCase
         browser.click_modal_button('OK')
         assert_equal(browser.text_field!(:id, "testResult").value , "You pressed the Alert button!")
         
-        #browser.startClicker("ok")
         browser.button!(:id, "btnAlert").click_no_wait
         assert_equal("Press OK", browser.get_popup_text)
         browser.click_modal_button('OK')

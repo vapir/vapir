@@ -314,10 +314,16 @@ module Watir
       @win_window||= WinWindow.new(hwnd)
     end
     
-    def modal_dialog
-      IEModalDialog.new(self)
+    def modal_dialog(options={})
+      raise ArgumentError, "options argument must be a hash; received #{options.inspect} (#{options.class})" unless options.is_a?(Hash)
+      modal=IEModalDialog.new(self, options.merge(:error => false))
+      modal.exists? ? modal : nil
     end
     
+    def modal_dialog!(options={})
+      IEModalDialog.new(self, options.merge(:error => true))
+    end
+
     include Watir::Win32
 
   	# Are we attached to an open browser?

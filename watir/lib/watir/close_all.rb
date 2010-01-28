@@ -23,15 +23,9 @@ module Watir
     # to appear and does not raise exception if no window is found.
     # returns true if modal was found and close, otherwise false
     def close_modal
-      begin
-        original_attach_timeout = IE.attach_timeout
-        IE.attach_timeout = 0
-        self.modal_dialog.close
-        true
-      rescue NoMatchingWindowFoundException, TimeOutException
-        false
-      ensure
-        IE.attach_timeout = original_attach_timeout
+      modal_dialog=modal_dialog(:timeout => 0, :error => false)
+      if modal_dialog && modal_dialog.exists?
+        modal_dialog.close
       end
     end
   end

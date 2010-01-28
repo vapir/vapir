@@ -1,13 +1,14 @@
 require 'watir/win_window'
-require 'firewatir/firefox.rb'
+require 'firewatir/window'
 require 'watir/common_modal_dialog'
 module Watir
+  # represents a window which is modal to a parent window 
   class FFModalDialog
     include ModalDialog
     include FFWindow
     def locate
       candidates=[]
-      @browser.class.each_window_object do |win|
+      Watir::Firefox.each_window_object do |win|
         opener=win.attr(:opener)
         opener=nil unless opener.type=='object'
         content=win.attr(:content)
@@ -44,6 +45,7 @@ module Watir
     end
     
     def click_button(button_text, options={})
+      assert_exists
       options=handle_options(options, :timeout => nil) # we don't actually use timeout here. maybe should error on it? 
       # raise if no anonymous nodes are found (this is where the buttons are) 
       anonymous_dialog_nodes=@modal_window.document.getAnonymousNodes(@modal_window.document.documentElement) || raise("Could not find anonymous nodes on which to look for buttons")
@@ -64,17 +66,43 @@ module Watir
     end
     
     def document
+      assert_exists
       FFModalDialogDocument.new(self)
     end
     def browser_window_object
+      assert_exists
       modal_window
     end
     def mozilla_window_class_name
       'MozillaDialogClass'
     end
   end
+
+  # this module is for objects that can launch modal dialogs of their own. 
+  # such things are a Firefox Browser, and a FFModalDialogDocument. 
+  module FFModalDialogContainer
+    # returns a FFModalDialog. 
+    #
+    # you may specify an options hash. keys supported are those supported by the second argument
+    # to FFModalDialog#initialize, except that :error is overridden to false (use #modal_dialog!)
+    # if you want an exception to raise) 
+    def modal_dialog(options={})
+      modal=FFModalDialog.new(self, options.merge(:error => false))
+      modal.exists? ? modal : nil
+    end
+    
+    # returns #modal_dialog if it exists; otherwise, errors. use this with the expectation that the dialog does exist. 
+    # use #modal_dialog when you will check if it exists. 
+    def modal_dialog!(options={})
+      FFModalDialog.new(self, options.merge(:error => true))
+    end
+  end
+
+  # this represents a document contained within a modal dialog (a FFModalDialog)
+  # which was opened, generally, via a call to window.showModalDialog. 
   class FFModalDialogDocument
     include FFPageContainer
+    include FFModalDialogContainer
 
     def initialize(containing_modal_dialog, options={})
       options=handle_options(options, :timeout => ModalDialog::DEFAULT_TIMEOUT, :error => true)
@@ -92,6 +120,9 @@ module Watir
     def content_window_object
       browser_object.contentWindow
     end
+    def browser_window_object
+      containing_modal_dialog.modal_window
+    end
     def locate!(options={})
       exists? || raise(Watir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
     end
@@ -99,19 +130,6 @@ module Watir
     def exists?
       # todo/fix: will the document object change / become invalid / need to be relocated? 
       @containing_modal_dialog.exists? && document_object
-    end
-    
-    # this looks for a modal dialog on this modal dialog. but really it's modal to the same browser window
-    # that this is modal to, so we will check for the modal on the browser, see if it isn't the same as our
-    # self, and return it if so. 
-    def modal_dialog(options={})
-      raise NotImplementedError
-      ::Waiter.try_for(ModalDialog::DEFAULT_TIMEOUT, 
-                        :exception => NoMatchingWindowFoundException.new("No other modal dialog was found on the browser."),
-                        :condition => proc{|md| md.hwnd != containing_modal_dialog.hwnd }
-                      ) do
-        modal_dialog=containing_modal_dialog.browser.modal_dialog(options)
-      end
     end
     
     def wait(options=nil)

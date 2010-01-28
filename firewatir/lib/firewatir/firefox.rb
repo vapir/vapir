@@ -82,48 +82,17 @@
 =end
 
 require 'watir/waiter'
+require 'firewatir/window'
+require 'firewatir/modal_dialog'
 
 module Watir
   include Watir::Exception
   
-  # this contains methods for an object that represnts a thing that has its own window. 
-  # that includes a Browser and a ModalDialog. 
-  # this assumes that #browser_window_object is defined on the includer. 
-  # also assumes that #mozilla_window_class_name returns the exected class name for this sort of window. 
-  # this is MS Windows-specific stuff at the moment. 
-  module FFWindow
-    def hwnd
-      win_window.hwnd
-    end
-    def win_window
-      require 'watir/win_window'
-      @win_window||=begin
-        orig_browser_window_title=browser_window_object.document.title
-        browser_window_object.document.title=orig_browser_window_title+(rand(36**16).to_s(36))
-        begin
-          candidates=::Waiter.try_for(2, :condition => proc{|ret| ret.size > 0}, :exception => nil) do
-            WinWindow::All.select do |win|
-              [mozilla_window_class_name].include?(win.class_name) && win.text==browser_window_object.document.title
-            end
-          end
-          unless candidates.size==1
-            raise ::WinWindow::MatchError, "Found #{candidates.size} Mozilla windows titled #{browser_window_object.document.title}"
-          end
-          candidates.first
-        ensure
-          browser_window_object.document.title=orig_browser_window_title
-        end
-      end
-    end
-    def bring_to_front
-      win_window.set_foreground!
-    end
-  end
-
   class Firefox < Browser
     include FFPageContainer
     include FFWindow
-                    
+    include FFModalDialogContainer
+
     def self.initialize_jssh_socket
       # if it already exists and is not nil, then we are clobbering an existing one, presumably dead. but a new socket will not have any objects of the old one, so warn 
       if class_variable_defined?('@@jssh_socket') && @@jssh_socket 
@@ -528,22 +497,6 @@ module Watir
       else
         raise TypeError, "Argument #{target} should be a string or regexp."
       end
-    end
-
-    # returns a FFModalDialog. 
-    #
-    # you may specify an options hash. keys supported are those supported by the second argument
-    # to FFModalDialog#initialize, except that :error is overridden to false (use #modal_dialog!)
-    # if you want an exception to raise) 
-    def modal_dialog(options={})
-      modal=FFModalDialog.new(self, options.merge(:error => false))
-      modal.exists? ? modal : nil
-    end
-    
-    # returns #modal_dialog if it exists; otherwise, errors. use this with the expectation that the dialog does exist. 
-    # use #modal_dialog when you will check if it exists. 
-    def modal_dialog!(options={})
-      FFModalDialog.new(self, options.merge(:error => true))
     end
 
     #   Returns the Status of the page currently loaded in the browser from statusbar.

@@ -19,12 +19,6 @@ module Watir
     include Container
     include Watir::Exception
     
-    def extra_for_contained
-      extra={:container => self}
-      extra[:browser]= @browser if @browser
-      extra
-    end
-
     # Note: @container is the container of this object, i.e. the container
     # of this container.
     # In other words, for ie.table().this_thing().text_field().set,
@@ -33,8 +27,6 @@ module Watir
     # This is used to change the typing speed when entering text on a page.
     attr_accessor :typingspeed
     attr_accessor :type_keys
-    # The PageContainer object containing this element
-    attr_accessor :page_container
     
     def copy_test_config(container) # only used by form and frame
       @typingspeed = container.typingspeed

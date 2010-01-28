@@ -40,6 +40,10 @@ module Watir
     def content_window_object
       document_object.parentWindow
     end
+    
+    def page_container
+      self
+    end
 
     # The HTML of the current page
     def html

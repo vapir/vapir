@@ -493,6 +493,7 @@ module Watir
       end
       @container=extra[:container]
       @browser=extra[:browser]
+      @page_container=extra[:page_container]
       extra[:locate]=true unless @extra.key?(:locate) # set default 
       case extra[:locate]
       when :assert
@@ -928,10 +929,9 @@ module Watir
       @container
     end
     
-    def browser
-      assert_container
-      @container.browser
-    end
+    attr_reader :browser
+    attr_reader :page_container
+
     def document_object
       assert_container
       @container.document_object

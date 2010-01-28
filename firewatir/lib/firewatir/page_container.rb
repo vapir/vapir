@@ -19,6 +19,10 @@ module Watir
     def text
       document_element.textContent
     end
+    
+    def page_container
+      self
+    end
 
     # returns nil or raises an error if the given javascript errors. 
     #

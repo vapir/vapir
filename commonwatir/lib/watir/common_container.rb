@@ -111,6 +111,14 @@ module Watir
       result
     end
     
+    def default_extra_for_contained
+      extra={:container => self}
+      extra[:browser]= browser if respond_to?(:browser)
+      extra[:page_container]= page_container if respond_to?(:page_container)
+      extra
+    end
+    alias extra_for_contained default_extra_for_contained
+    
     # shows the available objects on the current container.
     # This is usually only used for debugging or writing new test scripts.
     # This is a nice feature to help find out what HTML objects are on a page

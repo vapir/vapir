@@ -12,6 +12,7 @@ require 'firewatir/jssh_socket'
 require 'firewatir/container'
 require 'firewatir/page_container'
 require "firewatir/element"
+require 'firewatir/modal_dialog'
 
 require "firewatir/elements/form"
 require "firewatir/elements/frame"

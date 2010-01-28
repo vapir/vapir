@@ -1,66 +1,62 @@
 require 'watir/win_window'
-
+require 'watir/common_modal_dialog'
 module Watir
-  DEFAULT_MODAL_TIMEOUT=4
   class IEModalDialog
-    def initialize(browser, options={})
-      options={:timeout => DEFAULT_MODAL_TIMEOUT}.merge(options)
-      @browser=browser
-      @browser_win=browser.win_window
-      @popup_win=::Waiter.try_for(options[:timeout], :exception => Watir::Exception::NoMatchingWindowFoundException.new("No popup was found on the browser")) do
-        @browser_win.enabled_popup
-      end
+    include ModalDialog
+    def locate
+      @modal_window=@browser.win_window.enabled_popup
     end
     
     def exists?
-      @popup_win.exists?
+      @modal_window.exists?
     end
     
     def text
-      @popup_win.children.select{|child| child.class_name.downcase=='static' && child.text!=''}.map{|c| c.text }.join(' ')
+      assert_exists
+      @modal_window.children.select{|child| child.class_name.downcase=='static' && child.text!=''}.map{|c| c.text }.join(' ')
     end
     
     def set_text_field(value)
-      edit_field=@popup_win.children.detect{|child| child.class_name=='Edit'} || (raise "No Edit field in the popup!")
+      assert_exists
+      edit_field=@modal_window.children.detect{|child| child.class_name=='Edit'} || (raise "No Edit field in the popup!")
       edit_field.send_set_text!(value)
       value
     end
     
     def click_button(button_text, options={})
-      options=handle_options(options, :timeout => DEFAULT_MODAL_TIMEOUT)
-      @popup_win.click_child_button_try_for!(button_text, options[:timeout])
+      assert_exists
+      options=handle_options(options, :timeout => ModalDialog::DEFAULT_TIMEOUT)
+      @modal_window.click_child_button_try_for!(button_text, options[:timeout])
     end
     
     def close
       if (document=IEModalDialogDocument.new(self, :error => false, :timeout => 0)) && document.exists?
         document.close
       else
-        @popup_win.send_close!
+        @modal_window.send_close!
       end
     end
     
-    attr_reader :browser
-    attr_reader :browser_win
-
     def hwnd
-      @popup_win.hwnd
+      assert_exists
+      @modal_window.hwnd
     end
     def win_window
-      @popup_win
+      @modal_window
     end
     
     def document
+      assert_exists
       IEModalDialogDocument.new(self)
     end
   end
   class IEModalDialogDocument
-    include IEContainer
     include IEPageContainer
     @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/watir/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
 
     GetUnknown = Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
     def initialize(containing_modal_dialog, options={})
-      options=handle_options(options, :timeout => DEFAULT_MODAL_TIMEOUT, :error => true)
+      options=handle_options(options, :timeout => ModalDialog::DEFAULT_TIMEOUT, :error => true)
       @containing_modal_dialog=containing_modal_dialog
       
       intUnknown = nil
@@ -77,7 +73,6 @@ module Watir
     end
     attr_reader :containing_modal_dialog
     attr_reader :document_object
-    alias containing_object document_object
     def locate!(options={})
       exists? || raise(Watir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
     end
@@ -91,7 +86,7 @@ module Watir
     # that this is modal to, so we will check for the modal on the browser, see if it isn't the same as our
     # self, and return it if so. 
     def modal_dialog
-      ::Waiter.try_for(DEFAULT_MODAL_TIMEOUT, 
+      ::Waiter.try_for(ModalDialog::DEFAULT_TIMEOUT, 
                         :exception => NoMatchingWindowFoundException.new("No other modal dialog was found on the browser."),
                         :condition => proc{|md| md.hwnd != containing_modal_dialog.hwnd }
                       ) do

@@ -520,48 +520,14 @@ module Watir
     end
 
     def modal_dialog
-      candidates=[]
-      self.class.each_window_object do |win|
-        opener=win.attr(:opener)
-        next if opener.type=='undefined' || opener.type=='null'
-        if [self.browser_window_object, self.content_window_object].any?{|_w|_w==opener} #&& win.location.href=='chrome://global/content/commonDialog.xul'
-          candidates << win 
-        end
-      end
-      if candidates.size==0
-        return nil
-      elsif candidates.size==1
-        return *candidates
-      else
-        raise "Multiple windows found which this is a parent of - cannot determine which is the expected modal dialog"
-      end
+      modal=FFModalDialog.new(self, :error => false)
+      modal.exists? ? modal : nil
     end
     
     # returns #modal_dialog if it exists; otherwise, errors. use this with the expectation that the dialog does exist. 
     # use #modal_dialog when you will check if it exists. 
     def modal_dialog!
-      modal_dialog || raise(Exception::NoMatchingWindowFoundException, "No modal dialog found on this browser")
-    end
-    
-    def click_modal_button(button_text)
-      modal=self.modal_dialog!
-      # raise if no anonymous nodes are found (this is where the buttons are) 
-      anonymous_dialog_nodes=modal.document.getAnonymousNodes(modal.document.documentElement) || raise("Could not find anonymous nodes on which to look for buttons")
-      xul_buttons=[]
-      anonymous_dialog_nodes.to_array.each do |node|
-        xul_buttons+=node.getElementsByTagName('xul:button').to_array.select do |button|
-          Watir::fuzzy_match(button.label, button_text)
-        end
-      end
-      raise("Found #{xul_buttons.size} buttons which match #{button_text} - expected to find 1") unless xul_buttons.size==1
-      xul_button=xul_buttons.first
-      xul_button.disabled=false # get around firefox's stupid thing where the default button is disabled for a few seconds or something, god knows why
-      xul_button.click
-    end
-    
-    # Returns the url of the page currently loaded in the browser.
-    def url
-      @url = document_object.location.href
+      FFModalDialog.new(self, :error => true)
     end
 
     #   Returns the Status of the page currently loaded in the browser from statusbar.
@@ -654,13 +620,6 @@ module Watir
     def startClicker(*args)
       raise NotImplementedError, "startClicker is gone. Use Firefox#click_modal_button (generally preceded by a Element#click_no_wait)"
     end
-
-    # Returns the text content of the current modal dialog on this browser. 
-    def modal_text
-      modal=self.modal_dialog!
-      modal.document.documentElement.textContent
-    end
-    alias get_popup_text modal_text
 
     private
 

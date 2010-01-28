@@ -45,7 +45,9 @@ module Watir
     
     private
     def extra_for_contained
-      {:container => self, :browser => self.browser, :jssh_socket => self.jssh_socket}
+      extra={:container => self, :jssh_socket => self.jssh_socket}
+      extra[:browser]= @browser if @browser
+      extra
     end
 
     public

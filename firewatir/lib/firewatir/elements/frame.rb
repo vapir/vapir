@@ -3,12 +3,7 @@ require 'firewatir/firefox'
 module Watir
   class FFFrame < FFElement
     include Frame
-    include FFHasDocument
-    #include FFDocument
-
-    def containing_object
-      element_object.contentDocument
-    end
+    include FFPageContainer
 
     def document_object
       unless @element_object
@@ -21,12 +16,6 @@ module Watir
     end
     def content_window_object
       element_object.contentWindow
-    end
-    def url
-      content_window_object.location.href
-    end
-    def text
-      document_object.body.textContent
     end
   end # Frame
 end # FireWatir

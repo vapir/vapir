@@ -10,8 +10,8 @@ require 'watir/common_elements'
 require 'firewatir/exceptions'
 require 'firewatir/jssh_socket'
 require 'firewatir/container'
+require 'firewatir/page_container'
 require "firewatir/element"
-#require "firewatir/document"
 
 require "firewatir/elements/form"
 require "firewatir/elements/frame"

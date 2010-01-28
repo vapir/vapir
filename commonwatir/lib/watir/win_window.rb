@@ -484,6 +484,17 @@ class WinWindow
     ret, args= User32['EndTask', 'CICC'].call(hwnd, 0, force ? WIN_TRUE : WIN_FALSE)
     ret != WIN_FALSE
   end
+  
+  # sends notification that the window should close. 
+  # returns nil (we get no indication of success or failure). 
+  #
+  # http://msdn.microsoft.com/en-us/library/ms632617%28VS.85%29.aspx
+  def send_close!
+    buff_size=0
+    buff=""
+    len, args= User32['SendMessage', 'ILIIS'].call(hwnd, WM_CLOSE, buff_size, buff)
+    nil
+  end
 
   # tries to click on this Window
   # Clicking might not always work! Especially if the window is not focused (frontmost application). 

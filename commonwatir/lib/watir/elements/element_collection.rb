@@ -14,6 +14,7 @@ module Watir
       candidates.each do |candidate|
         yield @collection_class.new(:element_object, candidate, @extra)
       end
+      self
     end
     def each_index
       (1..length).each do |i|
@@ -36,6 +37,7 @@ module Watir
       each_index do |i|
         yield at(i), i
       end
+      self
     end
     alias each_with_index each_with_element_index
     

@@ -325,6 +325,6 @@ class TC_Tables_Display < Test::Unit::TestCase
   #tag_method :test_showTables, :fails_on_ie
   def test_showTables
     goto_page("table1.html")
-    assert_match(/There are 7 tables(\nWatir::\w*Table.*?){7}/m, capture_stdout { browser.show_tables })
+    assert_match(/There are 7 tables(\nWatir(::\w+)*::Table.*?){7}/m, capture_stdout { browser.show_tables })
   end
 end

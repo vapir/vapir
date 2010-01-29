@@ -58,6 +58,6 @@ class TC_Pres_Display < Test::Unit::TestCase
   tag_method :test_showPres, :fails_on_ie
   def test_showPres
     goto_page("pre.html")
-    assert_match(/There are 3 pres(\nWatir::\w*Pre.*?){3}/m, capture_stdout { browser.show_pres })
+    assert_match(/There are 3 pres(\nWatir(::\w+)*::Pre.*?){3}/m, capture_stdout { browser.show_pres })
   end
 end

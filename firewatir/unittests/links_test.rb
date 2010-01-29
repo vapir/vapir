@@ -24,7 +24,7 @@ class TC_Links < Test::Unit::TestCase
         begin
             browser.link!(:bad_attribute, 199).click 
         rescue MissingWayOfFindingObjectException => e           
-            assert_match(/^Cannot search for a Watir::.*Link using the given argument/, e.message)
+            assert_match(/^Cannot search for a Watir(::\w+)*::Link using the given argument/, e.message)
         end
     end
 
@@ -182,6 +182,6 @@ class TC_Links_Display < Test::Unit::TestCase
   tag_method :test_showLinks, :fails_on_ie
   def test_showLinks
     goto_page("links1.html")
-    assert_match(/There are 11 links(\nWatir::\w*Link.*?){11}/m, capture_stdout { browser.show_links })
+    assert_match(/There are 11 links(\nWatir(::\w+)*::Link.*?){11}/m, capture_stdout { browser.show_links })
   end
 end

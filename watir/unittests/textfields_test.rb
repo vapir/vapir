@@ -82,7 +82,7 @@ class TC_Fields < Test::Unit::TestCase
 #      
 #    items = browser.text_field!(:index, 2).to_s.split(/\n/)
 #    expected.each_with_index{|regex, x| assert_match(regex, items[x]) }
-    assert_match(/Watir::\w*TextField.*?/m, browser.text_field!(:index, 1).to_s)
+    assert_match(/Watir(::\w+)*::TextField.*?/m, browser.text_field!(:index, 1).to_s)
     assert_raises(UnknownObjectException) { browser.text_field!(:index, 999) }
   end
   

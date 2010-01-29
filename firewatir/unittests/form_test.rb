@@ -54,7 +54,7 @@ class TC_Form_Display < Test::Unit::TestCase
 
   def test_showforms
     goto_page("forms2.html")
-    assert_match(/There are 4 forms(\nWatir::\w*Form.*?){4}/m, capture_stdout { browser.show_forms })
+    assert_match(/There are 4 forms(\nWatir(::\w+)*::Form.*?){4}/m, capture_stdout { browser.show_forms })
   end
 end
 

@@ -165,7 +165,7 @@ class TC_Images_Display < Test::Unit::TestCase
   tag_method :test_showImages, :fails_on_ie
   def test_showImages
     goto_page("images1.html")
-    assert_match(/There are 6 images(\nWatir::\w*?Image.*?){6}/m, capture_stdout { browser.show_images })
+    assert_match(/There are 6 images(\nWatir(::\w+)*::Image.*?){6}/m, capture_stdout { browser.show_images })
   end
 end
 

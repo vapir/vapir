@@ -89,9 +89,9 @@ module Watir
   include Watir::Exception
   
   class Firefox < Browser
-    include FFPageContainer
-    include FFWindow
-    include FFModalDialogContainer
+    include Firefox::PageContainer
+    include Firefox::Window
+    include Firefox::ModalDialogContainer
 
     def self.initialize_jssh_socket
       # if it already exists and is not nil, then we are clobbering an existing one, presumably dead. but a new socket will not have any objects of the old one, so warn 
@@ -644,7 +644,7 @@ module Watir
 
     private
     def base_element_class
-      FFElement
+      Firefox::Element
     end
     def browser_class
       Firefox

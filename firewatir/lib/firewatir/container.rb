@@ -40,8 +40,8 @@
 require 'firewatir/exceptions'
 
 module Watir
-  module FFContainer 
-    include Container
+  module Firefox::Container 
+    include Watir::Container
     
     private
     def extra_for_contained
@@ -102,7 +102,7 @@ module Watir
     #   Frame object or nil if the specified frame does not exist. 
     #
     def frame(how, what = nil)
-      element_by_howwhat(FFFrame, how, what)
+      element_by_howwhat(Firefox::Frame, how, what)
     end
 
     #
@@ -125,7 +125,7 @@ module Watir
     #   Form object.
     #
     def form(how, what=nil)
-      element_by_howwhat(FFForm, how, what)
+      element_by_howwhat(Firefox::Form, how, what)
     end
     
     #
@@ -145,7 +145,7 @@ module Watir
     #   Table object.
     #
     def table(how, what=nil)
-      element_by_howwhat(FFTable, how, what)
+      element_by_howwhat(Firefox::Table, how, what)
     end
     
     #
@@ -164,7 +164,7 @@ module Watir
     #    TableCell Object
     #
     def table_cell(how, what=nil)
-      element_by_howwhat(FFTableCell, how, what)
+      element_by_howwhat(Firefox::TableCell, how, what)
     end
     
     # 
@@ -183,7 +183,7 @@ module Watir
     #   TableRow object
     #
     def table_row(how, what=nil)
-      element_by_howwhat(FFTableRow, how, what)
+      element_by_howwhat(Firefox::TableRow, how, what)
     end
     
     # 
@@ -206,7 +206,7 @@ module Watir
     #   Button element.
     #
     def button(how, what=nil)
-      element_by_howwhat(FFButton, how, what)
+      element_by_howwhat(Firefox::Button, how, what)
     end    
     
     # 
@@ -225,7 +225,7 @@ module Watir
     #   FileField object
     #
     def file_field(how, what = nil)
-      element_by_howwhat(FFFileField, how, what)
+      element_by_howwhat(Firefox::FileField, how, what)
     end    
     
     #
@@ -245,7 +245,7 @@ module Watir
     #   TextField object.
     #
     def text_field(how, what = nil)
-      element_by_howwhat(FFTextField, how, what)
+      element_by_howwhat(Firefox::TextField, how, what)
     end    
     
     # 
@@ -265,7 +265,7 @@ module Watir
     #   Hidden object.
     #
     def hidden(how, what=nil)
-      element_by_howwhat(FFHidden, how, what)
+      element_by_howwhat(Firefox::Hidden, how, what)
     end
     
     #
@@ -285,10 +285,10 @@ module Watir
     #   Select List object.
     #
     def select_list(how, what=nil) 
-      element_by_howwhat(FFSelectList, how, what)
+      element_by_howwhat(Firefox::SelectList, how, what)
     end
     def option(how, what=nil) 
-      element_by_howwhat(FFOption, how, what)
+      element_by_howwhat(Firefox::Option, how, what)
     end
 =end
     #
@@ -318,7 +318,7 @@ module Watir
     #   Checkbox object.
     #
 #    def checkbox(how, what=nil, value=nil) 
-#      element_by_howwhat(FFCheckBox, how, what, {:other_attributes => value ? {:value => value} : nil})
+#      element_by_howwhat(Firefox::CheckBox, how, what, {:other_attributes => value ? {:value => value} : nil})
 #    end
     
     #
@@ -348,7 +348,7 @@ module Watir
     #   Radio button object.
     #
 #    def radio(how, what=nil, value=nil)
-#      element_by_howwhat(FFRadio, how, what, {:other_attributes => value ? {:value => value} : nil})
+#      element_by_howwhat(Firefox::Radio, how, what, {:other_attributes => value ? {:value => value} : nil})
 #    end
     
     #
@@ -368,7 +368,7 @@ module Watir
     #   Link object.
     #
 #    def link(how, what=nil) 
-#      element_by_howwhat(FFLink, how, what)
+#      element_by_howwhat(Firefox::Link, how, what)
 #    end
     
     #
@@ -388,7 +388,7 @@ module Watir
     #   Image object.
     #
  #   def image(how, what = nil)
- #     element_by_howwhat(FFImage, how, what)
+ #     element_by_howwhat(Firefox::Image, how, what)
  #   end    
     
     
@@ -409,7 +409,7 @@ module Watir
     #   Dl object.
     #
 #    def dl(how, what = nil)
-#      element_by_howwhat(FFDl, how, what)
+#      element_by_howwhat(Firefox::Dl, how, what)
 #    end
 
     #
@@ -429,7 +429,7 @@ module Watir
     #   Dt object.
     #
 #    def dt(how, what = nil)
-#      element_by_howwhat(FFDt, how, what)
+#      element_by_howwhat(Firefox::Dt, how, what)
 #    end
 
     #
@@ -449,7 +449,7 @@ module Watir
     #   Dd object.
     #
 #    def dd(how, what = nil)
-#      element_by_howwhat(FFDd, how, what)
+#      element_by_howwhat(Firefox::Dd, how, what)
 #    end
 
     # Description:

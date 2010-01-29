@@ -1,9 +1,9 @@
 module Watir
-  module FFPageContainer
+  module Firefox::PageContainer
     def containing_object
       document_object
     end
-    include FFContainer
+    include Firefox::Container
     def url
       document_object.location.href
     end

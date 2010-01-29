@@ -3,8 +3,8 @@ module Watir
   # Description:
   #   Class for Image element.
   #
-  class FFImage < FFElement
-    include Image
+  class Firefox::Image < Firefox::Element
+    include Watir::Image
 
     # this method returns the file created date of the image
     #def file_created_date

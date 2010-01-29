@@ -3,8 +3,8 @@ module Watir
   # Description:
   # Class for Text Field element.
   #
-  class FFTextField < FFInputElement
-    include TextField
+  class Firefox::TextField < Firefox::InputElement
+    include Watir::TextField
 
     #
     # Description:

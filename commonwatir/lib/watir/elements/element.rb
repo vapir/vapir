@@ -12,7 +12,7 @@ class Module
 end
 module Watir
   # this module is for methods that should go on both common element modules (ie, TextField) as well
-  # as browser-specific element classes (ie, FFTextField). 
+  # as browser-specific element classes (ie, Firefox::TextField). 
   module ElementClassAndModuleMethods
     # takes an element_object (JsshObject or WIN32OLE), and finds the most specific class 
     # that is < self whose specifiers match it. Returns an instance of that class using the given
@@ -268,7 +268,7 @@ module Watir
     def included(including_class)
       including_class.send :extend, ElementClassAndModuleMethods
       
-      # get Container modules that the including_class includes (ie, Watir::FFTextField includes the Watir::FFContainer Container module)
+      # get Container modules that the including_class includes (ie, Watir::Firefox::TextField includes the Watir::Firefox::Container Container module)
       container_modules=including_class.included_modules.select do |mod|
         mod.included_modules.include?(Watir::Container)
       end
@@ -329,7 +329,7 @@ module Watir
 
       # copy constants (like Specifiers) onto classes when inherited
       # this is here to set the constants of the Element modules below onto the actual classes that instantiate 
-      # per-browser (Watir::IETextField, Watir::FFTextField, etc) so that calling #const_defined? on those 
+      # per-browser (Watir::IE::TextField, Watir::Firefox::TextField, etc) so that calling #const_defined? on those 
       # returns true, and so that the constants defined here clobber any inherited stuff from superclasses
       # which is unwanted. 
       self.constants.each do |const| # copy all of its constants onto wherever it was included
@@ -657,11 +657,11 @@ module Watir
     # For example, if we have a table, get its first element, and call #to_factory on it:
     #
     # a_table=browser.tables.first
-    # => #<Watir::IETable:0x071bc70c how=:index index=:first tagName="TABLE">
+    # => #<Watir::IE::Table:0x071bc70c how=:index index=:first tagName="TABLE">
     # a_element=a_table.elements.first
-    # => #<Watir::IEElement:0x071b856c how=:index index=:first tagName="TBODY" id="">
+    # => #<Watir::IE::Element:0x071b856c how=:index index=:first tagName="TBODY" id="">
     # a_element.to_factory
-    # => #<Watir::IETableBody:0x071af78c how=:index index=:first tagName="TBODY" id="">
+    # => #<Watir::IE::TableBody:0x071af78c how=:index index=:first tagName="TBODY" id="">
     #
     # we get back a Watir::TableBody. 
     def to_factory
@@ -994,7 +994,7 @@ module Watir
     end
 
     # for a common module, such as a TextField, returns an elements-specific class (such as
-    # FFTextField) that inherits from the base_element_class of self. That is, this returns
+    # Firefox::TextField) that inherits from the base_element_class of self. That is, this returns
     # a sibling class, as it were, of whatever class inheriting from Element is instantiated.
     def element_class_for(common_module)
       element_class=nil

@@ -1,7 +1,7 @@
 module Watir
 
-  class IEForm < IEElement
-    include Form
-  end # class IEForm
+  class IE::Form < IE::Element
+    include Watir::Form
+  end # class IE::Form
   
 end

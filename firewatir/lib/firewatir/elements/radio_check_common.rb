@@ -1,5 +1,5 @@
 module Watir
-  module FFRadioCheckboxCommon
+  module Firefox::RadioCheckboxCommon
     private
     # radios in firefox seem to be totally unresponsive to css color and border, but
     # they can change size, so use that for the highlight method. 
@@ -17,17 +17,17 @@ module Watir
       element_object.style.width=@original_width
     end
   end
-  class FFRadio < FFInputElement
-    include Radio
-    include FFRadioCheckboxCommon
+  class Firefox::Radio < Firefox::InputElement
+    include Watir::Radio
+    include Firefox::RadioCheckboxCommon
   end # Radio
 
   #
   # Description:
   # Class for Checkbox element.
   #
-  class FFCheckBox < FFInputElement
-    include CheckBox
-    include FFRadioCheckboxCommon
+  class Firefox::CheckBox < Firefox::InputElement
+    include Watir::CheckBox
+    include Firefox::RadioCheckboxCommon
   end # CheckBox
 end # FireWatir

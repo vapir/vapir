@@ -3,14 +3,14 @@ module Watir
   # what JavaScript calls a Window.
   #
   # this assumes that document_object is defined on the includer. 
-  module IEPageContainer
+  module IE::PageContainer
     # Used internally to determine when IE has finished loading a page
     READYSTATE_COMPLETE = 4
        
     def containing_object
       document_object
     end
-    include IEContainer
+    include IE::Container
     include Watir::Exception
 
     # This method checks the currently displayed page for http errors, 404, 500 etc

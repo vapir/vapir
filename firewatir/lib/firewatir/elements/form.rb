@@ -1,5 +1,5 @@
 module Watir
-  class FFForm < FFElement
-    include Form
+  class Firefox::Form < Firefox::Element
+    include Watir::Form
   end # Form
 end # FireWatir

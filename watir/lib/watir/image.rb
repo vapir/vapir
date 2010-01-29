@@ -5,8 +5,8 @@ module Watir
   #
   # many of the methods available to this object are inherited from the Element class
   #
-  class IEImage < IEElement
-    include Image
+  class IE::Image < IE::Element
+    include Watir::Image
     
     dom_attr :fileSize => :file_size
     dom_attr :fileCreatedDate => :file_created_date

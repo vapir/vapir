@@ -1,9 +1,9 @@
 require 'firewatir/firefox'
 
 module Watir
-  class FFFrame < FFElement
-    include Frame
-    include FFPageContainer
+  class Firefox::Frame < Firefox::Element
+    include Watir::Frame
+    include Firefox::PageContainer
 
     def document_object
       unless @element_object

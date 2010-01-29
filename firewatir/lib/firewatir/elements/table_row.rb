@@ -3,7 +3,7 @@ module Watir
   # Description:
   # Class for Table row element.
   #
-  class FFTableRow < FFElement
-    include TableRow
+  class Firefox::TableRow < Firefox::Element
+    include Watir::TableRow
   end # TableRow
 end # FireWatir

@@ -282,7 +282,7 @@ module Watir
     # Raises UnknownObjectException if the select box is not found
     def options
       assert_exists do
-        ElementCollection.new(self, element_class_for(Option), extra_for_contained.merge(:candidates => :options, :select_list => self))
+        ElementCollection.new(self, element_class_for(Watir::Option), extra_for_contained.merge(:candidates => :options, :select_list => self))
       end
     end
     # note that the above is defined that way rather than with element_collection, as below, because adding :select_list => self to extra isn't implemented yet 
@@ -560,7 +560,7 @@ module Watir
     # returns all of the cells of this table. to get the cells including nested tables, 
     # use #table_cells, which is defined on all containers (including Table) 
     def cells
-      ElementCollection.new(self, element_class_for(TableCell), extra_for_contained.merge(:candidates => proc do |container|
+      ElementCollection.new(self, element_class_for(Watir::TableCell), extra_for_contained.merge(:candidates => proc do |container|
         container_object=container.element_object
         object_collection_to_enumerable(container_object.rows).inject([]) do |candidates, row|
           candidates+object_collection_to_enumerable(row.cells).to_a

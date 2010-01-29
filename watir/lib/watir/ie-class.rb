@@ -7,7 +7,7 @@ require 'watir/win32'
 module Watir
   class IE < Browser
     include Watir::Exception
-    include IEPageContainer
+    include IE::PageContainer
     
     # Maximum number of seconds to wait when attaching to a window
     @@attach_timeout = 2.0 # default value
@@ -316,12 +316,12 @@ module Watir
     
     def modal_dialog(options={})
       raise ArgumentError, "options argument must be a hash; received #{options.inspect} (#{options.class})" unless options.is_a?(Hash)
-      modal=IEModalDialog.new(self, options.merge(:error => false))
+      modal=IE::ModalDialog.new(self, options.merge(:error => false))
       modal.exists? ? modal : nil
     end
     
     def modal_dialog!(options={})
-      IEModalDialog.new(self, options.merge(:error => true))
+      IE::ModalDialog.new(self, options.merge(:error => true))
     end
 
     include Watir::Win32
@@ -509,7 +509,7 @@ module Watir
 #        count = allForms.length
 #        puts "There are #{count} forms"
 #        for i in 0..count-1 do
-#          wrapped = IEFormWrapper.new(allForms.item(i))
+#          wrapped = IE::FormWrapper.new(allForms.item(i))
 #          puts "Form name: #{wrapped.name}"
 #          puts "       id: #{wrapped.id}"
 #          puts "   method: #{wrapped.method}"
@@ -966,7 +966,7 @@ module Watir
     
     private
     def base_element_class
-      IEElement
+      IE::Element
     end
     def browser_class
       IE

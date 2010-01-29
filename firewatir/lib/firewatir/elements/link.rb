@@ -3,8 +3,8 @@ module Watir
   # Description:
   #   Class for Link element.
   #
-  class FFLink < FFElement
-    include Link
+  class Firefox::Link < Firefox::Element
+    include Watir::Link
 
     #TODO: if an image is used as part of the link, this will return true
     #def link_has_image

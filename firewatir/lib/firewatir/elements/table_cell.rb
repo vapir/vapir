@@ -3,7 +3,7 @@ module Watir
   # Description:
   # Class for Table Cell.
   #
-  class FFTableCell < FFElement
-    include TableCell
+  class Firefox::TableCell < Firefox::Element
+    include Watir::TableCell
   end # TableCell
 end # FireWatir

@@ -1,86 +1,86 @@
 module Watir
-  class FFPre < FFElement
-    include Pre
+  class Firefox::Pre < Firefox::Element
+    include Watir::Pre
   end
 
-  class FFP < FFElement
-    include P
+  class Firefox::P < Firefox::Element
+    include Watir::P
   end
 
-  class FFDiv < FFElement
-    include Div
+  class Firefox::Div < Firefox::Element
+    include Watir::Div
   end
 
-  class FFSpan < FFElement
-    include Span
+  class Firefox::Span < Firefox::Element
+    include Watir::Span
   end
 
-  class FFStrong < FFElement
-    include Strong
+  class Firefox::Strong < Firefox::Element
+    include Watir::Strong
   end
 
-  class FFLabel < FFElement
-    include Label
+  class Firefox::Label < Firefox::Element
+    include Watir::Label
   end
 
-  class FFUl < FFElement
-    include Ul
+  class Firefox::Ul < Firefox::Element
+    include Watir::Ul
   end
 
-  class FFOl < FFElement
-    include Ol
+  class Firefox::Ol < Firefox::Element
+    include Watir::Ol
   end
 
-  class FFLi < FFElement
-    include Li
+  class Firefox::Li < Firefox::Element
+    include Watir::Li
   end
 
-  class FFDl < FFElement
-    include Dl
+  class Firefox::Dl < Firefox::Element
+    include Watir::Dl
   end
 
-  class FFDt < FFElement
-    include Dt
+  class Firefox::Dt < Firefox::Element
+    include Watir::Dt
   end
 
-  class FFDd < FFElement
-    include Dd
+  class Firefox::Dd < Firefox::Element
+    include Watir::Dd
   end
 
-  class FFH1 < FFElement
-    include H1
+  class Firefox::H1 < Firefox::Element
+    include Watir::H1
   end
 
-  class FFH2 < FFElement
-    include H2
+  class Firefox::H2 < Firefox::Element
+    include Watir::H2
   end
 
-  class FFH3 < FFElement
-    include H3
+  class Firefox::H3 < Firefox::Element
+    include Watir::H3
   end
 
-  class FFH4 < FFElement
-    include H4
+  class Firefox::H4 < Firefox::Element
+    include Watir::H4
   end
 
-  class FFH5 < FFElement
-    include H5
+  class Firefox::H5 < Firefox::Element
+    include Watir::H5
   end
 
-  class FFH6 < FFElement
-    include H6
+  class Firefox::H6 < Firefox::Element
+    include Watir::H6
   end
 
-  class FFMap < FFElement
-    include Map
+  class Firefox::Map < Firefox::Element
+    include Watir::Map
   end
 
-  class FFArea < FFElement
-    include Area
+  class Firefox::Area < Firefox::Element
+    include Watir::Area
   end
 
-  class FFEm < FFElement
-    include Em
+  class Firefox::Em < Firefox::Element
+    include Watir::Em
   end
 
 end # FireWatir

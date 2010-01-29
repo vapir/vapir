@@ -1,8 +1,8 @@
 require 'watir/win_window'
 require 'watir/common_modal_dialog'
 module Watir
-  class IEModalDialog
-    include ModalDialog
+  class IE::ModalDialog
+    include Watir::ModalDialog
     def locate
       @modal_window=@browser.win_window.enabled_popup
     end
@@ -30,7 +30,7 @@ module Watir
     end
     
     def close
-      if (document=IEModalDialogDocument.new(self, :error => false, :timeout => 0)) && document.exists?
+      if (document=IE::ModalDialogDocument.new(self, :error => false, :timeout => 0)) && document.exists?
         document.close
       else
         @modal_window.send_close!
@@ -47,11 +47,11 @@ module Watir
     
     def document
       assert_exists
-      IEModalDialogDocument.new(self)
+      IE::ModalDialogDocument.new(self)
     end
   end
-  class IEModalDialogDocument
-    include IEPageContainer
+  class IE::ModalDialogDocument
+    include IE::PageContainer
     @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/watir/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
 
     GetUnknown = Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
@@ -97,9 +97,9 @@ module Watir
 end
 =begin
 module Watir
-  class IEModalDialog
-    include IEContainer
-    include IEPageContainer
+  class IE::ModalDialog
+    include IE::Container
+    include IE::PageContainer
     include Win32
 
     # Return the current window handle

@@ -4,8 +4,8 @@ module Watir
   # Normally a user would not need to create this object as it is returned by the Watir::Container#link method
   # many of the methods available to this object are inherited from the Element class
   #
-  class IELink < IEElement
-    include Link
+  class IE::Link < IE::Element
+    include Watir::Link
     
     # if an image is used as part of the link, this will return true
     def link_has_image

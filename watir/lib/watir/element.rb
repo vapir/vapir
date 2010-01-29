@@ -1,9 +1,9 @@
 module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
-  class IEElement # Wrapper
-    include IEContainer # presumes @container is defined
-    include Element
+  class IE::Element # Wrapper
+    include IE::Container # presumes @container is defined
+    include Watir::Element
     include Watir::Exception
     
     alias containing_object element_object
@@ -17,7 +17,7 @@ module Watir
     
     private
     def base_element_class
-      IEElement
+      IE::Element
     end
     def browser_class
       IE

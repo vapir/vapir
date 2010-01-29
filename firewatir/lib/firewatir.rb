@@ -7,6 +7,13 @@ require 'activesupport'
 
 require 'watir'
 require 'watir/common_elements'
+
+# create stub class since everything is defined in Watir::Firefox namespace - this needs to be defined before the real class.
+module Watir
+  class Firefox < Watir::Browser
+  end
+end
+
 require 'firewatir/exceptions'
 require 'firewatir/jssh_socket'
 require 'firewatir/container'

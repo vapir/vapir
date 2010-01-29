@@ -2,7 +2,7 @@ module Watir
   # this contains methods for an object that represnts a thing that has its own window. 
   # that includes a Browser and a ModalDialog. 
   # this assumes that #browser_window_object is defined on the includer. 
-  module FFWindow
+  module Firefox::Window
     # returns the hWnd of this window. 
     # (MS Windows-only) 
     def hwnd

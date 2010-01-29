@@ -15,8 +15,8 @@ module Watir
   # there are many methods available to the Button object
   #
   # Is includable for classes that have @container, document and ole_inner_elements
-  module IEContainer
-    include Container
+  module IE::Container
+    include Watir::Container
     include Watir::Exception
     
     # Note: @container is the container of this object, i.e. the container

@@ -1,7 +1,7 @@
 module Watir
-  class IEFrame < IEElement
+  class IE::Frame < IE::Element
     include Frame
-    include IEPageContainer
+    include IE::PageContainer
     
     def content_window_object
       element_object.contentWindow

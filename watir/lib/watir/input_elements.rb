@@ -1,6 +1,6 @@
 module Watir
   
-  class IEInputElement < IEElement
+  class IE::InputElement < IE::Element
     include InputElement
   end
 
@@ -10,12 +10,12 @@ module Watir
   
   # This class is the way in which select boxes are manipulated.
   # Normally a user would not need to create this object as it is returned by the Watir::Container#select_list method
-  class IESelectList < IEInputElement
+  class IE::SelectList < IE::InputElement
     include SelectList
   end
   
   # An item in a select list
-  class IEOption < IEElement
+  class IE::Option < IE::Element
     include Option
   end
   
@@ -24,7 +24,7 @@ module Watir
   #
   
   # Returned by the Watir::Container#button method
-  class IEButton < IEInputElement
+  class IE::Button < IE::InputElement
     include Button
     dom_attr :value => :caption
   end
@@ -35,7 +35,7 @@ module Watir
   
   # This class is the main class for Text Fields
   # Normally a user would not need to create this object as it is returned by the Watir::Container#text_field method
-  class IETextField < IEInputElement
+  class IE::TextField < IE::InputElement
     include TextField
 #    def_wrap_guard :size
     
@@ -97,13 +97,13 @@ module Watir
   
   # this class can be used to access hidden field objects
   # Normally a user would not need to create this object as it is returned by the Watir::Container#hidden method
-  class IEHidden < IETextField
+  class IE::Hidden < IE::TextField
     include Hidden
   end
   
   # For fields that accept file uploads
   # Windows dialog is opened and handled by WinWindow (see scripts/select_file.rb), launched in a new process.  
-  class IEFileField < IEInputElement
+  class IE::FileField < IE::InputElement
     include FileField
     
     # set the file location in the Choose file dialog 
@@ -135,12 +135,12 @@ module Watir
   end
   
   # This class is the watir representation of a radio button.
-  class IERadio < IEInputElement
+  class IE::Radio < IE::InputElement
     include Radio
   end
   
   # This class is the watir representation of a check box.
-  class IECheckBox < IEInputElement
+  class IE::CheckBox < IE::InputElement
     include CheckBox
   end
   

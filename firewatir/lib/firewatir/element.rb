@@ -1,11 +1,11 @@
 module Watir
   # Base class for html elements.
   # This is not a class that users would normally access.
-  class FFElement
-    include Watir::FFContainer
-    include Element
+  class Firefox::Element
+    include Watir::Firefox::Container
+    include Watir::Element
 
-    # Creates new instance of FFElement. 
+    # Creates new instance of Firefox::Element. 
     def initialize(how, what, extra={})
       @jssh_socket=extra[:jssh_socket]
       @jssh_socket||= (extra[:browser].jssh_socket if extra[:browser])
@@ -56,7 +56,7 @@ module Watir
 
     private
     def base_element_class
-      FFElement
+      Firefox::Element
     end
     def browser_class
       Firefox

@@ -5,9 +5,8 @@ module Watir
   #
   # many of the methods available to this object are inherited from the Element class
   #
-  class IETable < IEElement
-    include Table
-    include IEContainer
+  class IE::Table < IE::Element
+    include Watir::Table
     
     def self.create_from_element(container, element)
       Watir::Table.create_from_element(container, element)
@@ -15,17 +14,17 @@ module Watir
   end
   
   # this class is a table body
-  class IETableBody < IEElement
-    include TBody
+  class IE::TableBody < IE::Element
+    include Watir::TBody
   end
     
-  class IETableRow < IEElement
-    include TableRow
+  class IE::TableRow < IE::Element
+    include Watir::TableRow
   end
   
   # this class is a table cell - when called via the Table object
-  class IETableCell < IEElement
-    include TableCell
+  class IE::TableCell < IE::Element
+    include Watir::TableCell
   end
   
 end

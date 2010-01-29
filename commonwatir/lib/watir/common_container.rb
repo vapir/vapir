@@ -18,7 +18,7 @@ module Watir
     # the arguments 'first' and 'second' (they are the first and second arguments given
     # to the container method, not to this method) correspond to 'how' and 'what, after a fashion. 
     # 
-    # see also #extra_for_contained on inheriting classes (IEElement, FFElement) for what this passes to the created 
+    # see also #extra_for_contained on inheriting classes (IE::Element, Firefox::Element) for what this passes to the created 
     # element, in terms of browser, container, other things each element uses. 
     def element_by_howwhat(klass, first, second, other={})
       other={:other_attributes => nil}.merge(other)

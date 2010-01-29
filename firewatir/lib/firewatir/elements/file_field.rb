@@ -3,8 +3,8 @@ module Watir
   # Description:
   #   Class for FileField element.
   #
-  class FFFileField < FFInputElement
-    include FileField
+  class Firefox::FileField < Firefox::InputElement
+    include Watir::FileField
 
     #
     # Description:

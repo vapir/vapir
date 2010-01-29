@@ -3,7 +3,7 @@ module Watir
   # Description:
   #   Class for Hidden Field element.
   #
-  class FFHidden < FFTextField
-    include Hidden
+  class Firefox::Hidden < Firefox::TextField
+    include Watir::Hidden
   end # Hidden
 end # FireWatir

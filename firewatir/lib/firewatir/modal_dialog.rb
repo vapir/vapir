@@ -3,9 +3,9 @@ require 'firewatir/window'
 require 'watir/common_modal_dialog'
 module Watir
   # represents a window which is modal to a parent window 
-  class FFModalDialog
-    include ModalDialog
-    include FFWindow
+  class Firefox::ModalDialog
+    include Watir::ModalDialog
+    include Firefox::Window
     def locate
       candidates=[]
       Watir::Firefox.each_window_object do |win|
@@ -67,7 +67,7 @@ module Watir
     
     def document
       assert_exists
-      FFModalDialogDocument.new(self)
+      Firefox::ModalDialogDocument.new(self)
     end
     def browser_window_object
       assert_exists
@@ -79,30 +79,30 @@ module Watir
   end
 
   # this module is for objects that can launch modal dialogs of their own. 
-  # such things are a Firefox Browser, and a FFModalDialogDocument. 
-  module FFModalDialogContainer
-    # returns a FFModalDialog. 
+  # such things are a Firefox Browser, and a Firefox::ModalDialogDocument. 
+  module Firefox::ModalDialogContainer
+    # returns a Firefox::ModalDialog. 
     #
     # you may specify an options hash. keys supported are those supported by the second argument
-    # to FFModalDialog#initialize, except that :error is overridden to false (use #modal_dialog!)
+    # to Firefox::ModalDialog#initialize, except that :error is overridden to false (use #modal_dialog!)
     # if you want an exception to raise) 
     def modal_dialog(options={})
-      modal=FFModalDialog.new(self, options.merge(:error => false))
+      modal=Firefox::ModalDialog.new(self, options.merge(:error => false))
       modal.exists? ? modal : nil
     end
     
     # returns #modal_dialog if it exists; otherwise, errors. use this with the expectation that the dialog does exist. 
     # use #modal_dialog when you will check if it exists. 
     def modal_dialog!(options={})
-      FFModalDialog.new(self, options.merge(:error => true))
+      Firefox::ModalDialog.new(self, options.merge(:error => true))
     end
   end
 
-  # this represents a document contained within a modal dialog (a FFModalDialog)
+  # this represents a document contained within a modal dialog (a Firefox::ModalDialog)
   # which was opened, generally, via a call to window.showModalDialog. 
-  class FFModalDialogDocument
-    include FFPageContainer
-    include FFModalDialogContainer
+  class Firefox::ModalDialogDocument
+    include Firefox::PageContainer
+    include Firefox::ModalDialogContainer
 
     def initialize(containing_modal_dialog, options={})
       options=handle_options(options, :timeout => ModalDialog::DEFAULT_TIMEOUT, :error => true)

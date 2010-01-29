@@ -1,77 +1,77 @@
 module Watir
 
-  class IEPre < IEElement
-    include Pre
+  class IE::Pre < IE::Element
+    include Watir::Pre
   end
 
-  class IEP < IEElement
-    include P
+  class IE::P < IE::Element
+    include Watir::P
   end
 
   # this class is used to deal with Div tags in the html page. http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/div.asp?frame=true
   # It would not normally be created by users
-  class IEDiv < IEElement
-    include Div
+  class IE::Div < IE::Element
+    include Watir::Div
   end
 
   # this class is used to deal with Span tags in the html page. It would not normally be created by users
-  class IESpan < IEElement
-    include Span
+  class IE::Span < IE::Element
+    include Watir::Span
   end
 
-  class IEMap < IEElement
-    include Map
+  class IE::Map < IE::Element
+    include Watir::Map
   end
 
-  class IEArea < IEElement
-    include Area
+  class IE::Area < IE::Element
+    include Watir::Area
   end
 
   # Accesses Label element on the html page - http://msdn.microsoft.com/workshop/author/dhtml/reference/objects/label.asp?frame=true
-  class IELabel < IEElement
-    include Label
+  class IE::Label < IE::Element
+    include Watir::Label
   end
 
-  class IELi < IEElement
-    include Li
+  class IE::Li < IE::Element
+    include Watir::Li
   end
-  class IEUl < IEElement
-    include Ul
+  class IE::Ul < IE::Element
+    include Watir::Ul
   end
-  class IEOl < IEElement
-    include Ol
+  class IE::Ol < IE::Element
+    include Watir::Ol
   end
-  class IEH1 < IEElement
-    include H1
+  class IE::H1 < IE::Element
+    include Watir::H1
   end
-  class IEH2 < IEElement
-    include H2
+  class IE::H2 < IE::Element
+    include Watir::H2
   end
-  class IEH3 < IEElement
-    include H3
+  class IE::H3 < IE::Element
+    include Watir::H3
   end
-  class IEH4 < IEElement
-    include H4
+  class IE::H4 < IE::Element
+    include Watir::H4
   end
-  class IEH5 < IEElement
-    include H5
+  class IE::H5 < IE::Element
+    include Watir::H5
   end
-  class IEH6 < IEElement
-    include H6
+  class IE::H6 < IE::Element
+    include Watir::H6
   end
-  class IEDl < IEElement
-    include Dl
+  class IE::Dl < IE::Element
+    include Watir::Dl
   end
-  class IEDt < IEElement
-    include Dt
+  class IE::Dt < IE::Element
+    include Watir::Dt
   end
-  class IEDd < IEElement
-    include Dd
+  class IE::Dd < IE::Element
+    include Watir::Dd
   end
-  class IEStrong < IEElement
-    include Strong
+  class IE::Strong < IE::Element
+    include Watir::Strong
   end
-  class IEEm < IEElement
-    include Em
+  class IE::Em < IE::Element
+    include Watir::Em
   end
 end

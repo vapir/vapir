@@ -1,5 +1,4 @@
-require 'dl/import'
-require 'dl/struct'
+require 'ffi'
 
 require 'watir/handle_options'
 require 'watir/waiter'
@@ -10,10 +9,6 @@ class WinWindow
   #--
   #
   # todo: 
-  # * maybe use a class or module with include DL::Importable and extern 
-  #   functions used instead of calling User32['whatever', '...'] every time
-  #   (see win32screenshot.rb)
-  # * make sure the signatures being used are correct with the letter codings (bools are chars in some places, pointers, voids may be wrong)
   # * GetTitleBarInfo http://msdn.microsoft.com/en-us/library/ms633513(VS.85).aspx
   # * GetWindowInfo http://msdn.microsoft.com/en-us/library/ms633516(VS.85).aspx http://msdn.microsoft.com/en-us/library/ms632610(VS.85).aspx
   # * ? ShowOwnedPopups http://msdn.microsoft.com/en-us/library/ms633547(VS.85).aspx
@@ -26,8 +21,71 @@ class WinWindow
   class NotExistsError < Error;end
   class MatchError < Error;end
   
-  User32 = DL.dlopen("user32")
-  Kernel32 = DL.dlopen("kernel32")
+  IsWin64=nil # TODO/FIX: detect this! 
+  # types from http://msdn.microsoft.com/en-us/library/aa383751%28VS.85%29.aspx
+  Types={}
+  Types[:HWND]= :ulong # this is a lie. really void*, but easier to deal with as a long. 
+  Types[:LPSTR]= :string # char*
+  Types[:LPWSTR]= :pointer # wchar_t*
+  Types[:LPCSTR]= :buffer_in # const char*
+  Types[:LPCWSTR]= :pointer # const wchar_t*
+  Types[:LONG_PTR]=IsWin64 ? :int64 : :long
+  Types[:LRESULT]= Types[:LONG_PTR]
+  Types[:WPARAM]=IsWin64 ? :uint64 : :uint
+  Types[:LPARAM]= :pointer #Types[:LONG_PTR] # this is supposed to be a LONG_PTR (a long type for pointer precision), but casting around is annoying - just going to use it as a pointer. 
+  Types[:BOOL]= :int
+  Types[:BYTE]= :uchar
+  Types[:DWORD]= :ulong
+
+  module WinUser
+    extend FFI::Library
+    ffi_lib 'user32'
+    ffi_convention :stdcall
+    
+    attach_function :GetWindowTextA, [Types[:HWND], Types[:LPSTR], :int], :int
+    attach_function :GetWindowTextW, [Types[:HWND], Types[:LPWSTR], :int], :int
+    attach_function :GetWindowTextLengthA, [Types[:HWND]], :int
+    attach_function :GetWindowTextLengthW, [Types[:HWND]], :int
+    attach_function :SendMessageA, [Types[:HWND], :uint, Types[:WPARAM], Types[:LPARAM]], Types[:LRESULT]
+    attach_function :SendMessageW, [Types[:HWND], :uint, Types[:WPARAM], Types[:LPARAM]], Types[:LRESULT]
+    attach_function :PostMessageA, [Types[:HWND], :uint, Types[:WPARAM], Types[:LPARAM]], Types[:BOOL]
+    attach_function :PostMessageW, [Types[:HWND], :uint, Types[:WPARAM], Types[:LPARAM]], Types[:BOOL]
+    attach_function :SetWindowTextA, [Types[:HWND], Types[:LPCSTR]], Types[:BOOL]
+    attach_function :SetWindowTextW, [Types[:HWND], Types[:LPCWSTR]], Types[:BOOL]
+    attach_function :GetWindow, [Types[:HWND], :uint], Types[:HWND]
+    attach_function :GetLastActivePopup, [Types[:HWND]], Types[:HWND]
+    [:GetLastActivePopup, :GetTopWindow, :GetParent].each do |func|
+      attach_function func, [Types[:HWND]], Types[:HWND]
+    end
+    attach_function :SetParent, [Types[:HWND], Types[:HWND]], Types[:HWND]
+    attach_function :IsChild, [Types[:HWND], Types[:HWND]], Types[:BOOL]
+    [:IsHungAppWindow, :IsWindow, :IsWindowVisible, :IsIconic, :SetForegroundWindow, :BringWindowToTop, :CloseWindow, :DestroyWindow].each do |func|
+      attach_function func, [Types[:HWND]], Types[:BOOL]
+    end
+    attach_function :GetClassNameA, [Types[:HWND], Types[:LPSTR], :int], :int
+    attach_function :GetClassNameW, [Types[:HWND], Types[:LPWSTR], :int], :int
+    attach_function :RealGetWindowClassA, [Types[:HWND], Types[:LPSTR], :uint], :uint
+    attach_function :RealGetWindowClassW, [Types[:HWND], Types[:LPWSTR], :uint], :uint
+    attach_function :SwitchToThisWindow, [Types[:HWND], Types[:BOOL]], :void
+    attach_function :LockSetForegroundWindow, [:uint], Types[:BOOL]
+    attach_function :MapVirtualKeyA, [:uint, :uint], :uint
+    attach_function :MapVirtualKeyW, [:uint, :uint], :uint
+    attach_function :keybd_event, [Types[:BYTE], Types[:BYTE], Types[:DWORD], :pointer], :void
+    attach_function :ShowWindow, [Types[:HWND], :int], Types[:BOOL]
+    attach_function :EndTask, [Types[:HWND], Types[:BOOL], Types[:BOOL]], Types[:BOOL]
+    attach_function :GetForegroundWindow, [], Types[:HWND]
+    
+    callback :WNDENUMPROC, [Types[:HWND], Types[:LPARAM]], Types[:BOOL]
+    attach_function :EnumWindows, [:WNDENUMPROC, Types[:LPARAM]], Types[:BOOL]
+    attach_function :EnumChildWindows, [Types[:HWND], :WNDENUMPROC, Types[:LPARAM]], Types[:BOOL]
+  end
+  module WinKernel
+    extend FFI::Library
+    ffi_lib 'kernel32'
+    ffi_convention :stdcall
+    
+    attach_function :GetLastError, [], Types[:DWORD]
+  end
 
   WM_CLOSE    = 0x0010
   WM_KEYDOWN  = 0x0100
@@ -106,8 +164,8 @@ class WinWindow
   # http://msdn.microsoft.com/en-us/library/ms633520(VS.85).aspx
   def text
     buff_size=text_length+1
-    buff="\000"*buff_size
-    len,(passed_hwnd,buff,buff_size)= User32['GetWindowText' , 'ILSI'].call(hwnd, buff, buff_size)
+    buff="\001"*buff_size
+    len= WinUser.GetWindowTextA(hwnd, buff, buff_size)
     @text=buff[0...len]
   end
 
@@ -116,7 +174,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633521(VS.85).aspx
   def text_length
-    len, args= User32['GetWindowTextLength', 'LL'].call(hwnd)
+    len= WinUser.GetWindowTextLengthA(hwnd)
     len
   end
 
@@ -127,14 +185,14 @@ class WinWindow
   # and here: http://blogs.msdn.com/oldnewthing/archive/2003/08/21/54675.aspx
   def retrieve_text
     buff_size=retrieve_text_length+1
-    buff="\000"*buff_size
-    len, (passed_hwnd, passed_thing, buff_size, buff)= User32['SendMessage', 'ILIIS'].call(hwnd, WM_GETTEXT, buff_size, buff)
+    buff=" "*buff_size
+    len= WinUser.SendMessageA(hwnd, WM_GETTEXT, buff_size, buff)
     @text=buff[0...len]
   end
   
   # similar to #text_length; differences between that and this are the same as between #text and #retrieve_text 
   def retrieve_text_length
-    len, args= User32['SendMessage', 'LLIII'].call(hwnd, WM_GETTEXTLENGTH, 0, 0)
+    len= WinUser.SendMessageA(hwnd, WM_GETTEXTLENGTH, 0, nil)
     len
   end
 
@@ -143,14 +201,14 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633546(VS.85).aspx
   def set_text!(text)
-    set, args= User32['SetWindowText', 'CLS'].call(hwnd, text)
+    set=WinUser.SetWindowTextA(hwnd, text)
     set != WIN_FALSE
   end
 
   # sets text by sending WM_SETTEXT message. this different than #set_text! in the same way that
   # #retrieve_text is different than #text
   def send_set_text!(text)
-    ret, args= User32['SendMessage', 'ILISS'].call(hwnd, WM_SETTEXT, '', text)
+    ret=WinUser.SendMessageA(hwnd, WM_SETTEXT, '', text)
     nil
   end
 
@@ -160,7 +218,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633515(VS.85).aspx
   def enabled_popup
-    popup_hwnd, args=User32['GetWindow', 'LLL'].call(hwnd, GW_ENABLEDPOPUP)
+    popup_hwnd=WinUser.GetWindow(hwnd, GW_ENABLEDPOPUP)
     @enabled_popup= popup_hwnd > 0 && popup_hwnd != self.hwnd ? self.class.new(popup_hwnd) : nil
   end
 
@@ -168,7 +226,7 @@ class WinWindow
   # 
   # http://msdn.microsoft.com/en-us/library/ms633515(VS.85).aspx
   def owner
-    owner_hwnd, args=User32['GetWindow', 'LLL'].call(hwnd, GW_OWNER)
+    owner_hwnd=WinUser.GetWindow(hwnd, GW_OWNER)
     @owner= owner_hwnd > 0 ? self.class.new(owner_hwnd) : nil
   end
   
@@ -176,7 +234,7 @@ class WinWindow
   # 
   # http://msdn.microsoft.com/en-us/library/ms633502(VS.85).aspx
   def ancestor_parent
-    ret_hwnd, args=User32['GetAncestor', 'LLI'].call(hwnd, GA_PARENT)
+    ret_hwnd=WinUser.GetAncestor(hwnd, GA_PARENT)
     @ancestor_parent= ret_hwnd > 0 ? self.class.new(ret_hwnd) : nil
   end
   
@@ -184,7 +242,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633502(VS.85).aspx
   def ancestor_root
-    ret_hwnd, args=User32['GetAncestor', 'LLI'].call(hwnd, GA_ROOT)
+    ret_hwnd=WinUser.GetAncestor(hwnd, GA_ROOT)
     @ancestor_root= ret_hwnd > 0 ? self.class.new(ret_hwnd) : nil
   end
   
@@ -192,7 +250,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633502(VS.85).aspx
   def ancestor_root_owner
-    ret_hwnd, args=User32['GetAncestor', 'LLI'].call(hwnd, GA_ROOTOWNER)
+    ret_hwnd=WinUser.GetAncestor(hwnd, GA_ROOTOWNER)
     @ancestor_root_owner= ret_hwnd > 0 ? self.class.new(ret_hwnd) : nil
   end
   
@@ -200,7 +258,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633507(VS.85).aspx
   def last_active_popup
-    ret_hwnd, args=User32['GetLastActivePopup', 'LL'].call(hwnd)
+    ret_hwnd=WinUser.GetLastActivePopup(hwnd)
     @last_active_popup= ret_hwnd > 0 ? self.class.new(ret_hwnd) : nil
   end
   
@@ -208,7 +266,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633514(VS.85).aspx
   def top_window
-    ret_hwnd, args=User32['GetTopWindow', 'LL'].call(hwnd)
+    ret_hwnd= WinUser.GetTopWindow(hwnd)
     @top_window= ret_hwnd > 0 ? self.class.new(ret_hwnd) : nil
   end
 
@@ -216,7 +274,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633510(VS.85).aspx
   def parent
-    parent_hwnd,args=User32['GetParent', 'LL'].call(hwnd)
+    parent_hwnd=WinUser.GetParent(hwnd)
     @parent= parent_hwnd > 0 ? self.class.new(parent_hwnd) : nil
   end
 
@@ -225,7 +283,7 @@ class WinWindow
   # http://msdn.microsoft.com/en-us/library/ms633541(VS.85).aspx
   def set_parent!(parent)
     parent_hwnd= parent.is_a?(self.class) ? parent.hwnd : parent
-    new_parent, args=User32['SetParent', 'LLL'].call(hwnd, parent_hwnd)
+    new_parent=WinUser.SetParent(hwnd, parent_hwnd)
     new_parent > 0 ? self.class.new(new_parent) : nil
   end
 
@@ -234,7 +292,7 @@ class WinWindow
   # http://msdn.microsoft.com/en-us/library/ms633524(VS.85).aspx
   def child_of?(parent)
     parent_hwnd= parent.is_a?(self.class) ? parent.hwnd : parent
-    child, args=User32['IsChild', 'CLL'].call(parent_hwnd, hwnd)
+    child=WinUser.IsChild(parent_hwnd, hwnd)
     child!=WIN_FALSE
   end
 
@@ -242,7 +300,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633526.aspx
   def hung_app?
-    hung,args= User32['IsHungAppWindow','CL'].call(hwnd)
+    hung=WinUser.IsHungAppWindow(hwnd)
     hung != WIN_FALSE
   end
 
@@ -251,8 +309,8 @@ class WinWindow
   # http://msdn.microsoft.com/en-us/library/ms633582(VS.85).aspx
   def class_name
     buff_size=256
-    buff="\000"*buff_size
-    len, (passed_hwnd, buff, buff_size)=User32['GetClassName', 'ILpI'].call(hwnd, buff, buff_size)
+    buff=" "*buff_size
+    len=WinUser.GetClassNameA(hwnd, buff, buff_size)
     @class_name=buff.to_s[0...len]
   end
   
@@ -261,8 +319,8 @@ class WinWindow
   # http://msdn.microsoft.com/en-us/library/ms633538(VS.85).aspx
   def real_class_name
     buff_size=256
-    buff="\000"*buff_size
-    len, (passed_hwnd, buff, buff_size)=User32['RealGetWindowClass', 'ILpI'].call(hwnd, buff, buff_size)
+    buff=" "*buff_size
+    len=RealGetWindowClassA(hwnd, buff, buff_size)
     @real_class_name=buff.to_s[0...len]
   end
   
@@ -270,7 +328,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633528(VS.85).aspx
   def exists?
-    ret, args=User32['IsWindow', 'CL'].call(hwnd)
+    ret=WinUser.IsWindow(hwnd)
     ret != WIN_FALSE
   end
 
@@ -278,7 +336,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633530(VS.85).aspx
   def visible?
-    ret, args=User32['IsWindowVisible', 'CL'].call(hwnd)
+    ret=WinUser.IsWindowVisible(hwnd)
     ret != WIN_FALSE
   end
 
@@ -286,7 +344,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633527(VS.85).aspx
   def iconic?
-    ret, args=User32['IsIconic', 'CL'].call(hwnd)
+    ret=WinUser.IsIconic(hwnd)
     ret != WIN_FALSE
   end
   alias minimized? iconic?
@@ -296,8 +354,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633553(VS.85).aspx
   def switch_to!(alt_tab=false)
-    void, args=User32['SwitchToThisWindow','pLC'].call(hwnd, alt_tab ? WIN_TRUE : WIN_FALSE)
-    nil
+    WinUser.SwitchToThisWindow(hwnd, alt_tab ? WIN_TRUE : WIN_FALSE)
   end
 
   # puts the thread that created the specified window into the foreground and activates the window. Keyboard input is directed to the window, and various visual cues are changed for the user. The system assigns a slightly higher priority to the thread that created the foreground window than it does to other threads.
@@ -306,7 +363,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633539(VS.85).aspx
   def set_foreground!
-    ret, args=User32['SetForegroundWindow','CL'].call(hwnd)
+    ret= WinUser.SetForegroundWindow(hwnd)
     ret != WIN_FALSE
   end
   
@@ -318,11 +375,11 @@ class WinWindow
   LSFW_LOCK = 1
   LSFW_UNLOCK = 2
   def self.lock_set_foreground_window
-    ret, args=User32['LockSetForegroundWindow', 'CI'].call(LSFW_LOCK)
+    ret= WinUser.LockSetForegroundWindow(LSFW_LOCK)
     ret != WIN_FALSE
   end
   def self.unlock_set_foreground_window
-    ret, args=User32['LockSetForegroundWindow', 'CI'].call(LSFW_UNLOCK)
+    ret= WinUser.LockSetForegroundWindow(LSFW_UNLOCK)
     ret != WIN_FALSE
   end
 
@@ -340,10 +397,10 @@ class WinWindow
     # keybd_event((BYTE)VK_MENU, MapVirtualKey(VK_MENU, 0), 0, 0);
     # keybd_event((BYTE)VK_MENU, MapVirtualKey(VK_MENU, 0), KEYEVENTF_KEYUP, 0);
 
-    mapped_vk_menu, args=User32['MapVirtualKey', 'III'].call(VK_MENU, 0)
+    mapped_vk_menu=WinUser.MapVirtualKeyA(VK_MENU, 0)
     2.times do
-      ret, args=User32['keybd_event','CCCCC'].call(VK_MENU, mapped_vk_menu, KEYEVENTF_KEYDOWN, 0)
-      ret, args=User32['keybd_event','CCCCC'].call(VK_MENU, mapped_vk_menu, KEYEVENTF_KEYUP, 0)
+      ret=WinUser.keybd_event(VK_MENU, mapped_vk_menu, KEYEVENTF_KEYDOWN, nil)
+      ret=WinUser.keybd_event(VK_MENU, mapped_vk_menu, KEYEVENTF_KEYUP, nil)
     end
     set_foreground!
   end
@@ -352,7 +409,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms632673(VS.85).aspx
   def bring_to_top!
-    ret, args=User32['BringWindowToTop','CL'].call(hwnd)
+    ret=WinUser.BringWindowToTop(hwnd)
     ret != WIN_FALSE
   end
   
@@ -361,7 +418,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms632678(VS.85).aspx
   def close!
-    ret, args= User32['CloseWindow', 'CL'].call(hwnd)
+    ret=WinUser.CloseWindow(hwnd)
     ret != WIN_FALSE
   end
 
@@ -369,7 +426,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def hide!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_HIDE)
+    ret=WinUser.ShowWindow(hwnd, SW_HIDE)
     ret != WIN_FALSE
   end
 
@@ -377,7 +434,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def show_normal!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_SHOWNORMAL)
+    ret=WinUser.ShowWindow(hwnd, SW_SHOWNORMAL)
     ret != WIN_FALSE
   end
 
@@ -385,7 +442,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def show_minimized!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_SHOWMINIMIZED)
+    ret=WinUser.ShowWindow(hwnd, SW_SHOWMINIMIZED)
     ret != WIN_FALSE
   end
 
@@ -393,7 +450,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def show_maximized!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_SHOWMAXIMIZED)
+    ret=WinUser.ShowWindow(hwnd, SW_SHOWMAXIMIZED)
     ret != WIN_FALSE
   end
 
@@ -401,7 +458,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def maximize!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_MAXIMIZE)
+    ret=WinUser.ShowWindow(hwnd, SW_MAXIMIZE)
     ret != WIN_FALSE
   end
 
@@ -409,7 +466,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def show_no_activate!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_SHOWNOACTIVATE)
+    ret=WinUser.ShowWindow(hwnd, SW_SHOWNOACTIVATE)
     ret != WIN_FALSE
   end
 
@@ -417,7 +474,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def show!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_SHOW)
+    ret=WinUser.ShowWindow(hwnd, SW_SHOW)
     ret != WIN_FALSE
   end
 
@@ -425,7 +482,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def minimize!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_MINIMIZE)
+    ret=WinUser.ShowWindow(hwnd, SW_MINIMIZE)
     ret != WIN_FALSE
   end
 
@@ -433,7 +490,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def show_min_no_active!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_SHOWMINNOACTIVE)
+    ret=WinUser.ShowWindow(hwnd, SW_SHOWMINNOACTIVE)
     ret != WIN_FALSE
   end
 
@@ -441,7 +498,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def show_na!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_SHOWNA)
+    ret=WinUser.ShowWindow(hwnd, SW_SHOWNA)
     ret != WIN_FALSE
   end
 
@@ -449,7 +506,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def restore!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_RESTORE)
+    ret=WinUser.ShowWindow(hwnd, SW_RESTORE)
     ret != WIN_FALSE
   end
 
@@ -457,7 +514,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def show_default!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_SHOWDEFAULT)
+    ret=WinUser.ShowWindow(hwnd, SW_SHOWDEFAULT)
     ret != WIN_FALSE
   end
 
@@ -465,7 +522,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633548(VS.85).aspx
   def force_minimize!
-    ret, args= User32['ShowWindow', 'CLI'].call(hwnd, SW_FORCEMINIMIZE)
+    ret=WinUser.ShowWindow(hwnd, SW_FORCEMINIMIZE)
     ret != WIN_FALSE
   end
 
@@ -475,7 +532,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms632682(VS.85).aspx
   def destroy!
-    ret, args= User32['DestroyWindow', 'CI'].call(hwnd)
+    ret=WinUser.DestroyWindow(hwnd)
     ret != WIN_FALSE
   end
 
@@ -485,7 +542,7 @@ class WinWindow
   #
   # http://msdn.microsoft.com/en-us/library/ms633492(VS.85).aspx
   def end_task!(force=false)
-    ret, args= User32['EndTask', 'CICC'].call(hwnd, 0, force ? WIN_TRUE : WIN_FALSE)
+    ret=WinUser.EndTask(hwnd, 0, force ? WIN_TRUE : WIN_FALSE)
     ret != WIN_FALSE
   end
   
@@ -496,7 +553,7 @@ class WinWindow
   def send_close!
     buff_size=0
     buff=""
-    len, args= User32['SendMessage', 'ILIIS'].call(hwnd, WM_CLOSE, buff_size, buff)
+    len=WinUser.SendMessageA(hwnd, WM_CLOSE, buff_size, buff)
     nil
   end
 
@@ -504,8 +561,7 @@ class WinWindow
   # Clicking might not always work! Especially if the window is not focused (frontmost application). 
   # The BM_CLICK message might just be ignored, or maybe it will just focus the hwnd but not really click.
   def click!
-    User32['PostMessage', 'ILILL'].call(hwnd, BM_CLICK, 0, 0)
-    nil
+    WinUser.PostMessageA(hwnd, BM_CLICK, 0, nil)
   end
 
   # iterates over each child, yielding a WinWindow object. 
@@ -517,17 +573,13 @@ class WinWindow
   # For System Error Codes see http://msdn.microsoft.com/en-us/library/ms681381(VS.85).aspx
   def each_child
     raise WinWindow::NotExistsError, "Window does not exist! Cannot enumerate children." unless exists?
-    enum_child_windows_callback= DL.callback('ILL') do |chwnd, lparam|
+    enum_child_windows_callback= proc do |chwnd, lparam|
       yield WinWindow.new(chwnd)
       WIN_TRUE
     end
-    begin
-      ret, args= User32['EnumChildWindows', 'IIPL'].call(hwnd, enum_child_windows_callback, 0)
-    ensure
-      DL.remove_callback(enum_child_windows_callback)
-    end
+    ret=WinUser.EnumChildWindows(hwnd, enum_child_windows_callback, nil)
     if ret==0
-      code, args=Kernel32['GetLastError','I'].call
+      code=WinKernel.GetLastError
       raise WinWindow::SystemError, "EnumChildWindows encountered an error (System Error Code #{code})"
       # actually, EnumChildWindows doesn't say anything about return value indicating error encountered.
       # Although EnumWindows does, so it seems sort of safe to assume that would apply here too. 
@@ -627,17 +679,13 @@ class WinWindow
   #
   # For System Error Codes see http://msdn.microsoft.com/en-us/library/ms681381(VS.85).aspx
   def self.each_window
-    enum_windows_callback= DL.callback('ILL') do |hwnd,lparam|
+    enum_windows_callback= proc do |hwnd,lparam|
       yield WinWindow.new(hwnd)
       WIN_TRUE
     end
-    begin
-      ret, args=User32['EnumWindows', 'IPL'].call(enum_windows_callback, 0)
-    ensure
-      DL.remove_callback(enum_windows_callback)
-    end
+    ret=WinUser.EnumWindows(enum_windows_callback, nil)
     if ret==WIN_FALSE
-      code, args=Kernel32['GetLastError','I'].call
+      code=WinKernel.GetLastError
       raise WinWindow::SystemError, "EnumWindows ecountered an error (System Error Code #{code})"
     end
     nil
@@ -701,7 +749,7 @@ class WinWindow
   end
   
   def self.foreground_window
-    hwnd,args=User32['GetForegroundWindow', 'I'].call
+    hwnd,args=WinUser.GetForegroundWindow
     if hwnd == 0
       nil
     else

@@ -433,9 +433,6 @@ module Watir
     
     # Make the window come to the front
     def bring_to_front
-      if win_window.iconic?
-        win_window.restore!
-      end
       win_window.really_set_foreground!
     end
     
@@ -459,7 +456,6 @@ module Watir
     # - :window (default) takes a screenshot of the full browser window
     # - :desktop takes a screenshot of the full desktop
     def screen_capture(filename, dc=:window)
-      bring_to_front
       if dc==:desktop
         screenshot_win=WinWindow.desktop_window
         dc=:window

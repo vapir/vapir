@@ -5,7 +5,16 @@ module Watir
   # this assumes that document_object is defined on the includer. 
   module IE::PageContainer
     # Used internally to determine when IE has finished loading a page
-    READYSTATE_COMPLETE = 4
+    # http://msdn.microsoft.com/en-us/library/system.windows.forms.webbrowserreadystate.aspx
+    # http://msdn.microsoft.com/en-us/library/system.windows.forms.webbrowser.readystate.aspx
+    module WebBrowserReadyState
+      Uninitialized = 0 # No document is currently loaded.
+      Loading       = 1 # The control is loading a new document.
+      Loaded        = 2 # The control has loaded and initialized the new document, but has not yet received all the document data.
+      Interactive   = 3 # The control has loaded enough of the document to allow limited user interaction, such as clicking hyperlinks that have been displayed.
+      Complete      = 4 # The control has finished loading the new document and all its contents.
+    end
+    READYSTATE_COMPLETE = WebBrowserReadyState::Complete
        
     def containing_object
       document_object
@@ -108,9 +117,9 @@ module Watir
           return unless exists?
           !browser_object.busy
         end
-        ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's readyState was still not READYSTATE_COMPLETE at the end of the specified interval") do
+        ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's readyState was still not ready for interaction at the end of the specified interval") do
           return unless exists?
-          browser_object.readyState == READYSTATE_COMPLETE
+          [WebBrowserReadyState::Interactive, WebBrowserReadyState::Complete].include?(browser_object.readyState)
         end
       end
       ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's document was still not defined at the end of the specified interval") do

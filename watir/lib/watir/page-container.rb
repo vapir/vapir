@@ -76,7 +76,7 @@ module Watir
         result=document_object.parentWindow.eval(source)
       rescue WIN32OLERuntimeError
         # don't retry more than once; don't catch anything but the particular thing we're looking for 
-        if retried || $!.message.split("\n").map{|line| line.strip}!=["unknown property or method `eval'","HRESULT error code:0x80020006","Unknown name."]
+        if retried || $!.message !~ /unknown property or method:? `eval'/
           raise
         end
         # this can happen if no scripts have executed at all - the 'eval' function doesn't exist. 

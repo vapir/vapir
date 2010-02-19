@@ -412,7 +412,7 @@ module Watir
       @ie.quit
       # this doesn't work; the same hwnd can stay open if there are multiple tabs. not that it does anything anyway. 
       ::Waiter.try_for(32) do
-        Win32API.new("user32","IsWindow", 'L', 'L').Call(chwnd) == 0
+        !win_window.exists?
       end
     end
     
@@ -450,6 +450,23 @@ module Watir
       require 'watir/autoit'
       bring_to_front
       Watir.autoit.Send key_string
+    end
+    
+    # saves a screenshot of this browser window to the given filename. 
+    #
+    # second argument, optional, specifies what area to take a screenshot of. 
+    # - :client takes a screenshot of the client area, which excludes the menu bar and other window trimmings.
+    # - :window (default) takes a screenshot of the full browser window
+    # - :desktop takes a screenshot of the full desktop
+    def screen_capture(filename, dc=:window)
+      bring_to_front
+      if dc==:desktop
+        screenshot_win=WinWindow.desktop_window
+        dc=:window
+      else
+        screenshot_win=win_window
+      end
+      screenshot_win.capture_to_bmp_file(filename, :dc => dc)
     end
     
     def dir

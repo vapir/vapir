@@ -3,16 +3,13 @@
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
-require 'watir/screen_capture'
 
 class TC_Capture< Test::Unit::TestCase
   tags :must_be_visible
-  include Watir
-  include Watir::ScreenCapture
   
   def setup
-    delete_captured_files( [ 'jpeg1.jpg' , 'jpeg2.jpg' , 'bmp1.bmp', 'bmp2.bmp' ] )
-    browser.goto($htmlRoot + 'buttons1.html' )
+    delete_captured_files('capture_window.bmp', 'capture_client.bmp', 'capture_desktop.bmp')
+    browser.goto($htmlRoot + 'buttons1.html')
     @file_list = []       
   end
   
@@ -20,35 +17,32 @@ class TC_Capture< Test::Unit::TestCase
     delete_captured_files
   end
   
-  def delete_captured_files(files=nil )
-    files = @file_list unless files
+  def delete_captured_files(*files)
+    files = @file_list if files.empty?
     files.each do |f|
-      File.delete( f) if FileTest.exists?( f)
+      File.delete(f) if FileTest.exists?(f)
     end
   end
   
-  def test_jpeg
-    file_name= 'jpeg1.jpg'
-    @file_list << file_name
-    screen_capture( file_name  )
-    assert(FileTest.exist?( file_name) )
-    
-    file_name= 'jpeg2.jpg'
-    @file_list << file_name
-    screen_capture( file_name , true  )   # just the active window
-    assert(FileTest.exist?( file_name) )
+  def test_capture
+    client_bmp_file= 'capture_client.bmp'
+    @file_list << client_bmp_file
+    browser.screen_capture(client_bmp_file, :client)   # just the active window's client area
+    assert(FileTest.exist?(client_bmp_file))
+    assert File.size(client_bmp_file) > 0
+
+    window_bmp_file= 'capture_window.bmp'
+    @file_list << window_bmp_file
+    browser.screen_capture(window_bmp_file, :window)   # just the active window
+    assert(FileTest.exist?(window_bmp_file))
+    assert File.size(window_bmp_file) > File.size(client_bmp_file) # the window area should be bigger than the client area
+
+    desktop_file= 'capture_desktop.bmp'
+    @file_list << desktop_file
+    browser.screen_capture(desktop_file, :desktop) # full desktop
+    assert(FileTest.exist?(desktop_file))
+    assert File.size(desktop_file) >= File.size(window_bmp_file) # the desktop area should be at least as big as the window area (same if it's maximized)
   end
   
-  def test_bmp
-    file_name= 'bmp1.bmp'
-    @file_list << file_name
-    screen_capture( file_name , false, true )
-    assert(FileTest.exist?( file_name ) )
-    
-    file_name= 'bmp2.bmp'
-    @file_list << file_name
-    screen_capture( file_name , true , true )   # just the active window
-    assert(FileTest.exist?( file_name) ) 
-  end
 end
 

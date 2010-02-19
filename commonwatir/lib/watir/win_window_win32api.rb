@@ -38,7 +38,7 @@ class WinWindow
                  :void => 'V',
                  :pointer => 'P',
                  :callback => 'K',
-                 :string => 'S'
+                 :string => 'P', # 'S' works here on mingw32, but not on mswin32 
                }
     Types=BasicTypes.dup
     Types[:buffer_in]=Types[:string]
@@ -60,7 +60,7 @@ class WinWindow
     end
     # this takes arguments in the order that they're given in c/c++ so that signatures look kind of like the source
     def attach(return_type, function_name, *arg_types)
-      the_function=Win32::API.new(function_name, arg_types.map{|arg_type| Types[arg_type] }.join(''), Types[return_type], @lib)
+      the_function=Win32::API.new(function_name.to_s, arg_types.map{|arg_type| Types[arg_type] }.join(''), Types[return_type], @lib)
       metaclass=class << self;self;end
       metaclass.send(:define_method, function_name) do |*args|
         the_function.call(*args)
@@ -255,7 +255,7 @@ class WinWindow
   # sets text by sending WM_SETTEXT message. this different than #set_text! in the same way that
   # #retrieve_text is different than #text
   def send_set_text!(text)
-    ret=WinUser.SendMessageA(hwnd, WM_SETTEXT, '', text)
+    ret=WinUser.SendMessageA(hwnd, WM_SETTEXT, 0, text.dup)
     nil
   end
 

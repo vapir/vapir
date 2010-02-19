@@ -320,9 +320,11 @@ module Watir
       el=element_object
       begin
         begin
-          xy+=Vector[el.scrollLeft, el.scrollTop]
+          if (scroll_left=el.scrollLeft).is_a?(Numeric) && (scroll_top=el.scrollTop).is_a?(Numeric)
+            xy+=Vector[scroll_left, scroll_top]
+          end
         rescue WIN32OLERuntimeError
-          # doesn't respnd to those; do nothing. 
+          # doesn't respond to those; do nothing. 
         end
         el=el.parentNode
       end while el

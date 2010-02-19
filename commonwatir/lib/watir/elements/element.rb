@@ -883,8 +883,8 @@ module Watir
       xy=Vector[0,0]
       el=element_object
       begin
-        if el.respond_to?(:scrollLeft)
-          xy+=Vector[el.scrollLeft, el.scrollTop]
+        if el.respond_to?(:scrollLeft) && el.respond_to?(:scrollTop) && (scroll_left=el.scrollLeft).is_a?(Numeric) && (scroll_top=el.scrollTop).is_a?(Numeric)
+          xy+=Vector[scroll_left, scroll_top]
         end
         el=el.parentNode
       end while el

@@ -20,41 +20,103 @@ class WinWindow
   class MatchError < Error;end
   
   # this module exists because I've implemented this library for DL, for FFI, and for Win32::API.
-  # Getting tired of changing everything everywhere, now it just takes changes to some Types (mostly
-  # basic types), the use_lib method, and the attach method to switch to another library. Also some
-  # callback stuff in some other places. 
-  # I may support switching backends at some point, but for now it's Win32::API.
+  # Getting tired of changing everything everywhere, now it just takes changes to Types, 
+  # and a few methods (use_lib, attach, callback) to switch to another library. 
   module AttachLib
+    IsWin64=nil # TODO/FIX: detect this! 
+
+#=begin
+    # here begins the FFI version. this one needs to hack improperly into FFI's internals, bypassing its
+    # broken API for #callback which doesn't set the calling convention, causing segfaults. 
+    require 'ffi'
+
+    # types that FFI recognizes
+    Types=[:char, :uchar, :int, :uint, :long, :ulong, :void, :pointer, :string].inject({}) do |type_hash, type|
+      type_hash[type]=type
+      type_hash
+    end
+
+    def self.extended(extender)
+      ffi_module=Module.new
+      ffi_module.send(:extend, FFI::Library)
+      extender.send(:instance_variable_set, '@ffi_module', ffi_module)
+    end
+    def use_lib(lib)
+      @ffi_module.ffi_lib lib
+      @ffi_module.ffi_convention :stdcall
+    end
+    # this takes arguments in the order that they're given in c/c++ so that signatures look kind of like the source
+    def attach(return_type, function_name, *arg_types)
+      @ffi_module.attach_function(function_name, arg_types.map{|arg_type| Types[arg_type] }, Types[return_type])
+      metaclass=class << self;self;end
+      ffi_module=@ffi_module
+      metaclass.send(:define_method, function_name) do |*args|
+        ffi_module.send(function_name, *args)
+      end
+      nil
+    end
+    # this takes arguments like #attach, but with a name for the callback's type on the front. 
+    def callback(callback_type_name, return_type, callback_method_name, *arg_types)
+      
+      Types[callback_type_name]=callback_type_name
+      
+      #@ffi_module.callback(callback_type_name, arg_types.map{|type| Types[type]}, Types[return_type])
+      
+      # we do not call @ffi_module.callback here, because it is broken. we need to pass the convention ourselves in the options hash. 
+      # this is adapted from: http://gist.github.com/256660
+      options={}
+      types=Types
+      @ffi_module.instance_eval do
+        options[:convention] = defined?(@ffi_convention) ? @ffi_convention : :default
+        options[:enums] = @ffi_enums if defined?(@ffi_enums)
+
+        cb = FFI::CallbackInfo.new(find_type(types[return_type]), arg_types.map{|e| find_type(types[e]) }, options)
+
+        @ffi_callbacks = Hash.new unless defined?(@ffi_callbacks)
+        @ffi_callbacks[callback_type_name] = cb
+      end
+      #options[:convention] = @ffi_module.instance_variable_defined?('@ffi_convention') ? @ffi_module.instance_variable_get('@ffi_convention') : :default
+      #options[:enums] = @ffi_module.instance_variable_get('@ffi_enums') if @ffi_module.instance_variable_defined?('@ffi_enums')
+      #unless @ffi_module.instance_variable_defined?('@ffi_callbacks')
+      #  @ffi_module.instance_variable_set('@ffi_callbacks', cb)
+      #end
+      
+      # perform some hideous class_eval'ing to dynamically define the callback method such that it will take a block 
+      metaclass=class << self;self;end
+
+      # FFI just takes the block itself. don't need anything fancy here. 
+      metaclass.class_eval("def #{callback_method_name}(&block)
+        block
+      end
+      def remove_#{callback_method_name}(callback_method)
+        # FFI has no support for removing callbacks? 
+        nil
+      end")
+      # don't use define_method as this will be called from an ensure block which segfaults ruby 1.9.1. see http://redmine.ruby-lang.org/issues/show/2728
+      #metaclass.send(:define_method, "remove_"+callback_method_name.to_s) do |callback_method|
+      #  nil
+      #end
+      nil
+    end
+#=end
+=begin
+    # here begins the Win32::API version. this one doesn't work because of a hard-coded limit on 
+    # callbacks in win32/api.c combined with a lack of any capacity to remove any callbacks. 
     require 'win32/api'
 
-    IsWin64=nil # TODO/FIX: detect this! 
-    # types from http://msdn.microsoft.com/en-us/library/aa383751%28VS.85%29.aspx
-    BasicTypes={ :char => 'I', # no 8-bit type in Win32::API?
-                 :uchar => 'I', # no unsigned types in Win32::API?
-                 :int => 'I',
-                 :uint => 'I',
-                 :long => 'L',
-                 :ulong => 'L',
-                 :void => 'V',
-                 :pointer => 'P',
-                 :callback => 'K',
-                 :string => 'P', # 'S' works here on mingw32, but not on mswin32 
-               }
-    Types=BasicTypes.dup
-    Types[:buffer_in]=Types[:string]
-    Types[:buffer_out]=Types[:pointer]
-    Types[:HWND]= Types[:ulong] # this is a lie. really void*, but easier to deal with as a long. 
-    Types[:LPSTR]= Types[:pointer] # char*
-    Types[:LPWSTR]= Types[:pointer] # wchar_t*
-    Types[:LPCSTR]= Types[:buffer_in] # const char*
-    Types[:LPCWSTR]= Types[:pointer] # const wchar_t*
-    Types[:LONG_PTR]=IsWin64 ? Types[:int64] : Types[:long] # TODO/FIX: there is no :int64 type defined yet 
-    Types[:LRESULT]= Types[:LONG_PTR]
-    Types[:WPARAM]=IsWin64 ? Types[:uint64] : Types[:uint] # TODO/FIX: no :uint64
-    Types[:LPARAM]= Types[:pointer] #Types[:LONG_PTR] # this is supposed to be a LONG_PTR (a long type for pointer precision), but casting around is annoying - just going to use it as a pointer. 
-    Types[:BOOL]= Types[:int]
-    Types[:BYTE]= Types[:uchar]
-    Types[:DWORD]= Types[:ulong]
+    # basic types that Win32::API recognizes
+    Types={ :char => 'I', # no 8-bit type in Win32::API?
+            :uchar => 'I', # no unsigned types in Win32::API?
+            :int => 'I',
+            :uint => 'I',
+            :long => 'L',
+            :ulong => 'L',
+            :void => 'V',
+            :pointer => 'P',
+            :callback => 'K',
+            :string => 'P', # 'S' works here on mingw32, but not on mswin32 
+          }
+    
     def use_lib(lib)
       @lib=lib
     end
@@ -76,17 +138,51 @@ class WinWindow
       metaclass.class_eval("def #{callback_method_name}(&block)
         #{callback_method_name}_with_arg_stuff_in_scope(block)
       end")
+      types=Types
       metaclass.send(:define_method, callback_method_name.to_s+"_with_arg_stuff_in_scope") do |block|
-        return Win32::API::Callback.new(arg_types.map{|t| Types[t]}.join(''), Types[return_type], &block)
+        return Win32::API::Callback.new(arg_types.map{|t| types[t]}.join(''), types[return_type], &block)
       end
+      def remove_#{callback_method_name}(callback_method)
+        # Win32::API has no support for removing callbacks? 
+        nil
+      end")
+      # don't use define_method as this will be called from an ensure block which segfaults ruby 1.9.1. see http://redmine.ruby-lang.org/issues/show/2728
+      #metaclass.send(:define_method, "remove_"+callback_method_name.to_s) do |callback_method|
+      #  nil
+      #end
       nil
     end
+=end
+    def self.add_type(hash)
+      hash.each_pair do |key, value|
+        unless Types.key?(value)
+          raise "unrecognized type #{value.inspect}"
+        end
+        Types[key]=Types[value]
+      end
+    end
+
   end
 
+  # types from http://msdn.microsoft.com/en-us/library/aa383751%28VS.85%29.aspx
+  AttachLib.add_type :buffer_in => :string
+  AttachLib.add_type :buffer_out => :pointer
+  AttachLib.add_type :HWND     => :ulong # this is a lie. really void*, but easier to deal with as a long. 
+  AttachLib.add_type :LPSTR    => :pointer # char*
+  AttachLib.add_type :LPWSTR   => :pointer # wchar_t*
+  AttachLib.add_type :LPCSTR   => :buffer_in # const char*
+  AttachLib.add_type :LPCWSTR  => :pointer # const wchar_t*
+  AttachLib.add_type :LONG_PTR => (AttachLib::IsWin64 ? :int64 : :long) # TODO/FIX: there is no :int64 type defined on Win32::API
+  AttachLib.add_type :LRESULT  => :LONG_PTR
+  AttachLib.add_type :WPARAM   => (AttachLib::IsWin64 ? :uint64 : :uint) # TODO/FIX: no :uint64 on Win3::API
+  AttachLib.add_type :LPARAM   => :pointer #:LONG_PTR # this is supposed to be a LONG_PTR (a long type for pointer precision), but casting around is annoying - just going to use it as a pointer. 
+  AttachLib.add_type :BOOL     => :int
+  AttachLib.add_type :BYTE     => :uchar
+  AttachLib.add_type :DWORD    => :ulong
   module WinUser
     extend AttachLib
     use_lib 'user32'
-    
+
     attach :int, :GetWindowTextA, :HWND, :LPSTR, :int
     attach :int, :GetWindowTextW, :HWND, :LPWSTR, :int
     attach :int, :GetWindowTextLengthA, :HWND
@@ -624,7 +720,11 @@ class WinWindow
       yield WinWindow.new(chwnd)
       WIN_TRUE
     end
-    ret=WinUser.EnumChildWindows(hwnd, enum_child_windows_callback, nil)
+    begin
+      ret=WinUser.EnumChildWindows(hwnd, enum_child_windows_callback, nil)
+    ensure
+      WinUser.remove_window_enum_callback(enum_child_windows_callback)
+    end
     if ret==0
       code=WinKernel.GetLastError
       raise WinWindow::SystemError, "EnumChildWindows encountered an error (System Error Code #{code})"
@@ -730,7 +830,11 @@ class WinWindow
       yield WinWindow.new(hwnd)
       WIN_TRUE
     end
-    ret=WinUser.EnumWindows(enum_windows_callback, nil)
+    begin
+      ret=WinUser.EnumWindows(enum_windows_callback, nil)
+    ensure
+      WinUser.remove_window_enum_callback(enum_windows_callback)
+    end
     if ret==WIN_FALSE
       code=WinKernel.GetLastError
       raise WinWindow::SystemError, "EnumWindows ecountered an error (System Error Code #{code})"

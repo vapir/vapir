@@ -1,5 +1,5 @@
 require 'watir/win32ole'
-require 'watir/ie' # for Watir.autoit
+require 'watir/autoit' # for Watir.autoit
 
 class WindowHelper
     @@ie_window_name = "Windows Internet Explorer"

@@ -418,43 +418,38 @@ module Watir
     
     # Maximize the window (expands to fill the screen)
     def maximize
-      set_window_state :SW_MAXIMIZE
+      win_window.maximize!
     end
     
     # Minimize the window (appears as icon on taskbar)
     def minimize
-      set_window_state :SW_MINIMIZE
+      win_window.minimize!
     end
     
     # Restore the window (after minimizing or maximizing)
     def restore
-      set_window_state :SW_RESTORE
+      win_window.restore!
     end
     
     # Make the window come to the front
     def bring_to_front
-      autoit.WinActivate title, ''
+      if win_window.iconic?
+        win_window.restore!
+      end
+      win_window.really_set_foreground!
     end
     
     def front?
-      1 == autoit.WinActive(title, '')
+      win_window.foreground?
     end
-    
-    private
-    def set_window_state(state)
-      autoit.WinSetState title, '', autoit.send(state)
-    end
-    def autoit
-      Watir::autoit
-    end
-    public
     
     # Send key events to IE window.
     # See http://www.autoitscript.com/autoit3/docs/appendix/SendKeys.htm
     # for complete documentation on keys supported and syntax.
     def send_keys(key_string)
-      autoit.WinActivate title
-      autoit.Send key_string
+      require 'watir/autoit'
+      bring_to_front
+      Watir.autoit.Send key_string
     end
     
     def dir

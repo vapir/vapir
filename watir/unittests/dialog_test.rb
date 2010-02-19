@@ -3,7 +3,6 @@
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
-require 'watir/dialog'
 
 class TC_Dialog_Test < Test::Unit::TestCase
   tags :must_be_visible
@@ -13,66 +12,45 @@ class TC_Dialog_Test < Test::Unit::TestCase
     goto_page 'JavascriptClick.html'
   end    
   def teardown
-    begin 
-      sleep 0.4 # XXX 
-      dialog.button!('OK').click
-    rescue
-    end
   end
   
   def test_alert_without_bonus_script
     browser.button!(:id, 'btnAlert').click_no_wait
-    sleep 0.4 # FIXME: need to be able to poll for window to exist
-    dialog.button("OK").click
+    browser.modal_dialog.click_button("OK")
     assert_match(/Alert button!/, browser.text_field!(:id, "testResult").value)  
   end
   
   def test_button_name_not_found
     browser.button!(:id, 'btnAlert').click_no_wait
-    sleep 0.4 # FIXME replace with dialog.exists?
-    assert_raises(UnknownObjectException) { dialog.button("Yes").click }
-    dialog.button!("OK").click
+    assert_raises(WinWindow::NotExistsError) { browser.modal_dialog.click_button("Yes") }
+    browser.modal_dialog.click_button("OK")
   end
   
-  def xtest_exists
-    assert_false( dialog.exists?) # known bug: finds main window instead of dialog!
+  def test_exists
+    assert_nil( browser.modal_dialog)
     browser.button!(:id, 'btnAlert').click_no_wait
-    sleep 0.4 # FIXME: need to add polling
-    assert dialog.exists?
-    dialog.button!('OK').click
-  end
-  
-  def test_leaves_dialog_open
-    # should be closed in teardown
-    browser.button!(:id, 'btnAlert').click_no_wait
-  end
-  
-  def test_copy_array_elements
-    a = ['a', 'b', 'c']
-    copy = Array.new(a)
-    c = []        
-    code = _code_that_copies_readonly_array(a, "c")
-    eval code
-    assert_equal copy, c
+    assert browser.modal_dialog.exists?
+    browser.modal_dialog.click_button('OK')
   end
   
   def test_confirm_ok
     browser.button!(:value, 'confirm').click_no_wait
-    assert dialog.exists?
-    dialog.button!('OK').click
+    assert browser.modal_dialog.exists?
+    browser.modal_dialog.click_button('OK')
     assert_equal "You pressed the Confirm and OK button!", browser.text_field!(:id, 'testResult').value
   end
   
-  def xtest_confirm_cancel
+  def test_confirm_cancel
     browser.button!(:value, 'confirm').click_no_wait
-    assert dialog.exists?
-    dialog.button!('Cancel').click
+    assert browser.modal_dialog.exists?
+    browser.modal_dialog.click_button('Cancel')
     assert_equal "You pressed the Confirm and Cancel button!", browser.text_field!(:id, 'testResult').value
   end
   
   def test_dialog_close
-    dialog.close
-    assert !dialog.exists? 
+    browser.button!(:id, 'btnAlert').click_no_wait
+    browser.modal_dialog.close
+    assert_nil browser.modal_dialog
   end
   
 end

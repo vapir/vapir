@@ -31,7 +31,7 @@ class WinWindow
     require 'ffi'
 
     # types that FFI recognizes
-    Types=[:char, :uchar, :int, :uint, :long, :ulong, :void, :pointer, :string].inject({}) do |type_hash, type|
+    Types=[:char, :uchar, :int, :uint, :short, :ushort, :long, :ulong, :void, :pointer, :string].inject({}) do |type_hash, type|
       type_hash[type]=type
       type_hash
     end
@@ -163,11 +163,12 @@ class WinWindow
     end
 
   end
-
+  Types=AttachLib::Types
   # types from http://msdn.microsoft.com/en-us/library/aa383751%28VS.85%29.aspx
   AttachLib.add_type :buffer_in => :string
   AttachLib.add_type :buffer_out => :pointer
   AttachLib.add_type :HWND     => :ulong # this is a lie. really void*, but easier to deal with as a long. 
+  AttachLib.add_type :HDC      => :pointer
   AttachLib.add_type :LPSTR    => :pointer # char*
   AttachLib.add_type :LPWSTR   => :pointer # wchar_t*
   AttachLib.add_type :LPCSTR   => :buffer_in # const char*
@@ -178,7 +179,9 @@ class WinWindow
   AttachLib.add_type :LPARAM   => :pointer #:LONG_PTR # this is supposed to be a LONG_PTR (a long type for pointer precision), but casting around is annoying - just going to use it as a pointer. 
   AttachLib.add_type :BOOL     => :int
   AttachLib.add_type :BYTE     => :uchar
+  AttachLib.add_type :WORD     => :ushort
   AttachLib.add_type :DWORD    => :ulong
+  AttachLib.add_type :LPRECT   => :pointer
   module WinUser
     extend AttachLib
     use_lib 'user32'
@@ -219,15 +222,85 @@ class WinWindow
     attach :BOOL, :ShowWindow, :HWND, :int
     attach :BOOL, :EndTask, :HWND, :BOOL, :BOOL
     attach :HWND, :GetForegroundWindow
+    attach :HWND, :GetDesktopWindow
+    attach :HDC, :GetDC, :HWND
+    attach :HDC, :GetWindowDC, :HWND
+    attach :int, :ReleaseDC, :HWND, :HDC
+    
+    class Rect < FFI::Struct
+      layout :left, :long,
+        :top, :long,
+        :right, :long,
+        :bottom, :long
+    end
+    attach :BOOL, :GetWindowRect, :HWND, :LPRECT
+    attach :BOOL, :GetClientRect, :HWND, :LPRECT
     
     callback :WNDENUMPROC, :BOOL, :window_enum_callback, :HWND, :LPARAM
     attach :BOOL, :EnumWindows, :WNDENUMPROC, :LPARAM
     attach :BOOL, :EnumChildWindows, :HWND, :WNDENUMPROC, :LPARAM
   end
+  AttachLib.add_type :SIZE_T => (AttachLib::IsWin64 ? :uint64 : :ulong)
+
   module WinKernel
     extend AttachLib
     use_lib 'kernel32'
     attach :DWORD, :GetLastError
+    attach :DWORD, :FormatMessageA, :DWORD, :pointer, :DWORD, :DWORD, :LPSTR, :DWORD
+    attach :DWORD, :FormatMessageW, :DWORD, :pointer, :DWORD, :DWORD, :LPWSTR, :DWORD
+
+    attach :pointer, :GlobalAlloc, :uint, :SIZE_T
+    attach :pointer, :GlobalFree, :pointer
+    attach :pointer, :GlobalLock, :pointer
+    attach :pointer, :GlobalUnlock, :pointer
+  end
+  AttachLib.add_type :HGDIOBJ => :pointer
+  AttachLib.add_type :HBITMAP => :pointer
+  AttachLib.add_type :LPBITMAPINFO => :pointer
+  module WinGDI
+    extend AttachLib
+    use_lib 'gdi32'
+    attach :HDC, :CreateCompatibleDC, :HDC
+    attach :BOOL, :DeleteDC, :HDC
+    attach :int, :GetDeviceCaps, :HDC, :int
+    attach :HBITMAP, :CreateCompatibleBitmap, :HDC, :int, :int
+    attach :HGDIOBJ, :SelectObject, :HDC, :HGDIOBJ
+    attach :BOOL, :DeleteObject, :HGDIOBJ
+    attach :BOOL, :BitBlt, :HDC, :int, :int, :int, :int, :HDC, :int, :int, :DWORD
+    attach :int, :GetDIBits, :HDC, :HBITMAP, :uint, :uint, :pointer, :LPBITMAPINFO, :uint
+
+    class BITMAPINFOHEADER < FFI::Struct
+      layout(
+        :Size, :int32,
+        :Width, :int32,
+        :Height, :int32,
+        :Planes, :int16,
+        :BitCount, :int16,
+        :Compression, :int32,
+        :SizeImage, :int32,
+        :XPelsPerMeter, :int32,
+        :YPelsPerMeter, :int32,
+        :ClrUsed, :int32,
+        :ClrImportant, :int32
+      )
+    end
+    class BITMAPFILEHEADER < FFI::Struct
+      layout(
+        :Type, :int16, 0,
+        :Size, :int32, 2,
+        :Reserved1, :int16, 6,
+        :Reserved2, :int16, 8,
+        :OffBits, :int32, 10
+      )
+    end
+    # for some reason size is returned as 16; should be 14
+    class << FFI::Struct
+      def real_size
+        layout.fields.inject(0) do |sum, field|
+          sum+field.size
+        end
+      end
+    end
   end
 
   WM_CLOSE    = 0x0010
@@ -707,6 +780,159 @@ class WinWindow
     WinUser.PostMessageA(hwnd, BM_CLICK, 0, nil)
   end
 
+  # Returns a Rect struct with members left, top, right, and bottom indicating the dimensions of the bounding rectangle of the specified window. The dimensions are given in screen coordinates that are relative to the upper-left corner of the screen.
+  #
+  # http://msdn.microsoft.com/en-us/library/ms633519%28VS.85%29.aspx
+  def window_rect
+    rect=WinUser::Rect.new
+    ret=WinUser.GetWindowRect(hwnd, rect)
+    if ret==WIN_FALSE
+      self.class.system_error "GetWindowRect"
+    else
+      rect
+    end
+  end
+  # Returns a Rect struct with members left, top, right, and bottom indicating the coordinates of a window's client area. The client coordinates specify the upper-left and lower-right corners of the client area. Because client coordinates are relative to the upper-left corner of a window's client area, the coordinates of the upper-left corner are (0,0).
+  #
+  # http://msdn.microsoft.com/en-us/library/ms633503%28VS.85%29.aspx
+  def client_rect
+    rect=WinUser::Rect.new
+    ret=WinUser.GetClientRect(hwnd, rect)
+    if ret==WIN_FALSE
+      self.class.system_error "GetClientRect"
+    else
+      rect
+    end
+  end
+  
+  SRCCOPY = 0xCC0020
+  DIB_RGB_COLORS = 0x0
+  GMEM_FIXED = 0x0
+  SM_CXSCREEN=
+  SM_CYSCREEN=
+  
+  # Creates a bitmap image of this window (a screenshot). 
+  # Returns the bitmap as represented by three FFI objects: a BITMAPFILEHEADER, a BITMAPINFOHEADER, and a
+  # pointer to actual bitmap data. 
+  # See also #capture_to_bmp_blob and #capture_to_bmp_file - probably more useful to the user than this method. 
+  #
+  # takes an options hash:
+  # - :dc => :client OR :window - whether to use the client area (excluding window trimmings like title bar
+  #          and resizing border-things), or the window area, including window trimmings. default is :window.
+  def capture_to_bmp_structs(options={})
+    options={:dc => :window}.merge(options)
+    if options[:dc]==:client
+      rect=self.client_rect
+      dc=WinUser.GetDC(hwnd) || system_error("GetDC")
+    elsif options[:dc]==:window
+      rect=self.window_rect
+      dc=WinUser.GetWindowDC(hwnd) || system_error("GetWindowDC")
+    else
+      raise ArgumentError
+    end
+    width=rect[:right]-rect[:left]
+    height=rect[:bottom]-rect[:top]
+    begin
+      dc_mem = WinGDI.CreateCompatibleDC(dc) || system_error("CreateCompatibleDC")
+      begin
+        bmp = WinGDI.CreateCompatibleBitmap(dc, width, height) || system_error("CreateCompatibleBitmap")
+        begin
+          WinGDI.SelectObject(dc_mem, bmp) || system_error("SelectObject")
+          WinGDI.BitBlt(dc_mem, 0, 0, width, height, dc, 0, 0, SRCCOPY) || system_error("BitBlt")
+          
+          bytes_per_pixel=3
+          
+          bmp_info=WinGDI::BITMAPINFOHEADER.new
+          { :Size => WinGDI::BITMAPINFOHEADER.real_size, # 40
+            :Width => width,
+            :Height => height,
+            :Planes => 1,
+            :BitCount => bytes_per_pixel*8,
+            :Compression => 0,
+            :SizeImage => 0,
+            :XPelsPerMeter => 0,
+            :YPelsPerMeter => 0,
+            :ClrUsed => 0,
+            :ClrImportant => 0,
+          }.each_pair do |key,val|
+            bmp_info[key]=val
+          end
+          bmp_row_size=width*bytes_per_pixel
+          bmp_row_size+=bmp_row_size%4 # row size must be a multiple of 4 (size of a dword)
+          bmp_size=bmp_row_size*height
+          
+          bits=FFI::MemoryPointer.new(1, bmp_size)
+          
+          WinGDI.GetDIBits(dc_mem, bmp, 0, height, bits, bmp_info, DIB_RGB_COLORS) || system_error("GetDIBits")
+          
+          bmp_file_header=WinGDI::BITMAPFILEHEADER.new
+          { :Type => 'BM'.unpack('S').first, # must be 'BM'
+            :Size => WinGDI::BITMAPFILEHEADER.real_size + WinGDI::BITMAPINFOHEADER.real_size + bmp_size,
+            :Reserved1 => 0,
+            :Reserved2 => 0,
+            :OffBits => WinGDI::BITMAPFILEHEADER.real_size + WinGDI::BITMAPINFOHEADER.real_size
+          }.each_pair do |key,val|
+            bmp_file_header[key]=val
+          end
+          return [bmp_file_header, bmp_info, bits]
+        ensure
+          WinGDI.DeleteObject(bmp)
+        end
+      ensure
+        WinGDI.DeleteDC(dc_mem)
+      end
+    ensure
+      WinUser.ReleaseDC(hwnd, dc)
+    end
+  end
+  # captures this window to a bitmap image (a screenshot). 
+  # Returns the bitmap as represented by a blob (a string) of bitmap data, including the BITMAPFILEHEADER, 
+  # BITMAPINFOHEADER, and data. This can be written directly to a file (though if you want that, 
+  # #capture_to_bmp_file is probably what you want), or passed to ImageMagick, or whatever you like. 
+  #
+  # takes an options hash:
+  # - :dc => :client OR :window - whether to use the client area (excluding window trimmings like title bar
+  #          and resizing border-things), or the window area, including window trimmings. default is :window.
+  def capture_to_bmp_blob(options={})
+    capture_to_bmp_structs(options).map do |struct|
+      if struct.is_a?(FFI::Pointer)
+        ptr=struct
+        size=ptr.size
+      else
+        ptr=struct.to_ptr
+        size=struct.class.real_size
+      end
+      ptr.get_bytes(0, size)
+    end.join("")
+  end
+  
+  # captures this window to a bitmap image (a screenshot). 
+  # stores the bitmap to a filename specified in the first argument. 
+  #
+  # takes an options hash:
+  # - :dc => :client OR :window - whether to use the client area (excluding window trimmings like title bar
+  #          and resizing border-things), or the window area, including window trimmings. default is :window.
+  def capture_to_bmp_file(filename, options={})
+    File.open(filename, 'wb') do |file|
+      file.write(capture_to_bmp_blob(options))
+    end
+  end
+
+  private
+  FORMAT_MESSAGE_FROM_SYSTEM=0x00001000
+  # get the last error from GetLastError, format an error message with FormatMessage, and raise a WinWindow::SystemError 
+  def self.system_error(function)
+    code=WinKernel.GetLastError
+    
+    dwFlags=FORMAT_MESSAGE_FROM_SYSTEM
+    buff_size=65535
+    buff="\1"*buff_size
+    len=WinKernel.FormatMessageA(dwFlags, nil, code, 0, buff, buff_size)
+    system_error_message=buff[0...len]
+    raise WinWindow::SystemError, "#{function} encountered an error\nSystem Error Code #{code}\n"+system_error_message
+  end
+  public
+    
   # iterates over each child, yielding a WinWindow object. 
   # raises a WinWindow::NotExistsError if the window does not exist, or a WinWindow::SystemError if a System Error errors.
   # use #children to get an Enumerable object. 
@@ -726,8 +952,7 @@ class WinWindow
       WinUser.remove_window_enum_callback(enum_child_windows_callback)
     end
     if ret==0
-      code=WinKernel.GetLastError
-      raise WinWindow::SystemError, "EnumChildWindows encountered an error (System Error Code #{code})"
+      self.class.system_error("EnumChildWindows")
       # actually, EnumChildWindows doesn't say anything about return value indicating error encountered.
       # Although EnumWindows does, so it seems sort of safe to assume that would apply here too. 
       # but, maybe not - so, should we raise an error here? 
@@ -836,8 +1061,7 @@ class WinWindow
       WinUser.remove_window_enum_callback(enum_windows_callback)
     end
     if ret==WIN_FALSE
-      code=WinKernel.GetLastError
-      raise WinWindow::SystemError, "EnumWindows ecountered an error (System Error Code #{code})"
+      system_error "EnumWindows"
     end
     nil
   end
@@ -899,8 +1123,23 @@ class WinWindow
     end
   end
   
+  # Returns a WinWindow representing the current foreground window (the window with which the user is currently working).
+  #
+  # http://msdn.microsoft.com/en-us/library/ms633505%28VS.85%29.aspx
   def self.foreground_window
-    hwnd,args=WinUser.GetForegroundWindow
+    hwnd=WinUser.GetForegroundWindow
+    if hwnd == 0
+      nil
+    else
+      self.new(hwnd)
+    end
+  end
+  
+  # Returns a WinWindow representing the desktop window. The desktop window covers the entire screen. The desktop window is the area on top of which other windows are painted. 
+  #
+  # http://msdn.microsoft.com/en-us/library/ms633504%28VS.85%29.aspx
+  def self.desktop_window
+    hwnd=WinUser.GetDesktopWindow
     if hwnd == 0
       nil
     else

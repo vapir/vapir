@@ -83,7 +83,7 @@ module Watir
       
       event_object_hash=create_event_object_hash(event_type, options)
       event_object_hash.each_pair do |key,val|
-        event_object[key.to_s]=val
+        event_object.send(key.to_s+'=', val)
       end
       return event_object
     end

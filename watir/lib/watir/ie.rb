@@ -155,9 +155,3 @@ module Watir
     system("regsvr32.exe /s /u " + "#{@@dir}/#{dll}".gsub('/', '\\'))
   end
 end
-
-# why won't this work when placed in the module (where it properly belongs)
-def _code_that_copies_readonly_array(array, name)
-  raise NotImplementedError
-    "temp = Array.new(#{array.inspect}); #{name}.clear; temp.each {|element| #{name} << element}"
-end

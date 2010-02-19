@@ -35,6 +35,9 @@ module Watir
       else
         @modal_window.send_close!
       end
+      ::Waiter.try_for(ModalDialog::DEFAULT_TIMEOUT, :exception => Watir::Exception::WindowException.new("The modal window failed to close")) do
+        !exists?
+      end
     end
     
     def hwnd

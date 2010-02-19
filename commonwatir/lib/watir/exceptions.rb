@@ -31,8 +31,9 @@ module Watir
     # This exception gets raised if part of finding an object is missing
     class MissingWayOfFindingObjectException < WatirException; end
 
+    class WindowException < WatirException; end
     # This exception is thrown if the window cannot be found
-    class NoMatchingWindowFoundException < WatirException; end
+    class NoMatchingWindowFoundException < WindowException; end
 
     # This exception is thrown if an attemp is made to acces the status bar of the browser when it doesnt exist
     class NoStatusBarException < WatirException; end

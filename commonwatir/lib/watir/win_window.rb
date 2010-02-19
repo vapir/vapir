@@ -602,23 +602,40 @@ class WinWindow
   VK_MENU=0x12
   KEYEVENTF_KEYDOWN=0x0
   KEYEVENTF_KEYUP=0x2
+  # really sets this to be the foreground window. 
+  # restores the window if it's iconic. 
   # attempts to circumvent a lock disabling calls made by set_foreground!
-  # then call set_foreground! and hopefully that will work. 
-  def really_set_foreground!
-    # Simulate two single ALT keystrokes in order to deactivate lock on SetForeGroundWindow before we call it.
-    # See LockSetForegroundWindow, http://msdn.microsoft.com/en-us/library/ms633532(VS.85).aspx
-    # also keybd_event, see http://msdn.microsoft.com/en-us/library/ms646304(VS.85).aspx
-    #
-    # this idea is taken from AutoIt's setforegroundwinex.cpp in SetForegroundWinEx::Activate(HWND hWnd)
-    # keybd_event((BYTE)VK_MENU, MapVirtualKey(VK_MENU, 0), 0, 0);
-    # keybd_event((BYTE)VK_MENU, MapVirtualKey(VK_MENU, 0), KEYEVENTF_KEYUP, 0);
-
+  # then calls set_foreground!, which should then work with that lock disabled. 
+  # tries this for a few seconds, checking if it was successful.
+  #
+  # if you want it to raise an exception if it can't set the foreground window, 
+  # pass :error => true (default is false) 
+  def really_set_foreground!(options={})
+    options=handle_options(options, :error => false)
+    try_harder=false
     mapped_vk_menu=WinUser.MapVirtualKeyA(VK_MENU, 0)
-    2.times do
-      ret=WinUser.keybd_event(VK_MENU, mapped_vk_menu, KEYEVENTF_KEYDOWN, nil)
-      ret=WinUser.keybd_event(VK_MENU, mapped_vk_menu, KEYEVENTF_KEYUP, nil)
+    ::Waiter.try_for(2, :exception => (options[:error] && WinWindow::Error.new("Failed to set foreground window"))) do
+      if iconic?
+        restore!
+      end
+      if try_harder
+        # Simulate two single ALT keystrokes in order to deactivate lock on SetForeGroundWindow before we call it.
+        # See LockSetForegroundWindow, http://msdn.microsoft.com/en-us/library/ms633532(VS.85).aspx
+        # also keybd_event, see http://msdn.microsoft.com/en-us/library/ms646304(VS.85).aspx
+        #
+        # this idea is taken from AutoIt's setforegroundwinex.cpp in SetForegroundWinEx::Activate(HWND hWnd)
+        # keybd_event((BYTE)VK_MENU, MapVirtualKey(VK_MENU, 0), 0, 0);
+        # keybd_event((BYTE)VK_MENU, MapVirtualKey(VK_MENU, 0), KEYEVENTF_KEYUP, 0);
+        2.times do
+          ret=WinUser.keybd_event(VK_MENU, mapped_vk_menu, KEYEVENTF_KEYDOWN, nil)
+          ret=WinUser.keybd_event(VK_MENU, mapped_vk_menu, KEYEVENTF_KEYUP, nil)
+        end
+      else
+        try_harder=true
+      end
+      set_foreground!
+      foreground?
     end
-    set_foreground!
   end
 
   # brings the window to the top of the Z order. If the window is a top-level window, it is activated. If the window is a child window, the top-level parent window associated with the child window is activated.
@@ -817,18 +834,37 @@ class WinWindow
   # See also #capture_to_bmp_blob and #capture_to_bmp_file - probably more useful to the user than this method. 
   #
   # takes an options hash:
-  # - :dc => :client OR :window - whether to use the client area (excluding window trimmings like title bar
-  #          and resizing border-things), or the window area, including window trimmings. default is :window.
+  # - :dc => what device context to use 
+  #     :client - captures the client area, which excludes window trimmings like title bar, resize bars, etc.
+  #     :window (default) - capturse the window area, including window trimmings. 
+  # - :set_foreground => whether to try to set this to be the foreground 
+  #     true - calls to #set_foreground
+  #     false - doesn't call to any functions to set this to be the foreground
+  #     :really (default) - calls to #really_set_foreground. this is the default because really being 
+  #       in the foreground is rather important when taking a screenshot. 
   def capture_to_bmp_structs(options={})
-    options={:dc => :window}.merge(options)
-    if options[:dc]==:client
+    options=handle_options(options, :dc => :window, :set_foreground => :really)
+    case options[:set_foreground]
+    when :really
+      really_set_foreground!
+    when true
+      set_foreground!
+    when false,nil
+    else
+      raise ArgumentError, ":set_foreground option is invalid. expected values are :really, true, or false/nil. received #{options[:set_foreground]} (#{options[:set_foreground].class})"
+    end
+    if options[:set_foreground]
+      sleep 0.2 # if setting foreground, sleep a tick - sometimes it still hasn't show up even when it is the foreground window; sometimes it's still only partway-drawn 
+    end
+    case options[:dc]
+    when :client
       rect=self.client_rect
       dc=WinUser.GetDC(hwnd) || system_error("GetDC")
-    elsif options[:dc]==:window
+    when :window
       rect=self.window_rect
       dc=WinUser.GetWindowDC(hwnd) || system_error("GetWindowDC")
     else
-      raise ArgumentError
+      raise ArgumentError, ":dc option is invalid. expected values are :client or :window; received #{options[:dc]} (#{options[:dc].class})"
     end
     width=rect[:right]-rect[:left]
     height=rect[:bottom]-rect[:top]
@@ -890,9 +926,7 @@ class WinWindow
   # BITMAPINFOHEADER, and data. This can be written directly to a file (though if you want that, 
   # #capture_to_bmp_file is probably what you want), or passed to ImageMagick, or whatever you like. 
   #
-  # takes an options hash:
-  # - :dc => :client OR :window - whether to use the client area (excluding window trimmings like title bar
-  #          and resizing border-things), or the window area, including window trimmings. default is :window.
+  # takes an options hash. see the documentation on #capture_to_bmp_structs for what options are accepted. 
   def capture_to_bmp_blob(options={})
     capture_to_bmp_structs(options).map do |struct|
       if struct.is_a?(FFI::Pointer)
@@ -909,9 +943,7 @@ class WinWindow
   # captures this window to a bitmap image (a screenshot). 
   # stores the bitmap to a filename specified in the first argument. 
   #
-  # takes an options hash:
-  # - :dc => :client OR :window - whether to use the client area (excluding window trimmings like title bar
-  #          and resizing border-things), or the window area, including window trimmings. default is :window.
+  # takes an options hash. see the documentation on #capture_to_bmp_structs for what options are accepted. 
   def capture_to_bmp_file(filename, options={})
     File.open(filename, 'wb') do |file|
       file.write(capture_to_bmp_blob(options))

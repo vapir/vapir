@@ -1,5 +1,6 @@
 require 'dl/import'
 require 'dl/struct'
+require 'Win32API'
 
 module Watir
   module Win32

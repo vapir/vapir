@@ -1,5 +1,3 @@
-require 'ffi'
-
 require 'watir/handle_options'
 require 'watir/waiter'
 
@@ -21,70 +19,119 @@ class WinWindow
   class NotExistsError < Error;end
   class MatchError < Error;end
   
-  IsWin64=nil # TODO/FIX: detect this! 
-  # types from http://msdn.microsoft.com/en-us/library/aa383751%28VS.85%29.aspx
-  Types={}
-  Types[:HWND]= :ulong # this is a lie. really void*, but easier to deal with as a long. 
-  Types[:LPSTR]= :string # char*
-  Types[:LPWSTR]= :pointer # wchar_t*
-  Types[:LPCSTR]= :buffer_in # const char*
-  Types[:LPCWSTR]= :pointer # const wchar_t*
-  Types[:LONG_PTR]=IsWin64 ? :int64 : :long
-  Types[:LRESULT]= Types[:LONG_PTR]
-  Types[:WPARAM]=IsWin64 ? :uint64 : :uint
-  Types[:LPARAM]= :pointer #Types[:LONG_PTR] # this is supposed to be a LONG_PTR (a long type for pointer precision), but casting around is annoying - just going to use it as a pointer. 
-  Types[:BOOL]= :int
-  Types[:BYTE]= :uchar
-  Types[:DWORD]= :ulong
+  # this module exists because I've implemented this library for DL, for FFI, and for Win32::API.
+  # Getting tired of changing everything everywhere, now it just takes changes to some Types (mostly
+  # basic types), the use_lib method, and the attach method to switch to another library. Also some
+  # callback stuff in some other places. 
+  # I may support switching backends at some point, but for now it's Win32::API.
+  module AttachLib
+    require 'win32/api'
+
+    IsWin64=nil # TODO/FIX: detect this! 
+    # types from http://msdn.microsoft.com/en-us/library/aa383751%28VS.85%29.aspx
+    BasicTypes={ :char => 'I', # no 8-bit type in Win32::API?
+                 :uchar => 'I', # no unsigned types in Win32::API?
+                 :int => 'I',
+                 :uint => 'I',
+                 :long => 'L',
+                 :ulong => 'L',
+                 :void => 'V',
+                 :pointer => 'P',
+                 :callback => 'K',
+                 :string => 'S'
+               }
+    Types=BasicTypes.dup
+    Types[:buffer_in]=Types[:string]
+    Types[:buffer_out]=Types[:pointer]
+    Types[:HWND]= Types[:ulong] # this is a lie. really void*, but easier to deal with as a long. 
+    Types[:LPSTR]= Types[:pointer] # char*
+    Types[:LPWSTR]= Types[:pointer] # wchar_t*
+    Types[:LPCSTR]= Types[:buffer_in] # const char*
+    Types[:LPCWSTR]= Types[:pointer] # const wchar_t*
+    Types[:LONG_PTR]=IsWin64 ? Types[:int64] : Types[:long] # TODO/FIX: there is no :int64 type defined yet 
+    Types[:LRESULT]= Types[:LONG_PTR]
+    Types[:WPARAM]=IsWin64 ? Types[:uint64] : Types[:uint] # TODO/FIX: no :uint64
+    Types[:LPARAM]= Types[:pointer] #Types[:LONG_PTR] # this is supposed to be a LONG_PTR (a long type for pointer precision), but casting around is annoying - just going to use it as a pointer. 
+    Types[:BOOL]= Types[:int]
+    Types[:BYTE]= Types[:uchar]
+    Types[:DWORD]= Types[:ulong]
+    def use_lib(lib)
+      @lib=lib
+    end
+    # this takes arguments in the order that they're given in c/c++ so that signatures look kind of like the source
+    def attach(return_type, function_name, *arg_types)
+      the_function=Win32::API.new(function_name, arg_types.map{|arg_type| Types[arg_type] }.join(''), Types[return_type], @lib)
+      metaclass=class << self;self;end
+      metaclass.send(:define_method, function_name) do |*args|
+        the_function.call(*args)
+      end
+      nil
+    end
+    # this takes arguments like #attach, but with a name for the callback's type on the front. 
+    def callback(callback_type_name, return_type, callback_method_name, *arg_types)
+      Types[callback_type_name]=Types[:callback]
+      
+      # perform some hideous class_eval'ing to dynamically define the callback method such that it will take a block 
+      metaclass=class << self;self;end
+      metaclass.class_eval("def #{callback_method_name}(&block)
+        #{callback_method_name}_with_arg_stuff_in_scope(block)
+      end")
+      metaclass.send(:define_method, callback_method_name.to_s+"_with_arg_stuff_in_scope") do |block|
+        return Win32::API::Callback.new(arg_types.map{|t| Types[t]}.join(''), Types[return_type], &block)
+      end
+      nil
+    end
+  end
 
   module WinUser
-    extend FFI::Library
-    ffi_lib 'user32'
-    ffi_convention :stdcall
+    extend AttachLib
+    use_lib 'user32'
     
-    attach_function :GetWindowTextA, [Types[:HWND], Types[:LPSTR], :int], :int
-    attach_function :GetWindowTextW, [Types[:HWND], Types[:LPWSTR], :int], :int
-    attach_function :GetWindowTextLengthA, [Types[:HWND]], :int
-    attach_function :GetWindowTextLengthW, [Types[:HWND]], :int
-    attach_function :SendMessageA, [Types[:HWND], :uint, Types[:WPARAM], Types[:LPARAM]], Types[:LRESULT]
-    attach_function :SendMessageW, [Types[:HWND], :uint, Types[:WPARAM], Types[:LPARAM]], Types[:LRESULT]
-    attach_function :PostMessageA, [Types[:HWND], :uint, Types[:WPARAM], Types[:LPARAM]], Types[:BOOL]
-    attach_function :PostMessageW, [Types[:HWND], :uint, Types[:WPARAM], Types[:LPARAM]], Types[:BOOL]
-    attach_function :SetWindowTextA, [Types[:HWND], Types[:LPCSTR]], Types[:BOOL]
-    attach_function :SetWindowTextW, [Types[:HWND], Types[:LPCWSTR]], Types[:BOOL]
-    attach_function :GetWindow, [Types[:HWND], :uint], Types[:HWND]
-    attach_function :GetLastActivePopup, [Types[:HWND]], Types[:HWND]
-    [:GetLastActivePopup, :GetTopWindow, :GetParent].each do |func|
-      attach_function func, [Types[:HWND]], Types[:HWND]
-    end
-    attach_function :SetParent, [Types[:HWND], Types[:HWND]], Types[:HWND]
-    attach_function :IsChild, [Types[:HWND], Types[:HWND]], Types[:BOOL]
-    [:IsHungAppWindow, :IsWindow, :IsWindowVisible, :IsIconic, :SetForegroundWindow, :BringWindowToTop, :CloseWindow, :DestroyWindow].each do |func|
-      attach_function func, [Types[:HWND]], Types[:BOOL]
-    end
-    attach_function :GetClassNameA, [Types[:HWND], Types[:LPSTR], :int], :int
-    attach_function :GetClassNameW, [Types[:HWND], Types[:LPWSTR], :int], :int
-    attach_function :RealGetWindowClassA, [Types[:HWND], Types[:LPSTR], :uint], :uint
-    attach_function :RealGetWindowClassW, [Types[:HWND], Types[:LPWSTR], :uint], :uint
-    attach_function :SwitchToThisWindow, [Types[:HWND], Types[:BOOL]], :void
-    attach_function :LockSetForegroundWindow, [:uint], Types[:BOOL]
-    attach_function :MapVirtualKeyA, [:uint, :uint], :uint
-    attach_function :MapVirtualKeyW, [:uint, :uint], :uint
-    attach_function :keybd_event, [Types[:BYTE], Types[:BYTE], Types[:DWORD], :pointer], :void
-    attach_function :ShowWindow, [Types[:HWND], :int], Types[:BOOL]
-    attach_function :EndTask, [Types[:HWND], Types[:BOOL], Types[:BOOL]], Types[:BOOL]
-    attach_function :GetForegroundWindow, [], Types[:HWND]
+    attach :int, :GetWindowTextA, :HWND, :LPSTR, :int
+    attach :int, :GetWindowTextW, :HWND, :LPWSTR, :int
+    attach :int, :GetWindowTextLengthA, :HWND
+    attach :int, :GetWindowTextLengthW, :HWND
+    attach :LRESULT, :SendMessageA, :HWND, :uint, :WPARAM, :LPARAM
+    attach :LRESULT, :SendMessageW, :HWND, :uint, :WPARAM, :LPARAM
+    attach :BOOL, :PostMessageA, :HWND, :uint, :WPARAM, :LPARAM
+    attach :BOOL, :PostMessageW, :HWND, :uint, :WPARAM, :LPARAM
+    attach :BOOL, :SetWindowTextA, :HWND, :LPCSTR
+    attach :BOOL, :SetWindowTextW, :HWND, :LPCWSTR
+    attach :HWND, :GetWindow, :HWND, :uint
+    attach :HWND, :GetLastActivePopup, :HWND
+    attach :HWND, :GetTopWindow, :HWND
+    attach :HWND, :GetParent, :HWND
+    attach :HWND, :SetParent, :HWND, :HWND
+    attach :BOOL, :IsChild, :HWND, :HWND
+    attach :BOOL, :IsHungAppWindow, :HWND
+    attach :BOOL, :IsWindow, :HWND
+    attach :BOOL, :IsWindowVisible, :HWND
+    attach :BOOL, :IsIconic, :HWND
+    attach :BOOL, :SetForegroundWindow, :HWND
+    attach :BOOL, :BringWindowToTop, :HWND
+    attach :BOOL, :CloseWindow, :HWND
+    attach :BOOL, :DestroyWindow, :HWND
+    attach :int, :GetClassNameA, :HWND, :LPSTR, :int
+    attach :int, :GetClassNameW, :HWND, :LPWSTR, :int
+    attach :uint, :RealGetWindowClassA, :HWND, :LPSTR, :uint
+    attach :uint, :RealGetWindowClassW, :HWND, :LPWSTR, :uint
+    attach :void, :SwitchToThisWindow, :HWND, :BOOL
+    attach :BOOL, :LockSetForegroundWindow, :uint
+    attach :uint, :MapVirtualKeyA, :uint, :uint
+    attach :uint, :MapVirtualKeyW, :uint, :uint
+    attach :void, :keybd_event, :BYTE, :BYTE, :DWORD, :pointer
+    attach :BOOL, :ShowWindow, :HWND, :int
+    attach :BOOL, :EndTask, :HWND, :BOOL, :BOOL
+    attach :HWND, :GetForegroundWindow
     
-    callback :WNDENUMPROC, [Types[:HWND], Types[:LPARAM]], Types[:BOOL]
-    attach_function :EnumWindows, [:WNDENUMPROC, Types[:LPARAM]], Types[:BOOL]
-    attach_function :EnumChildWindows, [Types[:HWND], :WNDENUMPROC, Types[:LPARAM]], Types[:BOOL]
+    callback :WNDENUMPROC, :BOOL, :window_enum_callback, :HWND, :LPARAM
+    attach :BOOL, :EnumWindows, :WNDENUMPROC, :LPARAM
+    attach :BOOL, :EnumChildWindows, :HWND, :WNDENUMPROC, :LPARAM
   end
   module WinKernel
-    extend FFI::Library
-    ffi_lib 'kernel32'
-    ffi_convention :stdcall
-    
-    attach_function :GetLastError, [], Types[:DWORD]
+    extend AttachLib
+    use_lib 'kernel32'
+    attach :DWORD, :GetLastError
   end
 
   WM_CLOSE    = 0x0010
@@ -573,7 +620,7 @@ class WinWindow
   # For System Error Codes see http://msdn.microsoft.com/en-us/library/ms681381(VS.85).aspx
   def each_child
     raise WinWindow::NotExistsError, "Window does not exist! Cannot enumerate children." unless exists?
-    enum_child_windows_callback= proc do |chwnd, lparam|
+    enum_child_windows_callback= WinUser.window_enum_callback do |chwnd, lparam|
       yield WinWindow.new(chwnd)
       WIN_TRUE
     end
@@ -679,7 +726,7 @@ class WinWindow
   #
   # For System Error Codes see http://msdn.microsoft.com/en-us/library/ms681381(VS.85).aspx
   def self.each_window
-    enum_windows_callback= proc do |hwnd,lparam|
+    enum_windows_callback= WinUser.window_enum_callback do |hwnd,lparam|
       yield WinWindow.new(hwnd)
       WIN_TRUE
     end

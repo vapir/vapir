@@ -273,7 +273,7 @@ module Watir
                   candidate_attributes.call(:type).any?{|attr| Watir::fuzzy_match(attr, type)}
                 end
               else
-                matched_aliases = aliases.reject do |(dom_attr, alias_list)|
+                matched_aliases = aliases.reject do |dom_attr, alias_list|
                   !alias_list.include?(how)
                 end.keys
                 (matched_aliases+[how]).any? do |how_alias|

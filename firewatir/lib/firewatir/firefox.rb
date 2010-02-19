@@ -611,7 +611,7 @@ module Watir
       @current_os ||= begin
         platform= RUBY_PLATFORM =~ /java/ ? java.lang.System.getProperty("os.name") : RUBY_PLATFORM
         case platform
-        when /mswin|windows/i
+        when /mswin|windows|mingw32/i
           :windows
         when /darwin|mac os/i
           :macosx

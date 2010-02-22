@@ -30,12 +30,10 @@ module Watir
     end
     alias each_with_enumerable_index each_with_index # call ruby's 0-based indexing enumerable_index; call ours element_index
     def each_with_element_index
-      #each_with_enumerable_index do |element, enumerable_index|
-      #  yield element, enumerable_index+1
-      #end
-      # above method makes it use how=:element_object - since we're associating with index, going by how=:index seems more logical, hence below
-      each_index do |i|
-        yield at(i), i
+      index=1
+      candidates.each do |candidate|
+        yield @collection_class.new(:index, nil, @extra.merge(:index => index, :element_object => candidate)), index
+        index+=1
       end
       self
     end

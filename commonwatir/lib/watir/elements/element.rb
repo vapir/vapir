@@ -494,6 +494,7 @@ module Watir
       @container=extra[:container]
       @browser=extra[:browser]
       @page_container=extra[:page_container]
+      @element_object=extra[:element_object] # this will in most cases not be set, but may be set in some cases from ElementCollection enumeration 
       extra[:locate]=true unless @extra.key?(:locate) # set default 
       case extra[:locate]
       when :assert

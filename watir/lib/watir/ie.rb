@@ -69,6 +69,7 @@ class WIN32OLE
 end
 
 # create stub class since everything is defined in Watir::IE namespace - this needs to be defined before the real class.
+require 'watir/browser'
 module Watir
   class IE < Watir::Browser
   end

@@ -277,6 +277,8 @@ module Watir
     # in IE, type attribute is one of "select-one", "select-multiple" - but all are still the 'select' tag 
     container_single_method :select_list
     container_collection_method :select_lists
+    
+    dom_attr :multiple => [:multiple, :multiple?]
 
     # Returns an ElementCollection containing all the option elements of the select list 
     # Raises UnknownObjectException if the select box is not found
@@ -369,6 +371,7 @@ module Watir
     private
     # yields each option, selects the option if the given block returns true. fires onchange event if
     # any have changed. raises Watir::Exception::NoValueFoundException if none matched. 
+    # breaks after the first match found if this is not a multiple select list. 
     # takes options hash (note, these are flags for the function, not to be confused with the Options of the select list)
     # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
     #   used for the onchange event. 
@@ -382,11 +385,12 @@ module Watir
         # new option is selected (seems to be related to javascript events) and it has to be relocated. 
         # see documentation on ElementCollection#each_with_index vs. #each. 
         self.options.each_with_index do |option,i|
-          break unless option.exists? # javascript events on previous option selections can cause the select list or its options to change, so this may not actually exist. 
+          # javascript events on previous option selections can cause the select list or its options to change, so this may not actually exist. but only check if we've actually done anything. 
+          break if any_matched && !option.exists? 
           if yield option
             any_matched=true
             option.set_selected(true, method_options) # note that this fires the onchange event on this SelectList 
-            if !self.exists? # javascript events firing can cause us to stop existing at this point. we should not continue if we don't exist. 
+            if !self.exists? || !multiple? # javascript events firing can cause us to stop existing at this point. we should not continue if we don't exist. 
               break
             end
           end
@@ -394,6 +398,7 @@ module Watir
         if !any_matched
           raise Watir::Exception::NoValueFoundException, "Could not find any options matching those specified on #{self.inspect}"
         end
+        self
       end
     end
   end

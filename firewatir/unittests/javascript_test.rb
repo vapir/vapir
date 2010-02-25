@@ -12,12 +12,12 @@ class TC_JavaScript_Test < Test::Unit::TestCase
     tag_method :test_alert, :fails_on_ie
     def test_alert
         browser.button!(:id, "btnAlert").click_no_wait
-        assert_equal("Press OK", browser.modal_dialog.text)
+        assert_match(/Press OK\z/, browser.modal_dialog.text)
         browser.modal_dialog.click_button('OK')
         assert_equal(browser.text_field!(:id, "testResult").value , "You pressed the Alert button!")
         
         browser.button!(:id, "btnAlert").click_no_wait
-        assert_equal("Press OK", browser.modal_dialog.text)
+        assert_match(/Press OK\z/, browser.modal_dialog.text) # this is "[JavaScript Application]Press OK" on mac
         browser.modal_dialog.click_button('OK')
         assert_equal(browser.text_field!(:id, "testResult").value , "You pressed the Alert button!")
     end
@@ -25,12 +25,12 @@ class TC_JavaScript_Test < Test::Unit::TestCase
     tag_method :test_confirm_ok, :fails_on_ie
     def test_confirm_ok
         browser.button!(:id, "btnConfirm").click_no_wait
-        assert_equal("Press a button", browser.modal_dialog.text)
+        assert_match(/Press a button\z/, browser.modal_dialog.text) # "[JavaScript Application]Press a button" on mac
         browser.modal_dialog.click_button('OK')
         assert_equal(browser.text_field!(:id, "testResult").value , "You pressed the Confirm and OK button!")
 
         browser.button!(:id, "btnConfirm").click_no_wait
-        assert_equal("Press a button", browser.modal_dialog.text)
+        assert_match(/Press a button\z/, browser.modal_dialog.text)
         browser.modal_dialog.click_button('OK')
         assert_equal(browser.text_field!(:id, "testResult").value , "You pressed the Confirm and OK button!")
     end
@@ -38,12 +38,12 @@ class TC_JavaScript_Test < Test::Unit::TestCase
     tag_method :test_confirm_cancel, :fails_on_ie
     def test_confirm_cancel
         browser.button!(:id, "btnConfirm").click_no_wait
-        assert_equal("Press a button", browser.modal_dialog.text)
+        assert_match(/Press a button\z/, browser.modal_dialog.text)
         browser.modal_dialog.click_button('Cancel')
         assert_equal(browser.text_field!(:id, "testResult").value, "You pressed the Confirm and Cancel button!")
 
         browser.button!(:id, "btnConfirm").click_no_wait
-        assert_equal("Press a button", browser.modal_dialog.text)
+        assert_match(/Press a button\z/, browser.modal_dialog.text)
         browser.modal_dialog.click_button('Cancel')
         assert_equal(browser.text_field!(:id, "testResult").value, "You pressed the Confirm and Cancel button!")
     end
@@ -53,7 +53,7 @@ class TC_JavaScript_Test < Test::Unit::TestCase
         goto_page("selectboxes1.html")
         browser.select_list!(:id , "selectbox_5").select_value(/2/, :wait => false)
         sleep 0.2 # give it a (short) moment for the no-wait event to fire
-        assert_equal("Press OK", browser.modal_dialog.text)
+        assert_match(/Press OK\z/, browser.modal_dialog.text)
         browser.modal_dialog.click_button('OK')
         assert_equal(browser.text_field!(:id, "txtAlert").value , "You pressed OK button")
     end

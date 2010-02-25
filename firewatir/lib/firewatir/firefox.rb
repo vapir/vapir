@@ -109,7 +109,7 @@ module Watir
       if options[:reset_if_dead]
         begin
           @@jssh_socket.assert_socket
-        rescue JsshError, Errno::ECONNABORTED, Errno::ECONNRESET
+        rescue JsshConnectionError
           initialize_jssh_socket
         end
       end
@@ -335,9 +335,8 @@ module Watir
       begin
         browser_window_object.close
         @@jssh_socket.assert_socket
-      rescue JsshError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
+      rescue JsshConnectionError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
         @@jssh_socket=nil
-        nil
       end
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
 @launched_browser_process=false #TODO/FIX: check here if we originally launched the browser process
@@ -364,7 +363,7 @@ module Watir
           @@jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
           false
         end
-      rescue JsshError, Errno::ECONNRESET, Errno::ECONNABORTED
+      rescue JsshConnectionError
         @@jssh_socket=nil
       end
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil

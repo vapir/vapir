@@ -48,10 +48,13 @@ end
 class JsshError < StandardError
   attr_accessor :source, :lineNumber, :stack, :fileName
 end
-class JsshSyntaxError < JsshError; end
+# this exception covers all connection errors either on startup or during usage
+class JsshConnectionError < JsshError;end
 # This exception is thrown if we are unable to connect to JSSh.
-class JsshUnableToStart < JsshError; end
-class JsshUndefinedValueError < JsshError; end
+class JsshUnableToStart < JsshConnectionError;end
+class JsshJavascriptError < JsshError;end
+class JsshSyntaxError < JsshJavascriptError;end
+class JsshUndefinedValueError < JsshJavascriptError;end
 
 class JsshSocket
 #  def self.logger
@@ -99,12 +102,12 @@ class JsshSocket
       read=read_value(:timeout => LONG_SOCKET_TIMEOUT)
       if !read
         @expecting_extra_maybe=true
-        raise JsshError, "Something went wrong initializing - no response" 
+        raise JsshUnableToStart, "Something went wrong initializing - no response" 
       elsif read != welcome
         @expecting_extra_maybe=true
-        raise JsshError, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
+        raise JsshUnableToStart, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
       end
-    rescue Errno::ECONNREFUSED, Errno::ECONNRESET
+    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EPIPE
       err=JsshUnableToStart.new("Could not connect to JSSH sever #{@ip}:#{@port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
       err.set_backtrace($!.backtrace)
       raise err
@@ -198,7 +201,7 @@ class JsshSocket
       
       # Kernel.select seems to indicate that a dead socket is ready to read, and returns endless blank strings to recv. rather irritating. 
       if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd==''}
-        raise JsshError, "Socket seems to no longer be connected"
+        raise JsshConnectionError, "Socket seems to no longer be connected"
       end
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end
@@ -280,11 +283,11 @@ class JsshSocket
   def js_error(errclassname, message, source, stuff={})
     errclass=if errclassname
       unless JsshError.const_defined?(errclassname)
-        JsshError.const_set(errclassname, Class.new(JsshError))
+        JsshError.const_set(errclassname, Class.new(JsshJavascriptError))
       end
       JsshError.const_get(errclassname)
     else
-      JsshError
+      JsshJavascriptError
     end
     err=errclass.new("#{message}\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
     err.source=source
@@ -515,10 +518,14 @@ class JsshSocket
   
   # raises an informative error if the socket is down for some reason 
   def assert_socket
-    actual, expected=if prototype
-      [value_json('["foo"]'), ["foo"]]
-    else
-      [value('"foo"'), "foo"]
+    begin
+      actual, expected=if prototype
+        [value_json('["foo"]'), ["foo"]]
+      else
+        [value('"foo"'), "foo"]
+      end
+    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EPIPE
+      raise(JsshConnectionError, "Encountered a socket error while checking the socket.\n#{$!.class}\n#{$!.message}", $!.backtrace)
     end
     unless expected==actual
       raise JsshError, "The socket seems to have a problem: sent #{expected.inspect} but got back #{actual.inspect}"
@@ -658,7 +665,7 @@ class JsshObject
   # returns a JsshObject referencing the given attribute of this object 
   def attr(attribute)
     unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
-      raise JsshError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
+      raise JsshSyntaxError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
     end
     JsshObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
   end

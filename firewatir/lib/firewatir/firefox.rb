@@ -366,6 +366,15 @@ module Watir
       rescue JsshConnectionError
         @@jssh_socket=nil
       end
+      # TODO/FIX: poll to wait for the process itself to finish? the socket closes (which we wait for 
+      # above) before the process itself has exited, so if Firefox.new is called between the socket 
+      # closing and the process exiting, Firefox pops up with:
+      #  Close Firefox
+      #  A copy of Firefox is already open. Only one copy of Firefox can be open at a time.
+      #  [OK]
+      # until that's implemented, just wait for an arbitrary amount of time. (ick)
+      sleep 2
+
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
       nil
     end

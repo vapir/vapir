@@ -1,4 +1,3 @@
-require 'watir/win_window'
 require 'firewatir/window'
 require 'watir/common_modal_dialog'
 module Watir

@@ -1,4 +1,4 @@
-require "watir/specifier"
+require "vapir-common/specifier"
 
 module Watir
   class ElementCollection

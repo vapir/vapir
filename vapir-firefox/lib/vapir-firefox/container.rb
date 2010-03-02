@@ -37,8 +37,6 @@
     #
 =end
 
-require 'firewatir/exceptions'
-
 module Watir
   module Firefox::Container 
     include Watir::Container

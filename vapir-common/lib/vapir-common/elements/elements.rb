@@ -1,5 +1,5 @@
-require 'watir/elements/element'
-require 'watir/common_container'
+require 'vapir-common/elements/element'
+require 'vapir-common/common_container'
 
 module Watir
   module Frame

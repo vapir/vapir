@@ -7,7 +7,7 @@
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..') unless $SETUP_LOADED
 
-require 'watir/testcase'
+require 'vapir-common/testcase'
 
 class TC1_Alphabetical_Default < Watir::TestCase
   execute :alphabetically

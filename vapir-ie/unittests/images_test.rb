@@ -5,7 +5,7 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
 require 'ftools'
 require 'webrick'
-require 'watir/cookiemanager'
+require 'vapir-ie/cookiemanager'
 
 class TC_Images < Test::Unit::TestCase
   tags :must_be_visible, :creates_windows

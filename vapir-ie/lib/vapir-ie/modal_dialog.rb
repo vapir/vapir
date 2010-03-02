@@ -1,5 +1,5 @@
-require 'watir/win_window'
-require 'watir/common_modal_dialog'
+require 'vapir-common/win_window'
+require 'vapir-common/common_modal_dialog'
 module Watir
   class IE::ModalDialog
     include Watir::ModalDialog
@@ -55,7 +55,7 @@ module Watir
   end
   class IE::ModalDialogDocument
     include IE::PageContainer
-    @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/watir/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
+    @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/vapir-ie/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
 
     GetUnknown = Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
     def initialize(containing_modal_dialog, options={})

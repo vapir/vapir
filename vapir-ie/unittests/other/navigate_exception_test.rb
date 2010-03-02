@@ -3,7 +3,7 @@
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..') unless $SETUP_LOADED
 require 'unittests/setup'
-require 'watir/contrib/page_checker' 
+require 'vapir-ie/contrib/page_checker' 
 #  To add checkers, call the ie.add_checker method
 #
 #  ie.

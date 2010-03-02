@@ -1,6 +1,6 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 
-require 'watir/WindowHelper'
+require 'vapir-ie/WindowHelper'
 
 
 helper = WindowHelper.new

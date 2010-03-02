@@ -30,7 +30,7 @@ Unit Tests:
 
 Typical Usage
    # include the controller 
-   require 'watir' 
+   require 'vapir' 
    # create an instance of the controller 
    ie = Watir::IE.new  
    # go to the page you want to test 

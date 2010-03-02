@@ -31,7 +31,7 @@ module Watir
     # path - directory path and file name of where image should be saved
     def save(path)
     # TODO: FIX
-      require 'watir/windowhelper'
+      require 'vapir-ie/windowhelper'
       WindowHelper.check_autoit_installed
       @container.goto(src)
       begin

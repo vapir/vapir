@@ -1,6 +1,6 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
-require 'watir/WindowHelper'
+require 'vapir-ie/WindowHelper'
 
 class TC_Logon_Test < Test::Unit::TestCase
   include Watir

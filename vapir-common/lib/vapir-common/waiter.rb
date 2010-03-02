@@ -1,4 +1,4 @@
-require 'watir/exceptions'
+require 'vapir-common/exceptions'
 
 module Watir
   
@@ -91,7 +91,7 @@ end
     
 end # module
 
-require 'watir/handle_options'
+require 'vapir-common/handle_options'
 
 class WaiterError < StandardError; end
 class Waiter

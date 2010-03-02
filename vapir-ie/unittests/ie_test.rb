@@ -2,7 +2,7 @@
 # revision: $Revision$
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
-require 'watir/win32ole'
+require 'vapir-ie/win32ole'
 require 'unittests/ie_mock'
 require 'test/unit'
 

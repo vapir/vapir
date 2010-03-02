@@ -9,7 +9,7 @@ class TC_IEDialog < Test::Unit::TestCase
   include Watir 
 
   # this will find the IEDialog.dll file in its build location
-  @@iedialog_file = (File.expand_path(File.dirname(__FILE__)) + "/../../lib/watir/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
+  @@iedialog_file = (File.expand_path(File.dirname(__FILE__)) + "/../../lib/vapir-ie/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
   
   # commented out because it currently requires a manual click
   # a better idea would be to automate the click...

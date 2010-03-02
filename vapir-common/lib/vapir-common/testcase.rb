@@ -1,5 +1,5 @@
 require 'test/unit'
-require 'watir/assertions'
+require 'vapir-common/assertions'
 
 module Watir
 

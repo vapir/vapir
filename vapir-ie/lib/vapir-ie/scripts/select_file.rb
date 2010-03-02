@@ -37,11 +37,11 @@ at_exit do
   end
 end
 
-$LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', '..', 'commonwatir', 'lib'))
+$LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', '..', 'vapir-common', 'lib'))
 
-require 'watir/win_window'
-require 'watir/waiter'
-require 'watir/exceptions'
+require 'vapir-common/win_window'
+require 'vapir-common/waiter'
+require 'vapir-common/exceptions'
 
 browser_hwnd, file_path, $error_file_name=*ARGV
 unless (2..3).include?(ARGV.size) && browser_hwnd =~ /^\d+$/ && browser_hwnd.to_i > 0

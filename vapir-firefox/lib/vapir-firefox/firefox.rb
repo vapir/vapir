@@ -3,7 +3,7 @@
 
    Typical usage:
     # include the controller
-    require "firewatir"
+    require "vapir-firefox"
 
     # go to the page you want to test
     ff = FireWatir::Firefox.start("http://myserver/mypage")
@@ -81,9 +81,9 @@
 
 =end
 
-require 'watir/waiter'
-require 'firewatir/window'
-require 'firewatir/modal_dialog'
+require 'vapir-common/waiter'
+require 'vapir-firefox/window'
+require 'vapir-firefox/modal_dialog'
 
 module Watir
   include Watir::Exception

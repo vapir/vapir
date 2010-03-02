@@ -1,8 +1,8 @@
 # feature tests for wait_until
 
-require 'watir/testcase'
-require 'watir/waiter'
-require 'watir'
+require 'vapir-common/testcase'
+require 'vapir-common/waiter'
+require 'vapir'
 require 'spec' # gem install rspec
 
 # used for unit testing

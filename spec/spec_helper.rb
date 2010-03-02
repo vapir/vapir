@@ -1,12 +1,12 @@
-$LOAD_PATH.unshift File.expand_path("#{File.dirname(__FILE__)}/../commonwatir/lib")
-$LOAD_PATH.unshift File.expand_path("#{File.dirname(__FILE__)}/../watir/lib")
-$LOAD_PATH.unshift File.expand_path("#{File.dirname(__FILE__)}/../firewatir/lib")
+$LOAD_PATH.unshift File.expand_path("#{File.dirname(__FILE__)}/../vapir-common/lib")
+$LOAD_PATH.unshift File.expand_path("#{File.dirname(__FILE__)}/../vapir-ie/lib")
+$LOAD_PATH.unshift File.expand_path("#{File.dirname(__FILE__)}/../vapir-firefox/lib")
 
-require "watir"
+require "vapir"
 
 case ENV['watir_browser']
 when /firefox/
-  Browser = FireWatir::Firefox
+  Browser = Watir::Firefox
 else
   Browser = Watir::IE
   WatirSpec.persistent_browser = true

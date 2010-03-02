@@ -1,8 +1,7 @@
-require 'watir/ie'
-require 'watir/browser'
-require 'watir/container'
-require 'watir/page-container'
-require 'watir/win32'
+require 'vapir-ie/ie'
+require 'vapir-ie/container'
+require 'vapir-ie/page-container'
+require 'vapir-ie/win32'
 
 module Watir
   class IE < Browser
@@ -444,7 +443,7 @@ module Watir
     # See http://www.autoitscript.com/autoit3/docs/appendix/SendKeys.htm
     # for complete documentation on keys supported and syntax.
     def send_keys(key_string)
-      require 'watir/autoit'
+      require 'vapir-ie/autoit'
       bring_to_front
       Watir.autoit.Send key_string
     end

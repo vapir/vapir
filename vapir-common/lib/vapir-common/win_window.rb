@@ -1,5 +1,5 @@
-require 'watir/handle_options'
-require 'watir/waiter'
+require 'vapir-common/handle_options'
+require 'vapir-common/waiter'
 
 class WinWindow
   # Class that wraps useful methods of user32.dll involving windows in MS Windows (oh wonderful naming)

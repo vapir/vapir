@@ -1,5 +1,5 @@
 # mock library for testing the IE controller
-require 'watir'
+require 'vapir'
 
 class FakeFrame
   def length

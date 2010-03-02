@@ -1,4 +1,4 @@
-require 'watir/elements/element_collection'
+require 'vapir-common/elements/element_collection'
 require 'set'
 require 'matrix'
 

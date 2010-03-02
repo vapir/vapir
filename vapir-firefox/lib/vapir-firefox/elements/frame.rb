@@ -1,4 +1,4 @@
-require 'firewatir/firefox'
+require 'vapir-firefox/element'
 
 module Watir
   class Firefox::Frame < Firefox::Element

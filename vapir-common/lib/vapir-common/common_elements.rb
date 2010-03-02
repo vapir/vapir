@@ -1,2 +1,2 @@
-require 'watir/elements/element'
-require 'watir/elements/elements'
+require 'vapir-common/elements/element'
+require 'vapir-common/elements/elements'

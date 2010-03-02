@@ -3,7 +3,7 @@
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..') unless $SETUP_LOADED
 require 'unittests/setup'
-require 'watir/process'
+require 'vapir-ie/process'
 
 $mydir = File.expand_path(File.dirname(__FILE__)).gsub('/', '\\')
 

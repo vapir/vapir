@@ -1,8 +1,8 @@
 # based on http://svn.instiki.org/instiki/trunk/test/watir/e2e.rb
 # and http://rubyforge.org/pipermail/wtr-general/2005-November/004108.html
 
-require 'watir/ie-class'
-require 'watir/ie-process'
+require 'vapir-ie/ie-class'
+require 'vapir-ie/ie-process'
 
 class IEProcess < Watir::IE::Process 
   def stop

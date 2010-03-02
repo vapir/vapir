@@ -315,7 +315,7 @@ module Watir
     # to any scrolling parents. 
     # this is basically stolen from prototype - see http://www.prototypejs.org/api/element/cumulativescrolloffset
     def scroll_offset
-      # override the #scroll_offset defined in commonwatir because it calls #respond_to? which is very slow on WIN32OLE 
+      # override the #scroll_offset defined in vapir-common because it calls #respond_to? which is very slow on WIN32OLE 
       xy=Vector[0,0]
       el=element_object
       begin

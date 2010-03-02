@@ -1,7 +1,7 @@
 $:.unshift(File.dirname(__FILE__)) unless $:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
 
-require 'watir'
-require 'watir/common_elements'
+require 'vapir'
+require 'vapir-common/common_elements'
 
 # create stub class since everything is defined in Watir::Firefox namespace - this needs to be defined before the real class.
 module Watir
@@ -9,36 +9,35 @@ module Watir
   end
 end
 
-require 'firewatir/exceptions'
-require 'firewatir/jssh_socket'
-require 'firewatir/container'
-require 'firewatir/page_container'
-require "firewatir/element"
-require 'firewatir/modal_dialog'
+require 'vapir-firefox/exceptions'
+require 'vapir-firefox/jssh_socket'
+require 'vapir-firefox/container'
+require 'vapir-firefox/page_container'
+require "vapir-firefox/element"
+require 'vapir-firefox/modal_dialog'
 
-require "firewatir/elements/form"
-require "firewatir/elements/frame"
-require "firewatir/elements/non_control_element"
-require "firewatir/elements/non_control_elements"
-require "firewatir/elements/table"
-require "firewatir/elements/table_row"
-require "firewatir/elements/table_cell"
-require "firewatir/elements/image"
-require "firewatir/elements/link"
-require "firewatir/elements/input_element"
-require "firewatir/elements/select_list"
-require "firewatir/elements/option"
-require "firewatir/elements/button"
-require "firewatir/elements/text_field"
-require "firewatir/elements/hidden"
-require "firewatir/elements/file_field"
-require "firewatir/elements/radio_check_common"
-require "firewatir/element_collections"
+require "vapir-firefox/elements/form"
+require "vapir-firefox/elements/frame"
+require "vapir-firefox/elements/non_control_element"
+require "vapir-firefox/elements/non_control_elements"
+require "vapir-firefox/elements/table"
+require "vapir-firefox/elements/table_row"
+require "vapir-firefox/elements/table_cell"
+require "vapir-firefox/elements/image"
+require "vapir-firefox/elements/link"
+require "vapir-firefox/elements/input_element"
+require "vapir-firefox/elements/select_list"
+require "vapir-firefox/elements/option"
+require "vapir-firefox/elements/button"
+require "vapir-firefox/elements/text_field"
+require "vapir-firefox/elements/hidden"
+require "vapir-firefox/elements/file_field"
+require "vapir-firefox/elements/radio_check_common"
+require "vapir-firefox/element_collections"
 
-require 'watir/matches'
-require 'firewatir/firefox'
-require 'firewatir/version'
-require 'watir'
+require 'vapir-common/matches'
+require 'vapir-firefox/firefox'
+require 'vapir-firefox/version'
 
 
 

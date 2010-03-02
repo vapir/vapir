@@ -1,4 +1,4 @@
-require 'watir/win32ole'
+require 'vapir-ie/win32ole'
 
 class String
 

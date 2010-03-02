@@ -35,7 +35,7 @@
   (based on BSD Open Source License)
 =end
 
-require 'watir/win32ole'
+require 'vapir-ie/win32ole'
 
 # necessary extension of win32ole 
 class WIN32OLE
@@ -69,23 +69,23 @@ class WIN32OLE
 end
 
 # create stub class since everything is defined in Watir::IE namespace - this needs to be defined before the real class.
-require 'watir/browser'
+require 'vapir-common/browser'
 module Watir
   class IE < Watir::Browser
   end
 end
 
 require 'logger'
-require 'watir/common_elements'
-require 'watir/exceptions'
-require 'watir/close_all'
-require 'watir/ie-process'
+require 'vapir-common/common_elements'
+require 'vapir-common/exceptions'
+require 'vapir-ie/close_all'
+require 'vapir-ie/ie-process'
 
 require 'dl/import'
 require 'dl/struct'
 require 'Win32API'
 
-require 'watir/matches'
+require 'vapir-common/matches'
 
 # these switches need to be deleted from ARGV to enable the Test::Unit
 # functionality that grabs
@@ -103,23 +103,21 @@ $FAST_SPEED = ARGV.delete('-f')
 # Eat the -s command line switch (deprecated)
 ARGV.delete('-s')
 
-require 'watir/ie-class'
-require 'watir/logger'
-require 'watir/win32'
-require 'watir/container'
-require 'watir/page-container'
-require 'watir/version'
-require 'watir/element'
-require 'watir/frame'
-require 'watir/modal_dialog'
-require 'watir/form'
-require 'watir/non_control_elements'
-require 'watir/input_elements'
-require 'watir/table'
-require 'watir/image'
-require 'watir/link'
-
-require 'watir'
+require 'vapir-ie/ie-class'
+require 'vapir-ie/logger'
+require 'vapir-ie/win32'
+require 'vapir-ie/container'
+require 'vapir-ie/page-container'
+require 'vapir-ie/version'
+require 'vapir-ie/element'
+require 'vapir-ie/frame'
+require 'vapir-ie/modal_dialog'
+require 'vapir-ie/form'
+require 'vapir-ie/non_control_elements'
+require 'vapir-ie/input_elements'
+require 'vapir-ie/table'
+require 'vapir-ie/image'
+require 'vapir-ie/link'
 
 module Watir
   include Watir::Exception

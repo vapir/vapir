@@ -1,5 +1,5 @@
-require 'firewatir/window'
-require 'watir/common_modal_dialog'
+require 'vapir-firefox/window'
+require 'vapir-common/common_modal_dialog'
 module Watir
   # represents a window which is modal to a parent window 
   class Firefox::ModalDialog

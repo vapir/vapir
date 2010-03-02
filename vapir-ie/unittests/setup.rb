@@ -1,4 +1,4 @@
-# watir/unittests/setup.rb
+# vapir-ie/unittests/setup.rb
 $SETUP_LOADED = true
 
 $myDir = File.expand_path(File.dirname(__FILE__))
@@ -7,19 +7,19 @@ def append_to_load_path path
   $LOAD_PATH.unshift File.expand_path(path)
 end
 
-# use local development versions of watir, firewatir, commonwatir if available
+# use local development versions of vapir-ie, vapir-firefox, vapir-common if available
 topdir = File.join(File.dirname(__FILE__), '..')
-$firewatir_dev_lib = File.join(topdir, '..', 'firewatir', 'lib')
+$firewatir_dev_lib = File.join(topdir, '..', 'vapir-firefox', 'lib')
 $watir_dev_lib = File.join(topdir, 'lib')
 libs = []
-libs << File.join(topdir, '..', 'commonwatir', 'lib')
-libs << File.join(topdir, '..', 'commonwatir') # for the unit tests
+libs << File.join(topdir, '..', 'vapir-common', 'lib')
+libs << File.join(topdir, '..', 'vapir-common') # for the unit tests
 libs.each { |lib| append_to_load_path(lib) }
 
-require 'watir/browser'
+require 'vapir-common/browser'
 Watir::Browser.default = 'ie'
 require 'unittests/setup/lib'
-require 'watir/testcase'
+require 'vapir-common/testcase'
 
 # Standard Tags
 # :must_be_visible
@@ -33,14 +33,14 @@ Test Suites
 =end
 
 tiptopdir = File.join topdir, '..'
-commondir = File.join topdir, '..', 'commonwatir'
+commondir = File.join topdir, '..', 'vapir-common'
 append_to_load_path tiptopdir
 $all_tests = []
 Dir.chdir tiptopdir do
-  $all_tests += Dir["watir/unittests/*_test.rb"]
+  $all_tests += Dir["vapir-ie/unittests/*_test.rb"]
 end
 Dir.chdir tiptopdir do
-  $all_tests += Dir["commonwatir/unittests/*_test.rb"]
+  $all_tests += Dir["vapir-common/unittests/*_test.rb"]
 end
 
 # These tests won't load unless Watir is in the path
@@ -49,7 +49,7 @@ $watir_only_tests = [
   "images_test.rb",
   "dialog_test.rb",
   "ie_test.rb"
-].map {|file| "watir/unittests/#{file}"}
+].map {|file| "vapir-ie/unittests/#{file}"}
 
 if Watir::UnitTest.options[:browser] != 'ie'
   $all_tests -= $watir_only_tests
@@ -71,7 +71,7 @@ end
      'send_keys', # visible
 =end
 Dir.chdir tiptopdir do
-  $window_tests = Dir["watir/unittests/windows/*_test.rb"] - ["watir/unittests/windows/ie-each_test.rb"]
+  $window_tests = Dir["vapir-ie/unittests/windows/*_test.rb"] - ["vapir-ie/unittests/windows/ie-each_test.rb"]
 end
 
 

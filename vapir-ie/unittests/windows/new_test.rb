@@ -1,8 +1,8 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..') unless $SETUP_LOADED
 
 require 'unittests/setup'
-require 'watir/contrib/ie-new-process'
-require 'watir/process'
+require 'vapir-ie/contrib/ie-new-process'
+require 'vapir-ie/process'
 
 class TC_New < Test::Unit::TestCase
   

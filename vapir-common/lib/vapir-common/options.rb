@@ -1,4 +1,4 @@
-# watir/options
+# vapir-common/options
 require 'rubygems'
 
 require 'user-choices'

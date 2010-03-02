@@ -1,10 +1,10 @@
 # rapidly open and close IE windows
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..', 'lib')
-$LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..', '..', 'commonwatir', 'lib')
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..', '..', 'vapir-common', 'lib')
 require 'test/unit'
-require 'watir/ie'
-require 'watir/contrib/ie-new-process'
+require 'vapir-ie/ie'
+require 'vapir-ie/contrib/ie-new-process'
 
 class ZZ_OpenClose < Test::Unit::TestCase
   20.times do | i |

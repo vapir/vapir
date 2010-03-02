@@ -11,7 +11,7 @@ module Watir
     # returns an instance of WinWindow representing this window. 
     # (MS Windows only)
     def win_window
-      require 'watir/win_window'
+      require 'vapir-common/win_window'
       @win_window||=begin
         orig_browser_window_title=browser_window_object.document.title
         browser_window_object.document.title=orig_browser_window_title+(rand(36**16).to_s(36))

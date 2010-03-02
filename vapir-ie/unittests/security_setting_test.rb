@@ -1,6 +1,6 @@
 # The purpose of this test is to verify that IE has been manually
 # configured to allow active content from local files.
-# This setting is not really required for normal use of Watir, but
+# This setting is not really required for normal use of Vapir, but
 # it is essential for many of our unit tests.
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED

@@ -7,7 +7,7 @@ module Test::Unit
   module RDT
     def self.buildSuite filename
       collector = Test::Unit::Collector::ObjectSpace.new 
-      collector.filter = Watir::UnitTest.filter
+      collector.filter = Vapir::UnitTest.filter
       collector.collect filename
     end
   end
@@ -18,7 +18,7 @@ at_exit do
   unless $! || Test::Unit.run?
     runner = Test::Unit::AutoRunner.new false
     runner.process_args ARGV
-    runner.filters = Watir::UnitTest.filter 
+    runner.filters = Vapir::UnitTest.filter 
     exit runner.run
   end
 end

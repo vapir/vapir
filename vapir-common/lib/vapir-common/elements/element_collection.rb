@@ -1,6 +1,6 @@
 require "vapir-common/specifier"
 
-module Watir
+module Vapir
   class ElementCollection
     include Enumerable
 

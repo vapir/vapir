@@ -21,7 +21,7 @@ class TC_MinMax< Test::Unit::TestCase
   def test_front
     browser.bring_to_front
     assert browser.front?
-    ie2 = Watir::IE.start($htmlRoot + 'blankpage.html')
+    ie2 = Vapir::IE.start($htmlRoot + 'blankpage.html')
     assert ie2.front?
     assert ! browser.front?
     browser.bring_to_front

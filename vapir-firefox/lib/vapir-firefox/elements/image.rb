@@ -1,10 +1,10 @@
-module Watir
+module Vapir
   #
   # Description:
   #   Class for Image element.
   #
   class Firefox::Image < Firefox::Element
-    include Watir::Image
+    include Vapir::Image
 
     # this method returns the file created date of the image
     #def file_created_date
@@ -32,4 +32,4 @@ module Watir
     #end
     # alias hasLoaded? loaded?
   end # Image
-end # FireWatir
+end # Vapir

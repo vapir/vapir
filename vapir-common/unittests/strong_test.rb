@@ -2,7 +2,7 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
 
 class TC_Strong < Test::Unit::TestCase
-  include Watir::Exception
+  include Vapir::Exception
   location __FILE__
 
   def setup

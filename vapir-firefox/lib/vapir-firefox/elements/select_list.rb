@@ -1,9 +1,9 @@
-module Watir
+module Vapir
   #
   # Description:
   #   Class for SelectList element.
   #
   class Firefox::SelectList < Firefox::InputElement
-    include Watir::SelectList
+    include Vapir::SelectList
   end # SelectList
-end # FireWatir
+end # Vapir

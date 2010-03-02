@@ -1,6 +1,6 @@
 # vapir-common/browser
 require 'vapir-common/options'
-module Watir
+module Vapir
   
 =begin rdoc
 
@@ -105,7 +105,7 @@ before you invoke Browser.new.
       end
 
       def klass
-        key = Watir.options[:browser]
+        key = Vapir.options[:browser]
         #eval(@@browser_classes[key]) # this triggers the autoload
         browser_class_name=@@browser_classes[key]
         klass=browser_class_name.split('::').inject(Object) do |namespace, name_part|
@@ -160,9 +160,9 @@ before you invoke Browser.new.
         end
       end
       def set_sub_options
-        sub_options = @@sub_options[Watir.options[:browser]]
+        sub_options = @@sub_options[Vapir.options[:browser]]
         return if sub_options.nil?
-        specified_options = Watir.options.reject {|k, v| !sub_options.include? k}
+        specified_options = Vapir.options.reject {|k, v| !sub_options.include? k}
         self.set_options specified_options
       end
     end
@@ -172,7 +172,7 @@ before you invoke Browser.new.
       exists?
     end
     def locate!(options={})
-      locate(options) || raise(Watir::Exception::NoMatchingWindowFoundException, "The browser window seems to be gone")
+      locate(options) || raise(Vapir::Exception::NoMatchingWindowFoundException, "The browser window seems to be gone")
     end
   end
 

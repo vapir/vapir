@@ -1,4 +1,4 @@
-module Watir
+module Vapir
   module Firefox::PageContainer
     def containing_object
       document_object

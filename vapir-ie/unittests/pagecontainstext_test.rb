@@ -50,7 +50,7 @@ class TC_contains_text_in_new_ie < Test::Unit::TestCase
   # Doesn't actually raise an error, but fails to close the window afterwards
   # http://jira.openqa.org/browse/WTR-265
   def setup
-    @new_browser = Watir::Browser.new
+    @new_browser = Vapir::Browser.new
   end
   def test_nothing_raised
     assert_nothing_raised {@new_browser.text.include? ''}

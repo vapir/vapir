@@ -15,7 +15,7 @@ class TC_NewWindow < Test::Unit::TestCase
         browser.link!(:text, 'New Window').click
         begin 
           ff_new = browser.class.attach(:title, 'Pass Page')
-        rescue Watir::Exception::NoMatchingWindowFoundException
+        rescue Vapir::Exception::NoMatchingWindowFoundException
           raise $!, "Attach failed, check your Firefox settings: http://wiki.openqa.org/display/WTR/FireWatir+Installation#FireWatirInstallation-ffsettings" 
         end
         assert(ff_new.text.include?('PASS'))
@@ -27,7 +27,7 @@ class TC_NewWindow < Test::Unit::TestCase
         browser.link!(:text, 'New Window').click
         begin
           ff_new = browser.class.attach(:url, /pass\.html/)
-        rescue Watir::Exception::NoMatchingWindowFoundException
+        rescue Vapir::Exception::NoMatchingWindowFoundException
           raise $!, "Attach failed, check your Firefox settings: http://wiki.openqa.org/display/WTR/FireWatir+Installation#FireWatirInstallation-ffsettings" 
         end
         assert(ff_new.text.include?('PASS'))

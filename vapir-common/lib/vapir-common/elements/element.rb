@@ -10,7 +10,7 @@ class Module
     end
   end
 end
-module Watir
+module Vapir
   # this module is for methods that should go on both common element modules (ie, TextField) as well
   # as browser-specific element classes (ie, Firefox::TextField). 
   module ElementClassAndModuleMethods
@@ -25,7 +25,7 @@ module Watir
     def factory(element_object, extra={}, how=nil, what=nil)
       curr_klass=self
       # since this gets included in the Element modules, too, check where we are 
-      unless self.is_a?(Class) && self < Watir::Element
+      unless self.is_a?(Class) && self < Vapir::Element
         raise TypeError, "factory was called on #{self} (#{self.class}), which is not a Class that is < Element"
       end
       if how
@@ -38,7 +38,7 @@ module Watir
       end
       ObjectSpace.each_object(Class) do |klass|
         if klass < curr_klass
-          Watir::ElementObjectCandidates.match_candidates([element_object], klass.specifiers, klass.all_dom_attr_aliases) do |match|
+          Vapir::ElementObjectCandidates.match_candidates([element_object], klass.specifiers, klass.all_dom_attr_aliases) do |match|
             curr_klass=klass
             break
           end
@@ -237,7 +237,7 @@ module Watir
       class_array_append 'container_single_methods', *method_names
       element_module=self
       method_names.each do |method_name|
-        Watir::Element.module_eval do
+        Vapir::Element.module_eval do
           # these methods (Element#parent_table, Element#parent_div, etc)
           # iterate through parent nodes looking for a parent of the specified
           # type. if no element of that type is found which is a parent of
@@ -250,7 +250,7 @@ module Watir
               unless parentNode && parentNode != document_object # don't ascend up to the document. #TODO/Fix - for IE, comparing WIN32OLEs doesn't really work, this comparison is pointless. 
                 return nil
               end
-              matched=Watir::ElementObjectCandidates.match_candidates([parentNode], element_class.specifiers, element_class.all_dom_attr_aliases)
+              matched=Vapir::ElementObjectCandidates.match_candidates([parentNode], element_class.specifiers, element_class.all_dom_attr_aliases)
               if matched.size > 0
                 return element_class.new(:element_object, parentNode, extra_for_contained) # this is a little weird, passing extra_for_contained so that this is the container of its parent. 
               end
@@ -268,9 +268,9 @@ module Watir
     def included(including_class)
       including_class.send :extend, ElementClassAndModuleMethods
       
-      # get Container modules that the including_class includes (ie, Watir::Firefox::TextField includes the Watir::Firefox::Container Container module)
+      # get Container modules that the including_class includes (ie, Vapir::Firefox::TextField includes the Vapir::Firefox::Container Container module)
       container_modules=including_class.included_modules.select do |mod|
-        mod.included_modules.include?(Watir::Container)
+        mod.included_modules.include?(Vapir::Container)
       end
   
       container_modules.each do |container_module|
@@ -329,7 +329,7 @@ module Watir
 
       # copy constants (like Specifiers) onto classes when inherited
       # this is here to set the constants of the Element modules below onto the actual classes that instantiate 
-      # per-browser (Watir::IE::TextField, Watir::Firefox::TextField, etc) so that calling #const_defined? on those 
+      # per-browser (Vapir::IE::TextField, Vapir::Firefox::TextField, etc) so that calling #const_defined? on those 
       # returns true, and so that the constants defined here clobber any inherited stuff from superclasses
       # which is unwanted. 
       self.constants.each do |const| # copy all of its constants onto wherever it was included
@@ -539,14 +539,14 @@ module Watir
         when :element_object
           @element_object=@what # this is needed for checking its existence 
           if options[:relocate] && !element_object_exists?
-            raise Watir::Exception::UnableToRelocateException, "This #{self.class.name} was specified using #{how.inspect} and cannot be relocated."
+            raise Vapir::Exception::UnableToRelocateException, "This #{self.class.name} was specified using #{how.inspect} and cannot be relocated."
           end
           @what
         when :xpath
           assert_container
           @container.locate!(container_locate_options)
           unless @container.respond_to?(:element_object_by_xpath)
-            raise Watir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
+            raise Vapir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
           end
           # todo/fix: implement index for this, using element_objects_by_xpath ? 
           unless index_is_first
@@ -624,7 +624,7 @@ module Watir
           end
           by_custom
         else
-          raise Watir::Exception::MissingWayOfFindingObjectException, "Unknown 'how' given: #{@how.inspect} (#{@how.class}). 'what' was #{@what.inspect} (#{@what.class})"
+          raise Vapir::Exception::MissingWayOfFindingObjectException, "Unknown 'how' given: #{@how.inspect} (#{@how.class}). 'what' was #{@what.inspect} (#{@what.class})"
         end
       end
       if !element_object_existed && @element_object
@@ -634,7 +634,7 @@ module Watir
     end
     def locate!(options={})
       locate(options) || begin
-        klass=self.is_a?(Frame) ? Watir::Exception::UnknownFrameException : Watir::Exception::UnknownObjectException
+        klass=self.is_a?(Frame) ? Vapir::Exception::UnknownFrameException : Vapir::Exception::UnknownObjectException
         message="Unable to locate #{self.class}, using #{@how}"+(@what ? ": "+@what.inspect : '')+(@index ? ", index #{@index}" : "")
         message+="\non container: #{@container.inspect}" if @container
         raise(klass, message)
@@ -646,7 +646,7 @@ module Watir
     def exists?
       begin
         !!locate
-      rescue Watir::Exception::UnknownObjectException, Exception::NoMatchingWindowFoundException # if the window itself is gone, certainly we don't exist. 
+      rescue Vapir::Exception::UnknownObjectException, Exception::NoMatchingWindowFoundException # if the window itself is gone, certainly we don't exist. 
         false
       end
     end
@@ -658,13 +658,13 @@ module Watir
     # For example, if we have a table, get its first element, and call #to_factory on it:
     #
     # a_table=browser.tables.first
-    # => #<Watir::IE::Table:0x071bc70c how=:index index=:first tagName="TABLE">
+    # => #<Vapir::IE::Table:0x071bc70c how=:index index=:first tagName="TABLE">
     # a_element=a_table.elements.first
-    # => #<Watir::IE::Element:0x071b856c how=:index index=:first tagName="TBODY" id="">
+    # => #<Vapir::IE::Element:0x071b856c how=:index index=:first tagName="TBODY" id="">
     # a_element.to_factory
-    # => #<Watir::IE::TableBody:0x071af78c how=:index index=:first tagName="TBODY" id="">
+    # => #<Vapir::IE::TableBody:0x071af78c how=:index index=:first tagName="TBODY" id="">
     #
-    # we get back a Watir::TableBody. 
+    # we get back a Vapir::TableBody. 
     def to_factory
       self.class.factory(element_object, @extra, @how, @what)
     end

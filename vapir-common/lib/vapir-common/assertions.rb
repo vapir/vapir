@@ -1,6 +1,6 @@
 require 'test/unit/assertions'
 
-module Watir
+module Vapir
   # Verification methods
   module Assertions
   include Test::Unit::Assertions

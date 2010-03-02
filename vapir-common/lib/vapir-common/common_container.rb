@@ -1,6 +1,6 @@
 require 'vapir-common/specifier'
 
-module Watir
+module Vapir
   module Container
     # returns an Element of the given class klass with the specified how & what, and
     # with self as its container. 
@@ -45,13 +45,13 @@ module Watir
     end
     
     # figure out how and what from the form(s) that users give to the container methods, and translate 
-    # that to real how and what where 'how' is one of Watir::ElementObjectCandidates::HowList and 
+    # that to real how and what where 'how' is one of Vapir::ElementObjectCandidates::HowList and 
     # 'what' corresponds. 
     # this also determines index, when appropriate. 
     def normalize_how_what_index(first, second, klass)
       case first
       when nil
-        raise Watir::Exception::MissingWayOfFindingObjectException, "no first argument (how) was given!"
+        raise Vapir::Exception::MissingWayOfFindingObjectException, "no first argument (how) was given!"
       when Hash
         how=:attributes
         what=first.dup
@@ -60,7 +60,7 @@ module Watir
           raise(ArgumentError, "first argument was given as a Hash, so assumed to be the 'what' for how=:attributes, but a second argument was also given. arguments were #{first.inspect}, #{second.inspect}")
         end
       when String, Symbol
-        if Watir::ElementObjectCandidates::HowList.include?(first)
+        if Vapir::ElementObjectCandidates::HowList.include?(first)
           how=first
           what=second
           index=nil
@@ -71,7 +71,7 @@ module Watir
               what={klass.default_how => first}
               index=nil
             else
-              raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search using arguments #{first.inspect} (#{first.class}) and #{second.inspect} (#{second.class})"
+              raise Vapir::Exception::MissingWayOfFindingObjectException, "Cannot search using arguments #{first.inspect} (#{first.class}) and #{second.inspect} (#{second.class})"
             end
           elsif first==:index # this is different because the index number doesn't go in the 'what'
             how=first
@@ -83,12 +83,12 @@ module Watir
               what={first.to_sym => second}
               index=nil
             else
-              raise Watir::Exception::MissingWayOfFindingObjectException, "Cannot search for a #{klass} using the given argument: #{first.inspect} (other argument was #{second.inspect})"
+              raise Vapir::Exception::MissingWayOfFindingObjectException, "Cannot search for a #{klass} using the given argument: #{first.inspect} (other argument was #{second.inspect})"
             end
           end
         end
       else
-        raise Watir::Exception::MissingWayOfFindingObjectException, "Locating with the given arguments is not recognized or supported: #{first.inspect}, #{second.inspect}"
+        raise Vapir::Exception::MissingWayOfFindingObjectException, "Locating with the given arguments is not recognized or supported: #{first.inspect}, #{second.inspect}"
       end
       return [how, what, index]
     end
@@ -122,7 +122,7 @@ module Watir
     # shows the available objects on the current container.
     # This is usually only used for debugging or writing new test scripts.
     # This is a nice feature to help find out what HTML objects are on a page
-    # when developing a test case using FireWatir.
+    # when developing a test case using Vapir.
     #
     # Typical Usage:
     #   browser.show_all_objects

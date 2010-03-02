@@ -10,9 +10,9 @@ class TC_FirefoxBrowser < Test::Unit::TestCase
     end
     
     def test_close_all_firefox_browsers
-        ff1 = Watir::Browser.new
-        ff2 = Watir::Browser.new
-        ff3 = Watir::Browser.new
+        ff1 = Vapir::Browser.new
+        ff2 = Vapir::Browser.new
+        ff3 = Vapir::Browser.new
         ff1.close_all
         result = true
         # After closing all the browsers we'll not be able to connect to the JSSh. So just check
@@ -23,7 +23,7 @@ class TC_FirefoxBrowser < Test::Unit::TestCase
             result = true
         end
         assert_true(result)
-        $browser = Watir::Browser.new # restore a browser for subsequent tests. 
+        $browser = Vapir::Browser.new # restore a browser for subsequent tests. 
     end
  
     def test_status

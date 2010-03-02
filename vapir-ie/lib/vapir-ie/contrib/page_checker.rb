@@ -6,7 +6,7 @@
 #
 #  ie.add_checker(PageCheckers::NAVIGATION_CHECKER)
 #
-#  Checkers are Ruby proc objects which are called within Watir::IE and passed 
+#  Checkers are Ruby proc objects which are called within Vapir::IE and passed 
 #  the current instance of ie. 
 
 module PageCheckers        
@@ -18,7 +18,7 @@ module PageCheckers
 			1.upto ie.document.frames.length do |i|
 				begin
 					ie.frame(:index, i).check_for_http_error
-				rescue Watir::Exception::UnknownFrameException
+				rescue Vapir::Exception::UnknownFrameException
 					# frame can be already destroyed
 				end          
 			end

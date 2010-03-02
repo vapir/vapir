@@ -1,8 +1,8 @@
 require 'vapir-common/win_window'
 require 'vapir-common/common_modal_dialog'
-module Watir
+module Vapir
   class IE::ModalDialog
-    include Watir::ModalDialog
+    include Vapir::ModalDialog
     def locate
       @modal_window=@browser.win_window.enabled_popup
     end
@@ -35,7 +35,7 @@ module Watir
       else
         @modal_window.send_close!
       end
-      ::Waiter.try_for(ModalDialog::DEFAULT_TIMEOUT, :exception => Watir::Exception::WindowException.new("The modal window failed to close")) do
+      ::Waiter.try_for(ModalDialog::DEFAULT_TIMEOUT, :exception => Vapir::Exception::WindowException.new("The modal window failed to close")) do
         !exists?
       end
     end
@@ -77,7 +77,7 @@ module Watir
     attr_reader :containing_modal_dialog
     attr_reader :document_object
     def locate!(options={})
-      exists? || raise(Watir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
+      exists? || raise(Vapir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
     end
     
     def exists?

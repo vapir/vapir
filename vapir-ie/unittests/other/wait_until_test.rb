@@ -6,7 +6,7 @@ require 'vapir'
 require 'spec' # gem install rspec
 
 # used for unit testing
-class MockTimeKeeper < Watir::TimeKeeper
+class MockTimeKeeper < Vapir::TimeKeeper
   def sleep seconds
     @sleep_time += seconds
   end
@@ -15,10 +15,10 @@ class MockTimeKeeper < Watir::TimeKeeper
   end
 end
 
-class WaitUntilInstanceTest < Watir::TestCase
+class WaitUntilInstanceTest < Vapir::TestCase
   
   def setup
-    @waiter = Watir::Waiter.new
+    @waiter = Vapir::Waiter.new
     @waiter.timeout = 10.0
     @mock_checkee = Spec::Mocks::Mock.new "mock_checkee"
 
@@ -46,7 +46,7 @@ class WaitUntilInstanceTest < Watir::TestCase
   
   def test_timeout
     @mock_checkee.should_receive(:check).any_number_of_times.and_return false
-    lambda{@waiter.wait_until {@mock_checkee.check}}.should_raise Watir::Exception::TimeOutException
+    lambda{@waiter.wait_until {@mock_checkee.check}}.should_raise Vapir::Exception::TimeOutException
     @waiter.timer.sleep_time.should_be_close 10.25, 0.26
     @waiter.timer.sleep_time.should_satisfy {|x| [10.0, 10.5].include? x}
   end    
@@ -54,7 +54,7 @@ class WaitUntilInstanceTest < Watir::TestCase
   def test_polling_interval
     @waiter.polling_interval = 0.1
     @mock_checkee.should_receive(:check).any_number_of_times.and_return false
-    lambda{@waiter.wait_until {@mock_checkee.check}}.should_raise Watir::Exception::TimeOutException
+    lambda{@waiter.wait_until {@mock_checkee.check}}.should_raise Vapir::Exception::TimeOutException
     @waiter.timer.sleep_time.should_be_close 10.05, 0.07
   end
 
@@ -63,14 +63,14 @@ class WaitUntilInstanceTest < Watir::TestCase
     begin
       @waiter.wait_until {@mock_checkee.check} 
       flunk
-    rescue Watir::Exception::TimeOutException => e
+    rescue Vapir::Exception::TimeOutException => e
       e.duration.should_be_close 10.25, 0.26
       e.timeout.should_equal 10.0
     end
   end
 end
 
-class WaitUntilClassTest < Watir::TestCase
+class WaitUntilClassTest < Vapir::TestCase
   
   def setup
     @mock_checkee = Spec::Mocks::Mock.new "mock_checkee"
@@ -83,14 +83,14 @@ class WaitUntilClassTest < Watir::TestCase
   # Class method
   
   def test_class_method_with_args
-    Watir::Waiter.wait_until(5, 0.1) {@mock_checkee.check}
+    Vapir::Waiter.wait_until(5, 0.1) {@mock_checkee.check}
   end
   
   def test_class_method_with_defaults
-    Watir::Waiter.wait_until {@mock_checkee.check}
+    Vapir::Waiter.wait_until {@mock_checkee.check}
   end
   
-  include Watir
+  include Vapir
   def test_watir_method
     wait_until {@mock_checkee.check}
   end

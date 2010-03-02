@@ -17,7 +17,7 @@ libs << File.join(topdir, '..', 'vapir-common') # for the unit tests
 libs.each { |lib| append_to_load_path(lib) }
 
 require 'vapir-common/browser'
-Watir::Browser.default = 'ie'
+Vapir::Browser.default = 'ie'
 require 'unittests/setup/lib'
 require 'vapir-common/testcase'
 
@@ -43,7 +43,7 @@ Dir.chdir tiptopdir do
   $all_tests += Dir["vapir-common/unittests/*_test.rb"]
 end
 
-# These tests won't load unless Watir is in the path
+# These tests won't load unless Vapir is in the path
 $watir_only_tests = [
   "images_xpath_test.rb",
   "images_test.rb",
@@ -51,7 +51,7 @@ $watir_only_tests = [
   "ie_test.rb"
 ].map {|file| "vapir-ie/unittests/#{file}"}
 
-if Watir::UnitTest.options[:browser] != 'ie'
+if Vapir::UnitTest.options[:browser] != 'ie'
   $all_tests -= $watir_only_tests
 end
 

@@ -1,7 +1,7 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
   
-class Lists_Tests < Watir::TestCase
+class Lists_Tests < Vapir::TestCase
   
   def setup
     goto_page 'lists.html'

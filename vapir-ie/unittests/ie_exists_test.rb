@@ -7,7 +7,7 @@ require 'unittests/setup'
 class TC_IE_Exists < Test::Unit::TestCase 
   tags :fails_on_firefox, :new
   def setup
-    @ie = Watir::IE.new
+    @ie = Vapir::IE.new
   end
   def teardown
     @ie.close
@@ -20,7 +20,7 @@ end
 class TC_IENotExists < Test::Unit::TestCase 
   tags :fails_on_firefox, :new
   def setup
-    @ie = Watir::IE.new
+    @ie = Vapir::IE.new
   end
   def test_we_closed_it
     @ie.close

@@ -11,9 +11,9 @@ libs << File.join(topdir, '..', 'vapir-common') # for the unit tests
 libs.each { |lib| $LOAD_PATH.unshift File.expand_path(lib) }
 
 require 'vapir'
-Watir::Browser.default = 'firefox'
+Vapir::Browser.default = 'firefox'
 require 'unittests/setup/lib'
-module Watir::UnitTest
+module Vapir::UnitTest
   alias :uses_page :goto_page
 end
 

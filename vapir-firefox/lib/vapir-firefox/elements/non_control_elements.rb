@@ -1,86 +1,86 @@
-module Watir
+module Vapir
   class Firefox::Pre < Firefox::Element
-    include Watir::Pre
+    include Vapir::Pre
   end
 
   class Firefox::P < Firefox::Element
-    include Watir::P
+    include Vapir::P
   end
 
   class Firefox::Div < Firefox::Element
-    include Watir::Div
+    include Vapir::Div
   end
 
   class Firefox::Span < Firefox::Element
-    include Watir::Span
+    include Vapir::Span
   end
 
   class Firefox::Strong < Firefox::Element
-    include Watir::Strong
+    include Vapir::Strong
   end
 
   class Firefox::Label < Firefox::Element
-    include Watir::Label
+    include Vapir::Label
   end
 
   class Firefox::Ul < Firefox::Element
-    include Watir::Ul
+    include Vapir::Ul
   end
 
   class Firefox::Ol < Firefox::Element
-    include Watir::Ol
+    include Vapir::Ol
   end
 
   class Firefox::Li < Firefox::Element
-    include Watir::Li
+    include Vapir::Li
   end
 
   class Firefox::Dl < Firefox::Element
-    include Watir::Dl
+    include Vapir::Dl
   end
 
   class Firefox::Dt < Firefox::Element
-    include Watir::Dt
+    include Vapir::Dt
   end
 
   class Firefox::Dd < Firefox::Element
-    include Watir::Dd
+    include Vapir::Dd
   end
 
   class Firefox::H1 < Firefox::Element
-    include Watir::H1
+    include Vapir::H1
   end
 
   class Firefox::H2 < Firefox::Element
-    include Watir::H2
+    include Vapir::H2
   end
 
   class Firefox::H3 < Firefox::Element
-    include Watir::H3
+    include Vapir::H3
   end
 
   class Firefox::H4 < Firefox::Element
-    include Watir::H4
+    include Vapir::H4
   end
 
   class Firefox::H5 < Firefox::Element
-    include Watir::H5
+    include Vapir::H5
   end
 
   class Firefox::H6 < Firefox::Element
-    include Watir::H6
+    include Vapir::H6
   end
 
   class Firefox::Map < Firefox::Element
-    include Watir::Map
+    include Vapir::Map
   end
 
   class Firefox::Area < Firefox::Element
-    include Watir::Area
+    include Vapir::Area
   end
 
   class Firefox::Em < Firefox::Element
-    include Watir::Em
+    include Vapir::Em
   end
 
-end # FireWatir
+end # Vapir

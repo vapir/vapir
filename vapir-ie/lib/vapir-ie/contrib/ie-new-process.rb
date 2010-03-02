@@ -4,7 +4,7 @@
 require 'vapir-ie/ie-class'
 require 'vapir-ie/ie-process'
 
-class IEProcess < Watir::IE::Process 
+class IEProcess < Vapir::IE::Process 
   def stop
     right_to_terminate_process = 1
     handle = Win32API.new('kernel32.dll', 'OpenProcess', 'lil', 'l').
@@ -14,7 +14,7 @@ class IEProcess < Watir::IE::Process
   
 end
 
-module Watir
+module Vapir
   class IE
     def process_id
       @process_id ||= IEProcess.process_id_from_hwnd @ie.hwnd

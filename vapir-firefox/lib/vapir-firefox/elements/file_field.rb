@@ -1,10 +1,10 @@
-module Watir
+module Vapir
   #
   # Description:
   #   Class for FileField element.
   #
   class Firefox::FileField < Firefox::InputElement
-    include Watir::FileField
+    include Vapir::FileField
 
     #
     # Description:
@@ -21,4 +21,4 @@ module Watir
     end
 
   end # FileField
-end # FireWatir
+end # Vapir

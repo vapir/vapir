@@ -1,4 +1,4 @@
-module Watir    
+module Vapir    
   # A PageContainer contains an HTML Document. In other words, it is a 
   # what JavaScript calls a Window.
   #
@@ -20,7 +20,7 @@ module Watir
       document_object
     end
     include IE::Container
-    include Watir::Exception
+    include Vapir::Exception
 
     # This method checks the currently displayed page for http errors, 404, 500 etc
     # It gets called internally by the wait method, so a user does not need to call it explicitly

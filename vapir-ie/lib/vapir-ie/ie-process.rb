@@ -1,7 +1,7 @@
 require 'win32/process'
 require 'vapir-ie/ie-class'
 
-module Watir
+module Vapir
   class IE
     # the version string, from the registry key HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\Version
     def self.version
@@ -18,13 +18,13 @@ module Watir
       @@ie_version_parts ||= IE.version.split('.').map{|part| part.to_i }
     end
     class Process
-      # Watir::IE::Process.start is called by Watir::IE.new_process and does not start a new process correctly in IE8. 
+      # Vapir::IE::Process.start is called by Vapir::IE.new_process and does not start a new process correctly in IE8. 
       # Calling IE8 with the -nomerge option correctly starts a new process, so call Process.create with this option if 
       # IE's version is 8 
       def self.start
         program_files = ENV['ProgramFiles'] || "c:\\Program Files"
         startup_command = "#{program_files}\\Internet Explorer\\iexplore.exe"
-        startup_command << " -nomerge" if ::Watir::IE.version_parts.first==8
+        startup_command << " -nomerge" if ::Vapir::IE.version_parts.first==8
         # maybe raise an error here if it's > 8, as not-yet-supported? who knows what incompatibilities the future will hold 
         process_info = ::Process.create('app_name' => "#{startup_command} about:blank")
         process_id = process_info.process_id

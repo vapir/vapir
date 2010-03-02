@@ -1,9 +1,9 @@
-module Watir
+module Vapir
   #
   # Description:
   #   Class for Hidden Field element.
   #
   class Firefox::Hidden < Firefox::TextField
-    include Watir::Hidden
+    include Vapir::Hidden
   end # Hidden
-end # FireWatir
+end # Vapir

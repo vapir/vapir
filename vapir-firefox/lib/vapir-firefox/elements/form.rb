@@ -1,5 +1,5 @@
-module Watir
+module Vapir
   class Firefox::Form < Firefox::Element
-    include Watir::Form
+    include Vapir::Form
   end # Form
-end # FireWatir
+end # Vapir

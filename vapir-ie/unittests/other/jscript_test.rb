@@ -9,7 +9,7 @@ $mydir = File.expand_path(File.dirname(__FILE__)).gsub('/', '\\')
 
 class TC_JavaScript_Test < Test::Unit::TestCase
   def ruby_process_count
-    Watir::Process::count('rubyw.exe')
+    Vapir::Process::count('rubyw.exe')
   end
   
   def teardown

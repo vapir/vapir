@@ -1,9 +1,9 @@
-module Watir
+module Vapir
   #
   # Description:
   # Class for Table Cell.
   #
   class Firefox::TableCell < Firefox::Element
-    include Watir::TableCell
+    include Vapir::TableCell
   end # TableCell
-end # FireWatir
+end # Vapir

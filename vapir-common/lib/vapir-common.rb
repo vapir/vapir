@@ -1,3 +1,5 @@
-class CommonWatir
-  VERSION = '1.6.5'
+module Vapir
+  module Common
+    VERSION = '1.6.5'
+  end
 end

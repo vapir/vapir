@@ -1,9 +1,9 @@
-module Watir
+module Vapir
   #
   # Description:
   #   Class for Option element.
   #
   class Firefox::Option < Firefox::Element
-    include Watir::Option
+    include Vapir::Option
   end # Option
-end # FireWatir
+end # Vapir

@@ -1,10 +1,10 @@
-module Watir
+module Vapir
   #
   # Description:
   # Class for Text Field element.
   #
   class Firefox::TextField < Firefox::InputElement
-    include Watir::TextField
+    include Vapir::TextField
 
     #
     # Description:
@@ -57,5 +57,5 @@ module Watir
 
 
   end # TextField
-end # FireWatir
+end # Vapir
 

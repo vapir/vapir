@@ -1,10 +1,10 @@
 require 'vapir-ie/win32ole'
-require 'vapir-ie/autoit' # for Watir.autoit
+require 'vapir-ie/autoit' # for Vapir.autoit
 
 class WindowHelper
     @@ie_window_name = "Windows Internet Explorer"
     def initialize()
-        @autoit = Watir.autoit
+        @autoit = Vapir.autoit
     end
     
     def push_alert_button
@@ -39,9 +39,9 @@ class WindowHelper
     
     def WindowHelper.check_autoit_installed
         begin
-          Watir.autoit
+          Vapir.autoit
         rescue
-            raise Watir::Exception::WatirException, "The AutoIt dll must be correctly registered for this feature to work properly"
+            raise Vapir::Exception::VapirException, "The AutoIt dll must be correctly registered for this feature to work properly"
         end
     end
 end

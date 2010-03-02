@@ -1,4 +1,4 @@
-# tests of deferring when a Watir object is bound to a com object (lazy evaluation)
+# tests of deferring when a Vapir object is bound to a com object (lazy evaluation)
 # revision: $Revision$
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
@@ -11,7 +11,7 @@ class TC_Defer < Test::Unit::TestCase
   end
   tag_method :test_binding_to_newly_loaded_page, :fails_on_firefox, :attach
   def test_binding_to_newly_loaded_page
-    @new_browser = Watir::Browser.new
+    @new_browser = Vapir::Browser.new
     text_field = @new_browser.text_field(:name, 'text1')
     button = @new_browser.button(:value, 'Clear Events Box')
     div = @new_browser.div(:name, 'divvy')
@@ -33,7 +33,7 @@ class TC_Defer < Test::Unit::TestCase
   end
   tag_method :test_exists, :fails_on_firefox, :attach
   def test_exists
-    @new_browser = Watir::Browser.new
+    @new_browser = Vapir::Browser.new
     text_field = @new_browser.text_field(:name, 'text1')
     button = @new_browser.button(:value, 'Clear Events Box')
     div = @new_browser.div(:name, 'divvy')

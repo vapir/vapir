@@ -1,4 +1,4 @@
-module Watir
+module Vapir
   # This module contains the factory methods that are used to access most html objects
   #
   # For example, to access a button on a web page that has the following html
@@ -16,8 +16,8 @@ module Watir
   #
   # Is includable for classes that have @container, document and ole_inner_elements
   module IE::Container
-    include Watir::Container
-    include Watir::Exception
+    include Vapir::Container
+    include Vapir::Exception
     
     # Note: @container is the container of this object, i.e. the container
     # of this container.

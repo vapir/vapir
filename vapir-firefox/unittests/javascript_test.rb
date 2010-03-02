@@ -3,7 +3,7 @@ require 'unittests/setup'
 
 class TC_JavaScript_Test < Test::Unit::TestCase
     
-#    include FireWatir::Dialog
+#    include Vapir::Dialog
     
     def setup
         goto_page 'JavascriptClick.html'

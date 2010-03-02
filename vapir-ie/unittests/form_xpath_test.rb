@@ -29,7 +29,7 @@ class TC_Form_Display_XPath < Test::Unit::TestCase
   include CaptureIOHelper                
   def test_showforms
     goto_page "forms2.html"
-    assert_match(/There are 4 forms(\nWatir(::\w+)*::Form.*?){4}/m, capture_stdout { browser.show_forms })
+    assert_match(/There are 4 forms(\nVapir(::\w+)*::Form.*?){4}/m, capture_stdout { browser.show_forms })
   end
 end
 
@@ -94,7 +94,7 @@ class TC_Forms3_XPath < Test::Unit::TestCase
   
   def test_flash2
     browser.button!(:value, 'Click Me').flash
-    assert_raises(Watir::UnknownObjectException) { browser.text_field(:name , 'g177').flash }
+    assert_raises(Vapir::UnknownObjectException) { browser.text_field(:name , 'g177').flash }
   end
   
 #  def test_showElements # add verification!

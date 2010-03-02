@@ -5,8 +5,8 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..') unless $SETUP_L
 require 'unittests/setup'
 require 'vapir-common/testcase'
 
-class TC_NewWindow< Watir::TestCase
-  include Watir
+class TC_NewWindow< Vapir::TestCase
+  include Vapir
   
   def setup
     @original_timeout = IE.attach_timeout
@@ -72,7 +72,7 @@ class TC_NewWindow< Watir::TestCase
     IE.attach_timeout = 0.2
     browser.text_field!(:name, 'delay').set('2')
     browser.span!(:text, 'New Window Slowly').click
-    assert_raise(Watir::Exception::NoMatchingWindowFoundException) do
+    assert_raise(Vapir::Exception::NoMatchingWindowFoundException) do
       IE.attach(:title, 'Test page for buttons')
     end
     sleep 2.0 # clean up

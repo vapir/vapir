@@ -204,7 +204,7 @@ class TC_Button2 < Test::Unit::TestCase
     exception = assert_raise(UnknownObjectException) do
       browser.button(:value => 'Click Me', :index => 2).name
     end
-    assert_match(/^Unable to locate Watir(::\w+)*::Button, using attributes: \{:value=>"Click Me"\}, index 2$/, exception.message)
+    assert_match(/^Unable to locate Vapir(::\w+)*::Button, using attributes: \{:value=>"Click Me"\}, index 2$/, exception.message)
   end
 end
 

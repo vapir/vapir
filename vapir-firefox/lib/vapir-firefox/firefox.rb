@@ -1,12 +1,12 @@
 =begin rdoc
-   This is FireWatir, Web Application Testing In Ruby using Firefox browser
+   This is Vapir, Web Application Testing In Ruby using Firefox browser
 
    Typical usage:
     # include the controller
     require "vapir-firefox"
 
     # go to the page you want to test
-    ff = FireWatir::Firefox.start("http://myserver/mypage")
+    ff = Vapir::Firefox.start("http://myserver/mypage")
 
     # enter "Angrez" into an input field named "username"
     ff.text_field(:name, "username").set("Angrez")
@@ -21,8 +21,8 @@
     # click button that has a caption of "Cancel"
     ff.button(:value, "Cancel").click
 
-   FireWatir allows your script to read and interact with HTML objects--HTML tags
-   and their attributes and contents.  Types of objects that FireWatir can identify
+   Vapir allows your script to read and interact with HTML objects--HTML tags
+   and their attributes and contents.  Types of objects that Vapir can identify
    include:
 
    Type         Description
@@ -46,10 +46,10 @@
                 text field), and the type="password" attribute (a
                 single-line field in which the input is replaced with asterisks)
 
-   In general, there are several ways to identify a specific object.  FireWatir's
+   In general, there are several ways to identify a specific object.  Vapir's
    syntax is in the form (how, what), where "how" is a means of identifying
    the object, and "what" is the specific string or regular expression
-   that FireWatir will seek, as shown in the examples above.  Available "how"
+   that Vapir will seek, as shown in the examples above.  Available "how"
    options depend upon the type of object, but here are a few examples:
 
    How           Description
@@ -65,16 +65,16 @@
                  button with a given caption
    :index        Used to find the nth object of the specified type on a page.
                  For example, button(:index, 2) finds the second button.
-                 Current versions of FireWatir use 1-based indexing, but future
+                 Current versions of Vapir use 1-based indexing, but future
                  versions will use 0-based indexing.
    :xpath	     The xpath expression for identifying the element.
 
    Note that the XHTML specification requires that tags and their attributes be
-   in lower case.  FireWatir doesn't enforce this; FireWatir will find tags and
+   in lower case.  Vapir doesn't enforce this; Vapir will find tags and
    attributes whether they're in upper, lower, or mixed case.  This is either
    a bug or a feature.
 
-   FireWatir uses JSSh for interacting with the browser.  For further information on
+   Vapir uses JSSh for interacting with the browser.  For further information on
    Firefox and DOM go to the following Web page:
 
    http://www.xulplanet.com/references/objref/
@@ -85,8 +85,8 @@ require 'vapir-common/waiter'
 require 'vapir-firefox/window'
 require 'vapir-firefox/modal_dialog'
 
-module Watir
-  include Watir::Exception
+module Vapir
+  include Vapir::Exception
   
   class Firefox < Browser
     include Firefox::PageContainer
@@ -99,7 +99,7 @@ module Watir
         Kernel.warn "WARNING: JSSH_SOCKET RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
       end
       @@jssh_socket=JsshSocket.new
-      @@firewatir_jssh_objects=@@jssh_socket.object("FireWatir").assign({})
+      @@firewatir_jssh_objects=@@jssh_socket.object("Vapir").assign({})
       @@jssh_socket
     end
     def self.jssh_socket(options={})
@@ -150,7 +150,7 @@ module Watir
       rescue JsshError
         # here we're going to assume that since it's not connecting, we need to launch firefox. 
         if options[:attach]
-          raise Watir::Exception::NoBrowserException, "cannot attach using #{options[:attach].inspect} - could not connect to Firefox with JSSH"
+          raise Vapir::Exception::NoBrowserException, "cannot attach using #{options[:attach].inspect} - could not connect to Firefox with JSSH"
         else
           launch_browser
           # if we just launched a the browser process, attach to the window
@@ -162,7 +162,7 @@ module Watir
             options[:attach]=[:title, //]
           end
         end
-        ::Waiter.try_for(options[:wait_time], :exception => Watir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:wait_time]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
+        ::Waiter.try_for(options[:wait_time], :exception => Vapir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:wait_time]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
           begin
             jssh_socket(:reset_if_dead => true).assert_socket
             true
@@ -245,7 +245,7 @@ module Watir
       if browser_object.canGoBack
         browser_object.goBack
       else
-        raise Watir::Exception::NavigationException, "Cannot go back!"
+        raise Vapir::Exception::NavigationException, "Cannot go back!"
       end
       wait
     end
@@ -255,7 +255,7 @@ module Watir
       if browser_object.canGoForward
         browser_object.goForward
       else
-        raise Watir::Exception::NavigationException, "Cannot go forward!"
+        raise Vapir::Exception::NavigationException, "Cannot go forward!"
       end
       wait
     end
@@ -278,7 +278,7 @@ module Watir
       unless browser_window_object
         raise "Window must be set (using open_window or attach) before the browser document can be set!"
       end
-      @browser_object=@browser_jssh_objects[:browser]= ::Waiter.try_for(2, :exception => Watir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
+      @browser_object=@browser_jssh_objects[:browser]= ::Waiter.try_for(2, :exception => Vapir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
         if browser_window_object.respond_to?(:getBrowser)
           browser_window_object.getBrowser
         end
@@ -359,7 +359,7 @@ module Watir
       quitSeverity = options[:force] ? jssh_socket.Components.interfaces.nsIAppStartup.eForceQuit : jssh_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
       begin
         appStartup.quit(quitSeverity)
-        ::Waiter.try_for(8, :exception => Exception::WatirException.new("The browser did not quit")) do
+        ::Waiter.try_for(8, :exception => Exception::VapirException.new("The browser did not quit")) do
           @@jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
           false
         end
@@ -403,14 +403,14 @@ module Watir
     # Class method to return a browser object if a window matches for how
     # and what. Window can be referenced by url or title.
     # The second argument can be either a string or a regular expression.
-    # Watir::Browser.attach(:url, 'http://www.google.com')
-    # Watir::Browser.attach(:title, 'Google')
+    # Vapir::Browser.attach(:url, 'http://www.google.com')
+    # Vapir::Browser.attach(:title, 'Google')
     def self.attach how, what
       new(:attach => [how, what])
     end
 
     # loads up a new window in an existing process
-    # Watir::Browser.attach() with no arguments passed the attach method will create a new window
+    # Vapir::Browser.attach() with no arguments passed the attach method will create a new window
     # this will only be called one time per instance we're only ever going to run in 1 window
 
     def open_window
@@ -478,7 +478,7 @@ module Watir
       raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how
       found_win=nil
       self.class.each_browser_window_object do |win|
-        found_win=win if Watir::fuzzy_match(hows[how].call(win.getBrowser.contentDocument),what)
+        found_win=win if Vapir::fuzzy_match(hows[how].call(win.getBrowser.contentDocument),what)
         # we don't break here if found_win is set because we want the last match if there are multiple. 
       end
       return found_win
@@ -658,4 +658,4 @@ module Watir
       Firefox
     end
   end # Firefox
-end # FireWatir
+end # Vapir

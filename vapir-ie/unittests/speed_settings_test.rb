@@ -1,4 +1,4 @@
-# tests for ability to set defaults for Watir
+# tests for ability to set defaults for Vapir
 # revision: $Revision$
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
@@ -7,7 +7,7 @@ class TC_instance_options < Test::Unit::TestCase
   tags :fails_on_firefox
   
   def setup
-    @ie4 = Watir::IE.new    
+    @ie4 = Vapir::IE.new    
   end
   
   def test_using_default
@@ -28,7 +28,7 @@ end
 
 class TC_class_options < Test::Unit::TestCase
   tags :fails_on_firefox
-	include Watir
+	include Vapir
 	@@hide_ie = $HIDE_IE
 	def setup
 		@previous = IE.options

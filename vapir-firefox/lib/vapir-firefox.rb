@@ -3,9 +3,9 @@ $:.unshift(File.dirname(__FILE__)) unless $:.include?(File.dirname(__FILE__)) ||
 require 'vapir'
 require 'vapir-common/common_elements'
 
-# create stub class since everything is defined in Watir::Firefox namespace - this needs to be defined before the real class.
-module Watir
-  class Firefox < Watir::Browser
+# create stub class since everything is defined in Vapir::Firefox namespace - this needs to be defined before the real class.
+module Vapir
+  class Firefox < Vapir::Browser
   end
 end
 
@@ -43,4 +43,4 @@ require 'vapir-firefox/version'
 
 # this only has an effect if firewatir is required before anyone invokes 
 # Browser.new. Thus it has no effect when Browser.new itself autoloads this library.
-Watir::Browser.default = 'firefox'
+Vapir::Browser.default = 'firefox'

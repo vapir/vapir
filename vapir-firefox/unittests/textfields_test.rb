@@ -215,6 +215,6 @@ class TC_Labels_Display < Test::Unit::TestCase
   #tag_method :test_showLabels, :fails_on_ie
   def test_showLabels
     goto_page("textfields1.html")
-    assert_match(/There are 3 labels(\nWatir(::\w+)*::Label.*?){3}/m, capture_stdout { browser.show_labels })
+    assert_match(/There are 3 labels(\nVapir(::\w+)*::Label.*?){3}/m, capture_stdout { browser.show_labels })
   end
 end

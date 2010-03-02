@@ -1,9 +1,9 @@
 # vapir-common/browsers
-# Define browsers supported by Watir
+# Define browsers supported by Vapir
 
-Watir::Browser.support :name => 'ie', :class => 'Watir::IE', 
+Vapir::Browser.support :name => 'ie', :class => 'Vapir::IE', 
   :library => 'vapir-ie', :gem => 'vapir-ie', 
   :options => [:speed, :visible]
 
-Watir::Browser.support :name => 'firefox', :class => 'Watir::Firefox',
+Vapir::Browser.support :name => 'firefox', :class => 'Vapir::Firefox',
   :library => 'vapir-firefox'

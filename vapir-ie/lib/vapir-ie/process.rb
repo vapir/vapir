@@ -1,6 +1,6 @@
 require 'vapir-ie/ie-class'
 
-module Watir
+module Vapir
   module Process
     
     # Returns the number of windows processes running with the specified name.
@@ -16,7 +16,7 @@ module Watir
   class IE
     # Returns the number of IEXPLORE processes currently running.
     def self.process_count
-      Watir::Process.count 'iexplore.exe'
+      Vapir::Process.count 'iexplore.exe'
     end    
   end
 end

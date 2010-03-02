@@ -198,7 +198,7 @@ class TC_Divs_Display < Test::Unit::TestCase
   tag_method :test_showDivs, :fails_on_ie
   def test_showDivs
     goto_page("div.html")
-    assert_match(/There are 7 divs(\nWatir(::\w+)*::Div.*?){7}/m, capture_stdout { browser.show_divs })
+    assert_match(/There are 7 divs(\nVapir(::\w+)*::Div.*?){7}/m, capture_stdout { browser.show_divs })
   end
 end
 
@@ -208,6 +208,6 @@ class TC_Spans_Display < Test::Unit::TestCase
   #tag_method :test_showSpans, :fails_on_ie
   def test_showSpans
     goto_page("div.html")
-    assert_match(/There are 7 spans(\nWatir(::\w+)*::Span.*?){7}/m, capture_stdout { browser.show_spans })
+    assert_match(/There are 7 spans(\nVapir(::\w+)*::Span.*?){7}/m, capture_stdout { browser.show_spans })
   end
 end

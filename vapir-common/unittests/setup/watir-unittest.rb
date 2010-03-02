@@ -1,6 +1,6 @@
 $htmlRoot =  "file:///#{$myDir}/html/" 
 
-module Watir::UnitTest
+module Vapir::UnitTest
   # navigate the browser to the specified page in unittests/html
   def goto_page page
     new_url = self.class.html_root + page
@@ -42,8 +42,8 @@ module Watir::UnitTest
 end
 
 class Test::Unit::TestCase
-  include Watir::UnitTest
-  include Watir::Exception
+  include Vapir::UnitTest
+  include Vapir::Exception
 
   class << self
     def tags *names

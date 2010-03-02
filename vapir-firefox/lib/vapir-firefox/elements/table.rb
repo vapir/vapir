@@ -1,13 +1,13 @@
-module Watir
+module Vapir
   class Firefox::Table < Firefox::Element
-    include Watir::Table
+    include Vapir::Table
 
     def self.create_from_element(container, element)
-      Watir::Table.create_from_element(container, element)
+      Vapir::Table.create_from_element(container, element)
     end
   end # Table
 
   class Firefox::TBody < Firefox::Element
-    include Watir::TBody
+    include Vapir::TBody
   end
-end # FireWatir
+end # Vapir

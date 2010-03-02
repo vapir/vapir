@@ -1,10 +1,10 @@
-module Watir
+module Vapir
   # Base class for html elements.
   # This is not a class that users would normally access.
   class IE::Element # Wrapper
     include IE::Container # presumes @container is defined
-    include Watir::Element
-    include Watir::Exception
+    include Vapir::Element
+    include Vapir::Exception
     
     alias containing_object element_object
     alias ole_object element_object # TODO: deprecate this? 

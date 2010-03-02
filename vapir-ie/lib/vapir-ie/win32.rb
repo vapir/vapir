@@ -2,7 +2,7 @@ require 'dl/import'
 require 'dl/struct'
 require 'Win32API'
 
-module Watir
+module Vapir
   module Win32
     # this will find the IEDialog.dll file in its build location
     @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/vapir-ie/IEDialog/Release/IEDialog.dll").gsub('/', '\\')

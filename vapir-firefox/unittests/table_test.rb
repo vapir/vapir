@@ -306,7 +306,7 @@ class TC_Tables_Complex < Test::Unit::TestCase
   end
     
   def test_each_itterator
-    # for WTR-324: keep Watir::Table.each from crashing when run on nested tables
+    # for WTR-324: keep Vapir::Table.each from crashing when run on nested tables
     table = browser.table(:index,1)
     assert_equal(table.row_count, 2)
     example_row_count = 0
@@ -325,6 +325,6 @@ class TC_Tables_Display < Test::Unit::TestCase
   #tag_method :test_showTables, :fails_on_ie
   def test_showTables
     goto_page("table1.html")
-    assert_match(/There are 7 tables(\nWatir(::\w+)*::Table.*?){7}/m, capture_stdout { browser.show_tables })
+    assert_match(/There are 7 tables(\nVapir(::\w+)*::Table.*?){7}/m, capture_stdout { browser.show_tables })
   end
 end

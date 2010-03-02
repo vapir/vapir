@@ -5,7 +5,7 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..') unless $SETUP_L
 require 'unittests/setup'
 
 class TC_ExistingWindow < Test::Unit::TestCase
-  include Watir
+  include Vapir
 
   def setup
     goto_page 'buttons1.html'

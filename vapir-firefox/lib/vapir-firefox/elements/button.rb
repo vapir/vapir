@@ -1,10 +1,10 @@
-module Watir
+module Vapir
   #
   # Description:
   #   Class for Button element.
   #
   class Firefox::Button < Firefox::InputElement
-    include Watir::Button
+    include Vapir::Button
     
     # locating should check both of these values if :caption is specified because, unlike IE,
     # ff doesn't make the value of a button be its text content when there's no value. 
@@ -15,4 +15,4 @@ module Watir
       value.empty? ? text : value
     end
   end # Button
-end # FireWatir
+end # Vapir

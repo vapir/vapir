@@ -2,7 +2,7 @@
 
 require 'vapir-common/testcase'
 
-class VerifyTests < Watir::TestCase
+class VerifyTests < Vapir::TestCase
   
   def test_verify
     verify true

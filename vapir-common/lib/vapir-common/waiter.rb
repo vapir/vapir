@@ -1,6 +1,6 @@
 require 'vapir-common/exceptions'
 
-module Watir
+module Vapir
   
   def wait_until(*args)
     Waiter.wait_until(*args) {yield}
@@ -51,12 +51,12 @@ class Waiter
   # waiter.wait_until {puts 'hello'}
   # 
   # This code will print out "hello" for five seconds, and then raise a 
-  # Watir::TimeOutException.
+  # Vapir::TimeOutException.
   def wait_until # block
     start_time = now
     until yield do
       if (duration = now - start_time) > @timeout
-        raise Watir::Exception::TimeOutException.new(duration, @timeout),
+        raise Vapir::Exception::TimeOutException.new(duration, @timeout),
           "Timed out after #{duration} seconds."
       end
       sleep @polling_interval
@@ -71,7 +71,7 @@ class Waiter
   # Waiter.wait_until(5) {puts 'hello'}
   # 
   # This code will print out "hello" for five seconds, and then raise a 
-  # Watir::TimeOutException.  
+  # Vapir::TimeOutException.  
 
   # IDEA: wait_until: remove defaults from Waiter.wait_until
   def self.wait_until(timeout=@@default_timeout,

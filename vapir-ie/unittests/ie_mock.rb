@@ -75,7 +75,7 @@ class StubExplorer
   
 end
 
-class TestIE < Watir::IE
+class TestIE < Vapir::IE
   
   def create_browser_window
     @ie = StubExplorer.new

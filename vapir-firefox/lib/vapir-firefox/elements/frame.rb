@@ -1,8 +1,8 @@
 require 'vapir-firefox/element'
 
-module Watir
+module Vapir
   class Firefox::Frame < Firefox::Element
-    include Watir::Frame
+    include Vapir::Frame
     include Firefox::PageContainer
 
     def document_object
@@ -18,4 +18,4 @@ module Watir
       element_object.contentWindow
     end
   end # Frame
-end # FireWatir
+end # Vapir

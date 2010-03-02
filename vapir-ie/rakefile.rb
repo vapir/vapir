@@ -8,7 +8,7 @@ require 'rake/gempackagetask'
 require 'watir-rdoc'
 
 $VERBOSE = nil
-desc 'Generate Watir API Documentation'
+desc 'Generate Vapir API Documentation'
 Rake::RDocTask.new('rdoc') do |rdoc| 
   rdoc.rdoc_dir = 'rdoc'
   rdoc.options += $WATIR_RDOC_OPTIONS
@@ -49,8 +49,8 @@ task :bonus_zip => [:rdoc] do
     raise
   end
   
-  require 'watir/version'
-  version = Watir::IE::VERSION
+  require 'vapir-ie/version'
+  version = Vapir::IE::VERSION
   bonus_zip = "pkg/watir-bonus-#{version}.zip"
 
   if File.exist?(bonus_zip)

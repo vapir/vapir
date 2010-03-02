@@ -1,10 +1,10 @@
-module Watir
+module Vapir
   #
   # Description:
   #   Class for Link element.
   #
   class Firefox::Link < Firefox::Element
-    include Watir::Link
+    include Vapir::Link
 
     #TODO: if an image is used as part of the link, this will return true
     #def link_has_image
@@ -24,4 +24,4 @@ module Watir
     #end
 
   end # Link
-end # FireWatir
+end # Vapir

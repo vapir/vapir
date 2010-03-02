@@ -8,7 +8,7 @@ require 'vapir-common/waiter'
 
 class TC_IE_Each < Test::Unit::TestCase  
   def setup
-    assert_equal 0, Watir::IE.process_count
+    assert_equal 0, Vapir::IE.process_count
     @hits = 0
     @ie = []
   end
@@ -18,31 +18,31 @@ class TC_IE_Each < Test::Unit::TestCase
   end
 
   def test_zero_windows
-    Watir::IE.each {hit_me}    
+    Vapir::IE.each {hit_me}    
     assert_equal 0, @hits
   end
   
   def test_one_window
-    @ie << Watir::IE.new_process
-    Watir::IE.each {hit_me}    
+    @ie << Vapir::IE.new_process
+    Vapir::IE.each {hit_me}    
     assert_equal 1, @hits
   end
   
   def test_two_windows
-    @ie << Watir::IE.new_process
-    @ie << Watir::IE.new_process
-    Watir::IE.each {hit_me}    
+    @ie << Vapir::IE.new_process
+    @ie << Vapir::IE.new_process
+    Vapir::IE.each {hit_me}    
     assert_equal 2, @hits
   end
   
   def test_return_type
-    @ie << Watir::IE.new_process
-    Watir::IE.each {|ie| assert_equal(Watir::IE, ie.class)}    
+    @ie << Vapir::IE.new_process
+    Vapir::IE.each {|ie| assert_equal(Vapir::IE, ie.class)}    
   end
   
-  include Watir
+  include Vapir
   def teardown
     @ie.each {|ie| ie.close }
-    wait_until {Watir::IE.process_count == 0}
+    wait_until {Vapir::IE.process_count == 0}
   end
 end

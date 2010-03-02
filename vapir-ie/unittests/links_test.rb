@@ -6,7 +6,7 @@ require 'unittests/setup'
 require 'cgi'
 
 class TC_Links < Test::Unit::TestCase
-  include Watir::Exception
+  include Vapir::Exception
   
   def setup
     goto_page "links1.html"
@@ -18,7 +18,7 @@ class TC_Links < Test::Unit::TestCase
     begin
       browser.link(:bad_attribute, 199).click
     rescue MissingWayOfFindingObjectException => e           
-      assert_match(/\ACannot search for a Watir(::\w+)*::Link using the given argument: :bad_attribute \(other argument was 199\)\z/, e.message)
+      assert_match(/\ACannot search for a Vapir(::\w+)*::Link using the given argument: :bad_attribute \(other argument was 199\)\z/, e.message)
     end
   end
   
@@ -126,7 +126,7 @@ class TC_Links < Test::Unit::TestCase
 end
 
 class TC_Frame_Links < Test::Unit::TestCase
-  include Watir::Exception
+  include Vapir::Exception
   
   def setup
     goto_page "frame_links.html"
@@ -154,7 +154,7 @@ class TC_showlinks < Test::Unit::TestCase
   
   def test_showLinks
     goto_page "links1.html"
-    assert_match(/There are 9 links(\nWatir(::\w+)*::Link.*?){9}/m, capture_stdout { browser.show_links })
+    assert_match(/There are 9 links(\nVapir(::\w+)*::Link.*?){9}/m, capture_stdout { browser.show_links })
 #    expected = [/^index name +id +href + text\/src$/,
 #    get_path_regex(1, "links2.html", "test1"),
 #    get_path_regex(2, "link_pass.html", "test1"),

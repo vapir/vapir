@@ -1,4 +1,4 @@
-module Watir
+module Vapir
   AutoItDLL=File.join(File.expand_path(File.dirname(__FILE__)),'AutoItX3.dll')
   def self.autoit
     @@autoit||= begin

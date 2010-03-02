@@ -3,7 +3,7 @@ require 'unittests/setup'
 require 'vapir-ie/WindowHelper'
 
 class TC_Logon_Test < Test::Unit::TestCase
-  include Watir
+  include Vapir
   
   def goto_windows_login_page
     browser.goto('http://clio.lyris.com/')

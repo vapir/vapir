@@ -1,4 +1,4 @@
-module Watir
+module Vapir
   module Firefox::RadioCheckboxCommon
     private
     # radios in firefox seem to be totally unresponsive to css color and border, but
@@ -18,7 +18,7 @@ module Watir
     end
   end
   class Firefox::Radio < Firefox::InputElement
-    include Watir::Radio
+    include Vapir::Radio
     include Firefox::RadioCheckboxCommon
   end # Radio
 
@@ -27,7 +27,7 @@ module Watir
   # Class for Checkbox element.
   #
   class Firefox::CheckBox < Firefox::InputElement
-    include Watir::CheckBox
+    include Vapir::CheckBox
     include Firefox::RadioCheckboxCommon
   end # CheckBox
-end # FireWatir
+end # Vapir

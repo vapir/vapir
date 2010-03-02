@@ -9,7 +9,7 @@ require 'vapir-ie/contrib/page_checker'
 #  ie.
 
 class TC_NavigateException < Test::Unit::TestCase
-  include Watir
+  include Vapir
   
   def setup
     browser.add_checker(PageCheckers::NAVIGATION_CHECKER)

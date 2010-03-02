@@ -1,7 +1,7 @@
 require 'vapir-common/elements/element'
 require 'vapir-common/common_container'
 
-module Watir
+module Vapir
   module Frame
     extend ElementHelper
     
@@ -284,7 +284,7 @@ module Watir
     # Raises UnknownObjectException if the select box is not found
     def options
       assert_exists do
-        ElementCollection.new(self, element_class_for(Watir::Option), extra_for_contained.merge(:candidates => :options, :select_list => self))
+        ElementCollection.new(self, element_class_for(Vapir::Option), extra_for_contained.merge(:candidates => :options, :select_list => self))
       end
     end
     # note that the above is defined that way rather than with element_collection, as below, because adding :select_list => self to extra isn't implemented yet 
@@ -320,7 +320,7 @@ module Watir
     # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
     #   used for the onchange event. 
     def select_text(option_text, method_options={})
-      select_options_if(method_options) {|option| Watir::fuzzy_match(option.text, option_text) }
+      select_options_if(method_options) {|option| Vapir::fuzzy_match(option.text, option_text) }
     end
     alias select select_text
     alias set select_text
@@ -332,7 +332,7 @@ module Watir
     # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
     #   used for the onchange event. 
     def select_value(option_value, method_options={})
-      select_options_if(method_options) {|option| Watir::fuzzy_match(option.value, option_value) }
+      select_options_if(method_options) {|option| Vapir::fuzzy_match(option.value, option_value) }
     end
 
     # Does the SelectList have an option whose text matches the given text or regexp? 
@@ -345,7 +345,7 @@ module Watir
     # Is the specified option (text) selected? Raises exception of option does not exist.
     def selected_option_texts_include?(text_or_regexp)
       unless includes? text_or_regexp
-        raise Watir::Exception::UnknownObjectException, "Option #{text_or_regexp.inspect} not found."
+        raise Vapir::Exception::UnknownObjectException, "Option #{text_or_regexp.inspect} not found."
       end
       selected_option_texts.grep(text_or_regexp).size > 0
     end
@@ -370,7 +370,7 @@ module Watir
 
     private
     # yields each option, selects the option if the given block returns true. fires onchange event if
-    # any have changed. raises Watir::Exception::NoValueFoundException if none matched. 
+    # any have changed. raises Vapir::Exception::NoValueFoundException if none matched. 
     # breaks after the first match found if this is not a multiple select list. 
     # takes options hash (note, these are flags for the function, not to be confused with the Options of the select list)
     # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
@@ -396,7 +396,7 @@ module Watir
           end
         end
         if !any_matched
-          raise Watir::Exception::NoValueFoundException, "Could not find any options matching those specified on #{self.inspect}"
+          raise Vapir::Exception::NoValueFoundException, "Could not find any options matching those specified on #{self.inspect}"
         end
         self
       end
@@ -463,7 +463,7 @@ module Watir
       with_highlight do
         assert_enabled
         if checked!=state
-          if browser_class.name != 'Watir::Firefox'  # compare by name to not trigger autoload or raise NameError if not loaded 
+          if browser_class.name != 'Vapir::Firefox'  # compare by name to not trigger autoload or raise NameError if not loaded 
             # in firefox, firing the onclick event changes the state. in IE, it doesn't, so do that first 
             # todo/fix: this is browser-specific stuff, shouldn't it be in the browser-specific class? 
             element_object.checked=state
@@ -565,7 +565,7 @@ module Watir
     # returns all of the cells of this table. to get the cells including nested tables, 
     # use #table_cells, which is defined on all containers (including Table) 
     def cells
-      ElementCollection.new(self, element_class_for(Watir::TableCell), extra_for_contained.merge(:candidates => proc do |container|
+      ElementCollection.new(self, element_class_for(Vapir::TableCell), extra_for_contained.merge(:candidates => proc do |container|
         container_object=container.element_object
         object_collection_to_enumerable(container_object.rows).inject([]) do |candidates, row|
           candidates+object_collection_to_enumerable(row.cells).to_a

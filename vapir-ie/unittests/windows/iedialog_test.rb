@@ -6,7 +6,7 @@ require 'unittests/setup'
 require 'Win32API'
 
 class TC_IEDialog < Test::Unit::TestCase
-  include Watir 
+  include Vapir 
 
   # this will find the IEDialog.dll file in its build location
   @@iedialog_file = (File.expand_path(File.dirname(__FILE__)) + "/../../lib/vapir-ie/IEDialog/Release/IEDialog.dll").gsub('/', '\\')

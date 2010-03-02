@@ -5,7 +5,7 @@ require 'unittests/setup'
 
 class TC_FileField < Test::Unit::TestCase
   tags :must_be_visible, :creates_windows
-  include Watir
+  include Vapir
   
   def setup
     goto_page "fileupload.html"

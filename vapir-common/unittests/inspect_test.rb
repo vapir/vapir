@@ -24,7 +24,7 @@ class TC_Inspect < Test::Unit::TestCase
   end
 
   def test_element_collections_inspect
-    assert_match(%r{^#<Watir::ElementCollection.*#<.*Em:0x[0-9a-f]+.*>.*$}, browser.ems.inspect)
+    assert_match(%r{^#<Vapir::ElementCollection.*#<.*Em:0x[0-9a-f]+.*>.*$}, browser.ems.inspect)
   end
 
 end

@@ -68,11 +68,18 @@ class WIN32OLE
   end
 end
 
-# create stub class since everything is defined in Watir::IE namespace - this needs to be defined before the real class.
+# create stub class since everything is defined in Vapir::IE namespace - this needs to be defined before the real class.
 require 'vapir-common/browser'
-module Watir
-  class IE < Watir::Browser
-  end
+module Vapir
+#  class IE < Vapir::Browser
+#  end
+  # above somehow triggers autoload on Vapir::IE, which
+  # calls to a require that then requires this file, which
+  # already being loaded returns without defining Vapir::IE,
+  # causing NameError: uninitialized constant Vapir::IE
+  # very strange. 
+  IE= Class.new(Vapir::Browser)
+  #const_set('IE', Class.new(Vapir::Browser))
 end
 
 require 'logger'
@@ -91,7 +98,7 @@ require 'vapir-common/matches'
 # functionality that grabs
 # the remaining ARGV as a filter on what tests to run.
 # Note: this means that watir must be require'd BEFORE test/unit.
-# (Alternatively, you could require test/unit first and then put the Watir::IE
+# (Alternatively, you could require test/unit first and then put the Vapir::IE
 # arguments after the '--'.)
 
 # Make Internet Explorer invisible. -b stands for background
@@ -119,8 +126,8 @@ require 'vapir-ie/table'
 require 'vapir-ie/image'
 require 'vapir-ie/link'
 
-module Watir
-  include Watir::Exception
+module Vapir
+  include Vapir::Exception
 
   # Directory containing the watir.rb file
   @@dir = File.expand_path(File.dirname(__FILE__))

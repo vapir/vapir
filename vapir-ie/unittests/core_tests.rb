@@ -11,7 +11,7 @@ Dir.chdir TOPDIR do
   $all_tests.each {|x| require x}
 end
 
-Watir::UnitTest.filter_out do |test|
+Vapir::UnitTest.filter_out do |test|
   test.class.to_s =~ /xpath/i
 end
-Watir::UnitTest.filter_out_tests_tagged :must_be_visible 
+Vapir::UnitTest.filter_out_tests_tagged :must_be_visible 

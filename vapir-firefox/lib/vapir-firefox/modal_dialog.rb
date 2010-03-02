@@ -1,13 +1,13 @@
 require 'vapir-firefox/window'
 require 'vapir-common/common_modal_dialog'
-module Watir
+module Vapir
   # represents a window which is modal to a parent window 
   class Firefox::ModalDialog
-    include Watir::ModalDialog
+    include Vapir::ModalDialog
     include Firefox::Window
     def locate
       candidates=[]
-      Watir::Firefox.each_window_object do |win|
+      Vapir::Firefox.each_window_object do |win|
         opener=win.attr(:opener)
         opener=nil unless opener.type=='object'
         content=win.attr(:content)
@@ -51,7 +51,7 @@ module Watir
       xul_buttons=[]
       anonymous_dialog_nodes.to_array.each do |node|
         xul_buttons+=node.getElementsByTagName('xul:button').to_array.select do |button|
-          Watir::fuzzy_match(button.label, button_text)
+          Vapir::fuzzy_match(button.label, button_text)
         end
       end
       raise("Found #{xul_buttons.size} buttons which match #{button_text} - expected to find 1") unless xul_buttons.size==1
@@ -123,7 +123,7 @@ module Watir
       containing_modal_dialog.modal_window
     end
     def locate!(options={})
-      exists? || raise(Watir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
+      exists? || raise(Vapir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
     end
     
     def exists?

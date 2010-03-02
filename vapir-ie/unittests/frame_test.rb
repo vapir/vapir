@@ -5,7 +5,7 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'unittests/setup'
 
 class TC_Frames < Test::Unit::TestCase
-  include Watir::Exception
+  include Vapir::Exception
   
   def setup
     goto_page "frame_buttons.html"
@@ -55,7 +55,7 @@ end
   
 
 class TC_Frames2 < Test::Unit::TestCase
-  include Watir::Exception
+  include Vapir::Exception
   
   def setup
     goto_page "frame_multi.html"
@@ -125,17 +125,17 @@ class TC_show_frames < Test::Unit::TestCase
 
 #  tag_method :test_show_nested_frames, :fails_on_firefox
   def test_show_nested_frames
-    capture_and_compare("nestedFrames.html", /There are 2 frames(\nWatir(::\w+)*::Frame.*?nestedFrame.*?){2}/m)
+    capture_and_compare("nestedFrames.html", /There are 2 frames(\nVapir(::\w+)*::Frame.*?nestedFrame.*?){2}/m)
   end
   
 #  tag_method :test_button_frames, :fails_on_firefox
   def test_button_frames
-   capture_and_compare("frame_buttons.html", /There are 2 frames(\nWatir(::\w+)*::Frame.*?buttonFrame.*?){2}/m)
+   capture_and_compare("frame_buttons.html", /There are 2 frames(\nVapir(::\w+)*::Frame.*?buttonFrame.*?){2}/m)
   end
   
   tag_method :test_iframes, :fails_on_firefox
   def test_iframes
-    capture_and_compare("iframeTest.html", /There are 2 frames(\nWatir(::\w+)*::Frame.*?(sender|receiver)Frame.*?){2}/m)
+    capture_and_compare("iframeTest.html", /There are 2 frames(\nVapir(::\w+)*::Frame.*?(sender|receiver)Frame.*?){2}/m)
   end
   
 end

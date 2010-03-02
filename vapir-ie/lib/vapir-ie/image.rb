@@ -1,12 +1,12 @@
-module Watir
+module Vapir
   
   # This class is the means of accessing an image on a page.
-  # Normally a user would not need to create this object as it is returned by the Watir::Container#image method
+  # Normally a user would not need to create this object as it is returned by the Vapir::Container#image method
   #
   # many of the methods available to this object are inherited from the Element class
   #
   class IE::Image < IE::Element
-    include Watir::Image
+    include Vapir::Image
     
     dom_attr :fileSize => :file_size
     dom_attr :fileCreatedDate => :file_created_date
@@ -27,7 +27,7 @@ module Watir
     # will not overwrite a previously existing image.  If an image already
     # exists at the given path then a dialog will be displayed prompting
     # for overwrite.
-    # Raises a WatirException if AutoIt is not correctly installed
+    # Raises a VapirException if AutoIt is not correctly installed
     # path - directory path and file name of where image should be saved
     def save(path)
     # TODO: FIX

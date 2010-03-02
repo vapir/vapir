@@ -9,7 +9,7 @@ $watir_dev_lib = File.join(topdir, '..', 'vapir-ie', 'lib')
 $LOAD_PATH.unshift File.expand_path(File.join(topdir, 'lib'))
 
 require 'vapir-common/browser'
-Watir::Browser.default = 'ie'
+Vapir::Browser.default = 'ie'
 require 'unittests/setup/lib'
 
 Dir.chdir topdir do

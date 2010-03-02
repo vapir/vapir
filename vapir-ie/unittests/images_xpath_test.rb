@@ -8,7 +8,7 @@ require 'webrick'
 require 'vapir-ie/cookiemanager'
 
 class TC_Images_XPath < Test::Unit::TestCase
-  include Watir
+  include Vapir
   
   def setup
     gotoImagePage

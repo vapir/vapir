@@ -1,13 +1,13 @@
 require 'test/unit'
 require 'vapir-common/assertions'
 
-module Watir
+module Vapir
 
   class TestCase < Test::Unit::TestCase
-    include Watir::Assertions
+    include Vapir::Assertions
     @@order = :sequentially
     def initialize name
-      throw :invalid_test if name == :default_test && self.class == Watir::TestCase
+      throw :invalid_test if name == :default_test && self.class == Vapir::TestCase
       super
     end        
     class << self

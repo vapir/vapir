@@ -67,13 +67,13 @@ $upload_dialog=::Waiter.try_for(16, :exception => nil) do
   end
 end
 unless $upload_dialog
-  raise Watir::Exception::NoMatchingWindowFoundException.new('No window found to upload a file - '+(popup ? "enabled popup exists but has unrecognized text #{popup.text}" : 'no popup is on the browser'))
+  raise Vapir::Exception::NoMatchingWindowFoundException.new('No window found to upload a file - '+(popup ? "enabled popup exists but has unrecognized text #{popup.text}" : 'no popup is on the browser'))
 end
 filename_fields=UploadWindowFilenameFields.map do |control_args|
   $upload_dialog.child_control_with_preceding_label(*control_args)
 end
 unless (filename_field=filename_fields.compact.first)
-  raise Watir::Exception::NoMatchingWindowFoundException, "Could not find a filename field in the File Upload dialog"
+  raise Vapir::Exception::NoMatchingWindowFoundException, "Could not find a filename field in the File Upload dialog"
 end
 filename_field.send_set_text! file_path
 $upload_dialog.click_child_button_try_for!('Open', 4, :exception => WinWindow::Error.new("Failed to click the Open button on the File Upload dialog. It exists, but we couldn't click it."))

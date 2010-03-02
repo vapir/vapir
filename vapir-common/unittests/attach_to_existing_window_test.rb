@@ -6,7 +6,7 @@ require 'unittests/setup'
 
 class TC_ExistingWindow < Test::Unit::TestCase
   location __FILE__
-  include Watir
+  include Vapir
 
   def setup 
     @original_timeout = Browser.options[:attach_timeout]

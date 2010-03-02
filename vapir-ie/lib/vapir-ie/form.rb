@@ -1,7 +1,7 @@
-module Watir
+module Vapir
 
   class IE::Form < IE::Element
-    include Watir::Form
+    include Vapir::Form
   end # class IE::Form
   
 end

@@ -3,9 +3,9 @@ require 'vapir-ie/container'
 require 'vapir-ie/page-container'
 require 'vapir-ie/win32'
 
-module Watir
+module Vapir
   class IE < Browser
-    include Watir::Exception
+    include Vapir::Exception
     include IE::PageContainer
     
     # Maximum number of seconds to wait when attaching to a window
@@ -104,7 +104,7 @@ module Watir
 
     # Create a new IE window in a new process. 
     # This method will not work when
-    # Watir/Ruby is run under a service (instead of a user).
+    # Vapir/Ruby is run under a service (instead of a user).
     def self.new_process
       ie = new true
       ie._new_process_init
@@ -127,7 +127,7 @@ module Watir
       ie
     end
     
-    # Return a Watir::IE object for an existing IE window. Window can be
+    # Return a Vapir::IE object for an existing IE window. Window can be
     # referenced by url, title, or window handle.
     # Second argument can be either a string or a regular expression in the 
     # case of of :url or :title. 
@@ -135,7 +135,7 @@ module Watir
     # IE.attach(:title, 'Google')
     # IE.attach(:hwnd, 528140)
     # This method will not work when
-    # Watir/Ruby is run under a service (instead of a user).
+    # Vapir/Ruby is run under a service (instead of a user).
     def self.attach how, what
       ie = new true # don't create window
       ie._attach_init(how, what)
@@ -227,7 +227,7 @@ module Watir
     
     # Yields successively to each IE window on the current desktop. Takes a block.
     # This method will not work when
-    # Watir/Ruby is run under a service (instead of a user).
+    # Vapir/Ruby is run under a service (instead of a user).
 	# Yields to the window and its hwnd.
     def self.each
       shell = WIN32OLE.new('Shell.Application')
@@ -247,7 +247,7 @@ module Watir
     #   :title, title -- the title of the browser page
     #   :hwnd, hwnd -- the window handle of the browser window.
     # This method will not work when
-    # Watir/Ruby is run under a service (instead of a user).
+    # Vapir/Ruby is run under a service (instead of a user).
     def self.find(how, what)
       ie_ole = IE._find(how, what)
       IE.bind ie_ole if ie_ole
@@ -286,7 +286,7 @@ module Watir
       log "Seeking Window with #{how}: #{what}"
       ieTemp = nil
       begin
-        Watir::until_with_timeout do
+        Vapir::until_with_timeout do
           ieTemp = IE._find how, what
         end
       rescue TimeOutException
@@ -323,7 +323,7 @@ module Watir
       IE::ModalDialog.new(self, options.merge(:error => true))
     end
 
-    include Watir::Win32
+    include Vapir::Win32
 
   	# Are we attached to an open browser?
     def exists?
@@ -445,7 +445,7 @@ module Watir
     def send_keys(key_string)
       require 'vapir-ie/autoit'
       bring_to_front
-      Watir.autoit.Send key_string
+      Vapir.autoit.Send key_string
     end
     
     # saves a screenshot of this browser window to the given filename. 
@@ -968,7 +968,7 @@ module Watir
     private :element_by_absolute_xpath
     
     def attach_command
-      "Watir::IE.attach(:hwnd, #{hwnd})"
+      "Vapir::IE.attach(:hwnd, #{hwnd})"
     end
     
     private

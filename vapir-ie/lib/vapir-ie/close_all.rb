@@ -1,6 +1,6 @@
 require 'vapir-ie/ie-class'
 
-module Watir
+module Vapir
   class IE
     # close all ie browser windows
     def self.close_all
@@ -12,7 +12,7 @@ module Watir
     end
     private
     def self.close_all_but(except=nil)
-      Watir::IE.each do |ie|
+      Vapir::IE.each do |ie|
         ie.close_modal
         ie.close unless except and except.hwnd == ie.hwnd
       end

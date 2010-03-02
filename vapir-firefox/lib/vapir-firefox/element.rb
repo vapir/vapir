@@ -1,9 +1,9 @@
-module Watir
+module Vapir
   # Base class for html elements.
   # This is not a class that users would normally access.
   class Firefox::Element
-    include Watir::Firefox::Container
-    include Watir::Element
+    include Vapir::Firefox::Container
+    include Vapir::Element
 
     # Creates new instance of Firefox::Element. 
     def initialize(how, what, extra={})
@@ -284,4 +284,4 @@ module Watir
 #    end
     
   end # Element
-end # FireWatir
+end # Vapir

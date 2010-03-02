@@ -1,7 +1,7 @@
 # setup/options
 require 'user-choices'
 
-module Watir
+module Vapir
   module UnitTest
     class Options < UserChoices::Command
       include UserChoices
@@ -16,7 +16,7 @@ module Watir
         :default => 'regression'
       end
       def execute 
-        Watir::UnitTest.options = @user_choices
+        Vapir::UnitTest.options = @user_choices
       end 
     end
     def self.options

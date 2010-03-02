@@ -6,10 +6,10 @@ require "vapir"
 
 case ENV['watir_browser']
 when /firefox/
-  Browser = Watir::Firefox
+  Browser = Vapir::Firefox
 else
-  Browser = Watir::IE
-  WatirSpec.persistent_browser = true
+  Browser = Vapir::IE
+  VapirSpec.persistent_browser = true
 end
 
-include Watir::Exception
+include Vapir::Exception

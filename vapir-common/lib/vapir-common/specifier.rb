@@ -1,4 +1,4 @@
-module Watir
+module Vapir
   # This module is included in ElementCollection and Element. it 
   # it expects the includer to have defined:
   # - @container
@@ -9,7 +9,7 @@ module Watir
     # raises an error unless @container is set 
     def assert_container
       unless @container
-        raise Watir::Exception::MissingContainerException, "No container is defined for this #{self.class.inspect}"
+        raise Vapir::Exception::MissingContainerException, "No container is defined for this #{self.class.inspect}"
       end
     end
     
@@ -35,11 +35,11 @@ module Watir
         when nil
           get_elements_by_specifiers(@container, specifiers, aliases, respond_to?(:index_is_first) ? index_is_first : false)
         when Symbol
-          Watir::Element.object_collection_to_enumerable(@container.containing_object.send(@extra[:candidates]))
+          Vapir::Element.object_collection_to_enumerable(@container.containing_object.send(@extra[:candidates]))
         when Proc
           @extra[:candidates].call(@container)
         else
-          raise Watir::Exception::MissingWayOfFindingObjectException, "Unknown method of specifying candidates: #{@extra[:candidates].inspect} (#{@extra[:candidates].class})"
+          raise Vapir::Exception::MissingWayOfFindingObjectException, "Unknown method of specifying candidates: #{@extra[:candidates].inspect} (#{@extra[:candidates].class})"
         end
       end
     end
@@ -270,14 +270,14 @@ module Watir
             specifier.all? do |(how, what)|
               if how==:types
                 what.any? do |type|
-                  candidate_attributes.call(:type).any?{|attr| Watir::fuzzy_match(attr, type)}
+                  candidate_attributes.call(:type).any?{|attr| Vapir::fuzzy_match(attr, type)}
                 end
               else
                 matched_aliases = aliases.reject do |dom_attr, alias_list|
                   !alias_list.include?(how)
                 end.keys
                 (matched_aliases+[how]).any? do |how_alias|
-                  candidate_attributes.call(how_alias).any?{|attr| Watir::fuzzy_match(attr, what)}
+                  candidate_attributes.call(how_alias).any?{|attr| Vapir::fuzzy_match(attr, what)}
                 end
               end
             end
@@ -294,7 +294,7 @@ module Watir
     end
   end
 
-  # This is on the Watir module itself because it's used in a number of other places, should be in a broad namespace. 
+  # This is on the Vapir module itself because it's used in a number of other places, should be in a broad namespace. 
   module_function
   def fuzzy_match(attr, what)
     # IF YOU CHANGE THIS, CHANGE THE JAVASCRIPT REIMPLEMENTATION IN match_candidates

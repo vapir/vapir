@@ -37,9 +37,9 @@
     #
 =end
 
-module Watir
+module Vapir
   module Firefox::Container 
-    include Watir::Container
+    include Vapir::Container
     
     private
     def extra_for_contained
@@ -307,7 +307,7 @@ module Watir
     #   <input type = checkbox name = email_frequency value = 'Weekly'> Weekly Email
     #   <input type = checkbox name = email_frequency value = 'monthly'>Monthly Email
     #
-    #   FireWatir can access these using the following:
+    #   Vapir can access these using the following:
     #
     #   ff.checkbox(:id, 'day_to_send' , 'monday' )         # access the check box with an id of day_to_send and a value of monday
     #   ff.checkbox(:name ,'email_frequency', 'weekly')     # access the check box with a name of email_frequency and a value of 'weekly'
@@ -337,7 +337,7 @@ module Watir
     #   <input type = radio name = email_frequency value = 'Weekly'> Weekly Email
     #   <input type = radio name = email_frequency value = 'monthly'>Monthly Email
     #
-    #   FireWatir can access these using the following:
+    #   Vapir can access these using the following:
     #
     #   ff.radio(:id, 'day_to_send' , 'monday' )         # access the radio button with an id of day_to_send and a value of monday
     #   ff.radio(:name ,'email_frequency', 'weekly')     # access the radio button with a name of email_frequency and a value of 'weekly'

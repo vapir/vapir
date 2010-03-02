@@ -9,7 +9,7 @@ require 'vapir-ie/cookiemanager'
 
 class TC_Images < Test::Unit::TestCase
   tags :must_be_visible, :creates_windows
-  include Watir
+  include Vapir
   
   def setup
     goto_page "images1.html"

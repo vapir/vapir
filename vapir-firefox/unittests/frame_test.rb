@@ -124,15 +124,15 @@ class TC_show_frames < Test::Unit::TestCase
   end
  
   def test_show_nested_frames
-    capture_and_compare("nestedFrames.html", /There are 2 frames(\nWatir(::\w+)*::*Frame.*?nestedFrame.*?){2}/m)
+    capture_and_compare("nestedFrames.html", /There are 2 frames(\nVapir(::\w+)*::*Frame.*?nestedFrame.*?){2}/m)
   end
   
   def test_button_frames
-    capture_and_compare("frame_buttons.html", /There are 2 frames(\nWatir(::\w+)*::Frame.*?buttonFrame.*?){2}/m)
+    capture_and_compare("frame_buttons.html", /There are 2 frames(\nVapir(::\w+)*::Frame.*?buttonFrame.*?){2}/m)
   end
  
   def test_iframes
-    capture_and_compare("iframeTest.html", /There are 2 frames(\nWatir(::\w+)*::Frame.*?(sender|receiver)Frame.*?){2}/m)
+    capture_and_compare("iframeTest.html", /There are 2 frames(\nVapir(::\w+)*::Frame.*?(sender|receiver)Frame.*?){2}/m)
   end
   
 end

@@ -5,8 +5,8 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..') unless $SETUP_L
 require 'unittests/setup'
 require 'vapir-ie/close_all'
 
-class TC_ModalDialog < Watir::TestCase
-  include Watir
+class TC_ModalDialog < Vapir::TestCase
+  include Vapir
   
   def setup
     @original_timeout = IE.attach_timeout

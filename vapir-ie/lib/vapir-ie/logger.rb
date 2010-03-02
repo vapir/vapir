@@ -1,10 +1,10 @@
-module Watir
-  class WatirLogger < Logger
+module Vapir
+  class VapirLogger < Logger
     def initialize(filName, logsToKeep, maxLogSize)
       super(filName, logsToKeep, maxLogSize)
       self.level = Logger::DEBUG
       self.datetime_format = "%d-%b-%Y %H:%M:%S"
-      self.debug("Watir starting")
+      self.debug("Vapir starting")
     end
   end
   

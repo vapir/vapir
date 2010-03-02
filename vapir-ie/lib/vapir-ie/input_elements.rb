@@ -1,4 +1,4 @@
-module Watir
+module Vapir
   
   class IE::InputElement < IE::Element
     include InputElement
@@ -9,7 +9,7 @@ module Watir
   #
   
   # This class is the way in which select boxes are manipulated.
-  # Normally a user would not need to create this object as it is returned by the Watir::Container#select_list method
+  # Normally a user would not need to create this object as it is returned by the Vapir::Container#select_list method
   class IE::SelectList < IE::InputElement
     include SelectList
   end
@@ -23,7 +23,7 @@ module Watir
   # Input: Button
   #
   
-  # Returned by the Watir::Container#button method
+  # Returned by the Vapir::Container#button method
   class IE::Button < IE::InputElement
     include Button
     dom_attr :value => :caption
@@ -34,7 +34,7 @@ module Watir
   #
   
   # This class is the main class for Text Fields
-  # Normally a user would not need to create this object as it is returned by the Watir::Container#text_field method
+  # Normally a user would not need to create this object as it is returned by the Vapir::Container#text_field method
   class IE::TextField < IE::InputElement
     include TextField
 #    def_wrap_guard :size
@@ -96,7 +96,7 @@ module Watir
   end
   
   # this class can be used to access hidden field objects
-  # Normally a user would not need to create this object as it is returned by the Watir::Container#hidden method
+  # Normally a user would not need to create this object as it is returned by the Vapir::Container#hidden method
   class IE::Hidden < IE::TextField
     include Hidden
   end

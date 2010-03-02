@@ -2,7 +2,7 @@
 # use of modules here is ugly
 
 require 'find'
-module Watir
+module Vapir
   module CookieManager 
 
     class Dir
@@ -33,7 +33,7 @@ module Watir
         end
     end
 
-    class WatirHelper
+    class VapirHelper
         #taken from shlObj.h  used in win32 SHGetSpecialFolderLocation
         #define CSIDL_INTERNET_CACHE            0x0020
         #define CSIDL_COOKIES                   0x0021
@@ -41,13 +41,13 @@ module Watir
         COOKIES = 0x0021
         INTERNET_CACHE = 0x0020
         
-        def  WatirHelper.getSpecialFolderLocation(specFolderName)
+        def  VapirHelper.getSpecialFolderLocation(specFolderName)
             shell = WIN32OLE.new('Shell.Application')
             folder = shell.Namespace(specFolderName)
             folderItem = folder.Self
             folderPath = folderItem.Path
         end
-        def  WatirHelper.deleteSpecialFolderContents(specFolderName)
+        def  VapirHelper.deleteSpecialFolderContents(specFolderName)
             Dir.rm_rf(self.getSpecialFolderLocation(specFolderName))
         end
         

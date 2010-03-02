@@ -1,4 +1,4 @@
-module Watir
+module Vapir
   class IE::Frame < IE::Element
     include Frame
     include IE::PageContainer

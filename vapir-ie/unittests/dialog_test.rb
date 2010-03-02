@@ -6,7 +6,7 @@ require 'unittests/setup'
 
 class TC_Dialog_Test < Test::Unit::TestCase
   tags :must_be_visible
-  include Watir
+  include Vapir
   
   def setup
     goto_page 'JavascriptClick.html'

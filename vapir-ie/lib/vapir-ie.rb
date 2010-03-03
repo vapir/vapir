@@ -40,15 +40,7 @@ require 'vapir-common'
 # create stub class since everything is defined in Vapir::IE namespace - this needs to be defined before the real class.
 require 'vapir-common/browser'
 module Vapir
-#  class IE < Vapir::Browser
-#  end
-  # above somehow triggers autoload on Vapir::IE, which
-  # calls to a require that then requires this file, which
-  # already being loaded returns without defining Vapir::IE,
-  # causing NameError: uninitialized constant Vapir::IE
-  # very strange. 
   IE= Class.new(Vapir::Browser)
-  #const_set('IE', Class.new(Vapir::Browser))
 end
 
 # these switches need to be deleted from ARGV to enable the Test::Unit

@@ -3,8 +3,7 @@ require 'vapir-common'
 # create stub class since everything is defined in Vapir::Firefox namespace - this needs to be defined before the real class.
 require 'vapir-common/browser'
 module Vapir
-  class Firefox < Vapir::Browser
-  end
+  Firefox = Class.new(Vapir::Browser)
 end
 
 require 'vapir-firefox/firefox'

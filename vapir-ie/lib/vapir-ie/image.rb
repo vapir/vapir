@@ -1,3 +1,6 @@
+require 'vapir-ie/element'
+require 'vapir-common/elements/elements'
+
 module Vapir
   
   # This class is the means of accessing an image on a page.

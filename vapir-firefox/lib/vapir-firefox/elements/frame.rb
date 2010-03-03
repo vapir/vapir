@@ -1,4 +1,6 @@
 require 'vapir-firefox/element'
+require 'vapir-common/elements/elements'
+require 'vapir-firefox/page_container'
 
 module Vapir
   class Firefox::Frame < Firefox::Element

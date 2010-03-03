@@ -37,6 +37,8 @@
     #
 =end
 
+require 'vapir-common/container'
+
 module Vapir
   module Firefox::Container 
     include Vapir::Container

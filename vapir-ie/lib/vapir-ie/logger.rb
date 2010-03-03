@@ -1,3 +1,5 @@
+require 'logger'
+
 module Vapir
   class VapirLogger < Logger
     def initialize(filName, logsToKeep, maxLogSize)

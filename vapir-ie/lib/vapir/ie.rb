@@ -1,1 +1,1 @@
-require 'vapir-ie/ie'
+require 'vapir-ie'

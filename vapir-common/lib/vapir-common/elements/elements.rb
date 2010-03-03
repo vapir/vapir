@@ -1,5 +1,5 @@
 require 'vapir-common/elements/element'
-require 'vapir-common/common_container'
+require 'vapir-common/container'
 
 module Vapir
   module Frame

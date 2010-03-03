@@ -1,3 +1,5 @@
+require 'vapir-ie/container'
+
 module Vapir    
   # A PageContainer contains an HTML Document. In other words, it is a 
   # what JavaScript calls a Window.

@@ -1,5 +1,7 @@
 require 'vapir-common/win_window'
-require 'vapir-common/common_modal_dialog'
+require 'vapir-common/modal_dialog'
+require 'vapir-ie/page_container'
+
 module Vapir
   class IE::ModalDialog
     include Vapir::ModalDialog

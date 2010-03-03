@@ -1,3 +1,7 @@
+require 'vapir-ie/element'
+require 'vapir-common/elements/elements'
+require 'vapir-ie/page_container'
+
 module Vapir
   class IE::Frame < IE::Element
     include Frame

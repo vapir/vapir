@@ -1,5 +1,7 @@
 require 'vapir-firefox/window'
-require 'vapir-common/common_modal_dialog'
+require 'vapir-common/modal_dialog'
+require 'vapir-firefox/page_container'
+
 module Vapir
   # represents a window which is modal to a parent window 
   class Firefox::ModalDialog

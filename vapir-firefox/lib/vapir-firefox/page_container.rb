@@ -1,3 +1,5 @@
+require 'vapir-firefox/container'
+
 module Vapir
   module Firefox::PageContainer
     def containing_object

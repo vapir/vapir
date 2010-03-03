@@ -1,6 +1,3 @@
-# vapir-common/options
-require 'rubygems'
-
 require 'user-choices'
 
 module Vapir

@@ -1,3 +1,6 @@
+require 'vapir-firefox/elements/input_element'
+require 'vapir-common/elements/elements'
+
 module Vapir
   module Firefox::RadioCheckboxCommon
     private

@@ -35,7 +35,7 @@
   (based on BSD Open Source License)
 =end
 
-require 'vapir-ie/win32ole'
+require 'vapir-common'
 
 # create stub class since everything is defined in Vapir::IE namespace - this needs to be defined before the real class.
 require 'vapir-common/browser'
@@ -50,18 +50,6 @@ module Vapir
   IE= Class.new(Vapir::Browser)
   #const_set('IE', Class.new(Vapir::Browser))
 end
-
-require 'logger'
-require 'vapir-common/common_elements'
-require 'vapir-common/exceptions'
-require 'vapir-ie/close_all'
-require 'vapir-ie/ie-process'
-
-require 'dl/import'
-require 'dl/struct'
-require 'Win32API'
-
-require 'vapir-common/matches'
 
 # these switches need to be deleted from ARGV to enable the Test::Unit
 # functionality that grabs
@@ -80,20 +68,10 @@ $FAST_SPEED = ARGV.delete('-f')
 ARGV.delete('-s')
 
 require 'vapir-ie/ie-class'
-require 'vapir-ie/logger'
-require 'vapir-ie/win32'
-require 'vapir-ie/container'
-require 'vapir-ie/page-container'
+require 'vapir-ie/elements'
 require 'vapir-ie/version'
-require 'vapir-ie/element'
-require 'vapir-ie/frame'
-require 'vapir-ie/modal_dialog'
-require 'vapir-ie/form'
-require 'vapir-ie/non_control_elements'
-require 'vapir-ie/input_elements'
-require 'vapir-ie/table'
-require 'vapir-ie/image'
-require 'vapir-ie/link'
+
+require 'vapir-common/waiter'
 
 module Vapir
   include Vapir::Exception

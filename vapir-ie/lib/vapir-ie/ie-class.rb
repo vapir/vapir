@@ -1,7 +1,10 @@
-require 'vapir-ie/ie'
 require 'vapir-ie/container'
-require 'vapir-ie/page-container'
-require 'vapir-ie/win32'
+require 'vapir-ie/page_container'
+require 'vapir-ie/close_all'
+require 'vapir-ie/modal_dialog'
+require 'vapir-ie/win32ole'
+require 'vapir-ie/ie-process'
+require 'vapir-ie/logger'
 
 module Vapir
   class IE < Browser
@@ -322,8 +325,6 @@ module Vapir
     def modal_dialog!(options={})
       IE::ModalDialog.new(self, options.merge(:error => true))
     end
-
-    include Vapir::Win32
 
   	# Are we attached to an open browser?
     def exists?

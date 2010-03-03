@@ -1,3 +1,6 @@
+require 'vapir-common/elements/element'
+require 'vapir-firefox/container'
+
 module Vapir
   # Base class for html elements.
   # This is not a class that users would normally access.

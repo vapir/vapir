@@ -1,3 +1,5 @@
+require 'vapir-common/container'
+
 module Vapir
   # This module contains the factory methods that are used to access most html objects
   #

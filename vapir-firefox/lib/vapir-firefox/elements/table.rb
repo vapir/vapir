@@ -1,3 +1,6 @@
+require 'vapir-firefox/element'
+require 'vapir-common/elements/elements'
+
 module Vapir
   class Firefox::Table < Firefox::Element
     include Vapir::Table

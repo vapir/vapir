@@ -1,3 +1,6 @@
+require 'vapir-firefox/elements/text_field'
+require 'vapir-common/elements/elements'
+
 module Vapir
   #
   # Description:

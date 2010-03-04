@@ -102,6 +102,10 @@ class Waiter
   #    If :exception option is given, then if it is nil, no exception is raised; otherwise it should be
   #    an exception class or an exception instance which will be raised instead of WaiterError
   #
+  # Returns the value of the block, which can be handy for things that return nil on failure and some 
+  # other object on success, like Enumerable#detect for example: 
+  # found_thing=Waiter.try_for(30) { all_things().detect {|thing| thing.name=="Bill" } }
+  #
   # Examples:
   # Waiter.try_for(30) do
   #   Time.now.year == 2015

@@ -263,7 +263,7 @@ module Vapir
         
         case how
         when :url
-          ieTemp = window if (what.matches(window.locationURL))
+          ieTemp = window if Vapir::fuzzy_match(window.locationURL, what)
         when :title
           # normal windows explorer shells do not have document
           # note window.document will fail for "new" browsers
@@ -272,7 +272,7 @@ module Vapir
             title = window.document.title
           rescue WIN32OLERuntimeError
           end
-          ieTemp = window if what.matches(title)
+          ieTemp = window if Vapir::fuzzy_match(title, what)
         when :hwnd
           begin
             ieTemp = window if what == window.HWND

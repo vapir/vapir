@@ -4,5 +4,4 @@ module Vapir
   end
 end
 require 'vapir-common/browser'
-require 'vapir-common/matches'
 require 'vapir-common/exceptions'

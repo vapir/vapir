@@ -112,7 +112,15 @@ module Vapir
     # set the file location in the Choose file dialog 
     def set(file_path)
       assert_exists do
-      
+        # it would be nice to do a click_no_wait and then enter the select file dialog information
+        # in the same thread, but that won't work here, because #click_no_wait runs in a javascript 
+        # setTimeout, and javascript calling to a file input's .click() method doesn't work. it appears 
+        # to work until you submit the form, at which point it says access is denied. so, the click has 
+        # to be done via WIN32OLE, but it doesn't return until the file field is set, so we need two
+        # ruby processes (since WIN32OLE blocking blocks all ruby threads).
+        # since locating this element is a much more complicated task than locating the enabled_popup
+        # of this browser, this process will handle the former, and we'll spawn another to do the
+        # latter.
         require 'win32/process'
         require 'vapir-common/win_window'
         rubyw_exe= File.join(Config::CONFIG['bindir'], 'rubyw')

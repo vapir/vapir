@@ -18,14 +18,14 @@ class TC_SelectList < Test::Unit::TestCase
   end
   
   def test_enabled
-    assert(browser.select_list!(:name, "sel1").enabled?)   
+    assert(browser.select_list!(:name, "sel1").enabled?)
     assert_raises(UnknownObjectException) { browser.select_list(:name, "NoName").enabled? }
     assert_false(browser.select_list!(:id, 'selectbox_4').enabled?)
   end
   
   def test_class_name
     assert_raises(UnknownObjectException) { browser.select_list(:name, "missing").class_name }
-    assert_equal("list_style", browser.select_list!(:name, "sel1").class_name)   
+    assert_equal("list_style", browser.select_list!(:name, "sel1").class_name)
     assert_equal("", browser.select_list!(:name, "sel2").class_name)
   end
 
@@ -56,8 +56,8 @@ class TC_SelectList < Test::Unit::TestCase
     # the select method keeps any currently selected items - use the clear selection method first
     browser.select_list!(:name, "sel1").clearSelection
     browser.select_list!(:name, "sel1").option!(:text, "Option 1").select
-    assert_equal(["Option 1" ], browser.select_list!(:name, "sel1").selected_option_texts)   
-  end    
+    assert_equal(["Option 1" ], browser.select_list!(:name, "sel1").selected_option_texts)
+  end
   
   def xtest_option_class_name
     # the option object doesnt inherit from element, so this doesnt work
@@ -74,7 +74,7 @@ class TC_SelectList < Test::Unit::TestCase
     assert browser.select_list!(:name, 'sel1').includes?(/option/i)
     assert ! browser.select_list!(:name, 'sel1').includes?('Option 6')
     assert ! browser.select_list!(:name, 'sel1').includes?(/foobar/)
-  end  
+  end
   
   # SelectList#selected?
   
@@ -101,14 +101,14 @@ class TC_SelectList < Test::Unit::TestCase
     assert_raises(UnknownObjectException) { browser.select_list(:index, 199).disabled }
     assert_raises(UnknownObjectException) { browser.select_list(:index, 199).type }
     
-    assert_equal("o3"   ,    browser.select_list!(:index, 1).value)  
-    assert_equal("sel1" ,    browser.select_list!(:index, 1).name)  
-    assert_equal(""     ,    browser.select_list!(:index, 1).id)  
-    assert_equal("select-one",         browser.select_list!(:index, 1).type)  
-    assert_equal("select-multiple",    browser.select_list!(:index, 2).type)  
+    assert_equal("o3"   ,    browser.select_list!(:index, 1).value)
+    assert_equal("sel1" ,    browser.select_list!(:index, 1).name)
+    assert_equal(""     ,    browser.select_list!(:index, 1).id)
+    assert_equal("select-one",         browser.select_list!(:index, 1).type)
+    assert_equal("select-multiple",    browser.select_list!(:index, 2).type)
     
     browser.select_list!(:index,1).select(/1/)
-    assert_equal("o1", browser.select_list!(:index, 1).value)  
+    assert_equal("o1", browser.select_list!(:index, 1).value)
     
     assert_false( browser.select_list!(:index, 1).disabled)
     assert(browser.select_list!(:index, 4).disabled)
@@ -117,10 +117,10 @@ class TC_SelectList < Test::Unit::TestCase
   
   def test_iterator
     assert_equal(4, browser.select_lists.length)
-    assert_equal("o3"   ,    browser.select_lists[1].value)  
-    assert_equal("sel1" ,    browser.select_lists[1].name )  
-    assert_equal("select-one",         browser.select_lists[1].type )  
-    assert_equal("select-multiple" ,   browser.select_lists[2].type )  
+    assert_equal("o3"   ,    browser.select_lists[1].value)
+    assert_equal("sel1" ,    browser.select_lists[1].name )
+    assert_equal("select-one",         browser.select_lists[1].type )
+    assert_equal("select-multiple" ,   browser.select_lists[2].type )
     
     index = 1
     browser.select_lists.each do |l|

@@ -31,7 +31,7 @@ class TC_Forms2 < Test::Unit::TestCase # Note: there is no TC_Forms1
   
   def test_button_in_form
     assert(browser.form!(:name, "test2").button(:caption, "Submit").exists?)
-  end     
+  end
   def test_form_sub_element
     assert_equal('Click Me', browser.form!(:index, 1).button!(:name, 'b1').value)
   end

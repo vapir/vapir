@@ -51,7 +51,7 @@ class Test::Unit::TestCase
       @tags += names
     end
     def tag_method method_name, *tags
-      self.method_tags[method_name.to_s] = tags    
+      self.method_tags[method_name.to_s] = tags
     end
     def method_tags
       @method_tags ||= Hash.new []
@@ -61,7 +61,7 @@ class Test::Unit::TestCase
       $htmlRoot
     end
     def location path
-      @html_dir = File.join File.dirname(path), 'html'    
+      @html_dir = File.join File.dirname(path), 'html'
     end
   end
   

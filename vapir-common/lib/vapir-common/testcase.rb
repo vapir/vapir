@@ -40,7 +40,7 @@ EOT
     def initialize name
       throw :invalid_test if name == :default_test && self.class == Vapir::TestCase
       super
-    end        
+    end
     class << self
       attr_accessor :test_methods, :order
       def test_methods
@@ -84,6 +84,6 @@ EOT
       end
     end
     public :add_assertion
-  end    
+  end
 
-end  
+end

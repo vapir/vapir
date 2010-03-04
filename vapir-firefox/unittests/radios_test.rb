@@ -21,8 +21,8 @@ class TC_Radios < Test::Unit::TestCase
 
     def test_radio_class
        assert_raises(UnknownObjectException) { browser.radio(:name, "noName").class_name }
-       assert_equal("radio_style" , browser.radio!(:name, "box1").class_name)   
-       assert_equal("" , browser.radio!(:id, "box5").class_name)   
+       assert_equal("radio_style" , browser.radio!(:name, "box1").class_name)
+       assert_equal("" , browser.radio!(:id, "box5").class_name)
     end
 
     def test_Radio_Enabled
@@ -30,9 +30,9 @@ class TC_Radios < Test::Unit::TestCase
        assert_raises(UnknownObjectException) { browser.radio(:id, "noName").enabled?  }
        assert_raises(UnknownObjectException) { browser.radio(:name, "box4" , 6).enabled?  }
 
-       assert_false(browser.radio!(:name, "box2").enabled?)   
-       assert(browser.radio!(:id, "box5").enabled?)   
-       assert(browser.radio!(:name, "box1").enabled?)   
+       assert_false(browser.radio!(:name, "box2").enabled?)
+       assert(browser.radio!(:id, "box5").enabled?)
+       assert(browser.radio!(:name, "box1").enabled?)
     end
 
    def test_little
@@ -67,55 +67,55 @@ class TC_Radios < Test::Unit::TestCase
     end
 
     def test_Radio_checked
-       assert_raises(UnknownObjectException) {   browser.radio(:name, "noName").checked?  }  
+       assert_raises(UnknownObjectException) {   browser.radio(:name, "noName").checked?  }
 
-       assert_false(browser.radio!(:name, "box1").checked?)   
-       assert( browser.radio!(:name, "box3").checked?)   
-       assert_false(browser.radio!(:name, "box2").checked?)   
-       assert( browser.radio!(:name, "box4" , 1 ).checked?)   
-       assert_false(browser.radio!(:name, "box4" , 2 ).checked?)   
+       assert_false(browser.radio!(:name, "box1").checked?)
+       assert( browser.radio!(:name, "box3").checked?)
+       assert_false(browser.radio!(:name, "box2").checked?)
+       assert( browser.radio!(:name, "box4" , 1 ).checked?)
+       assert_false(browser.radio!(:name, "box4" , 2 ).checked?)
     end
 
     def test_radio_clear
        assert_raises(UnknownObjectException) { browser.radio(:name, "noName").clear  }
 
        browser.radio!(:name, "box1").clear
-       assert_false(browser.radio!(:name, "box1").checked?)   
+       assert_false(browser.radio!(:name, "box1").checked?)
 
        assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) {   browser.radio!(:name, "box2").clear  } 
-       assert_false(browser.radio!(:name, "box2").checked?)   
+       assert_false(browser.radio!(:name, "box2").checked?)
 
        browser.radio!(:name, "box3").clear
-       assert_false(browser.radio!(:name, "box3").checked?)   
+       assert_false(browser.radio!(:name, "box3").checked?)
 
        browser.radio!(:name, "box4" , 1).clear
-       assert_false(browser.radio!(:name, "box4" , 1).checked?)   
+       assert_false(browser.radio!(:name, "box4" , 1).checked?)
     end
 
     def test_radio_getState
        assert_raises(UnknownObjectException) { browser.radio(:name, "noName").checked?  }
 
-       assert_equal( false , browser.radio!(:name, "box1").checked? )   
-       assert_equal( true , browser.radio!(:name, "box3").checked?)   
+       assert_equal( false , browser.radio!(:name, "box1").checked? )
+       assert_equal( true , browser.radio!(:name, "box3").checked?)
 
        # radios that have the same name but different values
-       assert_equal( false , browser.radio!(:name, "box4" , 2).checked? )   
-       assert_equal( true , browser.radio!(:name, "box4" , 1).checked?)   
+       assert_equal( false , browser.radio!(:name, "box4" , 2).checked? )
+       assert_equal( true , browser.radio!(:name, "box4" , 1).checked?)
     end
 
     def test_radio_set
        assert_raises(UnknownObjectException) { browser.radio(:name, "noName").set  }
        browser.radio!(:name, "box1").set
-       assert(browser.radio!(:name, "box1").checked?)   
+       assert(browser.radio!(:name, "box1").checked?)
 
-       assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) {   browser.radio(:name, "box2").set  }  
+       assert_raises(ObjectDisabledException, "ObjectDisabledException was supposed to be thrown" ) {   browser.radio(:name, "box2").set  }
 
        browser.radio!(:name, "box3").set
-       assert(browser.radio!(:name, "box3").checked?)   
+       assert(browser.radio!(:name, "box3").checked?)
 
        # radioes that have the same name but different values
        browser.radio!(:name, "box4" , 3).set
-       assert(browser.radio!(:name, "box4" , 3).checked?)   
+       assert(browser.radio!(:name, "box4" , 3).checked?)
     end
 
     def test_radio_properties
@@ -126,16 +126,16 @@ class TC_Radios < Test::Unit::TestCase
         assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.radio(:index, 199).disabled }
         assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.radio(:index, 199).type }
 
-        assert_equal("on"   ,    browser.radio!(:index, 1).value)  
-        assert_equal("box1" ,    browser.radio!(:index, 1).name )  
-        assert_equal(""     ,    browser.radio!(:index, 1).id )  
-        assert_equal("radio",    browser.radio!(:index, 1).type )  
+        assert_equal("on"   ,    browser.radio!(:index, 1).value)
+        assert_equal("box1" ,    browser.radio!(:index, 1).name )
+        assert_equal(""     ,    browser.radio!(:index, 1).id )
+        assert_equal("radio",    browser.radio!(:index, 1).type )
 
         assert_equal( false, browser.radio!(:index, 1).disabled )
         assert_equal( true,  browser.radio!(:index, 3).disabled )
 
-        assert_equal("box5"  ,    browser.radio!(:index, 2).id )  
-        assert_equal(""      ,    browser.radio!(:index, 2).name )  
+        assert_equal("box5"  ,    browser.radio!(:index, 2).id )
+        assert_equal(""      ,    browser.radio!(:index, 2).name )
 
         assert_equal("box4-value5", browser.radio!(:name , "box4" , 5 ).title  )
         assert_equal("", browser.radio!(:name , "box4" , 4 ).title  )

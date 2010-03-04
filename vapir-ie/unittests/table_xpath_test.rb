@@ -62,7 +62,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
   end
   
   def test_row_directly
-    assert( browser.table_row(:xpath , "//tr[@id='row1']/").exists? )  
+    assert( browser.table_row(:xpath , "//tr[@id='row1']/").exists? )
     assert_false( browser.table_row(:xpath , "//tr[@id='no_exist']/").exists?)
     
     assert_equal('Row 2 Col1' ,  browser.table_row(:xpath , "//tr[@id='row1']/")[1].text.strip )

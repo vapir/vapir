@@ -37,35 +37,35 @@ class TC_TextArea < Test::Unit::TestCase
   end
   
   def test_readonly_and_enabled
-    assert_false(browser.text_field!(:name, "txtMultiLine1").readonly? )  
+    assert_false(browser.text_field!(:name, "txtMultiLine1").readonly? )
     assert(browser.text_field!(:name,"txtReadOnly").readonly?)
     
-    assert_false(browser.text_field!(:name, "txtDisabled").enabled? )  
-    assert(browser.text_field!(:id, "txtMultiLine1").enabled? )  
+    assert_false(browser.text_field!(:name, "txtDisabled").enabled? )
+    assert(browser.text_field!(:id, "txtMultiLine1").enabled? )
   end
   
   def test_verify_contains
     t1 = browser.text_field!(:name, "txtMultiLine1")
-    assert(t1.verify_contains("Hello World") )  
-    assert(t1.verify_contains(/el/) )  
+    assert(t1.verify_contains("Hello World") )
+    assert(t1.verify_contains(/el/) )
     assert(browser.text_field!(:name, "txtMultiLine2").verify_contains(/IE/))
   end
   
   def test_no_such_element
     assert_raises(UnknownObjectException) do
       browser.text_field(:name, "NoName").verify_contains("de nada")
-    end  
+    end
     assert_raises(UnknownObjectException) do
       browser.text_field(:id, "noID").verify_contains("de nada")
     end
     assert_raises(UnknownObjectException) do
       browser.text_field(:name, "txtNone").append("de nada")
-    end  
+    end
   end
   def test_readonly_and_disabled_errors
     assert_raises(ObjectReadOnlyException) do
       browser.text_field!(:id, "txtReadOnly").append("de nada")
-    end  
+    end
     assert_raises(ObjectDisabledException) do
       browser.text_field!(:name, "txtDisabled").append("de nada")
     end
@@ -80,14 +80,14 @@ class TC_TextArea < Test::Unit::TestCase
   def test_append_set_and_clear
     browser.text_field!(:name, "txtMultiLine1").append(" Some Text")
     assert_equal("Hello World Some Text", 
-      browser.text_field!(:name, "txtMultiLine1").value )  
+      browser.text_field!(:name, "txtMultiLine1").value )
     
     browser.text_field!(:name, "txtMultiLine1").set("watir IE Controller")
     assert_equal("watir IE Controller", 
-      browser.text_field!(:name, "txtMultiLine1").value )  
+      browser.text_field!(:name, "txtMultiLine1").value )
     
     browser.text_field!(:name, "txtMultiLine2").clear
-    assert_equal("" , browser.text_field!(:name, "txtMultiLine2").value )  
+    assert_equal("" , browser.text_field!(:name, "txtMultiLine2").value )
   end
   
 end

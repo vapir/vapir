@@ -8,7 +8,7 @@ class TC_contains_text < Test::Unit::TestCase
   
   def setup
     goto_page "textsearch.html"
-  end        
+  end
   
   def test_text_found
     assert(browser.contains_text('slings and arrows of outrageous fortune'))
@@ -63,7 +63,7 @@ end
 class TC_contains_text_in_frame < Test::Unit::TestCase
   def setup
     goto_page "frame_links.html"
-  end        
+  end
   def test_in_frame
     assert browser.frame!('linkFrame').contains_text('The button is really a link')
   end

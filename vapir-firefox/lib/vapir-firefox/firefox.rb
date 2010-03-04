@@ -67,7 +67,7 @@
                  For example, button(:index, 2) finds the second button.
                  Current versions of Vapir use 1-based indexing, but future
                  versions will use 0-based indexing.
-   :xpath	     The xpath expression for identifying the element.
+   :xpath        The xpath expression for identifying the element.
 
    Note that the XHTML specification requires that tags and their attributes be
    in lower case.  Vapir doesn't enforce this; Vapir will find tags and
@@ -574,7 +574,7 @@ module Vapir
         if wait_time
           sleep(wait_time)
           wait(:last_url => url)
-        end    
+        end
       end
       run_error_checks
       return self

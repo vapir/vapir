@@ -50,7 +50,7 @@ class TC_NewWindow< Vapir::TestCase
     ie_new = IE.attach(:title, 'Test page for buttons')
     assert(ie_new.text.include?('Blank page to fill in the frames'))
     ie_new.close
-  end    
+  end
   
   def test_attach_to_slow_window_works_without_waiting
     browser.span!(:text, 'New Window Slowly').click
@@ -58,7 +58,7 @@ class TC_NewWindow< Vapir::TestCase
     ie_new = IE.attach(:title, 'Test page for buttons')
     assert(ie_new.text.include?('Blank page to fill in the frames'))
     ie_new.close
-  end    
+  end
   
   def test_attach_timesout_when_window_takes_too_long
     IE.attach_timeout = 0.2
@@ -70,6 +70,6 @@ class TC_NewWindow< Vapir::TestCase
     sleep 2.0 # clean up
     IE.attach_timeout = 6.0
     IE.attach(:title, 'Test page for buttons').close
-  end        
+  end
   
 end

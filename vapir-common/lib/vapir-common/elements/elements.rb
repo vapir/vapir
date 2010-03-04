@@ -146,7 +146,7 @@ module Vapir
             fire_event("onSelect")
             assert_exists(:force => true)
           end
-          ((existing_value_chars.length)...new_value_chars.length).each do |i|   
+          ((existing_value_chars.length)...new_value_chars.length).each do |i|
 #            sleep typingspeed # TODO/FIX
             element_object.value = new_value_chars[0..i].join('')
             fire_event :onKeyDown # TODO/fix - keyCode for character typed 

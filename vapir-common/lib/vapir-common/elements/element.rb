@@ -834,7 +834,7 @@ module Vapir
             # check for display property. this is not inherited, and a parent with display of 'none' overrides an immediate visibility='visible' 
             display=style.invoke('display')
             if display && display.strip.downcase=='none'
-              return false  
+              return false
             end
           end
           element_to_check=element_to_check.parentNode

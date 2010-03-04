@@ -18,7 +18,7 @@
     # attributes used frequently to address an element are listed below
     #
     #    :index      - find the item using the index in the container ( a container can be a document, 
-    #    		a TableCell, a Span, a Div or a P)
+    #                  a TableCell, a Span, a Div or a P)
     #                  index is 1 based
     #    :name       - find the item using the name attribute
     #    :id         - find the item using the id attribute
@@ -207,11 +207,11 @@ module Vapir
     #
     def button(how, what=nil)
       element_by_howwhat(Firefox::Button, how, what)
-    end    
+    end
     
     # 
     # Description:
-    #   Used for accessing a file field. Usually an <input type = file> HTML tag.  
+    #   Used for accessing a file field. Usually an <input type = file> HTML tag.
     #  
     # Input:
     #   - how - Attribute used to identify the file field element
@@ -453,7 +453,7 @@ module Vapir
 #    end
 
     # Description:
-    #	Searching for Page Elements. Not for external consumption.
+    # Searching for Page Elements. Not for external consumption.
     #        
     # def ole_inner_elements
     # return document.body.all 

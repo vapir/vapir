@@ -23,7 +23,7 @@ class TC_FileField_XPath < Test::Unit::TestCase
     #click the upload button
     browser.button!(:xpath, "//input[@name='upload']/").click
     
-    assert(browser.text.include?("PASS"))	
+    assert(browser.text.include?("PASS"))
   end
   
   def test_iterator

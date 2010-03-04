@@ -7,7 +7,7 @@ require 'unittests/setup'
 class TC_error_checker < Test::Unit::TestCase
     
   def test_simple_checker
-    button_checker = Proc.new do |ie|  
+    button_checker = Proc.new do |ie|
       raise RuntimeError, "text 'buttons' is missing"  if ! ie.contains_text(/buttons/)
     end
     

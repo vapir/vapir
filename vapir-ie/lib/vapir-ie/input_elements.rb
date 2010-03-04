@@ -89,12 +89,12 @@ module Vapir
     alias_deprecated :dragContentsTo, :drag_contents_to
     
     def requires_typing
-    	@type_keys = true
-    	self
+      @type_keys = true
+      self
     end
     def abhors_typing
-    	@type_keys = false
-    	self
+      @type_keys = false
+      self
     end
   end
   
@@ -105,7 +105,7 @@ module Vapir
   end
   
   # For fields that accept file uploads
-  # Windows dialog is opened and handled by WinWindow (see scripts/select_file.rb), launched in a new process.  
+  # Windows dialog is opened and handled by WinWindow (see scripts/select_file.rb), launched in a new process.
   class IE::FileField < IE::InputElement
     include FileField
     

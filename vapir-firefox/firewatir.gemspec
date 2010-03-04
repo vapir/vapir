@@ -39,13 +39,13 @@ spec = Gem::Specification.new do |s|
   s.has_rdoc = true
     s.rdoc_options << 
       '--title' << 'FireWatir API Reference' <<
-  		'--accessor' << 'def_wrap=R,def_wrap_guard=R,def_creator=R,def_creator_with_default=R' <<
-  		'--exclude' << 'unittests|camel_case.rb|testUnitAddons.rb'
+      '--accessor' << 'def_wrap=R,def_wrap_guard=R,def_creator=R,def_creator_with_default=R' <<
+      '--exclude' << 'unittests|camel_case.rb|testUnitAddons.rb'
 
 #  s.test_file  = 'unittests/mozilla_all_tests.rb'
 
   s.files = $__firewatir_source_patterns.inject([]) { |list, glob|
-  	list << Dir[glob].delete_if { |path|
+    list << Dir[glob].delete_if { |path|
       File.directory?(path) or
       path.include?('CVS')
     }

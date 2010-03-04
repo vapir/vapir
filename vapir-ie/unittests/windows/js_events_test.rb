@@ -15,7 +15,7 @@ class TC_JSEvents < Test::Unit::TestCase
   
   def test_Button_Enabled
     browser.text_field!(:name, "entertext").fire_event("onkeyup")
-    assert(browser.button!(:caption, "Button 1").enabled?)   
+    assert(browser.button!(:caption, "Button 1").enabled?)
   end
   
   def test_Button_click

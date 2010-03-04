@@ -85,7 +85,7 @@ module Vapir
         document_object.appendChild(orig_childs.shift())
       end
       return result
-=end      
+=end
     end
   end
 end

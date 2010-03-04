@@ -19,7 +19,7 @@ class TC_IEDialog < Test::Unit::TestCase
     fnShowString.call("from ruby!") # blocks
   end
 
-  def test_find_window   
+  def test_find_window
     goto_page "pass.html"
     fnFindWindow = Win32API.new('user32.dll', 'FindWindow', ['p', 'p'], 'l')
     hwnd = fnFindWindow.call(nil, "Pass Page - Microsoft Internet Explorer")
@@ -29,7 +29,7 @@ class TC_IEDialog < Test::Unit::TestCase
     assert(hwnd != 0)
   end
 
-  def test_all    
+  def test_all
     goto_page "pass.html"
 
     fnFindWindow = Win32API.new('user32.dll', 'FindWindow', ['p', 'p'], 'l')
@@ -54,7 +54,7 @@ class TC_IEDialog < Test::Unit::TestCase
     # now we get the HTML DOM object!
     doc2 = scriptEngine.document
     body = doc2.body
-    assert_match(/^PASS/, body.innerHTML.strip)    
+    assert_match(/^PASS/, body.innerHTML.strip)
   end
 end
 

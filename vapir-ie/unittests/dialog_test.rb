@@ -10,14 +10,14 @@ class TC_Dialog_Test < Test::Unit::TestCase
   
   def setup
     goto_page 'JavascriptClick.html'
-  end    
+  end
   def teardown
   end
   
   def test_alert_without_bonus_script
     browser.button!(:id, 'btnAlert').click_no_wait
     browser.modal_dialog.click_button("OK")
-    assert_match(/Alert button!/, browser.text_field!(:id, "testResult").value)  
+    assert_match(/Alert button!/, browser.text_field!(:id, "testResult").value)
   end
   
   def test_button_name_not_found

@@ -45,7 +45,7 @@ class TC_Tables < Test::Unit::TestCase
     
     assert_equal(5, browser.table!(:id, 't1').row_count)  # 4 rows and a header 
     assert_equal(5, browser.table!(:index, 2).row_count)  # same table as above, just accessed by index 
-    assert_equal(5, browser.table!(:id, 't1').rows.length)   
+    assert_equal(5, browser.table!(:id, 't1').rows.length)
     
     # test the each iterator on rows - ie, go through each cell
     row = browser.table!(:index, 2)[2]
@@ -54,7 +54,7 @@ class TC_Tables < Test::Unit::TestCase
       result << cell.text.strip
     end
     assert_equal(['Row 1 Col1', 'Row 1 Col2'], result)
-    assert_equal(2, row.column_count)        
+    assert_equal(2, row.column_count)
   end
 
   tag_method :test_row_counts, :fails_on_firefox
@@ -158,7 +158,7 @@ class TC_Tables < Test::Unit::TestCase
     t = browser.table!(:index,1)
     contents = t.cells.collect {|c| c.text.strip}
     assert_equal(["Row 1 Col1","Row 1 Col2","Row 2 Col1","Row 2 Col2"], contents)
-  end    
+  end
    
   tag_method :test_table_body, :fails_on_firefox
   def test_table_body
@@ -203,7 +203,7 @@ class TC_Tables < Test::Unit::TestCase
     assert_equal('Second table with css class', 
       browser.table!(:class => 'sample', :index => 2)[1][1].text)
   end
-end    
+end
 
 class TC_Tables_Simple < Test::Unit::TestCase
   include Vapir

@@ -4,7 +4,7 @@ module Vapir
   
   def wait_until(*args)
     Waiter.wait_until(*args) {yield}
-  end  
+  end
 
 class TimeKeeper
   attr_reader :sleep_time
@@ -12,7 +12,7 @@ class TimeKeeper
     @sleep_time = 0.0
   end
   def sleep seconds
-    @sleep_time += Kernel.sleep seconds    
+    @sleep_time += Kernel.sleep seconds
   end
   def now
     Time.now
@@ -45,7 +45,7 @@ class Waiter
   # Execute the provided block until either (1) it returns true, or
   # (2) the timeout (in seconds) has been reached. If the timeout is reached,
   # a TimeOutException will be raised. The block will always
-  # execute at least once.  
+  # execute at least once.
   # 
   # waiter = Waiter.new(5)
   # waiter.wait_until {puts 'hello'}
@@ -61,17 +61,17 @@ class Waiter
       end
       sleep @polling_interval
     end
-  end  
+  end
 
   # Execute the provided block until either (1) it returns true, or
   # (2) the timeout (in seconds) has been reached. If the timeout is reached,
   # a TimeOutException will be raised. The block will always
-  # execute at least once.  
+  # execute at least once.
   # 
   # Waiter.wait_until(5) {puts 'hello'}
   # 
   # This code will print out "hello" for five seconds, and then raise a 
-  # Vapir::TimeOutException.  
+  # Vapir::TimeOutException.
 
   # IDEA: wait_until: remove defaults from Waiter.wait_until
   def self.wait_until(timeout=@@default_timeout,
@@ -87,7 +87,7 @@ class Waiter
   def now
     @timer.now
   end
-end  
+end
     
 end # module
 

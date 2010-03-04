@@ -36,31 +36,31 @@ class TC_Fields < Test::Unit::TestCase
     #end
    
     def test_text_field_verify_contains
-        assert(browser.text_field!(:name, "text1").verify_contains("Hello World"))  
-        assert(browser.text_field!(:name, "text1").verify_contains(/Hello\sW/))  
-        assert_false(browser.text_field!(:name, "text1").verify_contains("Ruby"))  
-        assert_false(browser.text_field!(:name, "text1").verify_contains(/R/))  
+        assert(browser.text_field!(:name, "text1").verify_contains("Hello World"))
+        assert(browser.text_field!(:name, "text1").verify_contains(/Hello\sW/))
+        assert_false(browser.text_field!(:name, "text1").verify_contains("Ruby"))
+        assert_false(browser.text_field!(:name, "text1").verify_contains(/R/))
         assert_raises(UnknownObjectException) { browser.text_field(:name, "NoName").verify_contains("No field to get a value of") } 
         
-        assert(browser.text_field!(:id, "text2").verify_contains("goodbye all") )  
-        assert_raises(UnknownObjectException) { browser.text_field(:id, "noID").verify_contains("No field to get a value of") }          
+        assert(browser.text_field!(:id, "text2").verify_contains("goodbye all") )
+        assert_raises(UnknownObjectException) { browser.text_field(:id, "noID").verify_contains("No field to get a value of") }
     end
     
     def test_text_field_enabled
-        assert_false(browser.text_field!(:name, "disabled").enabled? )  
-        assert(browser.text_field!(:name, "text1").enabled? )  
-        assert(browser.text_field!(:id, "text2").enabled? )  
+        assert_false(browser.text_field!(:name, "disabled").enabled? )
+        assert(browser.text_field!(:name, "text1").enabled? )
+        assert(browser.text_field!(:id, "text2").enabled? )
     end
     
     def test_text_field_readonly
-        assert_false(browser.text_field!(:name, "disabled").readonly? )  
-        assert(browser.text_field!(:name, "readOnly").readonly? )  
-        assert(browser.text_field!(:id, "readOnly2").readonly? )  
+        assert_false(browser.text_field!(:name, "disabled").readonly? )
+        assert(browser.text_field!(:name, "readOnly").readonly? )
+        assert(browser.text_field!(:id, "readOnly2").readonly? )
     end
     
     def test_text_field_get_contents
         assert_raises(UnknownObjectException) { browser.text_field(:name, "missing_field").append("Some Text") }
-        assert_equal("Hello World", browser.text_field!(:name, "text1").value)  
+        assert_equal("Hello World", browser.text_field!(:name, "text1").value)
     end
     
     tag_method :test_text_field_to_s, :fails_on_ie
@@ -91,30 +91,30 @@ class TC_Fields < Test::Unit::TestCase
     end
     
     def test_text_field_append
-        assert_raises(ObjectReadOnlyException) { browser.text_field!(:id, "readOnly2").append("Some Text") }  
-        assert_raises(ObjectDisabledException) { browser.text_field!(:name, "disabled").append("Some Text") }  
-        assert_raises(UnknownObjectException) { browser.text_field(:name, "missing_field").append("Some Text") }  
+        assert_raises(ObjectReadOnlyException) { browser.text_field!(:id, "readOnly2").append("Some Text") }
+        assert_raises(ObjectDisabledException) { browser.text_field!(:name, "disabled").append("Some Text") }
+        assert_raises(UnknownObjectException) { browser.text_field(:name, "missing_field").append("Some Text") }
         
         browser.text_field!(:name, "text1").append(" Some Text")
-        assert_equal("Hello World Some Text", browser.text_field!(:name, "text1").value)  
+        assert_equal("Hello World Some Text", browser.text_field!(:name, "text1").value)
     end
     
     def test_text_field_clear
         browser.text_field!(:name, "text1").clear
-        assert_equal("", browser.text_field!(:name, "text1").value)  
+        assert_equal("", browser.text_field!(:name, "text1").value)
     end
     
     def test_text_field_set
         browser.text_field!(:name, "text1").set("FireWatir Firefox Controller")
-        assert_equal("FireWatir Firefox Controller", browser.text_field!(:name, "text1").value)  
+        assert_equal("FireWatir Firefox Controller", browser.text_field!(:name, "text1").value)
     end
     
     def test_text_field_properties
-        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).value }  
-        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).name }  
-        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).id }  
-        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).disabled }  
-        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).type }  
+        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).value }
+        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).name }
+        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).id }
+        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).disabled }
+        assert_raises(UnknownObjectException) { browser.text_field(:index, 199).type }
         
         assert_equal("Hello World" , browser.text_field(:index, 1).value) 
         assert_equal("text"        , browser.text_field(:index, 1).type)
@@ -146,7 +146,7 @@ class TC_Fields < Test::Unit::TestCase
             assert_equal(browser.text_field(:index, index).name,  t.name)
             index += 1
         end
-        assert_equal(index - 1, browser.text_fields.length)         
+        assert_equal(index - 1, browser.text_fields.length)
     end
     
     tag_method :test_JS_Events, :fails_on_ie

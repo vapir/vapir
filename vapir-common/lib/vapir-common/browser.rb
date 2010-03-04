@@ -24,7 +24,7 @@ settings.
   require 'vapir'
   browser = Watir::Browser.new
   browser.goto 'http://google.com'
-  browser.text_field(:name, 'q').set 'pickaxe'  
+  browser.text_field(:name, 'q').set 'pickaxe'
   browser.button(:name, 'btnG').click
   if browser.text.include? 'Programming Ruby'
     puts 'Text was found'
@@ -125,7 +125,7 @@ before you invoke Browser.new.
         library = hash_args[:library]
         gem = hash_args[:gem] || library
 
-        @@browser_classes[option] = class_string        
+        @@browser_classes[option] = class_string
         @@sub_options[option] = additional_options
 
         autoload class_string, library
@@ -143,7 +143,7 @@ before you invoke Browser.new.
       # These are the options for 'watir_browser' (env var) or 'browser:' (yaml).
       def browser_names
         @@browser_classes.keys
-      end      
+      end
       
       private
       def autoload class_string, library

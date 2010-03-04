@@ -8,7 +8,7 @@ class TC_MinMax< Test::Unit::TestCase
   tags :must_be_visible
   def setup
     goto_page 'pass.html'
-  end        
+  end
   def teardown
     browser.restore
   end

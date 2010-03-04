@@ -29,7 +29,7 @@ class TC_Images_XPath < Test::Unit::TestCase
     
     assert_false( browser.image(:xpath , "//img[@src='missingsrc.gif']/").exists?)
     
-    # BP -- This fails for me but not for Paul. It doesn't make sense to me that it should pass.  
+    # BP -- This fails for me but not for Paul. It doesn't make sense to me that it should pass. 
     # assert(       browser.image(:src , "file:///#{$myDir}/html/images/triangle.jpg").exists?  )
     # assert(       browser.image(:src , /triangle/ ).exists?  )
     

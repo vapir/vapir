@@ -12,6 +12,6 @@ module CaptureIOHelper
   ensure
     $stdout = old
   end
-end    
+end
 
 

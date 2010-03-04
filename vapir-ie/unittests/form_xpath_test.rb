@@ -22,11 +22,11 @@ class TC_Forms2_XPath < Test::Unit::TestCase
   
   def test_ButtonInForm
     assert(browser.form!(:xpath , "//form[@name='test2']/").button(:caption , "Submit").exists?)
-  end     
+  end
 end
 
 class TC_Form_Display_XPath < Test::Unit::TestCase
-  include CaptureIOHelper                
+  include CaptureIOHelper
   def test_showforms
     goto_page "forms2.html"
     assert_match(/There are 4 forms(\nVapir(::\w+)*::Form.*?){4}/m, capture_stdout { browser.show_forms })
@@ -73,7 +73,7 @@ class TC_Forms3_XPath < Test::Unit::TestCase
         
     # also verify it works under a form, this time using the :id attribute
     browser.text_field!(:id, "t1").set("reset test - using a form")
-    assert_equal(browser.text_field!(:id, 't1').value, 'reset test - using a form')    
+    assert_equal(browser.text_field!(:id, 't1').value, 'reset test - using a form')
   end
     
   def test_flash1

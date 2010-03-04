@@ -40,7 +40,7 @@ class TC_Buttons_XPath < Test::Unit::TestCase
     assert_raises(UnknownObjectException) { browser.button(:xpath, "//input[@value='Missing Caption']/").click }
     assert_raises(UnknownObjectException) { browser.button(:xpath, "//input[@id='MissingId']/").click }
     
-    assert_raises(ObjectDisabledException , "ObjectDisabledException was supposed to be thrown" ) {   browser.button!(:xpath, "//input[@value='Disabled Button']/").click   }  
+    assert_raises(ObjectDisabledException , "ObjectDisabledException was supposed to be thrown" ) {   browser.button!(:xpath, "//input[@value='Disabled Button']/").click   }
     
     browser.button!(:xpath, "//input[@value='Click Me']/").click
     assert(browser.text.include?("PASS") )
@@ -58,10 +58,10 @@ class TC_Buttons_XPath < Test::Unit::TestCase
   end
   
   def test_Button_Enabled
-    assert(browser.button!(:xpath, "//input[@value='Click Me']/").enabled?)   
-    assert_false(browser.button!(:xpath, "//input[@value='Disabled Button']/").enabled?)   
-    assert_false(browser.button!(:xpath, "//input[@name='b4']/").enabled?)   
-    assert_false(browser.button!(:xpath, "//input[@id='b5']/").enabled?)   
+    assert(browser.button!(:xpath, "//input[@value='Click Me']/").enabled?)
+    assert_false(browser.button!(:xpath, "//input[@value='Disabled Button']/").enabled?)
+    assert_false(browser.button!(:xpath, "//input[@name='b4']/").enabled?)
+    assert_false(browser.button!(:xpath, "//input[@id='b5']/").enabled?)
     
     assert_raises(UnknownObjectException) { browser.button(:xpath, "//input[@name='noName']/").enabled? }
   end

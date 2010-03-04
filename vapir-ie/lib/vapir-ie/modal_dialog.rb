@@ -170,7 +170,7 @@ module Watir
           intUnknown = intArray.first
           intUnknown > 0
         end
-      rescue TimeOutException => e        
+      rescue TimeOutException => e
         raise NoMatchingWindowFoundException, 
           "Unable to attach to Modal Window #{what.inspect} after #{e.duration} seconds."
       end

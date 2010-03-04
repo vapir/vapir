@@ -30,7 +30,7 @@ class TC_Visibility < Test::Unit::TestCase
     browser.link!(:id, "div2vis").click
     #wait_until { browser.div!(:id, "div2").visible? }
     assert_equal(true, browser.div!(:id, "div2").visible? )
-    assert_equal(true, browser.text_field!(:id, "lgnId2").visible? )  
+    assert_equal(true, browser.text_field!(:id, "lgnId2").visible? )
   end
 
   # Check if the second div becomes visible (inline Display block test)
@@ -38,7 +38,7 @@ class TC_Visibility < Test::Unit::TestCase
     browser.link!(:id, "div3blk").click
     #wait_until { browser.div!(:id, "div3").visible? }
     assert_equal(true, browser.div!(:id, "div3").visible? )
-    assert_equal(true, browser.text_field!(:id, "lgnId3").visible? )  
+    assert_equal(true, browser.text_field!(:id, "lgnId3").visible? )
   end
   
   def test_hidden_element

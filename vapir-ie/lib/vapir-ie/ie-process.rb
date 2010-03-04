@@ -41,7 +41,7 @@ module Vapir
           IE.each do | ie |
             window = ie.ie
             hwnd = ie.hwnd
-            process_id = Process.process_id_from_hwnd hwnd        
+            process_id = Process.process_id_from_hwnd hwnd
             return window if process_id == @process_id
           end
         end

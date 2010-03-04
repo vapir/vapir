@@ -30,5 +30,5 @@ class TC_IENotExists < Test::Unit::TestCase
     @ie.ie.quit
     sleep 0.3 # give it some time to close
     assert_false(@ie.exists?)
-  end    
+  end
 end

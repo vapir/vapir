@@ -115,7 +115,7 @@ class TC_ModalDialog < Vapir::TestCase
     modal1.button!(:value, 'Modal with Frames').click_no_wait
     modal2 = browser.modal_dialog.document
     modal2.frame!('buttonFrame').button!(:value, 'Click Me').click
-    assert(modal2.frame!('buttonFrame').text.include?('PASS'))    
+    assert(modal2.frame!('buttonFrame').text.include?('PASS'))
     modal2.frame!('buttonFrame').button!(:value, 'Close Window').click
     modal1.close
   end

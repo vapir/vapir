@@ -35,17 +35,17 @@ class TC_TextArea_XPath < Test::Unit::TestCase
   
   def test_textarea_field
     # test for read only method
-    assert_false(browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").readonly? )  
+    assert_false(browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").readonly? )
     assert(browser.text_field!(:xpath , "//textarea[@name='txtReadOnly']/").readonly?)
     
     # test for enabled? method
-    assert_false(browser.text_field!(:xpath , "//textarea[@name='txtDisabled']/").enabled? )  
-    assert(browser.text_field!(:xpath , "//textarea[@id='txtMultiLine1']/").enabled? )  
+    assert_false(browser.text_field!(:xpath , "//textarea[@name='txtDisabled']/").enabled? )
+    assert(browser.text_field!(:xpath , "//textarea[@id='txtMultiLine1']/").enabled? )
     
     
     t1 = browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/")
-    assert(t1.verify_contains("Hello World") )  
-    assert(t1.verify_contains(/el/) )  
+    assert(t1.verify_contains("Hello World") )
+    assert(t1.verify_contains(/el/) )
     t2 = browser.text_field!(:xpath , "//textarea[@name='txtMultiLine2']/")
     assert(t2.verify_contains(/IE/))
     assert_raises(UnknownObjectException) { browser.text_field(:xpath , "//textarea[@name='NoName']/").verify_contains("No field to get a value of") }
@@ -53,26 +53,26 @@ class TC_TextArea_XPath < Test::Unit::TestCase
     
     assert_raises(UnknownObjectException  , "UnknownObjectException   was supposed to be thrown" ) { browser.text_field(:xpath , "//textarea[@name='txtNone']/").append("Some Text") }
     
-    assert_raises(ObjectReadOnlyException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//textarea[@id='txtReadOnly']/").append("Some Text") }  
-    assert_raises(ObjectDisabledException   , "ObjectDisabledException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//textarea[@name='txtDisabled']/").append("Some Text") }  
+    assert_raises(ObjectReadOnlyException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//textarea[@id='txtReadOnly']/").append("Some Text") }
+    assert_raises(ObjectDisabledException   , "ObjectDisabledException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//textarea[@name='txtDisabled']/").append("Some Text") }
     assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.text_field(:xpath , "//textarea[@name='missing_field']/").append("Some Text") }
     
     browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").append(" Some Text")
-    assert_equal(  "Hello World Some Text" , browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").value)  
+    assert_equal(  "Hello World Some Text" , browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").value)
     
-    assert_raises(ObjectReadOnlyException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//textarea[@id='txtReadOnly']/").append("Some Text") }  
-    assert_raises(ObjectDisabledException   , "ObjectDisabledException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//textarea[@name='txtDisabled']/").append("Some Text") }  
+    assert_raises(ObjectReadOnlyException  , "ObjectReadOnlyException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//textarea[@id='txtReadOnly']/").append("Some Text") }
+    assert_raises(ObjectDisabledException   , "ObjectDisabledException   was supposed to be thrown" ) {   browser.text_field!(:xpath , "//textarea[@name='txtDisabled']/").append("Some Text") }
     assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) { browser.text_field(:xpath , "//textarea[@name='missing_field']/").append("Some Text") }
     
     browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").set("watir IE Controller")
-    assert_equal(  "watir IE Controller" , browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").value )  
+    assert_equal(  "watir IE Controller" , browser.text_field!(:xpath , "//textarea[@name='txtMultiLine1']/").value )
     
     assert_raises(ObjectReadOnlyException  , "ObjectReadOnlyException was supposed to be thrown" ) { browser.text_field!(:xpath , "//textarea[@id='txtReadOnly']/").append("Some Text") }
     assert_raises(ObjectDisabledException   , "ObjectDisabledException was supposed to be thrown" ) { browser.text_field!(:xpath , "//textarea[@name='txtDisabled']/").append("Some Text") }
     assert_raises(UnknownObjectException, "UnknownObjectException was supposed to be thrown" ) { browser.text_field(:xpath , "//textarea[@name='missing_field']/").append("Some Text") }
     
     browser.text_field!(:xpath , "//textarea[@name='txtMultiLine2']/").clear
-    assert_equal(  "" , browser.text_field!(:xpath , "//textarea[@name='txtMultiLine2']/").value )  
+    assert_equal(  "" , browser.text_field!(:xpath , "//textarea[@name='txtMultiLine2']/").value )
   end
   
 end

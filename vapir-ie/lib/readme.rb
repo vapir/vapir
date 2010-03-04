@@ -32,7 +32,7 @@ Typical Usage
    # include the controller 
    require 'vapir' 
    # create an instance of the controller 
-   ie = Watir::IE.new  
+   ie = Watir::IE.new
    # go to the page you want to test 
    ie.goto('http://myserver/mypage') 
    # to enter text into a text field - assuming the field is named 'username' 

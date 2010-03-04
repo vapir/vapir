@@ -10,7 +10,7 @@ class TC_Navigate < Test::Unit::TestCase
   def test_navigation
     browser.clear_url_list
     goto_page 'buttons1.html'
-    assert_equal(($htmlRoot + 'buttons1.html').gsub(" ","%20").downcase, browser.url.downcase)  
+    assert_equal(($htmlRoot + 'buttons1.html').gsub(" ","%20").downcase, browser.url.downcase)
 
     assert_equal(1, browser.url_list.length)
     assert_equal(browser.url, browser.url_list[0])
@@ -25,12 +25,12 @@ class TC_Navigate < Test::Unit::TestCase
     assert_equal(0, browser.url_list.length )
     
     browser.back
-    assert_equal("Test page for buttons", browser.title)   
+    assert_equal("Test page for buttons", browser.title)
     
     browser.forward
-    assert_equal("Test page for Check Boxes", browser.title)   
+    assert_equal("Test page for Check Boxes", browser.title)
     browser.checkbox!(:name, "box1").set
-    assert(browser.checkbox!(:name, "box1").checked?)   
+    assert(browser.checkbox!(:name, "box1").checked?)
     
     browser.refresh
     # Not sure how we test this. Text fields and checkboxes dont get reset if you click the browser refresh button

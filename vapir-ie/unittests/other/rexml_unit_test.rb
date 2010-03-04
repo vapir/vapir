@@ -10,13 +10,13 @@ class XPathTest < Test::Unit::TestCase
     matches = []
     
     @doc.xpath(xpath).each() do |node|
-    	matches << node
-    	assert_equal('Add', node.text)
-    	assert_equal('ButtonText', node['class'])
+      matches << node
+      assert_equal('Add', node.text)
+      assert_equal('ButtonText', node['class'])
     end
     
     assert_equal(1, matches.length)
-  end  
+  end
   def test_text
     fixture "//div[text()='Add' and @class='ButtonText']"
   end

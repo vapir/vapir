@@ -1,7 +1,7 @@
 require 'vapir-ie/element'
 require 'vapir-common/elements/elements'
 
-module Vapir  
+module Vapir
   
   # This class is the means of accessing a link on a page
   # Normally a user would not need to create this object as it is returned by the Vapir::Container#link method

@@ -78,7 +78,7 @@ class TC_Bugs< Test::Unit::TestCase
         set_file_name = browser.file_field!(:name, "file3").value
         # make sure correct value for upload file is posted.
         assert(actual_file_name, set_file_name)
-    end    
+    end
 
     tag_method :test_attribute_value_bug22, :fails_on_ie
     def test_attribute_value_bug22
@@ -154,9 +154,9 @@ class TC_Bugs< Test::Unit::TestCase
         # Enter dummy path.
         if(RUBY_PLATFORM =~ /mswin|mingw/)
             browser.file_field!(:name, "file3").set("c:\\results.txt")
-        else    
+        else
             browser.file_field!(:name, "file3").set("/user/lib/results.txt")
-        end    
+        end
         browser.button!(:name, "upload").click()
         url = browser.url
         assert_match(/.*results.txt&upload=upload$/,url)

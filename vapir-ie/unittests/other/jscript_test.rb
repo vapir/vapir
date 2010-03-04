@@ -25,7 +25,7 @@ class TC_JavaScript_Test < Test::Unit::TestCase
     block.call
     browser.modal_dialog!.click_button(button_text)
     testResult = browser.text_field!(:id, "testResult").value
-    assert_match( expected_result, testResult )  
+    assert_match( expected_result, testResult )
   end
   
   def test_alert_button

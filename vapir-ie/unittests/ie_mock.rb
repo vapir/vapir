@@ -41,7 +41,7 @@ class FakeDoc
   def url
     return "file://fake"
   end
-  alias :href :url  
+  alias :href :url
 end
 
 class StubExplorer

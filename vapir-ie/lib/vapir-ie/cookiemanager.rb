@@ -52,5 +52,5 @@ module Vapir
         end
         
     end
-  end  
+  end
 end

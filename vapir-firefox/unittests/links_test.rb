@@ -20,10 +20,10 @@ class TC_Links < Test::Unit::TestCase
     # for the element. So there is no way to find out about missinwayoffindingobject exp.
     tag_method :test_bad_attribute, :fails_on_ie
     def test_bad_attribute
-        assert_raises(MissingWayOfFindingObjectException) { browser.link(:bad_attribute, 199).click }  
+        assert_raises(MissingWayOfFindingObjectException) { browser.link(:bad_attribute, 199).click }
         begin
             browser.link!(:bad_attribute, 199).click 
-        rescue MissingWayOfFindingObjectException => e           
+        rescue MissingWayOfFindingObjectException => e
             assert_match(/^Cannot search for a Vapir(::\w+)*::Link using the given argument/, e.message)
         end
     end
@@ -72,16 +72,16 @@ class TC_Links < Test::Unit::TestCase
         browser.link!(:text, "test1").click
         assert( browser.text.include?("Links2-Pass") ) 
     end
-    def test_link2_click    
+    def test_link2_click
         browser.link!(:url, /link_pass.html/).click
         assert( browser.text.include?("Links3-Pass") ) 
     end
-    def test_link3_click        
+    def test_link3_click
         browser.link!(:index, 1).click
         assert( browser.text.include?("Links2-Pass") ) 
     end
-    def test_link4_click        
-        assert_raises(UnknownObjectException  , "UnknownObjectException  was supposed to be thrown" ) {   browser.link(:index, 199).click }  
+    def test_link4_click
+        assert_raises(UnknownObjectException  , "UnknownObjectException  was supposed to be thrown" ) {   browser.link(:index, 199).click }
     end
     
     def test_link_properties
@@ -99,7 +99,7 @@ class TC_Links < Test::Unit::TestCase
         assert_equal( "test1" , browser.link!(:index, 1).text )
         assert_equal( ""      , browser.link!(:index, 1).name )
         assert_equal( ""      , browser.link!(:index, 1).id )
-        #assert_equal( false   , browser.link!(:index, 1).disabled )  
+        #assert_equal( false   , browser.link!(:index, 1).disabled )
         assert_equal( ""      , browser.link!(:index, 1).class_name)
         assert_equal( "link_class_1"      , browser.link!(:index, 2).class_name)
         
@@ -136,7 +136,7 @@ class TC_Links < Test::Unit::TestCase
 # ?? is this even supported in firefox? googling XML Data Island seems to indicate not. 
 # TODO, FIX
 #        goto_page("div_xml.html")
-#        assert_nothing_raised {browser.link!(:text, 'Create').exists? }   
+#        assert_nothing_raised {browser.link!(:text, 'Create').exists? }
     end
     def test_link_to_s
        #TODO/FIX: this
@@ -154,7 +154,7 @@ class TC_Frame_Links < Test::Unit::TestCase
     def test_new_frame_link_exists
         assert(browser.frame!("buttonFrame").link(:text, "test1").exists?)
     end
-    def test_missing_frame_links_dont_exist        
+    def test_missing_frame_links_dont_exist
         assert_false(browser.frame!("buttonFrame").link(:text, "missing").exists?)
         assert_raise(UnknownFrameException, "UnknownFrameException was supposed to be thrown"){browser.frame("missing").link(:text, "test1").exists?}
     end
@@ -163,7 +163,7 @@ class TC_Frame_Links < Test::Unit::TestCase
         assert(browser.frame!("buttonFrame").link(:text, "test1").exists?)
         assert_false(browser.frame!("buttonFrame").link(:text, "missing").exists?)
         
-        assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.frame!("buttonFrame").link(:index, 199).href }  
+        assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.frame!("buttonFrame").link(:index, 199).href }
         assert_match(/links2/, browser.frame!("buttonFrame").link!(:index, 1).href)
         
         count =0
@@ -172,7 +172,7 @@ class TC_Frame_Links < Test::Unit::TestCase
         end
         
         assert_equal(11 , count)
-    end    
+    end
 end
 
 class TC_Links_Display < Test::Unit::TestCase

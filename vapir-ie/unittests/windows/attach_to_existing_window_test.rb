@@ -31,7 +31,7 @@ class TC_ExistingWindow < Test::Unit::TestCase
     assert_raises(NoMatchingWindowFoundException) { IE.attach(:title, /missing/) }
     assert_raises(NoMatchingWindowFoundException) { IE.attach(:url, "missing") }
     assert_raises(NoMatchingWindowFoundException) { IE.attach(:url, /missing/) }
-  end    
+  end
   
   def test_existing_window
     ie3 = nil

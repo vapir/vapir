@@ -34,7 +34,7 @@ class TC_Tables < Test::Unit::TestCase
     
     assert_equal(5, browser.table!(:id, 't1').row_count)  # 4 rows and a header 
     assert_equal(5, browser.table!(:index, 2).row_count)  # same table as above, just accessed by index 
-    assert_equal(5, browser.table!(:id, 't1').rows.length)   
+    assert_equal(5, browser.table!(:id, 't1').rows.length)
     
     # test the each iterator on rows - ie, go through each cell
     row = browser.table!(:index, 2)[2]
@@ -48,7 +48,7 @@ class TC_Tables < Test::Unit::TestCase
       count += 1
     end
     assert_equal(2, count -1)
-    assert_equal(2, browser.table!(:index, 2)[2].column_count)        
+    assert_equal(2, browser.table!(:index, 2)[2].column_count)
   end
   
   def test_dynamic_tables
@@ -146,7 +146,7 @@ class TC_Tables < Test::Unit::TestCase
   def test_table_container
     assert_nothing_raised { browser.table!(:id, 't1').outer_html }
   end
-end    
+end
 
 class TC_Tables_Simple < Test::Unit::TestCase
   

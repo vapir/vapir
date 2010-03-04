@@ -6,7 +6,7 @@ require 'vapir'
 require 'vapir-ie/process'
 require 'vapir-common/waiter'
 
-class TC_IE_Each < Test::Unit::TestCase  
+class TC_IE_Each < Test::Unit::TestCase
   def setup
     assert_equal 0, Vapir::IE.process_count
     @hits = 0
@@ -18,26 +18,26 @@ class TC_IE_Each < Test::Unit::TestCase
   end
 
   def test_zero_windows
-    Vapir::IE.each {hit_me}    
+    Vapir::IE.each {hit_me}
     assert_equal 0, @hits
   end
   
   def test_one_window
     @ie << Vapir::IE.new_process
-    Vapir::IE.each {hit_me}    
+    Vapir::IE.each {hit_me}
     assert_equal 1, @hits
   end
   
   def test_two_windows
     @ie << Vapir::IE.new_process
     @ie << Vapir::IE.new_process
-    Vapir::IE.each {hit_me}    
+    Vapir::IE.each {hit_me}
     assert_equal 2, @hits
   end
   
   def test_return_type
     @ie << Vapir::IE.new_process
-    Vapir::IE.each {|ie| assert_equal(Vapir::IE, ie.class)}    
+    Vapir::IE.each {|ie| assert_equal(Vapir::IE, ie.class)}
   end
   
   include Vapir

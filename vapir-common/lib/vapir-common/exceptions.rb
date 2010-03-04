@@ -2,7 +2,7 @@ module Vapir
   module Exception
 
     # Root class for all Vapir Exceptions
-    class VapirException < RuntimeError  
+    class VapirException < RuntimeError
       def initialize(message="")
         super(message)
       end

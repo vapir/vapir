@@ -30,7 +30,7 @@ class TC_Links_Multi < Test::Unit::TestCase
   
   def test_class_and_index
     assert_match(/papa.html/, browser.link!(:class => 'Papa', :index => 2).href)
-  end  
+  end
 
   def test_not_found_single
     exception = assert_raise(UnknownObjectException) do

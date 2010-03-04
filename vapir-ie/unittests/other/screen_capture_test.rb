@@ -10,7 +10,7 @@ class TC_Capture< Test::Unit::TestCase
   def setup
     delete_captured_files('capture_window.bmp', 'capture_client.bmp', 'capture_desktop.bmp')
     browser.goto($htmlRoot + 'buttons1.html')
-    @file_list = []       
+    @file_list = []
   end
   
   def teardown

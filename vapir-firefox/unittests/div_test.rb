@@ -15,11 +15,11 @@ class TC_Divs < Test::Unit::TestCase
     assert_raises(UnknownObjectException) {browser.div(:id , "div77").click }
     assert_raises(UnknownObjectException) {browser.div(:title , "div77").click }
     
-    assert(browser.text_field!(:name, "text1").verify_contains("0") )  
+    assert(browser.text_field!(:name, "text1").verify_contains("0") )
     browser.div!(:id , "div3").click
-    assert(browser.text_field!(:name, "text1").verify_contains("1") )  
+    assert(browser.text_field!(:name, "text1").verify_contains("1") )
     browser.div!(:id , "div4").click
-    assert(browser.text_field!(:name, "text1").verify_contains("0") )  
+    assert(browser.text_field!(:name, "text1").verify_contains("0") )
   end
   
   tag_method :test_show_all_objects, :fails_on_ie
@@ -93,12 +93,12 @@ class TC_Divs < Test::Unit::TestCase
     assert_raises(UnknownObjectException) {browser.span(:id , "span77").click }
     assert_raises(UnknownObjectException) {browser.span(:title , "span77").click }
     
-    assert(browser.text_field!(:name, "text2").verify_contains("0") )  
+    assert(browser.text_field!(:name, "text2").verify_contains("0") )
     browser.span!(:id , "span3").click
-    assert(browser.text_field!(:name, "text2").verify_contains("1") )  
+    assert(browser.text_field!(:name, "text2").verify_contains("1") )
     
     browser.span!(:id , "span4").click
-    assert(browser.text_field!(:name, "text2").verify_contains("0") )  
+    assert(browser.text_field!(:name, "text2").verify_contains("0") )
     
     #puts browser.span!(:id,"text_fields1").to_s
   end

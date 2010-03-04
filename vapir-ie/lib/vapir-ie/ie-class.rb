@@ -22,39 +22,39 @@ module Vapir
 
     # Return the options used when creating new instances of IE.
     # BUG: this interface invites misunderstanding/misuse such as IE.options[:speed] = :zippy]
-		def self.options 	
-			{:speed => self.speed, :visible => self.visible, :attach_timeout => self.attach_timeout}
-	  end
+    def self.options
+      {:speed => self.speed, :visible => self.visible, :attach_timeout => self.attach_timeout}
+    end
     # set values for options used when creating new instances of IE.
-		def self.set_options options
-			options.each do |name, value|
+    def self.set_options options
+      options.each do |name, value|
         send "#{name}=", value
-			end
-		end
-		# The globals $FAST_SPEED and $HIDE_IE are checked both at initialization 
-		# and later, because they
-		# might be set after initialization. Setting them beforehand (e.g. from
-		# the command line) will affect the class, otherwise it is only a temporary
-		# effect
-		@@speed = $FAST_SPEED ? :fast : :slow
-		def self.speed
-			return :fast if $FAST_SPEED
-			@@speed
-		end
-		def self.speed= x
-			$FAST_SPEED = nil
-			@@speed = x
-		end
-		@@visible = $HIDE_IE ? false : true
-		def self.visible
-			return false if $HIDE_IE
-			@@visible
-		end
-		def self.visible= x
-			$HIDE_IE = nil
-			@@visible = x
-		end
-		    
+      end
+    end
+    # The globals $FAST_SPEED and $HIDE_IE are checked both at initialization 
+    # and later, because they
+    # might be set after initialization. Setting them beforehand (e.g. from
+    # the command line) will affect the class, otherwise it is only a temporary
+    # effect
+    @@speed = $FAST_SPEED ? :fast : :slow
+    def self.speed
+      return :fast if $FAST_SPEED
+      @@speed
+    end
+    def self.speed= x
+      $FAST_SPEED = nil
+      @@speed = x
+    end
+    @@visible = $HIDE_IE ? false : true
+    def self.visible
+      return false if $HIDE_IE
+      @@visible
+    end
+    def self.visible= x
+      $HIDE_IE = nil
+      @@visible = x
+    end
+        
     # IE inserts some element whose tagName is empty and just acts as block level element
     # Probably some IE method of cleaning things
     # To pass the same to the xml parser we need to give some name to empty tagName
@@ -119,7 +119,7 @@ module Vapir
       @ie = iep.window
       @process_id = iep.process_id
       initialize_options
-      goto 'about:blank'      
+      goto 'about:blank'
     end
     
     # Create a new IE window in a new process, starting at the specified URL. 
@@ -187,20 +187,20 @@ module Vapir
     def speed= how_fast
       case how_fast
       when :zippy then
-	      @typingspeed = 0
-	      @pause_after_wait = 0.01
-	      @type_keys = false
-	      @speed = :fast
+        @typingspeed = 0
+        @pause_after_wait = 0.01
+        @type_keys = false
+        @speed = :fast
       when :fast then
-	      @typingspeed = 0
-	      @pause_after_wait = 0.01
-	      @type_keys = true
-	      @speed = :fast
+        @typingspeed = 0
+        @pause_after_wait = 0.01
+        @type_keys = true
+        @speed = :fast
       when :slow then
-	      @typingspeed = 0.08
-	      @pause_after_wait = 0.1
-	      @type_keys = true
-	      @speed = :slow
+        @typingspeed = 0.08
+        @pause_after_wait = 0.1
+        @type_keys = true
+        @speed = :slow
       else
         raise ArgumentError, "Invalid speed: #{how_fast}"
       end
@@ -213,12 +213,12 @@ module Vapir
     
     # deprecated: use speed = :fast instead
     def set_fast_speed
-    	self.speed = :fast
+      self.speed = :fast
     end
 
-    # deprecated: use speed = :slow instead    
+    # deprecated: use speed = :slow instead
     def set_slow_speed
-    	self.speed = :slow
+      self.speed = :slow
     end
     
     def visible
@@ -231,7 +231,7 @@ module Vapir
     # Yields successively to each IE window on the current desktop. Takes a block.
     # This method will not work when
     # Vapir/Ruby is run under a service (instead of a user).
-	# Yields to the window and its hwnd.
+    # Yields to the window and its hwnd.
     def self.each
       shell = WIN32OLE.new('Shell.Application')
       shell.Windows.each do |window|
@@ -326,7 +326,7 @@ module Vapir
       IE::ModalDialog.new(self, options.merge(:error => true))
     end
 
-  	# Are we attached to an open browser?
+    # Are we attached to an open browser?
     def exists?
       return false if @closing
       begin
@@ -666,10 +666,10 @@ module Vapir
     
     # Functions written for using xpath for getting the elements.
     def xmlparser_document_object
-    	if @xml_parser_doc == nil
-    		create_xml_parser_doc
-    	end
-    	return @xml_parser_doc
+      if @xml_parser_doc == nil
+        create_xml_parser_doc
+      end
+      return @xml_parser_doc
     end
 
     # Create the Nokogiri object if it is nil. This method is private so can be called only
@@ -680,8 +680,8 @@ module Vapir
         htmlSource ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTML>\n"
         htmlSource = html_source(document.body,htmlSource," ")
         htmlSource += "\n</HTML>\n"
-				# Angrez: Resolving Jira issue WTR-114
-				htmlSource = htmlSource.gsub(/&nbsp;/, '&#160;')
+        # Angrez: Resolving Jira issue WTR-114
+        htmlSource = htmlSource.gsub(/&nbsp;/, '&#160;')
         begin
          #@xml_parser_doc = Nokogiri::HTML::Document.new(htmlSource)
           @xml_parser_doc = Nokogiri.parse(htmlSource)

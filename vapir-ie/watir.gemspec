@@ -49,7 +49,7 @@ spec = Gem::Specification.new do |s|
 #  s.test_file  = 'unittests/core_tests.rb'
 
   s.files = $__watir_source_patterns.inject([]) { |list, glob|
-  	list << Dir[glob].delete_if { |path|
+    list << Dir[glob].delete_if { |path|
       File.directory?(path) or
       path.include?('CVS')
     }

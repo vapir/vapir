@@ -25,7 +25,7 @@ class TC_ExistingWindow < Test::Unit::TestCase
     assert_raises(NoMatchingWindowFoundException) { Browser.attach(:title, /missing/) }
     assert_raises(NoMatchingWindowFoundException) { Browser.attach(:url, "missing") }
     assert_raises(NoMatchingWindowFoundException) { Browser.attach(:url, /missing/) }
-  end    
+  end
 
   # Open a few browsers so that the test has a few windows to choose
   # from. The test harness has already opened a window that we won't

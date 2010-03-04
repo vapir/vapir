@@ -33,7 +33,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
     assert_raises(UnknownObjectException){ browser.table!(:xpath, "//table[@bad_attribute = 99]") }
     
     assert_equal(5, browser.table!(:xpath, "//table[@id = 't1']").row_count)  # 4 rows and a header 
-    assert_equal(5, browser.table!(:xpath, "//table[@id = 't1']").rows.length)   
+    assert_equal(5, browser.table!(:xpath, "//table[@id = 't1']").rows.length)
     
     # test the each iterator on rows - ie, go through each cell
     row = browser.table!(:xpath, "//table[@id = 't1']")[2]
@@ -47,7 +47,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
       count += 1
     end
     assert_equal(2, count -1)
-    assert_equal(2, browser.table!(:xpath, "//table[@id = 't1']")[2].column_count)        
+    assert_equal(2, browser.table!(:xpath, "//table[@id = 't1']")[2].column_count)
   end
   
   def test_dynamic_tables
@@ -87,7 +87,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
   #end
   
   #def test_row_directly
-  #  assert( browser.table_row(:id, 'row1').exists? )  
+  #  assert( browser.table_row(:id, 'row1').exists? )
   #  assert_false( browser.table_row(:id, 'no_exist').exists?)
   #  
   #  assert_equal('Row 2 Col1' ,  browser.row(:id, 'row1')[1].text.strip )
@@ -99,7 +99,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
     t.each do |row|
       if count == 1
         assert("Table 2", row[1].text)
-      elsif count == 2  
+      elsif count == 2
         assert("Row 1 Col1", row[1].text)
         assert("Row 1 Col2", row[2].text)
       elsif count == 3
@@ -122,7 +122,7 @@ class TC_Tables_XPath < Test::Unit::TestCase
     t.rows.each do |row|
       if count == 1
         assert("Table 2", row[1].text)
-      elsif count == 2  
+      elsif count == 2
         assert("Row 1 Col1", row[1].text)
         assert("Row 1 Col2", row[2].text)
       elsif count == 3
@@ -182,5 +182,5 @@ class TC_Tables_XPath < Test::Unit::TestCase
   def test_table_container
     assert_nothing_raised { browser.table!(:id, 't1').outer_html }
   end
-end    
+end
 

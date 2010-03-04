@@ -17,6 +17,6 @@ module Vapir
     # Returns the number of IEXPLORE processes currently running.
     def self.process_count
       Vapir::Process.count 'iexplore.exe'
-    end    
+    end
   end
 end

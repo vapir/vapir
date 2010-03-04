@@ -17,14 +17,14 @@ class TC_Links < Test::Unit::TestCase
     assert_raises(MissingWayOfFindingObjectException) { browser.link(:bad_attribute, 199).click }
     begin
       browser.link(:bad_attribute, 199).click
-    rescue MissingWayOfFindingObjectException => e           
+    rescue MissingWayOfFindingObjectException => e
       assert_match(/\ACannot search for a Vapir(::\w+)*::Link using the given argument: :bad_attribute \(other argument was 199\)\z/, e.message)
     end
   end
   
   def xtest_missing_links_dont_exist
-    assert_false(exists?{browser.link!(:text, "missing")})   
-    assert_false(exists?{browser.link!(:text, /miss/)})   
+    assert_false(exists?{browser.link!(:text, "missing")})
+    assert_false(exists?{browser.link!(:text, /miss/)})
   end
   
   def test_link_Exists
@@ -66,15 +66,15 @@ class TC_Links < Test::Unit::TestCase
     browser.link!(:text, "test1").click
     assert( browser.text.include?("Links2-Pass") ) 
   end
-  def test_link2_click    
+  def test_link2_click
     browser.link!(:url, /link_pass.html/).click
     assert( browser.text.include?("Links3-Pass") ) 
   end
-  def test_link3_click        
+  def test_link3_click
     browser.link!(:index, 1).click
     assert( browser.text.include?("Links2-Pass") ) 
   end
-  def test_link4_click        
+  def test_link4_click
     assert_raises(UnknownObjectException, "UnknownObjectException  was supposed to be thrown" ) { browser.link(:index, 199).click }
   end
   
@@ -93,7 +93,7 @@ class TC_Links < Test::Unit::TestCase
     assert_equal("test1" , browser.link!(:index, 1).text )
     assert_equal(""      , browser.link!(:index, 1).name )
     assert_equal(""      , browser.link!(:index, 1).id )
-    assert_equal(false   , browser.link!(:index, 1).disabled )  
+    assert_equal(false   , browser.link!(:index, 1).disabled )
     assert_equal(""      , browser.link!(:index, 1).class_name)
     assert_equal("link_class_1"      , browser.link!(:index, 2).class_name)
     
@@ -121,7 +121,7 @@ class TC_Links < Test::Unit::TestCase
   
   def test_div_xml_bug
     goto_page "div_xml.html"
-    assert_nothing_raised {browser.link!(:text, 'Create').exists? }   
+    assert_nothing_raised {browser.link!(:text, 'Create').exists? }
   end
 end
 
@@ -145,7 +145,7 @@ class TC_Frame_Links < Test::Unit::TestCase
     end
     
     assert_equal( 9 , count)
-  end    
+  end
 end
 
 class TC_showlinks < Test::Unit::TestCase

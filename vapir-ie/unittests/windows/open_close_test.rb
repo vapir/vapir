@@ -16,4 +16,4 @@ class ZZ_OpenClose < Test::Unit::TestCase
       ie.close
     end
   end
-end       
+end

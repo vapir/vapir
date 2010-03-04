@@ -370,4 +370,4 @@ module Vapir
       return false
     end
   end
-end  
+end

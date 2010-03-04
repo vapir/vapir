@@ -5,7 +5,7 @@ class Map_Tests < Vapir::TestCase
   
   def setup
     goto_page 'map_test.html'
-  end        
+  end
   
   def test_01
     assert_contains_text "Test Page for Map Tests"
@@ -14,12 +14,12 @@ class Map_Tests < Vapir::TestCase
   def test_map_exists_by_name
     assert(browser.map(:name, 'maptest01').exists?)
     assert_false(browser.map(:name, 'maptest03').exists?)
-  end  
+  end
   
   def test_map_exists_by_id
     assert(browser.map(:id, 'maptestid01').exists?)
     assert_false(browser.map(:id, 'maptestid03').exists?)
-  end  
+  end
   
   def test_map_area_exists_by_href
     assert(browser.area(:url, /pass.html/).exists?)
@@ -50,7 +50,7 @@ class Map_Tests < Vapir::TestCase
     assert_contains_text "Test Page for Map Tests"
     browser.area!(:alt, 'Images').click
     assert_contains_text "The triangle only has"
-    browser.back  
+    browser.back
     assert_contains_text "Test Page for Map Tests"
     browser.area!(:url, /simple_table_buttons.html/).click
     assert_contains_text "This table has 3 images"
@@ -62,7 +62,7 @@ class Map_Tests < Vapir::TestCase
     assert_contains_text "Test Page for Map Tests"
     browser.area!(:url, /images1.html/).click
     assert_contains_text "The triangle only has"
-    browser.back  
+    browser.back
     assert_contains_text "Test Page for Map Tests"
     browser.map!(:name, 'maptest01').area!(:alt, 'Table Buttons').click
     assert_contains_text "This table has 3 images"
@@ -78,7 +78,7 @@ class Map_Tests < Vapir::TestCase
     assert_contains_text "Test Page for Map Tests"
     browser.map!(:id, 'maptestid01').area!(:url, /images1.html/).click
     assert_contains_text "The triangle only has"
-    browser.back  
+    browser.back
     assert_contains_text "Test Page for Map Tests"
   end
   

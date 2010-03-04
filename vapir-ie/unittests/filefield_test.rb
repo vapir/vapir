@@ -29,7 +29,7 @@ class TC_FileField < Test::Unit::TestCase
 
     # click the upload button
     browser.button!(:name,"upload").click
-    assert(browser.text.include?("PASS"))	
+    assert(browser.text.include?("PASS"))
   end
   
   def test_iterator

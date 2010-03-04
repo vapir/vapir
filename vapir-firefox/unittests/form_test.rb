@@ -33,7 +33,7 @@ class TC_Forms2 < Test::Unit::TestCase # Note: there is no TC_Forms
   
   def test_ButtonInForm
     assert(browser.form(:name, "test2").button(:caption , "Submit").exists?)
-  end     
+  end
   
   # The following tests from bug 2261 
   #tag_method :test_form_html, :fails_on_ie
@@ -116,7 +116,7 @@ class TC_Forms3 < Test::Unit::TestCase
 ##  def test_flash1
 ##    browser.form!(:name ,"test2").button!(:caption , "Submit").flash
 ##  end 
-#  
+#
   def test_objects_with_same_name
     assert_equal('textfield' ,browser.text_field!( :name , 'g1').value )
     assert_equal('button'    ,browser.button!(     :name , 'g1').value )
@@ -269,7 +269,7 @@ class TC_Hidden_Fields2 < Test::Unit::TestCase
 ##      end
 ##      count+=1
 ##    end
-#    
+#
 ##    assert_equal("hid1" , browser.hiddens[1].name )
 ##    assert_equal("hidden_1" , browser.hiddens[2].id )
   end

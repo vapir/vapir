@@ -1,3 +1,3 @@
 =begin rdoc
-:include:../CHANGES   
+:include:../CHANGES
 =end

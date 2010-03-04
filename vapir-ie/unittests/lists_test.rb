@@ -5,7 +5,7 @@ class Lists_Tests < Vapir::TestCase
   
   def setup
     goto_page 'lists.html'
-  end        
+  end
 
   def test_list_items_exist
     assert(browser.li(:id, 'list1').exists?)
@@ -18,7 +18,7 @@ class Lists_Tests < Vapir::TestCase
   def test_list_item_exists_by_name
     assert(browser.li(:name, 'x1').exists?)
     assert(!browser.li(:name, 'maptest02').exists?)
-  end  
+  end
   
   def test_li_length
     assert_equal(6, browser.lis.length)

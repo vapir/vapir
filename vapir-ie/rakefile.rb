@@ -16,8 +16,8 @@ Rake::RDocTask.new('rdoc') do |rdoc|
   $WATIR_EXTRA_RDOC_FILES.each do |file|
     rdoc.rdoc_files.include(file)
   end
-  rdoc.rdoc_files.include('lib/watir/contrib/*.rb')  
-  rdoc.rdoc_files.include('lib/watir/*.rb')   
+  rdoc.rdoc_files.include('lib/watir/contrib/*.rb')
+  rdoc.rdoc_files.include('lib/watir/*.rb')
 end
 
 CLEAN << 'pkg' << 'rdoc'

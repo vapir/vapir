@@ -15,11 +15,11 @@ class TC_Divs_XPath < Test::Unit::TestCase
     assert_raises(UnknownObjectException) {browser.div(:xpath , "//div[@id='div77']/").click }
     assert_raises(UnknownObjectException) {browser.div(:xpath , "//div[@title='div77']/").click }
     
-    assert(browser.text_field!(:xpath, "//input[@name='text1']/").verify_contains("0") )  
+    assert(browser.text_field!(:xpath, "//input[@name='text1']/").verify_contains("0") )
     browser.div!(:xpath , "//div[@id='div3']/").click
-    assert(browser.text_field!(:xpath, "//input[@name='text1']/").verify_contains("1") )  
+    assert(browser.text_field!(:xpath, "//input[@name='text1']/").verify_contains("1") )
     browser.div!(:xpath , "//div[@id='div4']/").click
-    assert(browser.text_field!(:xpath, "//input[@name='text1']/").verify_contains("0") )  
+    assert(browser.text_field!(:xpath, "//input[@name='text1']/").verify_contains("0") )
   end
   
   def test_div_properties
@@ -28,7 +28,7 @@ class TC_Divs_XPath < Test::Unit::TestCase
     
     assert_equal("This div has an onClick that increments text1", 
     browser.div!(:xpath , "//div[@id='div3']/").text.strip )
-    assert_equal("This text is in a div with an id of div1 and title of test1",   
+    assert_equal("This text is in a div with an id of div1 and title of test1",
     browser.div!(:xpath , "//div[@title='Test1']/").text.strip )
     
     assert_raises(UnknownObjectException) {browser.div(:xpath , "//div[@id='div77']/").class_name }
@@ -90,7 +90,7 @@ class TC_Divs_XPath < Test::Unit::TestCase
     assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").class_name }
     assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").text }
     assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").title }
-    assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").disabled }        
+    assert_raises( UnknownObjectException) {browser.p(:xpath , "//p[@id='missing']/").disabled }
     assert_raises( UnknownObjectException) {browser.p!(:xpath , "//p[@id='missing']/") }
   end
 end

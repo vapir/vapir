@@ -42,14 +42,14 @@ class WaitUntilInstanceTest < Vapir::TestCase
     @mock_checkee.should_receive(:check).exactly(3).times.and_return [false, false, true]
     @waiter.wait_until {@mock_checkee.check}
     @waiter.timer.sleep_time.should_equal 1.0
-  end        
+  end
   
   def test_timeout
     @mock_checkee.should_receive(:check).any_number_of_times.and_return false
     lambda{@waiter.wait_until {@mock_checkee.check}}.should_raise Vapir::Exception::TimeOutException
     @waiter.timer.sleep_time.should_be_close 10.25, 0.26
     @waiter.timer.sleep_time.should_satisfy {|x| [10.0, 10.5].include? x}
-  end    
+  end
   
   def test_polling_interval
     @waiter.polling_interval = 0.1
@@ -95,5 +95,5 @@ class WaitUntilClassTest < Vapir::TestCase
     wait_until {@mock_checkee.check}
   end
 
-end    
+end
     

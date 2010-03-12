@@ -107,7 +107,7 @@ class JsshSocket
         @expecting_extra_maybe=true
         raise JsshUnableToStart, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
       end
-    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EPIPE
+    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
       err=JsshUnableToStart.new("Could not connect to JSSH sever #{@ip}:#{@port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
       err.set_backtrace($!.backtrace)
       raise err
@@ -524,7 +524,7 @@ class JsshSocket
       else
         [value('"foo"'), "foo"]
       end
-    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EPIPE
+    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
       raise(JsshConnectionError, "Encountered a socket error while checking the socket.\n#{$!.class}\n#{$!.message}", $!.backtrace)
     end
     unless expected==actual

@@ -182,6 +182,7 @@ class WinWindow
   AttachLib.add_type :WORD     => :ushort
   AttachLib.add_type :DWORD    => :ulong
   AttachLib.add_type :LPRECT   => :pointer
+  AttachLib.add_type :LPDWORD  => :pointer
   module WinUser
     extend AttachLib
     use_lib 'user32'
@@ -215,6 +216,7 @@ class WinWindow
     attach :int, :GetClassNameW, :HWND, :LPWSTR, :int
     attach :uint, :RealGetWindowClassA, :HWND, :LPSTR, :uint
     attach :uint, :RealGetWindowClassW, :HWND, :LPWSTR, :uint
+    attach :DWORD, :GetWindowThreadProcessId, :HWND, :LPDWORD
     attach :void, :SwitchToThisWindow, :HWND, :BOOL
     attach :BOOL, :LockSetForegroundWindow, :uint
     attach :uint, :MapVirtualKeyA, :uint, :uint
@@ -541,6 +543,22 @@ class WinWindow
     @real_class_name=buff.to_s[0...len]
   end
   
+  # returns the identifier of the thread that created the window
+  #
+  # http://msdn.microsoft.com/en-us/library/ms633522%28VS.85%29.aspx
+  def thread_id
+    WinUser.GetWindowThreadProcessId(hwnd, nil)
+  end
+  
+  # returns the process identifier that created this window
+  #
+  # http://msdn.microsoft.com/en-us/library/ms633522%28VS.85%29.aspx
+  def process_id
+    lpdwProcessId=FFI::MemoryPointer.new(Types[:LPDWORD])
+    WinUser.GetWindowThreadProcessId(hwnd, lpdwProcessId)
+    lpdwProcessId.get_ulong(0)
+  end
+
   # determines whether the specified window handle identifies an existing window
   #
   # http://msdn.microsoft.com/en-us/library/ms633528(VS.85).aspx

@@ -536,18 +536,17 @@ module Vapir
       browser_window_object.minimize
     end
 
-    ARBITRARY_TIMEOUT=30 # seconds 
     # Waits for the page to get loaded.
     def wait(options={})
       return unless exists?
       unless options.is_a?(Hash)
         raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
       end
-      options={:sleep => false, :last_url => nil}.merge(options)
+      options={:sleep => false, :last_url => nil, :timeout => 120}.merge(options)
       started=Time.now
       while browser_object.webProgress.isLoadingDocument
         sleep 0.1
-        if Time.now - started > ARBITRARY_TIMEOUT
+        if Time.now - started > options[:timeout]
           raise "Page Load Timeout"
         end
       end
@@ -566,14 +565,21 @@ module Vapir
         # or continue. -1 means page is not redirected. Anyother positive values means wait.
         metas=document_object.getElementsByTagName 'meta'
         wait_time=metas.to_array.map do |meta|
-          if meta.httpEquiv =~ /^refresh$/i && (content_split=meta.content.split(';'))[1]!=url
-            content_split[0].to_i
+          return_time=true
+          return_time &&= meta.httpEquiv =~ /\Arefresh\z/i 
+          return_time &&= begin
+            content_split=meta.content.split(';')
+            content_split[1] && content_split[1] !~ /\A\s*url=#{Regexp.escape(url)}\s*\z/ # if there is no url, or if the url is the current url, it's just a reload, not a redirect; don't wait. 
           end
+          return_time ? content_split[0].to_i : nil
         end.compact.max
         
         if wait_time
+          if wait_time > (options[:timeout] - (Time.now - started)) # don't wait longer than what's left in the timeout would for any other timeout. 
+            raise "waiting for a meta refresh would take #{wait_time} seconds but remaining time before timeout is #{options[:timeout] - (Time.now - started)} seconds - giving up"
+          end
           sleep(wait_time)
-          wait(:last_url => url)
+          wait(:last_url => url, :timeout => options[:timeout] - (Time.now - started))
         end
       end
       run_error_checks

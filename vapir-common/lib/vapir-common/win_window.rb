@@ -197,6 +197,7 @@ class WinWindow
     attach :BOOL, :SetWindowTextA, :HWND, :LPCSTR
     attach :BOOL, :SetWindowTextW, :HWND, :LPCWSTR
     attach :HWND, :GetWindow, :HWND, :uint
+    attach :HWND, :GetAncestor, :HWND, :uint
     attach :HWND, :GetLastActivePopup, :HWND
     attach :HWND, :GetTopWindow, :HWND
     attach :HWND, :GetParent, :HWND
@@ -536,7 +537,7 @@ class WinWindow
   def real_class_name
     buff_size=256
     buff=" "*buff_size
-    len=RealGetWindowClassA(hwnd, buff, buff_size)
+    len=WinUser.RealGetWindowClassA(hwnd, buff, buff_size)
     @real_class_name=buff.to_s[0...len]
   end
   
@@ -825,8 +826,6 @@ class WinWindow
   SRCCOPY = 0xCC0020
   DIB_RGB_COLORS = 0x0
   GMEM_FIXED = 0x0
-  SM_CXSCREEN=
-  SM_CYSCREEN=
   
   # Creates a bitmap image of this window (a screenshot). 
   # Returns the bitmap as represented by three FFI objects: a BITMAPFILEHEADER, a BITMAPINFOHEADER, and a

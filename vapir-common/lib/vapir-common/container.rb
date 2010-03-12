@@ -2,6 +2,7 @@ require 'vapir-common/specifier'
 
 module Vapir
   module Container
+    module_function
     # returns an Element of the given class klass with the specified how & what, and
     # with self as its container. 
     # takes options:
@@ -93,6 +94,7 @@ module Vapir
       return [how, what, index]
     end
 
+    public
     # asserts that this element exists - optionally, takes a block, and other calls to assert_exists
     # over the course of the block will not cause redundant assertions. 
     def assert_exists(options={})

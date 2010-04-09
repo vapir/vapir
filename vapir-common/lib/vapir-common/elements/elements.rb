@@ -15,6 +15,9 @@ module Vapir
     dom_attr :name
     dom_attr :src
     inspect_these :name, :src
+    
+    # TODO/FIX: move this onto common page container, when such a thing exists 
+    element_collection proc{|frame| Element.object_collection_to_enumerable(frame.content_window_object.frames) }, :frames, Frame
   end
   module InputElement
     extend ElementHelper

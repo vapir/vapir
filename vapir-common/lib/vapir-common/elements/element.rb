@@ -483,11 +483,6 @@ module Vapir
     attr_reader :what
     attr_reader :index
     
-    # returns whether the specified index for this element is equivalent to finding the first element 
-    def index_is_first
-      [nil, :first, 1].include?(index)
-    end
-    
     def html
       Kernel.warn "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)\n(called from #{caller.map{|c|"\n"+c}})"
       outer_html
@@ -534,6 +529,38 @@ module Vapir
     # alias it in case class-specific ones don't need to override
     alias initialize default_initialize
     
+    private
+    # returns whether the specified index for this element is equivalent to finding the first element 
+    def index_is_first
+      [nil, :first, 1].include?(index)
+    end
+    def assert_no_index
+      unless index_is_first
+        raise NotImplementedError, "Specifying an index is not supported for locating by #{@how}"
+      end
+    end
+    # iterates over the element object candidates yielded by the given method. 
+    # returns the match at the given index. if a block is given, the block should 
+    # return true when the yielded element object is a match and false when it is not. 
+    # if no block is given, then it is assumed that every element object candidate
+    # returned by the candidates_method is a match. candidates_method_args are
+    # passed to the candidates method untouched. 
+    def candidate_match_at_index(index, candidates_method, *candidates_method_args)
+      matched_candidate=nil
+      matched_count=0
+      candidates_method.call(*candidates_method_args) do |candidate|
+        candidate_matches=block_given? ? yield(candidate) : true
+        if candidate_matches
+          matched_count+=1
+          if index==matched_count || index_is_first || index==:last
+            matched_candidate=candidate
+            break unless index==:last
+          end
+        end
+      end
+      matched_candidate
+    end
+    public
     # locates the element object for this element 
     # 
     # takes options hash. currently the only option is
@@ -561,6 +588,7 @@ module Vapir
       @element_object||= begin
         case @how
         when :element_object
+          assert_no_index
           @element_object=@what # this is needed for checking its existence 
           if options[:relocate] && !element_object_exists?
             raise Vapir::Exception::UnableToRelocateException, "This #{self.class.name} was specified using #{how.inspect} and cannot be relocated."
@@ -573,12 +601,11 @@ module Vapir
             raise Vapir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
           end
           # todo/fix: implement index for this, using element_objects_by_xpath ? 
-          unless index_is_first
-            raise NotImplementedError, "Specifying an index is not supported for locating by xpath"
-          end
+          assert_no_index
           by_xpath=@container.element_object_by_xpath(@what)
           match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers, self.class.all_dom_attr_aliases).first
         when :label
+          assert_no_index
           unless document_object
             raise "No document object found for this #{self.inspect} - needed to search by id for label from #{@container.inspect}"
           end
@@ -594,34 +621,15 @@ module Vapir
           specified_attributes=@what
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
           
-          matched_candidate=nil
-          matched_count=0
-          matched_candidates(specifiers, self.class.all_dom_attr_aliases) do |match|
-            matched_count+=1
-            if @index==matched_count || index_is_first || @index==:last
-              matched_candidate=match
-              break unless @index==:last
-            end
-          end
-          matched_candidate
+          candidate_match_at_index(@index, method(:matched_candidates), specifiers, self.class.all_dom_attr_aliases)
         when :index
-          # TODO/FIX: DRY; basically repeats how=:attributes 
           unless @what.nil?
             raise ArgumentError, "'what' was specified, but when 'how'=:index, no 'what' is used (just extra[:index])"
           end
           unless @index
             raise ArgumentError, "'how' was given as :index but no index was given"
           end
-          matched_candidate=nil
-          matched_count=0
-          matched_candidates(self.class.specifiers, self.class.all_dom_attr_aliases) do |match|
-            matched_count+=1
-            if @index==matched_count || index_is_first || @index==:last
-              matched_candidate=match
-              break unless @index==:last
-            end
-          end
-          matched_candidate
+          candidate_match_at_index(@index, method(:matched_candidates), self.class.specifiers, self.class.all_dom_attr_aliases)
         when :custom
           # this allows a proc to be given as 'what', which is called yielding candidates, each being 
           # an instanted Element of this class. this might seem a bit odd - instantiating a bunch 
@@ -639,14 +647,9 @@ module Vapir
           # 
           # the proc should return true (that is, not false or nil) when it likes the given Element - 
           # when it matches what it expects of this Element. 
-          by_custom=nil
-          matched_candidates(self.class.specifiers, self.class.all_dom_attr_aliases) do |match|
-            if what.call(self.class.new(:element_object, match, @extra))
-              by_custom=match
-              break
-            end
+          candidate_match_at_index(@index, method(:matched_candidates), self.class.specifiers, self.class.all_dom_attr_aliases) do |candidate|
+            what.call(self.class.new(:element_object, candidate, @extra))
           end
-          by_custom
         else
           raise Vapir::Exception::MissingWayOfFindingObjectException, "Unknown 'how' given: #{@how.inspect} (#{@how.class}). 'what' was #{@what.inspect} (#{@what.class})"
         end

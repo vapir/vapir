@@ -1,6 +1,7 @@
 require 'vapir-common/win_window'
 require 'vapir-common/modal_dialog'
 require 'vapir-ie/page_container'
+require 'Win32API'
 
 module Vapir
   class IE::ModalDialog

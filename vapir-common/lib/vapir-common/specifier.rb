@@ -50,7 +50,7 @@ module Vapir
     
     # this is a list of what users can specify (there are additional possible hows that may be given
     # to the Element constructor, but not generally for use by users, such as :element_object or :label
-    HowList=[:attributes, :xpath, :custom, :element_object]
+    HowList=[:attributes, :xpath, :custom, :element_object, :label]
 
     # returns an Enumerable of element objects that _may_ match (note, not do match, necessarily)
     # the given specifiers on the given container. these are obtained from the container's containing_object

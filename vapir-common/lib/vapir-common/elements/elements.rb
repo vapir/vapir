@@ -490,7 +490,7 @@ module Vapir
     container_collection_method :forms
     default_how :name
 
-    dom_attr :name, :action, :method
+    dom_attr :name, :action, :method => :form_method # can't use 'method' for the ruby method because it clobbers the rather important Object#method
     inspect_these :name, :action
 
     # Submit the form. Equivalent to pressing Enter or Return to submit a form.

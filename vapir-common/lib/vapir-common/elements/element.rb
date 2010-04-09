@@ -393,6 +393,7 @@ module Vapir
         if Object.const_defined?('WIN32OLE') && element_object.is_a?(WIN32OLE)
           # avoid respond_to? on WIN32OLE because it's slow. just call the method and rescue if it fails. 
           # the else block works fine for win32ole, but it's slower, so optimizing for IE here. 
+          # todo: move this into the ie flavor, doesn't need to be in common 
           got_attribute=false
           attribute=nil
           begin
@@ -403,8 +404,10 @@ module Vapir
           if !got_attribute
             if args.length==0
               begin
-                attribute=element_object.getAttributeNode(dom_method_name.to_s).value
-                got_attribute=true
+                if (node=element_object.getAttributeNode(dom_method_name.to_s))
+                  attribute=node.value
+                  got_attribute=true
+                end
               rescue WIN32OLERuntimeError
               end
             else
@@ -419,7 +422,11 @@ module Vapir
             # but that is problematic. see documentation above. 
           elsif args.length==0
             if element_object.object_respond_to?(:getAttributeNode)
-              element_object.getAttributeNode(dom_method_name.to_s).value
+              if (node=element_object.getAttributeNode(dom_method_name.to_s))
+                node.value
+              else
+                nil
+              end
             else
               nil
             end

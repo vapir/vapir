@@ -361,7 +361,7 @@ class WinWindow
   #
   # raises ArgumentError if the hWnd is not a Fixnum greater than 0
   def initialize(hwnd)
-    raise ArgumentError, "hwnd must be an integer greater than 0; got #{hwnd.inspect} (#{hwnd.class})" unless hwnd.is_a?(Fixnum) && hwnd > 0
+    raise ArgumentError, "hwnd must be an integer greater than 0; got #{hwnd.inspect} (#{hwnd.class})" unless hwnd.is_a?(Integer) && hwnd > 0
     @hwnd=hwnd
   end
   

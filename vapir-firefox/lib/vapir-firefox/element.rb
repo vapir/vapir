@@ -70,21 +70,6 @@ module Vapir
       document_object.defaultView.getComputedStyle(element_object, nil)
     end
     
-    public
-
-    # Returns true if this Element's #text matches the given String or Regexp to match; otherwise false. 
-    def contains_text?(match)
-      self_text=self.text
-      if match.kind_of? Regexp
-        !!self_text =~ match
-      elsif match.kind_of? String
-        self_text.include?(match)
-      else
-        raise TypeError, "Expected String or Regexp, got #{match.inspect} (#{match.class.name})"
-      end
-    end
-    alias contains_text contains_text?
-
     # Fires the given event on this element. 
     # The given event name can be either of the form 'onclick' (for compatibility with IE) or just 'click' (can also be Symbol :onclick or :click)
     # takes options:

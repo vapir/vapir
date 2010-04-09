@@ -120,7 +120,26 @@ module Vapir
       extra
     end
     alias extra_for_contained default_extra_for_contained
-    
+
+    # Checks if this container's text includes the given regexp or string. 
+    # Returns true if the container's #text matches the given String or Regexp; otherwise false. 
+    # 
+    # *Deprecated* 
+    # Instead use 
+    #   Container#text.include? target 
+    # or
+    #   Container#text.match target
+    def contains_text?(match)
+      if match.kind_of? Regexp
+        !!(text =~ match)
+      elsif match.kind_of? String
+        text.include?(match)
+      else
+        raise TypeError, "Expected String or Regexp, got #{match.inspect} (#{match.class.name})"
+      end
+    end
+    alias contains_text contains_text?
+
     # shows the available objects on the current container.
     # This is usually only used for debugging or writing new test scripts.
     # This is a nice feature to help find out what HTML objects are on a page

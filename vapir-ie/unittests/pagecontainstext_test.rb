@@ -27,18 +27,17 @@ class TC_contains_text < Test::Unit::TestCase
   end
   
   def test_match_regexp_found
-    $~ = browser.contains_text(/Messages ([0-9]+)/)
-    assert_equal('42', $1)
+    assert browser.contains_text(/Messages ([0-9]+)/)
   end
   
   def test_bad_search_argument
     assert_raises(ArgumentError) do
       browser.contains_text
     end
-    assert_raises(ArgumentError) do
+    assert_raises(TypeError) do
       browser.contains_text(nil)
     end
-    assert_raises(ArgumentError) do
+    assert_raises(TypeError) do
       browser.contains_text(42)
     end
   end

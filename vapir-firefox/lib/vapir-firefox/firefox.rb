@@ -489,28 +489,6 @@ module Vapir
     end
     private :find_window
 
-    #
-    # Description:
-    #   Matches the given text with the current text shown in the browser.
-    #
-    # Input:
-    #   target - Text to match. Can be a string or regex
-    #
-    # Output:
-    #   Returns the index if the specified text was found.
-    #   Returns matchdata object if the specified regexp was found.
-    #
-    def contains_text(target)
-      case target
-      when Regexp
-        self.text.match(target)
-      when String
-        self.text.index(target)
-      else
-        raise TypeError, "Argument #{target} should be a string or regexp."
-      end
-    end
-
     #   Returns the Status of the page currently loaded in the browser from statusbar.
     #
     # Output:

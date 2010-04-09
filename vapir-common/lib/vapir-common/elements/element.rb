@@ -652,6 +652,26 @@ module Vapir
     end
     alias :exist? :exists?
     
+    # method to access dom attributes by defined aliases. 
+    # unlike get_attribute, this only looks at the specific dom attributes that Watir knows about, and 
+    # the aliases for those that Watir defines. 
+    def attr(attribute)
+      unless attribute.is_a?(String) || attribute.is_a?(Symbol)
+        raise TypeError, "attribute should be string or symbol; got #{attribute.inspect}"
+      end
+      attribute=attribute.to_sym
+      all_aliases=self.class.all_dom_attr_aliases
+      dom_attrs=all_aliases.reject{|dom_attr, attr_aliases| !attr_aliases.include?(attribute) }.keys
+      case dom_attrs.size
+      when 0
+        raise ArgumentError, "Not a recognized attribute: #{attribute}"
+      when 1
+        method_from_element_object(dom_attrs.first)
+      else
+        raise ArgumentError, "Ambiguously aliased attribute #{attribute} may refer to any of: #{dom_attrs.join(', ')}"
+      end
+    end
+    
     # returns an Element that represents the same object as self, but is an instance of the 
     # most-specific class < self.class that can represent that object. 
     #

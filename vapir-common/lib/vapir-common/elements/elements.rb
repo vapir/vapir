@@ -747,7 +747,7 @@ module Vapir
     def for_element
       raise "document is not defined - cannot search for labeled element" unless document_object
       if for_object=document_object.getElementById(element_object.htmlFor)
-        base_element_class.factory(for_object, extra_for_contained, :label, self)
+        base_element_class.factory(for_object, container.extra_for_contained, :label, self)
       else
         raise Exception::UnknownObjectException, "no element found that #{self.inspect} is for!"
       end

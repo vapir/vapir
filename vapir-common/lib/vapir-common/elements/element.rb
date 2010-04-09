@@ -561,8 +561,8 @@ module Vapir
           unless what.is_a?(Label)
             raise "how=:label specified on this #{self.class}, but 'what' is not a Label! what=#{what.inspect} (#{what.class})"
           end
-          what.locate!(container_locate_options) # the what Label is functionally synonymous with the @container. actually it is currently always the same as the @container. 
-          by_label=document_object.getElementById(@container.for)
+          what.locate!(container_locate_options) # 'what' is not the container; our container is the label's container, but the options for locating should be the same. 
+          by_label=document_object.getElementById(what.for)
           match_candidates(by_label ? [by_label] : [], self.class.specifiers, self.class.all_dom_attr_aliases).first
         when :attributes
           assert_container

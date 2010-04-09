@@ -12,7 +12,8 @@ module Vapir
     alias containing_object element_object
     alias ole_object element_object # TODO: deprecate this? 
     
-    dom_attr :currentStyle
+    dom_attr :currentStyle => [:current_style_object, :computed_style_object]
+    alias_deprecated :currentStyle, :current_style_object
     dom_attr :disabled => [:disabled, :disabled?] # this applies to all elements for IE, apparently. 
     def enabled?
       !disabled

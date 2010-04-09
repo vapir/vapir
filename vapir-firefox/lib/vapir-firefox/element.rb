@@ -66,9 +66,11 @@ module Vapir
     end
 
     public
-    def currentStyle # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
+    def current_style_object # currentStyle is IE; document.defaultView.getComputedStyle is mozilla. 
       document_object.defaultView.getComputedStyle(element_object, nil)
     end
+    alias computed_style_object current_style_object
+    alias_deprecated :currentStyle, :current_style_object
     
     # Fires the given event on this element. 
     # The given event name can be either of the form 'onclick' (for compatibility with IE) or just 'click' (can also be Symbol :onclick or :click)

@@ -227,6 +227,23 @@ module Vapir
     def container_collection_methods
       class_array_get 'container_collection_methods'
     end
+
+    def parent_element_module(*arg)
+      defined_parent=set_or_get_class_var('@@parent_element_module', *arg)
+      defined_parent || (self==Watir::Element ? nil : Watir::Element)
+    end
+    def all_dom_attrs
+      super_attrs= parent_element_module ? parent_element_module.all_dom_attrs : []
+      super_attrs + class_array_get('dom_attrs')
+    end
+    def all_dom_attr_aliases
+      aliases=class_hash_get('dom_attr_aliases').dup
+      super_aliases= parent_element_module ? parent_element_module.all_dom_attr_aliases : {}
+      super_aliases.each_pair do |attr, alias_list|
+        aliases[attr] = (aliases[attr] || Set.new) + alias_list
+      end
+      aliases
+    end
   end
   module ElementHelper
     def add_specifier(specifier)

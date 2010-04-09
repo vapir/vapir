@@ -57,6 +57,7 @@ module Vapir
   end
   module TextField
     extend ElementHelper
+    parent_element_module InputElement
     
     add_specifier :tagName => 'textarea'
     add_specifier :tagName => 'input', :types => ['text', 'password', 'hidden']
@@ -191,6 +192,7 @@ module Vapir
   end
   module Hidden
     extend ElementHelper
+    parent_element_module TextField
     add_specifier :tagName => 'input', :type => 'hidden'
     container_single_method :hidden
     container_collection_method :hiddens
@@ -220,6 +222,7 @@ module Vapir
   end
   module Button
     extend ElementHelper
+    parent_element_module InputElement
     add_specifier :tagName => 'input', :types => ['button', 'submit', 'image', 'reset']
     add_specifier :tagName => 'button'
     container_single_method :button
@@ -230,6 +233,7 @@ module Vapir
   end
   module FileField
     extend ElementHelper
+    parent_element_module InputElement
     add_specifier :tagName => 'input', :type => 'file'
     container_single_method :file_field
     container_collection_method :file_fields
@@ -273,6 +277,7 @@ module Vapir
   end
   module SelectList
     extend ElementHelper
+    parent_element_module InputElement
     add_specifier :tagName => 'select'
     # in IE, type attribute is one of "select-one", "select-multiple" - but all are still the 'select' tag 
     container_single_method :select_list
@@ -419,6 +424,7 @@ module Vapir
   
   module Radio
     extend ElementHelper
+    parent_element_module InputElement
     add_specifier :tagName => 'input', :type => 'radio'
     container_single_method :radio
     container_collection_method :radios
@@ -449,6 +455,7 @@ module Vapir
   end
   module CheckBox
     extend ElementHelper
+    parent_element_module InputElement
     add_specifier :tagName => 'input', :type => 'checkbox'
     container_single_method :checkbox, :check_box
     container_collection_method :checkboxes, :check_boxes

@@ -43,7 +43,6 @@ module Vapir
   module Firefox::Container 
     include Vapir::Container
     
-    private
     def extra_for_contained
       default_extra_for_contained.merge(:jssh_socket => jssh_socket)
     end

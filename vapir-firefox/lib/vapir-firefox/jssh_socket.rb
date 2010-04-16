@@ -652,7 +652,7 @@ class JsshObject
     type=attr_obj.type
     case type
     when 'function'
-      attr_obj.pass(*args).val_or_object
+      attr_obj.call(*args)
     else
       if args.empty?
         attr_obj.val_or_object
@@ -939,13 +939,13 @@ class JsshObject
   end
   
   def to_js_array
-    jssh_socket.object('$A').pass(self)
+    jssh_socket.object('$A').call(self)
   end
   def to_js_hash
-    jssh_socket.object('$H').pass(self)
+    jssh_socket.object('$H').call(self)
   end
   def to_js_hash_safe
-    jssh_socket.object('$_H').pass(self)
+    jssh_socket.object('$_H').call(self)
   end
   def to_array
     JsshArray.new(self.ref, self.jssh_socket, :debug_name => debug_name)
@@ -982,7 +982,7 @@ class JsshObject
   end
   
   def inspect
-    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :debug_name].map{|attr| attr.to_s+'='+send(attr)}.join(', ')}>"
+    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :debug_name].map{|attr| attr.to_s+'='+send(attr).to_s}.join(', ')}>"
   end
   def pretty_print(pp)
     pp.object_address_group(self) do
@@ -1024,7 +1024,12 @@ class JsshArray < JsshObject
     length=self.length
     raise JsshError, "length #{length.inspect} is not a non-negative integer on #{self.ref}" unless length.is_a?(Integer) && length >= 0
     for i in 0...length
-      yield self[i].store_rand_temp
+      element=self[i]
+      if element.is_a?(JsshObject)
+        # yield a more permanent reference than the array subscript 
+        element=element.store_rand_temp
+      end
+      yield element
     end
   end
   include Enumerable

@@ -356,13 +356,15 @@ module Vapir
 
       current_node=@element_object
       while current_node
-        if win.__watir_javascript_equals__(current_node, document_object)
-          # if we encounter the correct current document going up the parentNodes, @element_object does exist. 
-          return true
-        end
         begin
+          if win.__watir_javascript_equals__(current_node, document_object)
+            # if we encounter the correct current document going up the parentNodes, @element_object does exist. 
+            return true
+          end
           current_node=current_node.parentNode
         rescue WIN32OLERuntimeError
+          # two possibilities for why we're here:
+          # if the method __watir_javascript_equals__ stops existing, then that probably means the window changed, meaning @element object doesn't exist anymore. 
           # if we encounter an error trying to access parentNode before reaching the current document, @element_object doesn't exist. 
           return false
         end

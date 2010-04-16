@@ -291,9 +291,12 @@ module Vapir
       # the following are not stored elsewhere; the ref will just be to attributes of the browser, so that updating the 
       # browser (in javascript) will cause all of these refs to reflect that as well 
       @document_object=browser_object.contentDocument
-      @content_window_object=browser_object.contentWindow 
+      @content_window_object=browser_object.contentWindow
         # note that browser_window_object.content is the same thing, but simpler to refer to stuff on browser_object since that is updated by the nsIWebProgressListener below
       @body_object=document_object.body
+      @browser_jssh_objects[:requests_in_progress]=[]
+      @requests_in_progress=@browser_jssh_objects[:requests_in_progress].to_array
+      @browser_jssh_objects[:unmatched_stopped_requests_count]=0
       
       @updated_at_epoch_ms=@browser_jssh_objects.attr(:updated_at_epoch_ms).assign_expr('new Date().getTime()')
       @updated_at_offset=Time.now.to_f-jssh_socket.value_json('new Date().getTime()')/1000.0
@@ -313,10 +316,42 @@ module Vapir
          }")
       listener_object[:onStateChange]= jssh_socket.object(
         "function(aWebProgress, aRequest, aStateFlags, aStatus)
-         { if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP && aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)
+         { var requests_in_progress=#{@requests_in_progress.ref};
+           if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
            { #{@updated_at_epoch_ms.ref}=new Date().getTime();
              #{browser_object.ref}=#{browser_window_object.ref}.getBrowser();
+             var matched=false;
+             for(var i=0; i<requests_in_progress.length; i+=1)
+             { if(requests_in_progress[i].request==aRequest)
+               // TODO/FIX: this doesn't seem to work reliably - possibly related to redirects? 
+               // workaround is to just check if there are as many unmatched stop requests as requests 
+               // in progress.
+               // but this ought to be fixed to correctly match STATE_STOP requests to previously-
+               // encountered STATE_START requests. 
+               { requests_in_progress.splice(i, 1);
+                 matched=true;
+                 break;
+               }
+             }
+             if(!matched)
+             { #{@browser_jssh_objects.attr(:unmatched_stopped_requests_count).ref}++; //.push({webProgress: aWebProgress, request: aRequest, stateFlags: aStateFlags, status: aStatus});
+               // count any stop requests that we fail to match so that we can compare that count to the number of unmatched start requests. 
+             }
            }
+           if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_START)
+           { requests_in_progress.push({webProgress: aWebProgress, request: aRequest, stateFlags: aStateFlags, status: aStatus});
+           }
+           // the below was kind of a hack to get rid of any requests which 
+           // are done but were not matched to a STATE_STOP request. 
+           // it doesn't seem to work very well, so commented.
+           /*
+           for(var i=0; i<requests_in_progress.length; ++i)
+           { var request_in_progress=requests_in_progress[i];
+             if(request_in_progress.request.loadGroup.activeCount==0)
+             { requests_in_progress.splice(i, 1);
+               --i;
+             }
+           }*/
          }")
       browser_object.addProgressListener(listener_object)
     end
@@ -559,6 +594,9 @@ module Vapir
           sleep(wait_time)
           wait(:last_url => url, :timeout => options[:timeout] - (Time.now - started))
         end
+      end
+      ::Waiter.try_for(options[:timeout] - (Time.now - started), :exception => "Waiting for requests in progress to complete timed out.") do
+        @requests_in_progress.length<=@browser_jssh_objects[:unmatched_stopped_requests_count]
       end
       run_error_checks
       return self

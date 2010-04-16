@@ -393,10 +393,6 @@ module Vapir
       wait
     end
 
-    def inspect
-      '#<%s:0x%x url=%s title=%s>' % [self.class, hash*2, url.inspect, title.inspect]
-    end
-
     # clear the list of urls that we have visited
     def clear_url_list
       @url_list.clear

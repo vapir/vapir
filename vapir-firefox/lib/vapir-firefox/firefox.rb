@@ -205,10 +205,6 @@ module Vapir
       self
     end
     
-    def inspect
-      "#<#{self.class}:0x#{(self.hash*2).to_s(16)} " + (exists? ? "url=#{url.inspect} title=#{title.inspect}" : "exists?=false") + '>'
-    end
-
     def exists?
       # jssh_socket may be nil if the window has closed 
       jssh_socket && browser_window_object && jssh_socket.object('getWindows()').to_js_array.include(browser_window_object)

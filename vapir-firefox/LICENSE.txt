@@ -1,9 +1,18 @@
-=begin rdoc
+The Vapir-Firefox library comes from a number of sources and authors, all released
+under the Modified BSD License:
+- Original contributions by Ethan:
+  Copyright: Ethan 2009-2010
+  License: Modified BSD license (full text below)
 
-License
-  ---------------------------------------------------------------------------
-  Copyright (c) 2004 - 2005, Paul Rogers and Bret Pettichord
-  Copyright (c) 2006 - 2008, Bret Pettichord
+- The Firewatir library from which Vapir-Firefox was forked:
+  Copyright: 
+    Copyright (c) 2004 - 2005, Paul Rogers and Bret Pettichord
+    Copyright (c) 2006 - 2007, Angrez Singh
+    Copyright (c) 2008, Bret Pettichord
+  License: Modified BSD license (full text below)
+
+
+Full text of the Modified BSD License:
   All rights reserved.
   
   Redistribution and use in source and binary forms, with or without
@@ -31,8 +40,3 @@ License
   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  --------------------------------------------------------------------------
-  (based on BSD Open Source License)
-
-=end
-

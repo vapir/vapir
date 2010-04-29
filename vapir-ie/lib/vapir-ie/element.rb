@@ -1,4 +1,4 @@
-require 'vapir-common/elements/element'
+require 'vapir-common/element'
 require 'vapir-ie/container'
 
 module Vapir

@@ -328,9 +328,9 @@ module Vapir
 
     # Are we attached to an open browser?
     def exists?
-      return false if @closing
-      begin
+      @ie && begin
         @ie.name =~ /Internet Explorer/
+        true
       rescue WIN32OLERuntimeError
         false
       end
@@ -400,16 +400,25 @@ module Vapir
     
     # Closes the Browser
     def close
-      return unless exists?
-      @closing = true
+      assert_exists
       @ie.stop
-      #wait # why wait? 
-      chwnd = @ie.hwnd
       @ie.quit
-      # this doesn't work; the same hwnd can stay open if there are multiple tabs. not that it does anything anyway. 
-      ::Waiter.try_for(32) do
-        !win_window.exists?
+      # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
+      ::Waiter.try_for(32, :exception => WindowFailedToCloseException.new("The browser window did not close")) do
+        begin
+          @ie.LocationUrl
+          false
+        rescue WIN32OLERuntimeError
+          raise unless $!.message =~ /0x80010108|0x800706ba|0x800706be/i
+          # 0x800706ba -> The RPC server is unavailable
+          # 0x80010108 -> The object invoked has disconnected from its clients.
+          # 0x800706be -> The remote procedure call failed.
+          # we expect one of these error codes when quitting; if we don't encounter such an error, something has failed. 
+          # probably meaning that the browser window failed to close. 
+          true
+        end
       end
+      @ie=nil
     end
     
     # Maximize the window (expands to fill the screen)

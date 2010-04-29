@@ -369,6 +369,10 @@ module Vapir
       assert_exists
       begin
         browser_window_object.close
+        # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
+        ::Waiter.try_for(32, :exception => WindowFailedToCloseException.new("The browser window did not close")) do
+          !exists?
+        end
         @@jssh_socket.assert_socket
       rescue JsshConnectionError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
         @@jssh_socket=nil
@@ -394,7 +398,7 @@ module Vapir
       quitSeverity = options[:force] ? jssh_socket.Components.interfaces.nsIAppStartup.eForceQuit : jssh_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
       begin
         appStartup.quit(quitSeverity)
-        ::Waiter.try_for(8, :exception => Exception::VapirException.new("The browser did not quit")) do
+        ::Waiter.try_for(8, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
           @@jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
           false
         end

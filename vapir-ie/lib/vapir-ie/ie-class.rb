@@ -222,9 +222,11 @@ module Vapir
     end
     
     def visible
+      assert_exists
       @ie.visible
     end
     def visible=(boolean)
+      assert_exists
       @ie.visible = boolean if boolean != @ie.visible
     end
     
@@ -301,29 +303,33 @@ module Vapir
     private :attach_browser_window
     
     def browser_object
+      assert_exists
       @ie
     end
     
     # Return the current window handle
     def hwnd
-      raise "Not attached to a browser" if @ie.nil? 
+      assert_exists
       @hwnd ||= @ie.hwnd
     end
     attr_writer :hwnd
     
     def win_window
-      hwnd=self.hwnd
       @win_window||= WinWindow.new(hwnd)
     end
     
     def modal_dialog(options={})
-      raise ArgumentError, "options argument must be a hash; received #{options.inspect} (#{options.class})" unless options.is_a?(Hash)
-      modal=IE::ModalDialog.new(self, options.merge(:error => false))
-      modal.exists? ? modal : nil
+      assert_exists do
+        raise ArgumentError, "options argument must be a hash; received #{options.inspect} (#{options.class})" unless options.is_a?(Hash)
+        modal=IE::ModalDialog.new(self, options.merge(:error => false))
+        modal.exists? ? modal : nil
+      end
     end
     
     def modal_dialog!(options={})
-      IE::ModalDialog.new(self, options.merge(:error => true))
+      assert_exists do
+        IE::ModalDialog.new(self, options.merge(:error => true))
+      end
     end
 
     # Are we attached to an open browser?
@@ -367,30 +373,38 @@ module Vapir
     # Navigate to the specified URL.
     #  * url - string - the URL to navigate to
     def goto(url)
-      @ie.navigate(url)
-      wait
-      return @down_load_time
+      assert_exists do
+        @ie.navigate(url)
+        wait
+        return @down_load_time
+      end
     end
     
     # Go to the previous page - the same as clicking the browsers back button
     # an WIN32OLERuntimeError exception is raised if the browser cant go back
     def back
-      @ie.GoBack
-      wait
+      assert_exists do
+        @ie.GoBack
+        wait
+      end
     end
     
     # Go to the next page - the same as clicking the browsers forward button
     # an WIN32OLERuntimeError exception is raised if the browser cant go forward
     def forward
-      @ie.GoForward
-      wait
+      assert_exists do
+        @ie.GoForward
+        wait
+      end
     end
     
     # Refresh the current page - the same as clicking the browsers refresh button
     # an WIN32OLERuntimeError exception is raised if the browser cant refresh
     def refresh
-      @ie.refresh2(3)
-      wait
+      assert_exists do
+        @ie.refresh2(3)
+        wait
+      end
     end
 
     # clear the list of urls that we have visited
@@ -449,9 +463,11 @@ module Vapir
     # See http://www.autoitscript.com/autoit3/docs/appendix/SendKeys.htm
     # for complete documentation on keys supported and syntax.
     def send_keys(key_string)
-      require 'vapir-ie/autoit'
-      bring_to_front
-      Vapir.autoit.Send key_string
+      assert_exists do
+        require 'vapir-ie/autoit'
+        bring_to_front
+        Vapir.autoit.Send key_string
+      end
     end
     
     # saves a screenshot of this browser window to the given filename. 
@@ -480,6 +496,7 @@ module Vapir
     
     # Return the current document
     def document
+      assert_exists
       return @ie.document
     end
     alias document_object document
@@ -490,6 +507,7 @@ module Vapir
     
     # returns the current url, as displayed in the address bar of the browser
     def url
+      assert_exists
       return @ie.LocationURL
     end
 
@@ -497,7 +515,9 @@ module Vapir
     
     # this method runs the predefined error checks
     def run_error_checks
-      @error_checkers.each { |e| e.call(self) }
+      assert_exists do
+        @error_checkers.each { |e| e.call(self) }
+      end
     end
     
     # this method is used to add an error checker that gets executed on every page load

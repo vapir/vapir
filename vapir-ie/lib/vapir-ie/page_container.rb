@@ -129,9 +129,26 @@ module Vapir
         document_object
       end
       urls=[]
-      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "A frame on the browser did not come into readyState complete by the end of the specified interval") do
+      all_frames_complete_result=::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => nil, :condition => proc{|result| result==true }) do
         return unless exists?
         all_frames_complete?(document_object, urls)
+      end
+      case all_frames_complete_result
+      when false
+        raise "A frame on the browser did not come into readyState complete by the end of the specified interval"
+      when Exception
+        message = "A frame on the browser encountered an error.\n"
+        if all_frames_complete_result.message =~ /0x80070005/
+          message += "An 'Access is denied' error might be fixed by adding the domain of the site to your 'Trusted Sites'.\n"
+        end
+        message+="Original message was:\n\n"
+        message+=all_frames_complete_result.message
+        raise all_frames_complete_result.class, message, all_frames_complete_result.backtrace
+      when true
+        # dandy; carry on. 
+      else
+        # this should never happen. 
+        raise "Unexpected result from all_frames_complete?: #{all_frames_complete_result.inspect}"
       end
       @url_list=(@url_list || [])+urls
       
@@ -142,6 +159,13 @@ module Vapir
     end
     
     private
+    # this returns true if all frames are complete. 
+    # it returns false if a frame is incomplete. 
+    # if an unexpected exception is encountered, it returns that exception. yes, returns, not raises, 
+    # due to the fact that an exception may indicate either the frame not being complete, or an actual
+    # error condition - it is difficult to differentiate. in the usage above, in #wait, we check
+    # if an exception is still being raised at the end of the specified interval, and raise it if so. 
+    # if it stops being raised, we carry on. 
     def all_frames_complete?(document, urls=nil)
       begin
         if urls && !urls.include?(document.location.href)
@@ -172,7 +196,7 @@ module Vapir
           end
         end
       rescue WIN32OLERuntimeError
-        false
+        return $!
       end
     end
   end # module

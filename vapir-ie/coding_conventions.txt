@@ -8,8 +8,8 @@ The following is mostly elaboration; exceptions are marked as house style.
 * Don't use do/end on one line; use braces instead.
 * We prefer single-quoted strings when string interpolation is not being used 
   (or for other purposes, such as quoting single quotes). (house style)
-* Instance variables holding ole objects should have 'ole' in the name. (house style)
-* In general, Watir names (methods, classes) should follow what HTML or 
+* Instance variables holding OLE or JSSH objects should have '_object' ending the name. (house style)
+* In general, Vapir names (methods, classes) should follow what HTML or 
   JavaScript uses. These have precedence over the OLE API names. (house style)
 * Parameter names should be descriptive and accurate. Always. Same is true for 
   local variables, but more slack is allowed.
@@ -24,7 +24,7 @@ The following is mostly elaboration; exceptions are marked as house style.
 * Method calls with args that don't actually need parens (for syntax) don't 
   require them either (for style).
 * However: use extra spaces with vertical bars. Thus:
-    (1..5).each {| n | puts n}
+    (1..5).each {| n | puts n }
 * Also, always uses spaces with operators. Thus:
     a = b + c if d == e
 * Exception:

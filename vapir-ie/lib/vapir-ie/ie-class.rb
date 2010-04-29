@@ -422,11 +422,10 @@ module Vapir
     def close
       assert_exists
       @ie.stop
-      @ie.quit
       # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
-      ::Waiter.try_for(32, :exception => WindowFailedToCloseException.new("The browser window did not close")) do
+      ::Waiter.try_for(32, :exception => WindowFailedToCloseException.new("The browser window did not close"), :interval => 1) do
         begin
-          @ie.LocationUrl
+          @ie.quit
           false
         rescue WIN32OLERuntimeError
           raise unless $!.message =~ /0x80010108|0x800706ba|0x800706be/i

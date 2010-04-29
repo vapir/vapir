@@ -1,23 +1,11 @@
-= commonwatir
+= vapir-common
 
-* FIX (url)
+* http://vapir.org
 
 == DESCRIPTION:
 
-Common code used by Watir and FireWatir
-
-== FEATURES/PROBLEMS:
-
-* FIX (list of features or problems)
-
-== SYNOPSIS:
-
-  FIX (code sample of usage)
-
-== REQUIREMENTS:
-
-* FIX (list of requirements)
+Common code used by Vapir-IE and Vapir-Firefox
 
 == INSTALL:
 
-* sudo gem install commonwatir
+* sudo gem install vapir-common

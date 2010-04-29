@@ -398,11 +398,17 @@ module Vapir
       end
     end
     
+    module RefreshConstants
+      # http://msdn.microsoft.com/en-us/library/bb268230%28v=VS.85%29.aspx
+      REFRESH_NORMAL = 0
+      REFRESH_IFEXPIRED = 1
+      REFRESH_COMPLETELY = 3
+    end
     # Refresh the current page - the same as clicking the browsers refresh button
     # an WIN32OLERuntimeError exception is raised if the browser cant refresh
     def refresh
       assert_exists do
-        @ie.refresh2(3)
+        @ie.refresh2(RefreshConstants::REFRESH_COMPLETELY)
         wait
       end
     end

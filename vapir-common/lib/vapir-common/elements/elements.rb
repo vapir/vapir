@@ -752,7 +752,7 @@ module Vapir
     container_collection_method :labels
     
     dom_attr :htmlFor => [:html_for, :for, :htmlFor]
-    inspect_these :for
+    inspect_these :text, :for
 
     def for_element
       raise "document is not defined - cannot search for labeled element" unless document_object

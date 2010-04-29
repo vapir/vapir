@@ -148,25 +148,16 @@ module Vapir
     # Typical Usage:
     #   browser.show_all_objects
     #   browser.div(:id, 'foo').show_all_objects
+    #
+    # API: no
     def show_all_objects(write_to=$stdout)
       # this used to reject tagNames 'br', 'hr', 'doctype', 'meta', and elements with no tagName
-      element_object_arr=containing_object.getElementsByTagName('*')
-      if Object.const_defined?('JsshObject') && element_object_arr.is_a?(JsshObject)
-        element_objects=element_object_arr.to_array
-      elsif Object.const_defined?('WIN32OLE') && element_object_arr.is_a?(WIN32OLE)
-        element_objects=[]
-        element_object_arr.each do |el|
-          element_objects << el
-        end
-      else
-        raise RuntimeError, "unknown element object list #{element_object_arr.inspect} (#{element_object_arr.class})"
-      end
-      elements=element_objects.map{|el| base_element_class.factory(el, extra_for_contained)}
-      elements.each do |element|
+      elements.map do |element| 
+        element=element.to_factory
         write_to.write element.to_s+"\n"
-        write_to.write "------------------------------------------\n"
+        write_to.write '-'*42+"\n"
+        element
       end
-      return elements
     end
   end
 end

@@ -78,8 +78,7 @@ class JsshSocket
   @@default_jssh_port = 9997
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
 
-  DEFAULT_SOCKET_TIMEOUT=8
-  LONG_SOCKET_TIMEOUT=32
+  DEFAULT_SOCKET_TIMEOUT=64
   SHORT_SOCKET_TIMEOUT=(2**-2).to_f
 
   attr_reader :ip, :port, :prototype
@@ -99,7 +98,7 @@ class JsshSocket
       @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
       @expecting_extra_maybe=false
       welcome="Welcome to the Mozilla JavaScript Shell!\n"
-      read=read_value(:timeout => LONG_SOCKET_TIMEOUT)
+      read=read_value
       if !read
         @expecting_extra_maybe=true
         raise JsshUnableToStart, "Something went wrong initializing - no response" 
@@ -113,7 +112,7 @@ class JsshSocket
       raise err
     end
     if @prototype
-      ret=send_and_read(File.read(PrototypeFile), :timeout => LONG_SOCKET_TIMEOUT)
+      ret=send_and_read(File.read(PrototypeFile))
       if ret != "done!"
         @expecting_extra_maybe=true
         raise JsshError, "Something went wrong loading Prototype - message #{ret.inspect}"

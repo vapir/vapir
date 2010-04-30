@@ -66,7 +66,7 @@ module Vapir
         { document.appendChild(orig_childs.shift());
         }
         return retval;
-      })(#{document_object.ref})", :timeout => JsshSocket::LONG_SOCKET_TIMEOUT)
+      })(#{document_object.ref})")
 =begin
       temp_el=document_object.createElement('div') # make a temporary element
       orig_childs=jssh_socket.object('[]').store_rand_object_key(@browser_jssh_objects)

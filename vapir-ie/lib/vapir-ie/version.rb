@@ -1,5 +1,5 @@
 module Vapir
   class IE
-    VERSION = '1.6.5'
+    VERSION = '1.7.0.rc1'
   end
 end

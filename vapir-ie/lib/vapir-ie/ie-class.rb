@@ -332,11 +332,19 @@ module Vapir
       end
     end
 
+    # we expect one of these error codes when quitting or checking existence. 
+    ExistenceFailureCodesRE = Regexp.new(
+      { '0x800706ba' => 'The RPC server is unavailable',
+        '0x80010108' => 'The object invoked has disconnected from its clients.',
+        '0x800706be' => 'The remote procedure call failed.',
+      }.keys.join('|'), Regexp::IGNORECASE)
+
     # Are we attached to an open browser?
     def exists?
       !!(@ie && begin
         @ie.name
       rescue WIN32OLERuntimeError
+        raise unless $!.message =~ ExistenceFailureCodesRE
         false
       end)
     end
@@ -421,18 +429,18 @@ module Vapir
     def close
       assert_exists
       @ie.stop
+      @ie.quit
       # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
       ::Waiter.try_for(32, :exception => WindowFailedToCloseException.new("The browser window did not close"), :interval => 1) do
         begin
-          @ie.quit
-          false
+          if exists?
+            @ie.quit
+            false
+          else
+            true
+          end
         rescue WIN32OLERuntimeError
-          raise unless $!.message =~ /0x80010108|0x800706ba|0x800706be/i
-          # 0x800706ba -> The RPC server is unavailable
-          # 0x80010108 -> The object invoked has disconnected from its clients.
-          # 0x800706be -> The remote procedure call failed.
-          # we expect one of these error codes when quitting; if we don't encounter such an error, something has failed. 
-          # probably meaning that the browser window failed to close. 
+          raise unless $!.message =~ ExistenceFailureCodesRE
           true
         end
       end

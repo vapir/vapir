@@ -334,12 +334,11 @@ module Vapir
 
     # Are we attached to an open browser?
     def exists?
-      @ie && begin
-        @ie.name =~ /Internet Explorer/
-        true
+      !!(@ie && begin
+        @ie.name
       rescue WIN32OLERuntimeError
         false
-      end
+      end)
     end
     alias :exist? :exists?
     

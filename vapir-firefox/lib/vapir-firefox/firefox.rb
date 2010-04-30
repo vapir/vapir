@@ -370,7 +370,7 @@ module Vapir
       begin
         browser_window_object.close
         # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
-        ::Waiter.try_for(32, :exception => WindowFailedToCloseException.new("The browser window did not close")) do
+        ::Waiter.try_for(32, :exception => Exception::WindowFailedToCloseException.new("The browser window did not close")) do
           !exists?
         end
         @@jssh_socket.assert_socket

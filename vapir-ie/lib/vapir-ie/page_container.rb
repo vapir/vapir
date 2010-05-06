@@ -136,7 +136,7 @@ module Vapir
       case all_frames_complete_result
       when false
         raise "A frame on the browser did not come into readyState complete by the end of the specified interval"
-      when Exception
+      when ::Exception
         message = "A frame on the browser encountered an error.\n"
         if all_frames_complete_result.message =~ /0x80070005/
           message += "An 'Access is denied' error might be fixed by adding the domain of the site to your 'Trusted Sites'.\n"

@@ -124,14 +124,24 @@ module Vapir
           [WebBrowserReadyState::Interactive, WebBrowserReadyState::Complete].include?(browser_object.readyState)
         end
       end
+      # if the document object is gone, then we want to just return. 
+      # in subsequent code where we want the document object, we will call this proc 
+      # so that we don't have to deal with checking for error / returning every time. 
+      doc_or_ret = proc do
+        begin
+          document_object
+        rescue WIN32OLERuntimeError
+          return
+        end
+      end
       ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's document was still not defined at the end of the specified interval") do
         return unless exists?
-        document_object
+        doc_or_ret.call
       end
       urls=[]
       all_frames_complete_result=::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => nil, :condition => proc{|result| result==true }) do
         return unless exists?
-        all_frames_complete?(document_object, urls)
+        all_frames_complete?(doc_or_ret.call, urls)
       end
       case all_frames_complete_result
       when false

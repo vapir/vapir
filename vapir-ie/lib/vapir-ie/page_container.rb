@@ -157,6 +157,7 @@ module Vapir
       sleep @pause_after_wait if options[:sleep]
       @down_load_time
     end
+    alias page_container_wait wait # alias this so that Frame can clobber the #wait method 
     
     private
     # this returns true if all frames are complete. 

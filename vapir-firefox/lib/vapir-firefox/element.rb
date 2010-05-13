@@ -249,14 +249,5 @@ raise "the parent somehow changed - had #{orig_siblings_length} children; now ha
       })").call(@element_object, container.document_object) # use the container's document so that frames look at their parent document, not their own document 
     end
   
-#    def invoke(js_method)
-#      element_object.invoke(js_method)
-#    end
-
-#    def assign(property, value)
-#      locate
-#      element_object.attr(property).assign(value)
-#    end
-    
   end # Element
 end # Vapir

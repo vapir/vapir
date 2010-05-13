@@ -865,10 +865,6 @@ module Vapir
     end
     private :element_by_absolute_xpath
     
-    def attach_command
-      "Vapir::IE.attach(:hwnd, #{hwnd})"
-    end
-    
     private
     def base_element_class
       IE::Element

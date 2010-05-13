@@ -41,10 +41,10 @@ module Vapir
       @container.logger.debug(what) if @logger
     end
     
-    def set_container container
-      @container = container 
-      @page_container = container.page_container
-    end
+#    def set_container container
+#      @container = container 
+#      @page_container = container.page_container
+#    end
         
     private
   end # module

@@ -206,10 +206,6 @@ module Watir
       document.title
     end
 
-    def attach_command
-      "Watir::IE.find(:hwnd, #{@container.hwnd}).modal_dialog"
-    end
-      
     def wait(options={})
     end
     

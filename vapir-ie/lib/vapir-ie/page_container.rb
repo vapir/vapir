@@ -115,11 +115,11 @@ module Vapir
       start_load_time = Time.now
       
       if respond_to?(:browser_object)
-        ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser was still busy at the end of the specified interval") do
+        ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser was still busy after #{options[:timeout]} seconds") do
           return unless exists?
           !browser_object.busy
         end
-        ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's readyState was still not ready for interaction at the end of the specified interval") do
+        ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's readyState was still not ready for interaction after #{options[:timeout]} seconds") do
           return unless exists?
           [WebBrowserReadyState::Interactive, WebBrowserReadyState::Complete].include?(browser_object.readyState)
         end
@@ -134,7 +134,7 @@ module Vapir
           return
         end
       end
-      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's document was still not defined at the end of the specified interval") do
+      ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's document was still not defined after #{options[:timeout]} seconds") do
         return unless exists?
         doc_or_ret.call
       end
@@ -145,7 +145,7 @@ module Vapir
       end
       case all_frames_complete_result
       when false
-        raise "A frame on the browser did not come into readyState complete by the end of the specified interval"
+        raise "A frame on the browser did not come into readyState complete after #{options[:timeout]} seconds"
       when ::Exception
         message = "A frame on the browser encountered an error.\n"
         if all_frames_complete_result.message =~ /0x80070005/

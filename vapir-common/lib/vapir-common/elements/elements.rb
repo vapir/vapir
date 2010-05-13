@@ -609,6 +609,7 @@ module Vapir
     
     # Returns an array containing the text of the cell in the specified index in each row. 
     def column_texts_at(column_index)
+      # TODO: since this is named as 'column', not 'cell', shouldn't it return cell_at_column? 
       rows.map do |row|
         row.cells[column_index].text
       end

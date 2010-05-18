@@ -337,6 +337,7 @@ module Vapir
       { '0x800706ba' => 'The RPC server is unavailable',
         '0x80010108' => 'The object invoked has disconnected from its clients.',
         '0x800706be' => 'The remote procedure call failed.',
+        '0x800706b5' => 'The interface is unknown.',
       }.keys.join('|'), Regexp::IGNORECASE)
 
     # Are we attached to an open browser?

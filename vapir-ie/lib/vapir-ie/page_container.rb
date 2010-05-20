@@ -183,7 +183,7 @@ module Vapir
           urls << document.location.href
         end
         frames=document.frames
-        return document.readyState=='complete' && (0...frames.length).all? do |i|
+        return ['complete', 'interactive'].include?(document.readyState) && (0...frames.length).all? do |i|
           frame=document.frames[i.to_s]
           frame_document=begin
             frame.document

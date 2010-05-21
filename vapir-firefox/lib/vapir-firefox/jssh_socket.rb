@@ -45,14 +45,14 @@ class Object
 end
   
 
-class JsshError < StandardError
-  attr_accessor :source, :lineNumber, :stack, :fileName
-end
+class JsshError < StandardError;end
 # this exception covers all connection errors either on startup or during usage
 class JsshConnectionError < JsshError;end
 # This exception is thrown if we are unable to connect to JSSh.
 class JsshUnableToStart < JsshConnectionError;end
-class JsshJavascriptError < JsshError;end
+class JsshJavascriptError < JsshError
+  attr_accessor :source, :js_err, :lineNumber, :stack, :fileName
+end
 class JsshSyntaxError < JsshJavascriptError;end
 class JsshUndefinedValueError < JsshJavascriptError;end
 
@@ -290,6 +290,7 @@ class JsshSocket
     end
     err=errclass.new("#{message}\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
     err.source=source
+    err.js_err=stuff
     ["lineNumber", "stack", "fileName"].each do |attr|
       if stuff.key?(attr)
         err.send(:"#{attr}=", stuff[attr])

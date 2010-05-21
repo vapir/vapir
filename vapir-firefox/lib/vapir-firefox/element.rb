@@ -40,8 +40,6 @@ raise "the parent somehow changed - had #{orig_siblings_length} children; now ha
     # this is generally the same as the dom object, but different for Browser and Frame. 
     alias containing_object element_object
 
-#    alias ole_object element_object
-
     private
     def base_element_class
       Firefox::Element

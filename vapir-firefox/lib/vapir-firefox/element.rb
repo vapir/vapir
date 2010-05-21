@@ -26,8 +26,7 @@ module Vapir
       # in case doing appendChild of self on the temp_parent_element causes it to be removed from our parentNode, we first copy the list of parentNode's childNodes (our siblings)
       # todo/fix: can use cloneNode instead of all this? 
       if parentNode=element_object.parentNode
-        parentNode=parentNode.store_rand_temp
-        orig_siblings=jssh_socket.object('[]').store_rand_prefix('firewatir_elements')
+        orig_siblings=jssh_socket.object_in_temp('[]')
         parentNode.childNodes.to_array.each do |node|
           orig_siblings.push node
         end

@@ -69,7 +69,7 @@ module Vapir
       })(#{document_object.ref})")
 =begin
       temp_el=document_object.createElement('div') # make a temporary element
-      orig_childs=jssh_socket.object('[]').store_rand_object_key(@browser_jssh_objects)
+      orig_childs=jssh_socket.object_in_temp('[]')
       while document_object.childNodes.length > 0
         orig_childs.push(document_object.childNodes[0])
         document_object.removeChild(document_object.childNodes[0])

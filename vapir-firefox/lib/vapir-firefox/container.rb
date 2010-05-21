@@ -54,7 +54,7 @@ module Vapir
       elements=[]
       result=document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
       while element=result.iterateNext
-        elements << element.store_rand_object_key(@browser_jssh_objects)
+        elements << element
       end
       elements
     end

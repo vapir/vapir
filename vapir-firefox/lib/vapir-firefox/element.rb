@@ -23,29 +23,15 @@ module Vapir
     attr_reader :jssh_socket
     
     def outer_html
-      # in case doing appendChild of self on the temp_parent_element causes it to be removed from our parentNode, we first copy the list of parentNode's childNodes (our siblings)
-      # todo/fix: can use cloneNode instead of all this? 
-      if parentNode=element_object.parentNode
-        orig_siblings=jssh_socket.object_in_temp('[]')
-        parentNode.childNodes.to_array.each do |node|
-          orig_siblings.push node
-        end
-      end
+orig_siblings_length = (parentNode = element_object.parentNode) && parentNode.childNodes.length
       
       temp_parent_element=document_object.createElement('div')
-      temp_parent_element.appendChild(element_object)
+      temp_parent_element.appendChild(element_object.cloneNode(true))
       self_outer_html=temp_parent_element.innerHTML
       
-      # reinsert self in parentNode's childNodes if we have disappeared due to the appendChild on different parent
-      if parentNode && parentNode.childNodes.length != orig_siblings.length
-        while parentNode.childNodes.length > 0
-          parentNode.removeChild(parentNode.childNodes[0])
-        end
-        while orig_siblings.length > 0
-          parentNode.appendChild orig_siblings.shift
-        end
-      end
-      
+new_siblings_length = (parentNode = element_object.parentNode) && parentNode.childNodes.length
+#debug code:
+raise "the parent somehow changed - had #{orig_siblings_length} children; now has #{new_siblings_length}" unless orig_siblings_length==new_siblings_length
       return self_outer_html
     end
     alias outerHTML outer_html

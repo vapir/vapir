@@ -42,50 +42,19 @@ module Vapir
     end
 
     # Returns the html of the document
-    def html
-      jssh_socket.value_json("(function(document){
-        var temp_el=document.createElement('div');
-        var orig_childs=[];
-        while(document.childNodes.length > 0)
-        { orig_childs.push(document.childNodes[0]);
-          document.removeChild(document.childNodes[0]); 
-          /* we remove each childNode here because doing appendChild on temp_el removes it 
-           * from document anyway (at least when appendChild works), so we just remove all
-           * childNodes so that adding them back in the right order is simpler (using orig_childs)
-           */
-        }
-        for(var i in orig_childs)
+    def outer_html
+      jssh_socket.object("(function(document)
+      { var temp_el=document.createElement('div');
+        for(var i in document.childNodes)
         { try
-          { temp_el.appendChild(orig_childs[i]);
+          { temp_el.appendChild(document.childNodes[i].cloneNode(true));
           }
           catch(e)
           {}
         }
-        retval=temp_el.innerHTML;
-        while(orig_childs.length > 0)
-        { document.appendChild(orig_childs.shift());
-        }
-        return retval;
-      })(#{document_object.ref})")
-=begin
-      temp_el=document_object.createElement('div') # make a temporary element
-      orig_childs=jssh_socket.object_in_temp('[]')
-      while document_object.childNodes.length > 0
-        orig_childs.push(document_object.childNodes[0])
-        document_object.removeChild(document_object.childNodes[0])
-      end
-      orig_childs.to_array.each do |child|
-        begin
-          temp_el.appendChild(child)
-        rescue JsshError
-        end
-      end
-      result=temp_el.innerHTML
-      while orig_childs.length > 0
-        document_object.appendChild(orig_childs.shift())
-      end
-      return result
-=end
+        return temp_el.innerHTML;
+      })").call(document_object)
     end
+    alias html outer_html
   end
 end

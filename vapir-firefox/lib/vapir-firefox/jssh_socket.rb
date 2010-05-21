@@ -1003,9 +1003,31 @@ class JsshObject
 end
 
 class JsshDOMNode < JsshObject
+  def inspect_stuff
+    [:nodeName, :nodeType, :nodeValue, :tagName, :textContent, :id, :name, :value, :type, :className, :hidden].map do |attrn|
+      attr=attr(attrn)
+      if ['undefined','null'].include?(attr.type)
+        nil
+      else
+        [attrn, attr.val_or_object(:error_on_undefined => false)]
+      end
+    end.compact
+  end
   def inspect
-#    "\#<#{self.class.name} #{[:nodeName, :nodeType, :tagName, :textContent, :id, :name, :value, :type].map{|attrn| attr=attr(attrn);attrn.to_s+'='+(attr.type=='undefined' ? 'undefined' : attr.val_or_object(:error_on_undefined => false).inspect)}.join(', ')}>"
-    "\#<#{self.class.name} #{[:nodeName, :nodeType, :nodeValue, :tagName, :textContent, :id, :name, :value, :type, :className, :hidden].map{|attrn|attr=attr(attrn);(['undefined','null'].include?(attr.type) ? nil : attrn.to_s+'='+attr.val_or_object(:error_on_undefined => false).inspect)}.select{|a|a}.join(', ')}>"
+    "\#<#{self.class.name} #{inspect_stuff.map{|(k,v)| "#{k}=#{v.inspect}"}.join(', ')}>"
+  end
+  def pretty_print(pp)
+    pp.object_address_group(self) do
+      pp.seplist(inspect_stuff, lambda { pp.text ',' }) do |attr_val|
+        pp.breakable ' '
+        pp.group(0) do
+          pp.text attr_val.first.to_s
+          pp.text ': '
+          #pp.breakable
+          pp.text attr_val.last.inspect
+        end
+      end
+    end
   end
   def dump(options={})
     options={:recurse => nil, :level => 0}.merge(options)

@@ -504,6 +504,9 @@ class JsshSocket
   def object(ref)
     JsshObject.new(ref, self, :debug_name => ref)
   end
+  def object_in_temp(ref)
+    object(ref).store_rand_temp
+  end
   
   def temp_object
     @temp_object ||= object('JsshTemp')

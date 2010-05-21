@@ -364,7 +364,7 @@ class JsshSocket
          var result=result_f();
          nativeJSON_encode_length(#{ref_error} {errored: false, value: result});
        }catch(e)
-       { nativeJSON_encode_length({errored: true, value: e});
+       { nativeJSON_encode_length({errored: true, value: Object.extend({}, e)});
        }"
     val=send_and_read(wrapped_js, options.merge(:length_before_value => true))
     error_or_val_json(val, js)
@@ -473,7 +473,7 @@ class JsshSocket
   { nativeJSON_encode_length({errored: false, value: 'undefined'});
   }
   else
-  { nativeJSON_encode_length({errored: true, value: e});
+  { nativeJSON_encode_length({errored: true, value: Object.extend({}, e)});
   }
 }"
     error_or_val_json(send_and_read(js, :length_before_value => true),js)

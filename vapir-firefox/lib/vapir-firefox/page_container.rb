@@ -12,7 +12,9 @@ module Vapir
       document_element.textContent
     end
     
-    # returns nil or raises an error if the given javascript errors. 
+    # evaluates a given javascript string. 
+    # returns nil. 
+    # raises an error if the given javascript errors. 
     #
     # todo/fix: this should return the last evaluated value, like ie's? 
     def execute_script(javascript)

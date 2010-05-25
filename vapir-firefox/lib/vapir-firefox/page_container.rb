@@ -1,20 +1,10 @@
 require 'vapir-firefox/container'
+require 'vapir-common/page_container'
 
 module Vapir
   module Firefox::PageContainer
-    def containing_object
-      document_object
-    end
+    include Vapir::PageContainer
     include Firefox::Container
-    def url
-      document_object.location.href
-    end
-    def title
-      document_object.title
-    end
-    def document_element
-      document_object.documentElement
-    end
     #def content_window_object
     #  document_object.parentWindow
     #end
@@ -22,10 +12,6 @@ module Vapir
       document_element.textContent
     end
     
-    def page_container
-      self
-    end
-
     # returns nil or raises an error if the given javascript errors. 
     #
     # todo/fix: this should return the last evaluated value, like ie's? 

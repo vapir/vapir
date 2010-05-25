@@ -1,4 +1,5 @@
 require 'vapir-ie/container'
+require 'vapir-common/page_container'
 
 module Vapir
   # A PageContainer contains an HTML Document. In other words, it is a 
@@ -6,6 +7,8 @@ module Vapir
   #
   # this assumes that document_object is defined on the includer. 
   module IE::PageContainer
+    include Vapir::PageContainer
+
     # Used internally to determine when IE has finished loading a page
     # http://msdn.microsoft.com/en-us/library/system.windows.forms.webbrowserreadystate.aspx
     # http://msdn.microsoft.com/en-us/library/system.windows.forms.webbrowser.readystate.aspx
@@ -18,9 +21,6 @@ module Vapir
     end
     READYSTATE_COMPLETE = WebBrowserReadyState::Complete
        
-    def containing_object
-      document_object
-    end
     include IE::Container
     include Vapir::Exception
 
@@ -45,25 +45,13 @@ module Vapir
       false
     end 
     
-    def document_element
-      document_object.documentElement
-    end
     def content_window_object
       document_object.parentWindow
     end
     
-    def page_container
-      self
-    end
-
     # The HTML of the current page
     def html
       document_element.outerHTML
-    end
-    
-    # The url of the page object. 
-    def url
-      document_object.location.href
     end
     
     # The text of the current page
@@ -73,10 +61,6 @@ module Vapir
 
     def close
       content_window_object.close
-    end
-
-    def title
-      document_object.title
     end
 
     # Execute the given JavaScript string

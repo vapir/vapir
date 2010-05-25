@@ -340,8 +340,9 @@ module Vapir
       return nil if !@element_object
 
       begin
-        win=container.document_object.parentWindow
-        document_object=win.document # I don't know why container.document_object != container.document_object.parentWindow.document 
+        doc=container.document_object || (return nil)
+        win=doc.parentWindow || (return nil)
+        document_object=win.document || (return nil) # I don't know why container.document_object != container.document_object.parentWindow.document 
 
         # we need a javascript function to test equality because comparing two WIN32OLEs always returns false (unless they have the same object_id, which these don't) 
         win.execScript("__watir_javascript_equals__=function(a, b){return a==b;}")
@@ -375,3 +376,4 @@ module Vapir
     end
   end
 end
+  

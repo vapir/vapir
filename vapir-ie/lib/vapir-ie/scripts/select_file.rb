@@ -39,14 +39,15 @@ end
 
 $LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', '..', 'vapir-common', 'lib'))
 
-require 'vapir-common/win_window'
-require 'vapir-common/waiter'
-require 'vapir-common/exceptions'
-
 browser_hwnd, file_path, $error_file_name=*ARGV
 unless (2..3).include?(ARGV.size) && browser_hwnd =~ /^\d+$/ && browser_hwnd.to_i > 0
   raise ArgumentError, "This script takes two or three arguments: the hWnd that the File Selection dialog will pop up on (positive integer); the path to the file to select; and (optional) a filename to write any failure message to."
 end
+
+require 'rubygems' # win_window needs this for FFI 
+require 'vapir-common/win_window'
+require 'vapir-common/waiter'
+require 'vapir-common/exceptions'
 
 # titles of file upload window titles in supported browsers 
 # Add to this titles in other languages, too 

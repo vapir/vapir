@@ -60,7 +60,10 @@ module Vapir
     include IE::PageContainer
     @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/vapir-ie/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
 
-    GetUnknown = Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
+    def get_unknown(*args)
+      @@get_unknown ||= Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
+      @@get_unknown.call(*args)
+    end
     def initialize(containing_modal_dialog, options={})
       options=handle_options(options, :timeout => ModalDialog::DEFAULT_TIMEOUT, :error => true)
       @containing_modal_dialog=containing_modal_dialog
@@ -68,7 +71,7 @@ module Vapir
       intUnknown = nil
       ::Waiter.try_for(options[:timeout], :exception => (options[:error] && "Unable to attach to Modal Window after #{options[:timeout]} seconds.")) do
         intPointer = [0].pack("L") # will contain the int value of the IUnknown*
-        GetUnknown.call(@containing_modal_dialog.hwnd, intPointer)
+        get_unknown(@containing_modal_dialog.hwnd, intPointer)
         intArray = intPointer.unpack('L')
         intUnknown = intArray.first
         intUnknown > 0

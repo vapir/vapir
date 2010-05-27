@@ -91,6 +91,11 @@ class TC_NestedFrames < Test::Unit::TestCase
     assert(browser.frame!("nestedFrame").frame!("receiverFrame").text_field!(:name, "receiverText").verify_contains("Hello"))
   end
   
+  def test_num
+    assert_equal 2, browser.frames.length
+    assert_equal [2,0], browser.frames.map{|frame| frame.frames.length }
+  end
+  
 end
 
 class TC_IFrames < Test::Unit::TestCase

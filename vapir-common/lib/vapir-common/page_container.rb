@@ -1,5 +1,6 @@
 module Vapir
   module PageContainer
+    include Vapir::Container
     def containing_object
       document_object
     end

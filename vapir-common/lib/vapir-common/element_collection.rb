@@ -39,6 +39,14 @@ module Vapir
     end
     alias each_with_index each_with_element_index
     
+    # yields each element, specified by index (as opposed to by :element_object as #each yields)
+    # same as #each_with_index, except it doesn't yield the index number. 
+    def each_by_index # :yields: element
+      each_with_element_index do |element, i|
+        yield element
+      end
+    end
+    # returns the element at the given index in the collection. indices start at 1. 
     def [](index)
       at(index)
     end

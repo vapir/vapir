@@ -65,6 +65,10 @@ module Vapir
       element.exists? ? element : nil
     end
     alias detect find
+    def find!(&block)
+      element=@collection_class.new(:custom, block, @extra.merge(:locate => :assert))
+    end
+    alias detect! find!
     
     def inspect
       "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{map{|el|el.inspect}.join(', ')}>"

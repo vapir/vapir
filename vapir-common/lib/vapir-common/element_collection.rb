@@ -71,11 +71,16 @@ module Vapir
       at(:last)
     end
     # returns an element for which the given block returns true (that is, not false or nil) when yielded that element 
+    #
+    # returns nil if no such element exists. 
     def find(&block) # :yields: element
       element=@collection_class.new(:custom, block, @extra.merge(:locate => false))
       element.exists? ? element : nil
     end
     alias detect find
+    # returns an element for which the given block returns true (that is, not false or nil) when yielded that element 
+    #
+    # raises UnknownObjectException if no such element exists. 
     def find!(&block)
       element=@collection_class.new(:custom, block, @extra.merge(:locate => :assert))
     end

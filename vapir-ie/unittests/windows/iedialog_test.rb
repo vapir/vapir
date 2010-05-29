@@ -10,24 +10,6 @@ class TC_IEDialog < Test::Unit::TestCase
 
   # this will find the IEDialog.dll file in its build location
   @@iedialog_file = (File.expand_path(File.dirname(__FILE__)) + "/../../lib/vapir-ie/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
-  
-  # commented out because it currently requires a manual click
-  # a better idea would be to automate the click...
-  def xtest_connect_to_iedialog 
-    # make sure we can connect to the IEDialog.dll
-    fnShowString = Win32API.new(@@iedialog_file, 'ShowString', ['p'], 'v')
-    fnShowString.call("from ruby!") # blocks
-  end
-
-  def test_find_window
-    goto_page "pass.html"
-    fnFindWindow = Win32API.new('user32.dll', 'FindWindow', ['p', 'p'], 'l')
-    hwnd = fnFindWindow.call(nil, "Pass Page - Microsoft Internet Explorer")
-    if hwnd==0
-      hwnd = fnFindWindow.call(nil, "Pass Page - Windows Internet Explorer")
-    end
-    assert(hwnd != 0)
-  end
 
   def test_all
     goto_page "pass.html"

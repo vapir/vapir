@@ -401,7 +401,7 @@ module Vapir
           end
         end
         if !any_matched
-          raise Vapir::Exception::NoValueFoundException, "Could not find any options matching those specified on #{self.inspect}"
+          raise Vapir::Exception::NoValueFoundException, "Could not find any options matching those specified on #{self.inspect}.\nAvailable options are: \n#{options.map{|option| option.inspect}.join("\n")}"
         end
         self
       end

@@ -668,15 +668,26 @@ module Vapir
       nil
     end
     
-    # returns the cell of the current row at the given column index (starting from 1), taking
+    # returns the cell of the current row at the given column index (starting from 0), taking
     # into account conSpans of other cells. 
     #
     # returns nil if index is greater than the number of columns of this row. 
-    def cell_at_colum(index)
-      cells.detect do |cell|
+    def cell_at_column(index)
+      #TODO: test
+      cells.each_by_index do |cell|
         index=index-(cell.colSpan || 1)
-        index <= 0
+        return cell if index < 0
       end
+      nil
+    end
+    
+    # returns the cell of the current row at the given column index (starting from 0), taking
+    # into account conSpans of other cells. 
+    #
+    # raises exception if the cell does not exist (that is, index is greater than the number of columns of this row). 
+    def cell_at_column!(index)
+      #TODO: test
+      cell_at_column(index) || raise(Vapir::Exception::UnknownObjectException, "Unable to locate cell at column #{index}. Column count is #{column_count}\non container: #{@container.inspect}")
     end
   end
   module TBody

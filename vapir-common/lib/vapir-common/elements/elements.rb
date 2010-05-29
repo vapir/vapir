@@ -648,7 +648,7 @@ module Vapir
     
     def column_count
       cells.inject(0) do |count, cell|
-        count+ cell.colSpan || 1
+        count+ (cell.colSpan || 1)
       end
     end
     def cell_count

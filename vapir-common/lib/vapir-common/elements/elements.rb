@@ -655,6 +655,19 @@ module Vapir
       cells.length
     end
     
+    # returns the column index (starting at 0), taking into account colspans, of the table cell for which the given block returns true. 
+    #
+    # if nothing matches the block, returns nil. 
+    def column_count_where # :yields: table_cell
+      cells.inject(0) do |count, cell|
+        if yield cell
+          return count
+        end
+        count+(cell.colSpan || 1)
+      end
+      nil
+    end
+    
     # returns the cell of the current row at the given column index (starting from 1), taking
     # into account conSpans of other cells. 
     #

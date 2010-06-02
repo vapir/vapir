@@ -374,7 +374,7 @@ class JsshSocket
       @expecting_extra_maybe=true
       raise JsshError, "received no value! may have timed out waiting for a value that was not coming."
     end
-    if val=="SyntaxError: syntax error"
+    if val=~ /\ASyntaxError: /
       raise JsshSyntaxError, val
     end
     errord_and_val=parse_json(val)

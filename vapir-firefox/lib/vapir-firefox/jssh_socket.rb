@@ -627,19 +627,14 @@ class JsshObject
     else
       case self.type
       when 'undefined'
-        if function_result
+        if !options[:error_on_undefined]
           nil
-        elsif !options[:error_on_undefined]
-          self
         else
           raise JsshUndefinedValueError, "undefined expression #{ref}"
         end
       when 'boolean','number','string','null'
         val
-      when 'function','object'
-        self
-      else
-        # here we perhaps could (but won't for now) raise JsshError, "Unknown type: #{type}"
+      else # 'function','object', or anything else 
         self
       end
     end

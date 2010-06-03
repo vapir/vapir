@@ -134,6 +134,16 @@ class JsshSocket
   end
 
   private
+  # sets the error state if an exception is encountered while running the given block. the 
+  # exception is not rescued. 
+  def ensuring_extra_handled
+    begin
+      yield
+    rescue Exception
+      @expecting_extra_maybe = true
+      raise
+    end
+  end
   # reads from the socket and returns what seems to be the value that should be returned, by stripping prompts 
   # from the beginning and end where appropriate. 
   # 
@@ -164,8 +174,8 @@ class JsshSocket
     already_read_length=false
     expected_size=nil
 #    logger.add(-1) { "RECV_SOCKET is starting. timeout=#{timeout}" }
-    while size_to_read > 0 && Kernel.select([@socket] , nil , nil, timeout)
-      data = @socket.recv(size_to_read)
+    while size_to_read > 0 && ensuring_extra_handled { Kernel.select([@socket] , nil , nil, timeout) }
+      data = ensuring_extra_handled { @socket.recv(size_to_read) }
       received_data << data
       value_string << data
       if @expecting_prompt && utf8_length_safe(value_string) > PROMPT.length

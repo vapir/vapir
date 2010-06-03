@@ -222,7 +222,7 @@ class JsshSocket
           # if all we got was the prompt, just stick it on the value here so that the code below will deal with setting @execting_prompt correctly 
           value_string << cleared_error
         else
-          raise JsshError, "We finished receiving but the socket was still ready to send! extra data received was: #{cleared_error}"
+          raise JsshError, "We finished receiving but the socket was still ready to send! extra data received were: #{cleared_error}"
         end
       end
       @expecting_extra_maybe=false

@@ -6,7 +6,7 @@ module Vapir
   Firefox = Class.new(Vapir::Browser)
 end
 
-require 'vapir-firefox/firefox'
+require 'vapir-firefox/browser'
 require 'vapir-firefox/elements'
 require 'vapir-firefox/version'
 

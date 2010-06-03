@@ -22,7 +22,7 @@ $FAST_SPEED = ARGV.delete('-f')
 # Eat the -s command line switch (deprecated)
 ARGV.delete('-s')
 
-require 'vapir-ie/ie-class'
+require 'vapir-ie/browser'
 require 'vapir-ie/elements'
 require 'vapir-ie/version'
 

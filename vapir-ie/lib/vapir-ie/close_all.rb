@@ -1,4 +1,4 @@
-require 'vapir-ie/ie-class'
+require 'vapir-ie/browser'
 
 module Vapir
   class IE

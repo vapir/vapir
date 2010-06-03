@@ -1,7 +1,7 @@
 # based on http://svn.instiki.org/instiki/trunk/test/watir/e2e.rb
 # and http://rubyforge.org/pipermail/wtr-general/2005-November/004108.html
 
-require 'vapir-ie/ie-class'
+require 'vapir-ie/browser'
 require 'vapir-ie/ie-process'
 
 class IEProcess < Vapir::IE::Process 

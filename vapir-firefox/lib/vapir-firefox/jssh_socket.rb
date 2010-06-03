@@ -794,7 +794,7 @@ class JsshObject
     binary_operator('%', operand)
   end
   def ==(operand)
-    binary_operator('==', operand)
+    operand.is_a?(JsshObject) && binary_operator('==', operand)
   end
   def >(operand)
     binary_operator('>', operand)

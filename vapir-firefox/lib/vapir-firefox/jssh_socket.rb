@@ -1071,6 +1071,11 @@ class JsshObject
     end
   end
   
+  # returns an Array in which each element is the #val_or_Object of each element of this javascript array. 
+  def to_ruby_array
+    self.to_array.to_a
+  end
+  
   # represents this javascript object in one line, displaying the type and debug name. 
   def inspect
     "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:type, :debug_name].map{|attr| attr.to_s+'='+send(attr).to_s}.join(', ')}>"

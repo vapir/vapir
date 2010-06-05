@@ -32,7 +32,7 @@ module Vapir
     def each_with_element_index
       index=1
       candidates.each do |candidate|
-        yield @collection_class.new(:index, nil, @extra.merge(:index => index, :element_object => candidate)), index
+        yield @collection_class.new(:index, nil, @extra.merge(:index => index, :element_object => candidate, :locate => false)), index
         index+=1
       end
       self

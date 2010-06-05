@@ -972,7 +972,7 @@ class JsshObject
   end
   # returns true if this object responds to the given method (that is, it's a defined ruby method) 
   # or if #method_missing will handle it 
-  def respond_to?(method)
+  def respond_to?(method, include_private = false)
     super || object_respond_to?(method)
   end
   # returns true if the javascript object this represents responds to the given method. this does not pay attention

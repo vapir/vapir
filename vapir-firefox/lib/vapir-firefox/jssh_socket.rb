@@ -74,12 +74,14 @@ class JsshSocket
   PROMPT="\n> "
   
   # IP Address of the machine where the script is to be executed. Default to localhost.
-  @@default_jssh_ip = "127.0.0.1"
-  @@default_jssh_port = 9997
+  DEFAULT_IP = "127.0.0.1"
+  DEFAULT_PORT = 9997
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
 
   DEFAULT_SOCKET_TIMEOUT=64
   SHORT_SOCKET_TIMEOUT=(2**-2).to_f
+  
+  READ_SIZE=65536
 
   attr_reader :ip, :port, :prototype
   
@@ -89,8 +91,8 @@ class JsshSocket
   # * :jssh_port => the port to connect to, default 9997
   # * :send_prototype => true|false, whether to load and send the Prototype library (the functional programming part of it anyway, and JSON bits)
   def initialize(options={})
-    @ip=options[:jssh_ip] || @@default_jssh_ip
-    @port=options[:jssh_port] || @@default_jssh_port
+    @ip=options[:jssh_ip] || DEFAULT_IP
+    @port=options[:jssh_port] || DEFAULT_PORT
     @prototype=options.key?(:send_prototype) ? options[:send_prototype] : true
     begin
       @socket = TCPSocket::new(@ip, @port)
@@ -166,7 +168,7 @@ class JsshSocket
   # if this option is set, this doesn't do any SHORT_SOCKET_TIMEOUT waiting once it gets the full value, it returns 
   # immediately. 
   def read_value(options={})
-    options={:timeout => DEFAULT_SOCKET_TIMEOUT, :length_before_value => false, :read_size => 65536}.merge(options)
+    options={:timeout => DEFAULT_SOCKET_TIMEOUT, :length_before_value => false, :read_size => READ_SIZE}.merge(options)
     received_data = []
     value_string = ""
     size_to_read=options[:read_size]
@@ -271,7 +273,7 @@ class JsshSocket
     data=""
     while Kernel.select([@socket], nil, nil, SHORT_SOCKET_TIMEOUT)
       # clear any other crap left on the socket 
-      data << @socket.recv(65536)
+      data << @socket.recv(READ_SIZE)
     end
     if data =~ /#{Regexp.escape(PROMPT)}\z/
       @expecting_prompt=false

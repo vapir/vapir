@@ -1137,6 +1137,10 @@ class WinWindow
   # raises a WinWindow::MatchError if more than one window matching given text is found, 
   # so that you can be sure you are attaching to the right one (because it's the only one)
   #
+  # if there are multiple windows with titles that match which are all in a parent/child 
+  # relationship with each other, this will not error and will return the innermost child
+  # whose text matches. 
+  #
   # May also raise a WinWindow::SystemError from WinWindow.each_window
   def self.find_only_by_text(text)
     matched=WinWindow::All.select do |window|

@@ -294,7 +294,6 @@ class JsshSocket
     data
   end
 
-  public
   # sends the given javascript expression, reads the value returned on the socket, and returns that value. 
   def send_and_read(js_expr, options={})
 #    logger.add(-1) { "SEND_AND_READ is starting. options=#{options.inspect}" }
@@ -325,7 +324,7 @@ class JsshSocket
     end
     raise err
   end
-  private :js_error
+  public
 
   # returns the value of the given javascript expression, as reported by JSSH. 
   # This will be a string, the given expression's toString. 
@@ -396,6 +395,7 @@ class JsshSocket
     val=send_and_read(wrapped_js, options.merge(:length_before_value => true))
     error_or_val_json(val, js)
   end
+  private
   # takes a json value (a string) of the form {errored: boolean, value: anything},
   # checks if an error is indicated, and creates and raises an appropriate exception
   # if so. 
@@ -426,6 +426,7 @@ class JsshSocket
       val
     end
   end
+  public
   
   # assigns to the javascript reference on the left the object on the right. 
   # Assuming the right object can be converted to JSON, the javascript value will 

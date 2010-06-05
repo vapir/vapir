@@ -685,7 +685,7 @@ class JsshObject
         if !options[:error_on_undefined]
           nil
         else
-          raise JsshUndefinedValueError, "undefined expression #{ref}"
+          raise JsshUndefinedValueError, "undefined expression represented by #{self.inspect} (javascript reference is #{@ref})"
         end
       when 'boolean','number','string','null'
         val

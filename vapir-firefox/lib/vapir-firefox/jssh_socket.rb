@@ -1000,9 +1000,11 @@ class JsshObject
     end
   end
   
-  # override Object#id
-  def id(*args)
-    invoke :id, *args
+  # undefine Object#id, and... anything else I think of that needs undef'ing in the future 
+  [:id].each do |method_name|
+    if method_defined? method_name
+      eval('undef '+method_name.to_s)
+    end
   end
   
   # gives a reference  for this object. this is the only class for which to_jssh doesn't

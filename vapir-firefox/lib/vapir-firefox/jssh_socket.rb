@@ -91,7 +91,7 @@ class JsshSocket
   # maximum time to wait for the socket to send more stuff after an initial (presumably broken-up) send 
   SHORT_SOCKET_TIMEOUT=(2**-2).to_f
   # the number of bytes to read from the socket at a time 
-  READ_SIZE=65536
+  READ_SIZE=4096
 
   attr_reader :ip, :port
   # whether or not the prototype library is loaded into the environment

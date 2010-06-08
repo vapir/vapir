@@ -18,6 +18,13 @@ module Vapir
     def enabled?
       !disabled
     end
+    # Checks if this element is enabled or not. Raises ObjectDisabledException if this is disabled.
+    def assert_enabled
+      # TODO: dry? copied from common InputElement
+      if disabled
+        raise Exception::ObjectDisabledException, "#{self.inspect} is disabled"
+      end
+    end
     
     private
     def base_element_class

@@ -1144,8 +1144,14 @@ module Vapir
         object.to_array
       elsif Object.const_defined?('WIN32OLE') && object.is_a?(WIN32OLE)
         array=[]
-        (0...object.length).each do |i|
-          array << object.item(i)
+        length = object.length
+        (0...length).each do |i|
+          begin
+            array << object.item(i)
+          rescue WIN32OLERuntimeError
+            # not rescuing, just adding information
+            raise $!.class, "accessing item #{i} of #{length}, encountered:\n"+$!.message, $!.backtrace
+          end
         end
         array
       else

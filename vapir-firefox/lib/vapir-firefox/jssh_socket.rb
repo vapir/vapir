@@ -1001,8 +1001,8 @@ class JsshObject
   end
   
   # undefine Object#id, and... anything else I think of that needs undef'ing in the future 
-  [:id].each do |method_name|
-    if method_defined? method_name
+  [:id, :display].each do |method_name|
+    if method_defined?(method_name)
       eval('undef '+method_name.to_s)
     end
   end

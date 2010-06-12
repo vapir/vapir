@@ -1,11 +1,10 @@
 require 'vapir-common/handle_options'
 require 'vapir-common/waiter'
 
+# Class that wraps useful methods of user32.dll involving windows in MS Windows 
 class WinWindow
-  # Class that wraps useful methods of user32.dll involving windows in MS Windows (oh wonderful naming)
-  #
-  #--
-  #
+  # :stopdoc:
+  
   # todo: 
   # * GetTitleBarInfo http://msdn.microsoft.com/en-us/library/ms633513(VS.85).aspx
   # * GetWindowInfo http://msdn.microsoft.com/en-us/library/ms633516(VS.85).aspx http://msdn.microsoft.com/en-us/library/ms632610(VS.85).aspx
@@ -14,15 +13,23 @@ class WinWindow
   # * other useful stuff, see http://msdn.microsoft.com/en-us/library/ms632595(VS.85).aspx
   # * expand SendMessage / PostMessage http://msdn.microsoft.com/en-us/library/ms644950(VS.85).aspx http://msdn.microsoft.com/en-us/library/ms644944(VS.85).aspx
   
+  # :startdoc:
+  
+  # base class from which WinWindow Errors inherit. 
   class Error < StandardError;end
+  # exception which is raised when an underlying method of the operating system encounters an error 
   class SystemError < Error;end
+  # exception raised when a window which is expected to exist does not exist 
   class NotExistsError < Error;end
+  # exception raised when a thing was expected to match another thing but didn't 
   class MatchError < Error;end
+  
+  # :stopdoc:
   
   # this module exists because I've implemented this library for DL, for FFI, and for Win32::API.
   # Getting tired of changing everything everywhere, now it just takes changes to Types, 
   # and a few methods (use_lib, attach, callback) to switch to another library. 
-  module AttachLib
+  module AttachLib # :nodoc: all
     IsWin64=nil # TODO/FIX: detect this! 
 
 #=begin
@@ -183,7 +190,7 @@ class WinWindow
   AttachLib.add_type :DWORD    => :ulong
   AttachLib.add_type :LPRECT   => :pointer
   AttachLib.add_type :LPDWORD  => :pointer
-  module WinUser
+  module WinUser # :nodoc: all
     extend AttachLib
     use_lib 'user32'
 
@@ -245,7 +252,7 @@ class WinWindow
   end
   AttachLib.add_type :SIZE_T => (AttachLib::IsWin64 ? :uint64 : :ulong)
 
-  module WinKernel
+  module WinKernel # :nodoc: all
     extend AttachLib
     use_lib 'kernel32'
     attach :DWORD, :GetLastError
@@ -260,7 +267,7 @@ class WinWindow
   AttachLib.add_type :HGDIOBJ => :pointer
   AttachLib.add_type :HBITMAP => :pointer
   AttachLib.add_type :LPBITMAPINFO => :pointer
-  module WinGDI
+  module WinGDI # :nodoc: all
     extend AttachLib
     use_lib 'gdi32'
     attach :HDC, :CreateCompatibleDC, :HDC
@@ -354,12 +361,15 @@ class WinWindow
 
   WIN_TRUE=-1
   WIN_FALSE=0
+  
+  # :startdoc:
 
+  # handle to the window - a positive integer. (properly, this is a pointer, but we deal with it as a number.) 
   attr_reader :hwnd
 
   # creates a WinWindow from a given hWnd handle (integer) 
   #
-  # raises ArgumentError if the hWnd is not a Fixnum greater than 0
+  # raises ArgumentError if the hWnd is not an Integer greater than 0
   def initialize(hwnd)
     raise ArgumentError, "hwnd must be an integer greater than 0; got #{hwnd.inspect} (#{hwnd.class})" unless hwnd.is_a?(Integer) && hwnd > 0
     @hwnd=hwnd
@@ -389,6 +399,7 @@ class WinWindow
   end
 
   # length of the window text, see #text
+  #
   # similar to #text, cannot retrieve the text of a control in another application - see #retrieve_text, #retrieve_text_length
   #
   # http://msdn.microsoft.com/en-us/library/ms633521(VS.85).aspx
@@ -585,6 +596,7 @@ class WinWindow
   alias minimized? iconic?
   
   # switch focus and bring to the foreground
+  #
   # the argument alt_tab, if true, indicates that the window is being switched to using the Alt/Ctl+Tab key sequence. This argument should be false otherwise.
   #
   # http://msdn.microsoft.com/en-us/library/ms633553(VS.85).aspx
@@ -602,25 +614,41 @@ class WinWindow
     ret != WIN_FALSE
   end
   
+  # returns true if this is the same Window that is returned from WinWindow.foreground_window 
   def foreground?
     self==self.class.foreground_window
   end
 
-  
+  # :stopdoc:
   LSFW_LOCK = 1
   LSFW_UNLOCK = 2
+  # :startdoc: 
+  
+  # The foreground process can call the #lock_set_foreground_window function to disable calls to the #set_foreground! function. 
+  #
+  # Disables calls to #set_foreground!
+  #
+  # http://msdn.microsoft.com/en-us/library/ms633532%28VS.85%29.aspx
   def self.lock_set_foreground_window
     ret= WinUser.LockSetForegroundWindow(LSFW_LOCK)
     ret != WIN_FALSE
   end
+  # The foreground process can call the #lock_set_foreground_window function to disable calls to the #set_foreground! function. 
+  #
+  # Enables calls to #set_foreground!
+  #
+  # http://msdn.microsoft.com/en-us/library/ms633532%28VS.85%29.aspx
   def self.unlock_set_foreground_window
     ret= WinUser.LockSetForegroundWindow(LSFW_UNLOCK)
     ret != WIN_FALSE
   end
 
+  # :stopdoc:
   VK_MENU=0x12
   KEYEVENTF_KEYDOWN=0x0
   KEYEVENTF_KEYUP=0x2
+  # :startdoc:
+  
   # really sets this to be the foreground window. 
   # restores the window if it's iconic. 
   # attempts to circumvent a lock disabling calls made by set_foreground!
@@ -809,14 +837,17 @@ class WinWindow
     nil
   end
 
-  # tries to click on this Window
+  # tries to click on this Window (using PostMessage sending BM_CLICK message). 
+  #
   # Clicking might not always work! Especially if the window is not focused (frontmost application). 
   # The BM_CLICK message might just be ignored, or maybe it will just focus the hwnd but not really click.
   def click!
     WinUser.PostMessageA(hwnd, BM_CLICK, 0, nil)
   end
 
-  # Returns a Rect struct with members left, top, right, and bottom indicating the dimensions of the bounding rectangle of the specified window. The dimensions are given in screen coordinates that are relative to the upper-left corner of the screen.
+  # Returns a Rect struct with members left, top, right, and bottom indicating the dimensions of 
+  # the bounding rectangle of the specified window. The dimensions are given in screen coordinates 
+  # that are relative to the upper-left corner of the screen.
   #
   # http://msdn.microsoft.com/en-us/library/ms633519%28VS.85%29.aspx
   def window_rect
@@ -828,7 +859,10 @@ class WinWindow
       rect
     end
   end
-  # Returns a Rect struct with members left, top, right, and bottom indicating the coordinates of a window's client area. The client coordinates specify the upper-left and lower-right corners of the client area. Because client coordinates are relative to the upper-left corner of a window's client area, the coordinates of the upper-left corner are (0,0).
+  # Returns a Rect struct with members left, top, right, and bottom indicating the coordinates 
+  # of a window's client area. The client coordinates specify the upper-left and lower-right 
+  # corners of the client area. Because client coordinates are relative to the upper-left corner 
+  # of a window's client area, the coordinates of the upper-left corner are (0,0).
   #
   # http://msdn.microsoft.com/en-us/library/ms633503%28VS.85%29.aspx
   def client_rect
@@ -841,24 +875,28 @@ class WinWindow
     end
   end
   
+  # :stopdoc:
   SRCCOPY = 0xCC0020
   DIB_RGB_COLORS = 0x0
   GMEM_FIXED = 0x0
+  # :startdoc:
   
   # Creates a bitmap image of this window (a screenshot). 
+  #
   # Returns the bitmap as represented by three FFI objects: a BITMAPFILEHEADER, a BITMAPINFOHEADER, and a
   # pointer to actual bitmap data. 
+  #
   # See also #capture_to_bmp_blob and #capture_to_bmp_file - probably more useful to the user than this method. 
   #
   # takes an options hash:
-  # - :dc => what device context to use 
-  #     :client - captures the client area, which excludes window trimmings like title bar, resize bars, etc.
-  #     :window (default) - capturse the window area, including window trimmings. 
-  # - :set_foreground => whether to try to set this to be the foreground 
-  #     true - calls to #set_foreground
-  #     false - doesn't call to any functions to set this to be the foreground
-  #     :really (default) - calls to #really_set_foreground. this is the default because really being 
-  #       in the foreground is rather important when taking a screenshot. 
+  # * :dc => what device context to use 
+  #   * :client - captures the client area, which excludes window trimmings like title bar, resize bars, etc.
+  #   * :window (default) - capturse the window area, including window trimmings. 
+  # * :set_foreground => whether to try to set this to be the foreground 
+  #   * true - calls to #set_foreground!
+  #   * false - doesn't call to any functions to set this to be the foreground
+  #   * :really (default) - calls to #really_set_foreground!. this is the default because really being 
+  #     in the foreground is rather important when taking a screenshot. 
   def capture_to_bmp_structs(options={})
     options=handle_options(options, :dc => :window, :set_foreground => :really)
     case options[:set_foreground]
@@ -939,6 +977,7 @@ class WinWindow
     end
   end
   # captures this window to a bitmap image (a screenshot). 
+  #
   # Returns the bitmap as represented by a blob (a string) of bitmap data, including the BITMAPFILEHEADER, 
   # BITMAPINFOHEADER, and data. This can be written directly to a file (though if you want that, 
   # #capture_to_bmp_file is probably what you want), or passed to ImageMagick, or whatever you like. 
@@ -1089,9 +1128,10 @@ class WinWindow
 
 
 
-  # Class methods:
+  # -- Class methods:
   
   # Iterates over every window yielding a WinWindow object. 
+  #
   # use WinWindow::All if you want an Enumerable object. 
   #
   # Raises a WinWindow::SystemError if a System Error occurs. 
@@ -1099,7 +1139,7 @@ class WinWindow
   # http://msdn.microsoft.com/en-us/library/ms633497.aspx
   #
   # For System Error Codes see http://msdn.microsoft.com/en-us/library/ms681381(VS.85).aspx
-  def self.each_window
+  def self.each_window # :yields: win_window
     enum_windows_callback= WinUser.window_enum_callback do |hwnd,lparam|
       yield WinWindow.new(hwnd)
       WIN_TRUE
@@ -1127,15 +1167,20 @@ class WinWindow
 
   # returns all WinWindow objects found whose text matches what is given
   #
-  # May raise a WinWindow::SystemError from WinWindow.each_hwnd
+  # May raise a WinWindow::SystemError from WinWindow.each_window
   def self.find_all_by_text(text)
     WinWindow::All.select do |window|
       text===window.text # use triple-equals so regexps try to match, strings see if equal 
     end
   end
 
+  # returns the only window matching the given text. 
   # raises a WinWindow::MatchError if more than one window matching given text is found, 
-  # so that you can be sure you are attaching to the right one (because it's the only one)
+  # so that you can be sure you are returned the right one (because it's the only one)
+  #
+  # behavior is slightly more complex than that - if multiple windows match the given
+  # text, but are all in one heirarchy (all parents/children of each other), then this
+  # returns the highest one in the heirarchy. 
   #
   # if there are multiple windows with titles that match which are all in a parent/child 
   # relationship with each other, this will not error and will return the innermost child
@@ -1221,8 +1266,8 @@ class WinWindow
       @parentwindow=parentwindow
     end
     def each
-      parentwindow.each_child do |cwindow|
-        yield cwindow
+      parentwindow.each_child do |child_window|
+        yield child_window
       end
     end
     include Enumerable

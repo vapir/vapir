@@ -4,6 +4,7 @@ require 'socket'
 require 'timeout'
 #require 'logger'
 
+# :stopdoc:
 #class LoggerWithCallstack < Logger
 #  class TimeElapsedFormatter < Formatter
 #    def initialize
@@ -36,9 +37,13 @@ require 'timeout'
 #  end
 #end
 
+# :startdoc:
+
 class Object # :nodoc:all
-  # this is like #to_json, but without the conflicting names between ActiveSupport and JSON gem,
-  # and also for JsshObject (which is a reference; not real json; see the overload in that class)
+  # Returns an ActiveSupport::JSON encoding of this object. 
+  #
+  # this is like #to_json, but without the conflicting names between ActiveSupport and JSON gem. 
+  # #to_jssh is also defined for JsshObject, in that case returning a reference; not real json. see the overload in that class. 
   def to_jssh
     ActiveSupport::JSON.encode(self)
   end
@@ -59,7 +64,8 @@ class JsshSyntaxError < JsshJavascriptError;end
 # raised when a javascript value is expected to be defined but is undefined
 class JsshUndefinedValueError < JsshJavascriptError;end
 
-# wraps a TCPSocket connection to JSSH, and represents the javascript environment of JSSH. 
+# A JsshSocket represents a connection to Firefox over a socket opened to the JSSH extension. It 
+# does the work of interacting with the socket and translating ruby values to json and back. 
 class JsshSocket
   # :stopdoc:
 #  def self.logger
@@ -86,18 +92,22 @@ class JsshSocket
   # default port to connect to. 
   DEFAULT_PORT = 9997
 
-  # maximum time to wait for the socket to send something 
+  # maximum time JsshSocket waits for a value to be sent before giving up 
   DEFAULT_SOCKET_TIMEOUT=64
-  # maximum time to wait for the socket to send more stuff after an initial (presumably broken-up) send 
+  # maximum time JsshSocket will wait for additional reads on a socket that is actively sending 
   SHORT_SOCKET_TIMEOUT=(2**-2).to_f
   # the number of bytes to read from the socket at a time 
   READ_SIZE=4096
 
-  attr_reader :ip, :port
-  # whether or not the prototype library is loaded into the environment
+  # the IP to which this socket is connected 
+  attr_reader :ip
+  # the port on which this socket is connected 
+  attr_reader :port
+  # whether the prototye javascript library is loaded 
   attr_reader :prototype
   
   # Connects a new socket to jssh
+  #
   # Takes options:
   # * :jssh_ip => the ip to connect to, default 127.0.0.1
   # * :jssh_port => the port to connect to, default 9997
@@ -175,9 +185,11 @@ class JsshSocket
   # saying that the socket isn't ready after waiting for SHORT_SOCKET_TIMEOUT. usually this will be true after a 
   # single read, as most things only take one #recv call to get the whole value. this waiting for SHORT_SOCKET_TIMEOUT
   # can add up to being slow if you're doing a lot of socket activity.
+  #
   # to solve this, performance can be improved significantly using the :length_before_value option. with this, you have
   # to write your javascript to return the length of the value to be sent,  followed by a newline, followed by the actual
   # value (which must be of the length it says it is, or this method will error). 
+  #
   # if this option is set, this doesn't do any SHORT_SOCKET_TIMEOUT waiting once it gets the full value, it returns 
   # immediately. 
   def read_value(options={})
@@ -267,6 +279,8 @@ class JsshSocket
   end
   
   private
+  # returns the number of complete utf-8 encoded characters in the string, without erroring on
+  # partial characters. 
   def utf8_length_safe(string)
     string=string.dup
     begin
@@ -281,7 +295,7 @@ class JsshSocket
     end
   end
   # this should be called when an error occurs and we want to clear the socket of any value remaining on it. 
-  # this will continue trying for DEFAULT_SOCKET_TIMEOUT until 
+  # tries for SHORT_SOCKET_TIMEOUT to see if a value will appear on the socket; if one does, returns it. 
   def clear_error
     data=""
     while Kernel.select([@socket], nil, nil, SHORT_SOCKET_TIMEOUT)
@@ -294,7 +308,9 @@ class JsshSocket
     data
   end
 
-  # sends the given javascript expression, reads the value returned on the socket, and returns that value. 
+  # sends the given javascript expression which is evaluated, reads the resulting value from the socket, and returns that value. 
+  #
+  # options are passed to #read_value untouched; the only one that probably ought to be used here is :timeout. 
   def send_and_read(js_expr, options={})
 #    logger.add(-1) { "SEND_AND_READ is starting. options=#{options.inspect}" }
     @last_expression=js_expr
@@ -328,6 +344,7 @@ class JsshSocket
   public
 
   # returns the value of the given javascript expression, as reported by JSSH. 
+  #
   # This will be a string, the given expression's toString. 
   def value(js)
     # this is wrapped in a function so that ...
@@ -458,6 +475,7 @@ class JsshSocket
 
   # does the same thing as #handle, but with json, calling #assign_json, #value_json, 
   # or #call_json. 
+  #
   # if the given javascript expression ends with an = symbol, #handle_json calls to 
   # #assign_json assuming it is given one argument; if the expression refers to a function, 
   # calls that function with the given arguments using #call_json; if the expression is 
@@ -511,8 +529,8 @@ class JsshSocket
     error_or_val_json(send_and_read(js, :length_before_value => true),js)
   end
   
-  # takes two javascript expressions, representing an expression to be tested and an interface. 
-  # passes these to the javascript instanceof operator, and returns the result. 
+  # uses the javascript 'instanceof' operator, passing it the given 
+  # expression and interface. this should return true or false. 
   def instanceof(js_expression, js_interface)
     value_json "(#{js_expression}) instanceof (#{js_interface})"
   end
@@ -537,6 +555,7 @@ class JsshSocket
   end
 
   # takes a reference and returns a new JsshObject representing that reference on this socket. 
+  # ref should be a string representing a reference in javascript. 
   def object(ref)
     JsshObject.new(ref, self, :debug_name => ref)
   end
@@ -546,6 +565,8 @@ class JsshSocket
   
   # returns a JsshObject representing a designated top-level object for temporary storage of stuff
   # on this socket. 
+  #
+  # really, temporary values could be stored anywhere. this just gives one nice consistent designated place to stick them. 
   def temp_object
     @temp_object ||= object('JsshTemp')
   end
@@ -555,7 +576,7 @@ class JsshSocket
   def Components
     @components ||= object('Components')
   end
-  # returns an object representing the return value of the JSSH built-in function getWindows() 
+  # returns a JsshObject representing the return value of JSSH's builtin getWindows() function. 
   def getWindows
     @getwindows ||= object('getWindows()')
   end
@@ -583,11 +604,22 @@ end
 
 # represents a javascript object in ruby. 
 class JsshObject
-  attr_reader :ref, :jssh_socket
-  attr_reader :type, :function_result, :debug_name
+  # the reference to the javascript object this JsshObject represents 
+  attr_reader :ref
+  # the JsshSocket this JsshObject is on 
+  attr_reader :jssh_socket
+  # the type of this javascript object (as returned by JsshSocket#typeof)
+  attr_reader :type
+  # whether this represents the result of a function call (if it does, then JsshSocket#typeof won't be called on it)
+  attr_reader :function_result
+  # this tracks the origins of this object - what calls were made along the way to get it. 
+  attr_reader :debug_name
+# :stopdoc:
 #  def logger
 #    jssh_socket.logger
 #  end
+
+# :startdoc:
 
   public
   # initializes a JsshObject with a string of javascript containing a reference to
@@ -639,8 +671,8 @@ class JsshObject
     jssh_socket.instanceof(self.ref, interface.ref)
   end
   # returns an array of interfaces which this object is an instance of. this is achieved 
-  # by looping over each value of Components.interfaces and calling the #instanceof operator
-  # with this and the interface. 
+  # by looping over each value of Components.interfaces (see https://developer.mozilla.org/en/Components.interfaces ) 
+  # and calling the #instanceof operator with this and the interface. 
   #
   # this may be rather slow. 
   def implemented_interfaces
@@ -655,6 +687,8 @@ class JsshObject
   # This method returns 'Object' or 'XPCNativeWrapper [object HTMLDocument]' respectively.
   # Raises an error if this JsshObject points to something other than a javascript 'object'
   # type ('function' or 'number' or whatever)
+  #
+  # this isn't used, doesn't seem useful, and may go away in the future. 
   def object_type
     @object_type ||= begin
       case type
@@ -677,6 +711,9 @@ class JsshObject
   # 
   # if self is undefined in javascript, then behavor depends on the options hash. if :error_on_undefined is
   # true, then nil is returned; otherwise JsshUndefinedValueError is raised. 
+  #
+  # if this is a function result, this will store the result in a temporary location (thereby
+  # calling the function to acquire the result) before making the above decision. 
   def val_or_object(options={})
     options={:error_on_undefined=>true}.merge(options)
     if function_result # calling functions multiple times is bad, so store in temp before figuring out what to do with it
@@ -725,7 +762,7 @@ class JsshObject
     JsshObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
   end
 
-  # assigns (via JsshSocket#assign) the given ruby value (converted to_jssh) to the reference
+  # assigns the given ruby value (converted to_jssh) to the reference
   # for this object. returns self. 
   def assign(val)
     @debug_name="(#{debug_name}=#{val.is_a?(JsshObject) ? val.debug_name : val.to_jssh})"
@@ -753,6 +790,7 @@ class JsshObject
   # returns the value (via JsshSocket#value_json) or a JsshObject (see #val_or_object) of the return 
   # value of this function (assumes this object is a function) passing it the given arguments (which 
   # are converted to_jssh). 
+  #
   # simply, it just calls self.pass(*args).val_or_object
   def call(*args)
     pass(*args).val_or_object
@@ -765,6 +803,8 @@ class JsshObject
   #  => #<JsshObject:0x2dff870 @ref="foo" ...>
   #  >> foo.tagName
   #  => "DIV"
+  #
+  # the second argument is only used internally and shouldn't be used. 
   def store(js_variable, somewhere_meaningful=true)
     stored=JsshObject.new(js_variable, jssh_socket, :function_result => false, :debug_name => somewhere_meaningful ? "(#{js_variable}=#{debug_name})" : debug_name)
     stored.assign_expr(self.ref)
@@ -786,14 +826,14 @@ class JsshObject
   end
   public
   
-  # stores this obect in a randomly-named top-level variable with the given prefix followed by an underscore, and returns the reference. 
+  # stores this object in a randomly-named top-level variable with the given prefix followed by an underscore, and returns the stored object. 
   def store_rand_prefix(prefix)
     store_rand_named do |r|
       prefix+"_"+r
     end
   end
 
-  # stores this obect in a random key of the given object and returns the reference. 
+  # stores this object in a random key of the given object and returns the stored object. 
   def store_rand_object_key(object)
     raise ArgumentError("Object is not a JsshObject: got #{object.inspect}") unless object.is_a?(JsshObject)
     store_rand_named do |r|
@@ -801,17 +841,11 @@ class JsshObject
     end
   end
   
-  # stores this obect in a random key of the designated temporary object for this socket and returns the reference. 
+  # stores this object in a random key of the designated temporary object for this socket and returns the stored object. 
   def store_rand_temp
     store_rand_object_key(jssh_socket.temp_object)
   end
 
-  # returns a JsshObject referring to a subscript of this object, specified as a _javascript_ expression 
-  # (doesn't use to_jssh) 
-#  def sub_expr(key_expr)
-#    JsshObject.new("#{ref}[#{key_expr}]", jssh_socket, :debug_name => "#{debug_name}[#{}]")
-#  end
-  
   # returns a JsshObject referring to a subscript of this object, specified as a ruby object converted to 
   # javascript via to_jssh. 
   #
@@ -826,13 +860,14 @@ class JsshObject
   def [](key)
     sub(key).val_or_object(:error_on_undefined => false)
   end
+
   # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the given subscript
   # (key is converted to_jssh). 
   def []=(key, value)
     self.sub(key).assign(value)
   end
 
-  # calls a binary operator with self and another operand 
+  # calls a binary operator (in javascript) with self and another operand 
   def binary_operator(operator, operand)
     JsshObject.new("(#{ref}#{operator}#{operand.to_jssh})", jssh_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JsshObject) ? operand.debug_name : operand.to_jssh})").val_or_object
   end
@@ -894,7 +929,7 @@ class JsshObject
   # have an object or an array that you know you can json-ize, you can use ! to force that. 
   #
   # If the method ends with a question mark (?), then it will attempt to get a string representing the
-  # value, using JsonObject#val_str. This is safer than ! because the javascript conversion to json 
+  # value, using JsshObject#val_str. This is safer than ! because the javascript conversion to json 
   # can error. This also catches the JsshUndefinedValueError that can occur, and just returns nil
   # for undefined stuff. 
   #
@@ -920,7 +955,7 @@ class JsshObject
   #  => "foobar"
   #  >> document.forms[0].q.value
   #  => "foobar"
-  #
+  #--
   # $A and $H, used below, are methods of the Prototype javascript library, which add nice functional 
   # methods to arrays and hashes - see http://www.prototypejs.org/
   # You can use these methods with method_missing just like any other:
@@ -1047,11 +1082,23 @@ class JsshObject
   def to_dom
     JsshDOMNode.new(self.ref, self.jssh_socket, :debug_name => debug_name)
   end
-  # returns a Hash (ruby Hash, not a JsshHash). each key/value pair of this object
-  # is represented in the returned hash. if an error is encountered accessing the value for a given
-  # key, that key of the returned hash will contain the JsshError that was raised. 
-  # if the :recurse option is given, values which are objects will have #to_ruby_hash
-  # called on them to the specified recursion depth. 
+
+  # returns a ruby Hash. each key/value pair of this object
+  # is represented in the returned hash. 
+  #
+  # if an error is encountered trying to access the value for an attribute, then in the 
+  # returned hash, that attribute is set to the error that was encountered rather than 
+  # the actual value (since the value wasn't successfully retrieved). 
+  #
+  # options may be specified. the only option currently supported is:
+  # * :recurse => a number or nil. if it's a number, then this will recurse to that
+  #   depth. If it's nil, this won't recurse at all. 
+  #
+  # below the specified recursion level, this will return this JsshObject rather than recursing
+  # down into it. 
+  #
+  # this function isn't expected to raise any errors, since encountered errors are set as 
+  # attribute values. 
   def to_ruby_hash(options={})
     options={:recurse => 1}.merge(options)
     return self if !options[:recurse] || options[:recurse]==0
@@ -1102,7 +1149,9 @@ class JsshObject
 end
 
 # represents a node on the DOM. not substantially from JsshObject, but #inspect 
-# is more informative, and #dump is defined. 
+# is more informative, and #dump is defined for extensive debug info. 
+#
+# This class is mostly useful for debug, not used anywhere in production at the moment. 
 class JsshDOMNode < JsshObject
   def inspect_stuff # :nodoc:
     [:nodeName, :nodeType, :nodeValue, :tagName, :textContent, :id, :name, :value, :type, :className, :hidden].map do |attrn|
@@ -1131,7 +1180,8 @@ class JsshDOMNode < JsshObject
       end
     end
   end
-  # returns a string consisting of this dom node and its child nodes, recursively. each node is one line and depth is indicated by spacing. 
+  # returns a string (most useful when written to STDOUT or to a file) consisting of this dom node 
+  # and its child nodes, recursively. each node is one line and depth is indicated by spacing. 
   #
   # call #dump(:recurse => n) to recurse down only n levels. default is to recurse all the way down the dom tree. 
   def dump(options={})

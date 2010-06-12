@@ -508,7 +508,7 @@ class JsshSocket
   # raises error if the prototype library (needed for JSON stuff in javascript) has not been loaded
   def ensure_prototype
     unless prototype
-      raise JsshError, "Cannot invoke JSON on a Jssh session that does not have the Prototype library"
+      raise JsshError, "This functionality requires the prototype library; cannot be called on a Jssh session that has not loaded the Prototype library"
     end
   end
 

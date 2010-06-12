@@ -631,7 +631,7 @@ class WinWindow
   # http://msdn.microsoft.com/en-us/library/ms633532%28VS.85%29.aspx
   def self.lock_set_foreground_window
     ret= WinUser.LockSetForegroundWindow(LSFW_LOCK)
-    ret != WIN_FALSE
+    ret != WIN_FALSE # todo: raise system error? 
   end
   # The foreground process can call the #lock_set_foreground_window function to disable calls to the #set_foreground! function. 
   #
@@ -640,7 +640,7 @@ class WinWindow
   # http://msdn.microsoft.com/en-us/library/ms633532%28VS.85%29.aspx
   def self.unlock_set_foreground_window
     ret= WinUser.LockSetForegroundWindow(LSFW_UNLOCK)
-    ret != WIN_FALSE
+    ret != WIN_FALSE # todo: raise system error? 
   end
 
   # :stopdoc:

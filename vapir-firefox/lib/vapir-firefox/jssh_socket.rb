@@ -304,6 +304,7 @@ class JsshSocket
     return read_value(options)
   end
   
+  private
   # creates a ruby exception from the given information and raises it. 
   def js_error(errclassname, message, source, stuff={})
     errclass=if errclassname
@@ -770,6 +771,7 @@ class JsshObject
     stored
   end
   
+  private
   # takes a block which, when yielded a random key, should result in a random reference. this checks
   # that the reference is not already in use and stores this object in that reference, and returns 
   # a JsshObject referring to the stored object. 
@@ -782,6 +784,7 @@ class JsshObject
     # okay, more than one iteration is ridiculously unlikely, sure, but just to be safe. 
     store(name, false)
   end
+  public
   
   # stores this obect in a randomly-named top-level variable with the given prefix followed by an underscore, and returns the reference. 
   def store_rand_prefix(prefix)

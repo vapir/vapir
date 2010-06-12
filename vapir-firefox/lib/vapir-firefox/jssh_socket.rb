@@ -1236,15 +1236,19 @@ class JsshHash < JsshObject
              }"
     @keys=jssh_socket.object(keyfunc).pass(self).val
   end
-  # yields two-element arrays consisting of each key and value of this object 
-  def each
+  # yields each key and value 
+  def each(&block)
     keys.each do |key|
-      yield [key, self[key]]
+      if block.arity==1
+        yield [key, self[key]]
+      else
+        yield key, self[key]
+      end
     end
   end
   # yields each key and value for this object 
   def each_pair
-    each do |(k,v)|
+    each do |k,v|
       yield k,v
     end
   end

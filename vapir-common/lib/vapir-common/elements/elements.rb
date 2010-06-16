@@ -136,17 +136,17 @@ module Vapir
         element_object.scrollIntoView
         type_keys=respond_to?(:type_keys) ? self.type_keys : true # TODO: FIX
         typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0 # TODO: FIX
+        if options[:focus]
+          element_object.focus
+          fire_event('onFocus')
+          assert_exists(:force => true)
+        end
+        if options[:select]
+          element_object.select
+          fire_event("onSelect")
+          assert_exists(:force => true)
+        end
         if type_keys
-          if options[:focus]
-            element_object.focus
-            fire_event('onFocus')
-            assert_exists(:force => true)
-          end
-          if options[:select]
-            element_object.select
-            fire_event("onSelect")
-            assert_exists(:force => true)
-          end
           ((existing_value_chars.length)...new_value_chars.length).each do |i|
 #            sleep typingspeed # TODO/FIX
             element_object.value = new_value_chars[0..i].join('')
@@ -157,14 +157,14 @@ module Vapir
             fire_event :onKeyUp
             assert_exists(:force => true)
           end
-          if options[:change] && exists?
-            fire_event("onChange")
-          end
-          if options[:blur] && exists?
-            fire_event('onBlur')
-          end
         else
           element_object.value = element_object.value + value
+        end
+        if options[:change] && exists?
+          fire_event("onChange")
+        end
+        if options[:blur] && exists?
+          fire_event('onBlur')
         end
         wait
         self.value

@@ -1227,13 +1227,7 @@ end
 class JsshHash < JsshObject
   # returns an array of keys of this javascript object 
   def keys
-    keyfunc="function(obj)
-             { var keys=[];
-               for(var key in obj)
-               { keys.push(key);
-               }
-               return keys;
-             }"
+    keyfunc="function(obj) { var keys=[]; for(var key in obj) { keys.push(key); } return keys; }"
     @keys=jssh_socket.object(keyfunc).pass(self).val
   end
   # yields each key and value 

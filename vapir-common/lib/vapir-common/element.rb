@@ -2,14 +2,6 @@ require 'vapir-common/element_collection'
 require 'set'
 require 'matrix'
 
-class Module
-  def alias_deprecated(to, from)
-    define_method to do |*args|
-      Kernel.warn "DEPRECATION WARNING: #{self.class.name}\##{to} is deprecated. Please use #{self.class.name}\##{from}\n(called from #{caller.map{|c|"\n"+c}})"
-      send(from, *args)
-    end
-  end
-end
 module Vapir
   # this module is for methods that should go on both common element modules (ie, TextField) as well
   # as browser-specific element classes (ie, Firefox::TextField). 

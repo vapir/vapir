@@ -5,7 +5,7 @@ module Vapir
       document_object
     end
     def document_element
-      document_object.documentElement
+      document_object.documentElement || raise(Exception::ExistenceFailureException, "document_object.documentElement was nil")
     end
     def title
       document_object.title

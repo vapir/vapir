@@ -315,6 +315,7 @@ module Vapir
     attr_writer :hwnd
     
     def win_window
+      require 'vapir-common/win_window'
       @win_window||= WinWindow.new(hwnd)
     end
     

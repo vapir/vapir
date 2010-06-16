@@ -266,7 +266,7 @@ module Vapir
             end
           else
             if candidate.object_respond_to?(:nodeType)
-              match &&= candidate.candidate.nodeType==1
+              match &&= candidate.nodeType==1
             else
               match=false
             end

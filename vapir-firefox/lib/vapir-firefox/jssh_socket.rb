@@ -1231,7 +1231,7 @@ class JsshHash < JsshObject
     @keys=jssh_socket.object(keyfunc).pass(self).val
   end
   # yields each key and value 
-  def each(&block)
+  def each(&block) # :yields: key, value
     keys.each do |key|
       if block.arity==1
         yield [key, self[key]]
@@ -1242,8 +1242,8 @@ class JsshHash < JsshObject
   end
   # yields each key and value for this object 
   def each_pair
-    each do |k,v|
-      yield k,v
+    each do |key,value|
+      yield key,value
     end
   end
 

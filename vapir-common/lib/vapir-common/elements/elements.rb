@@ -147,27 +147,30 @@ module Vapir
           assert_exists(:force => true)
         end
         if type_keys
-          ((existing_value_chars.length)...new_value_chars.length).each do |i|
+          (existing_value_chars.length...new_value_chars.length).each do |i|
 #            sleep typingspeed # TODO/FIX
             element_object.value = new_value_chars[0..i].join('')
-            fire_event :onKeyDown # TODO/fix - keyCode for character typed 
-            assert_exists(:force => true)
-            fire_event :onKeyPress
-            assert_exists(:force => true)
-            fire_event :onKeyUp
-            assert_exists(:force => true)
+            last_key = i == new_value_chars.length - 1
+            handling_existence_failure(:handle => (last_key ? :ignore : :raise)) do
+              fire_event :onKeyDown # TODO/fix - keyCode for character typed 
+              assert_exists(:force => true)
+              fire_event :onKeyPress
+              assert_exists(:force => true)
+              fire_event :onKeyUp
+              assert_exists(:force => true)
+            end
           end
         else
           element_object.value = element_object.value + value
         end
         if options[:change] && exists?
-          fire_event("onChange")
+          handling_existence_failure { fire_event("onChange") }
         end
         if options[:blur] && exists?
-          fire_event('onBlur')
+          handling_existence_failure { fire_event('onBlur') }
         end
         wait
-        self.value
+        exists? ? self.value : nil
       end
     end
     # Sets the contents of the text field to the given value

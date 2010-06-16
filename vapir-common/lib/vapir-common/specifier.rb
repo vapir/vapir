@@ -226,6 +226,11 @@ module Vapir
         # IF YOU CHANGE THIS CODE CHANGE THE CORRESPONDING JAVASCRIPT ABOVE TOO 
         matched_candidates=[]
         candidates.each do |candidate|
+          # this bit isn't reflected in the javascript above because firefox doesn't behave this way, returning nil 
+          if candidate==nil
+            raise Exception::ExistenceFailureException, "when searching for an element, a candidate was nil. (this tends to happen when a page is changing and things stop existing.)\nspecifiers are: #{specifiers_list.inspect}"
+          end
+          
           candidate_attributes=proc do |attr|
             attrs=[]
             if Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE)

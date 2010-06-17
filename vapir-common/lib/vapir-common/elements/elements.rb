@@ -110,6 +110,20 @@ module Vapir
         self.value
       end
     end
+    private
+    # todo: move to Element or something? this applies to hitting a key anywhere, really - not just TextFields. 
+    def type_key(key, options={})
+      assert_exists(:force => true)
+      fire_event :onKeyDown # TODO/fix - keyCode for character typed 
+      assert_exists(:force => true)
+      fire_event :onKeyPress
+      handling_existence_failure(options) do
+        yield
+        assert_exists(:force => true)
+        fire_event :onKeyUp
+      end
+    end
+    public
     # Appends the specified string value to the contents of the text box.
     # 
     # returns the new value of the text field. this may not include all of what is given if there is a maxlength on the field. 
@@ -137,27 +151,21 @@ module Vapir
         type_keys=respond_to?(:type_keys) ? self.type_keys : true # TODO: FIX
         typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0 # TODO: FIX
         if options[:focus]
+          assert_exists(:force => true)
           element_object.focus
           fire_event('onFocus')
-          assert_exists(:force => true)
         end
         if options[:select]
+          assert_exists(:force => true)
           element_object.select
           fire_event("onSelect")
-          assert_exists(:force => true)
         end
         if type_keys
           (existing_value_chars.length...new_value_chars.length).each do |i|
 #            sleep typingspeed # TODO/FIX
-            element_object.value = new_value_chars[0..i].join('')
             last_key = i == new_value_chars.length - 1
-            handling_existence_failure(:handle => (last_key ? :ignore : :raise)) do
-              fire_event :onKeyDown # TODO/fix - keyCode for character typed 
-              assert_exists(:force => true)
-              fire_event :onKeyPress
-              assert_exists(:force => true)
-              fire_event :onKeyUp
-              assert_exists(:force => true)
+            type_key(new_value_chars[i], :handle => (last_key ? :ignore : :raise)) do
+              element_object.value = new_value_chars[0..i].join('')
             end
           end
         else

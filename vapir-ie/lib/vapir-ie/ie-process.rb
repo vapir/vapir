@@ -1,4 +1,3 @@
-require 'win32/process'
 require 'vapir-ie/browser'
 
 module Vapir
@@ -22,6 +21,7 @@ module Vapir
       # Calling IE8 with the -nomerge option correctly starts a new process, so call Process.create with this option if 
       # IE's version is 8 
       def self.start
+        require 'win32/process'
         program_files = ENV['ProgramFiles'] || "c:\\Program Files"
         startup_command = "#{program_files}\\Internet Explorer\\iexplore.exe"
         startup_command << " -nomerge" if ::Vapir::IE.version_parts.first==8
@@ -37,6 +37,7 @@ module Vapir
       attr_reader :process_id
       
       def window
+        require 'win32/process'
         Waiter.wait_until do
           IE.each do | ie |
             window = ie.ie

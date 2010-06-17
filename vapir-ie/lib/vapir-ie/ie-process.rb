@@ -50,6 +50,7 @@ module Vapir
       
       # Returns the process id for the specifed hWnd.
       def self.process_id_from_hwnd hwnd
+        require 'Win32API'
         pid_info = ' ' * 32
         Win32API.new('user32', 'GetWindowThreadProcessId', 'ip', 'i').
         call(hwnd, pid_info)

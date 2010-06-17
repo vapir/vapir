@@ -1,6 +1,5 @@
 require 'vapir-common/modal_dialog'
 require 'vapir-ie/page_container'
-require 'Win32API'
 
 module Vapir
   class IE::ModalDialog
@@ -60,6 +59,7 @@ module Vapir
     @@iedialog_file = (File.expand_path(File.dirname(__FILE__) + '/..') + "/vapir-ie/IEDialog/Release/IEDialog.dll").gsub('/', '\\')
 
     def get_unknown(*args)
+      require 'Win32API'
       @@get_unknown ||= Win32API.new(@@iedialog_file, 'GetUnknown', ['l', 'p'], 'v')
       @@get_unknown.call(*args)
     end

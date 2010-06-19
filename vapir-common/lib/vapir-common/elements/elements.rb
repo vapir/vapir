@@ -168,7 +168,7 @@ module Vapir
             end
           end
         else
-          element_object.value = element_object.value + value
+          element_object.value = new_value_chars.join('')
         end
         if options[:change] && exists?
           handling_existence_failure { fire_event("onChange") }

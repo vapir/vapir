@@ -107,7 +107,7 @@ module Vapir
         if options[:blur] && exists?
           fire_event('onBlur')
         end
-        self.value
+        exists? ? self.value : nil
       end
     end
     private
@@ -195,9 +195,7 @@ module Vapir
     def set(value, options={})
       with_highlight(options) do
         clear(options.merge(:blur => false, :change => false))
-        assert_exists(:force => true)
         append(value, options.merge(:focus => false, :select => false))
-        self.value
       end
     end
   end

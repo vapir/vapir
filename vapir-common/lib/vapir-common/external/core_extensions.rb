@@ -7,6 +7,16 @@ class Module
   end
 end
 
+class String
+  if method_defined?(:ord)
+    alias vapir_ord ord
+  else
+    def vapir_ord
+      unpack("U*")[0] # assume it's unicode 
+    end
+  end
+end
+
 class Symbol
   def to_proc
     proc{|__x__| __x__.send(self)}

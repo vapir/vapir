@@ -116,12 +116,12 @@ raise "the parent somehow changed - had #{orig_siblings_length} children; now ha
             [:bubbles, true],
             [:cancelable, true],
             [:windowObject, content_window_object],
-            [:ctrlKey, false],
-            [:altKey, false],
-            [:shiftKey, false],
-            [:metaKey, false],
-            [:keyCode, 0],
-            [:charCode, 0],
+            [:ctrlKey, options[:ctrlKey] || false],
+            [:altKey, options[:altKey] || false],
+            [:shiftKey, options[:shiftKey] || false],
+            [:metaKey, options[:metaKey] || false],
+            [:keyCode, options[:keyCode] || 0],
+            [:charCode, options[:charCode] || 0],
           ]
       when 'click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'
         dom_event_type = 'MouseEvents'
@@ -137,10 +137,10 @@ raise "the parent somehow changed - had #{orig_siblings_length} children; now ha
             [:screenY, options[:screenY] || 0],
             [:clientX, options[:clientX] || client_center[0]], # by default, assume the mouse is at the center of the element 
             [:clientY, options[:clientY] || client_center[1]],
-            [:ctrlKey, false],
-            [:altKey, false],
-            [:shiftKey, false],
-            [:metaKey, false],
+            [:ctrlKey, options[:ctrlKey] || false],
+            [:altKey, options[:altKey] || false],
+            [:shiftKey, options[:shiftKey] || false],
+            [:metaKey, options[:metaKey] || false],
             [:button, MouseButtonCodes[options[:button] || :left]],
             [:relatedTarget, nil],
           ]

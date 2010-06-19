@@ -141,9 +141,8 @@ module Vapir
       assert_not_readonly
       
       with_highlight(options) do
-        existing_value_chars=element_object.value.split(//)
-        new_value_chars=existing_value_chars+value.split(//)
-        #value_chars=value.split(//) # split on blank regexp (rather than iterating over each byte) for multibyte chars
+        existing_value_chars=element_object.value.split(//u)
+        new_value_chars=existing_value_chars+value.split(//u) # IE treats the string value is set to as utf8, and this is consistent with String#ord defined in core_ext 
         if self.type.downcase=='text' && maxlength && maxlength >= 0 && new_value_chars.length > maxlength
           new_value_chars=new_value_chars[0...maxlength]
         end

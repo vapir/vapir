@@ -1,6 +1,6 @@
 require 'vapir-common/element'
 require 'vapir-common/container'
-
+require 'vapir-common/keycodes.rb'
 module Vapir
   module Frame
     extend ElementHelper
@@ -85,22 +85,21 @@ module Vapir
       assert_not_readonly
       with_highlight(options) do
         if options[:focus]
+          assert_exists(:force => true)
           element_object.focus
           fire_event('onFocus')
-          assert_exists(:force => true)
         end
         if options[:select]
+          assert_exists(:force => true)
           element_object.select
           fire_event("onSelect")
-          assert_exists(:force => true)
         end
-        element_object.value = ''
-        fire_event :onKeyDown # TODO/fix - keyCode for 'delete' key 
-        assert_exists(:force => true)
-        fire_event :onKeyPress
-        assert_exists(:force => true)
-        fire_event :onKeyUp
-        assert_exists(:force => true)
+        handling_existence_failure do
+          with_key_down(:keyCode => KeyCodes[:delete]) do
+            assert_exists(:force => true)
+            element_object.value = ''
+          end
+        end
         if options[:change] && exists?
           fire_event("onChange")
         end
@@ -112,15 +111,39 @@ module Vapir
     end
     private
     # todo: move to Element or something? this applies to hitting a key anywhere, really - not just TextFields. 
-    def type_key(key, options={})
+    def with_key_down(fire_event_options={})
       assert_exists(:force => true)
-      fire_event :onKeyDown # TODO/fix - keyCode for character typed 
+      fire_event :onKeyDown, fire_event_options
+      yield if block_given?
       assert_exists(:force => true)
-      fire_event :onKeyPress
-      handling_existence_failure(options) do
-        yield
-        assert_exists(:force => true)
-        fire_event :onKeyUp
+      fire_event :onKeyUp, fire_event_options
+    end
+    def type_key(key)
+      # the events created by the following are sort of wrong - for firefox, only one of keyCode 
+      # or charCode should ever be set. 
+      # for ie, keyCode is always set and charCode is ignored (there is no such property of IE events). 
+      # I could overload this method on a browser-specific basis, but having both set in ff seems to
+      # do no harm, so I will not do that for the moment. 
+      if PrintKeyCodes.key?(key)
+        with_key_down(:keyCode => PrintKeyCodes[key]) do
+          assert_exists(:force => true)
+          fire_event :onKeyPress, :keyCode => key.vapir_ord, :charCode => key.vapir_ord
+          yield if block_given?
+        end
+      elsif ShiftPrintKeyCodes.key?(key)
+        with_key_down(:keyCode => KeyCodes[:shift], :shiftKey => true) do
+          with_key_down(:keyCode => ShiftPrintKeyCodes[key], :shiftKey => true) do
+            assert_exists(:force => true)
+            fire_event :onKeyPress, :keyCode => key.vapir_ord, :charCode => key.vapir_ord, :shiftKey => true
+            yield if block_given?
+          end
+        end
+      else #?
+        with_key_down do
+          assert_exists(:force => true)
+          fire_event :onKeyPress, :keyCode => key.vapir_ord, :charCode => key.vapir_ord
+          yield if block_given?
+        end
       end
     end
     public
@@ -162,9 +185,12 @@ module Vapir
         if type_keys
           (existing_value_chars.length...new_value_chars.length).each do |i|
 #            sleep typingspeed # TODO/FIX
-            last_key = i == new_value_chars.length - 1
-            type_key(new_value_chars[i], :handle => (last_key ? :ignore : :raise)) do
-              element_object.value = new_value_chars[0..i].join('')
+            last_key = (i == new_value_chars.length - 1)
+            handling_existence_failure(:handle => (last_key ? :ignore : :raise)) do
+              type_key(new_value_chars[i]) do
+                assert_exists(:force => true)
+                element_object.value = new_value_chars[0..i].join('')
+              end
             end
           end
         else

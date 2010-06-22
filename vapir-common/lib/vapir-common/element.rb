@@ -554,41 +554,22 @@ module Vapir
     end
     public
     # locates the element object for this element 
-    # 
-    # takes options hash. currently the only option is
-    # - :relocate => nil, :recursive, true, false 
-    #   - nil or not set (default): this Element is only relocated if the browser is updated (in firefox) or the WIN32OLE stops existing (IE). 
-    #   - :recursive: this element and its containers are relocated, recursively up to the containing browser. 
-    #   - false: no relocating is done even if the browser is updated or the element_object stops existing. 
-    #   - true: this Element is relocated. the container is relocated only if the browser is updated or the element_object stops existing. 
-    def locate(options={})
-      if options[:relocate]==nil && @element_object # don't override if it is set to false; only if it's nil, and don't set :relocate there's no @element_object (that's an initial locate, not a relocate) 
-        if @browser && @updated_at && @browser.respond_to?(:updated_at) && @browser.updated_at > @updated_at # TODO: implement this for IE; only exists for Firefox now. 
-          options[:relocate]=:recursive
-        elsif !element_object_exists?
-          options[:relocate]=true
-        end
+    def locate
+      if element_object_exists?
+        return @element_object
       end
-      container_locate_options={}
-      if options[:relocate]==:recursive
-        container_locate_options[:relocate]= options[:relocate]
-      end
-      if options[:relocate]
-        @element_object=nil
-      end
-      element_object_existed=!!@element_object
-      @element_object||= begin
+      new_element_object= begin
         case @how
         when :element_object
           assert_no_index
-          @element_object=@what # this is needed for checking its existence 
-          if options[:relocate] && !element_object_exists?
+          if @element_object # if @element_object is already set, it must not exist, since we check #element_object_exists? above. 
             raise Vapir::Exception::UnableToRelocateException, "This #{self.class.name} was specified using #{how.inspect} and cannot be relocated."
+          else
+            @what
           end
-          @what
         when :xpath
           assert_container
-          @container.locate!(container_locate_options)
+          @container.locate!
           unless @container.respond_to?(:element_object_by_xpath)
             raise Vapir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
           end
@@ -604,12 +585,12 @@ module Vapir
           unless what.is_a?(Label)
             raise "how=:label specified on this #{self.class}, but 'what' is not a Label! what=#{what.inspect} (#{what.class})"
           end
-          what.locate!(container_locate_options) # 'what' is not the container; our container is the label's container, but the options for locating should be the same. 
+          what.locate!
           by_label=document_object.getElementById(what.for)
           match_candidates(by_label ? [by_label] : [], self.class.specifiers, self.class.all_dom_attr_aliases).first
         when :attributes
           assert_container
-          @container.locate!(container_locate_options)
+          @container.locate!
           specified_attributes=@what
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
           
@@ -646,13 +627,10 @@ module Vapir
           raise Vapir::Exception::MissingWayOfFindingObjectException, "Unknown 'how' given: #{@how.inspect} (#{@how.class}). 'what' was #{@what.inspect} (#{@what.class})"
         end
       end
-      if !element_object_existed && @element_object
-        @updated_at=Time.now
-      end
-      @element_object
+      @element_object=new_element_object
     end
-    def locate!(options={})
-      locate(options) || begin
+    def locate!
+      locate || begin
         klass=self.is_a?(Frame) ? Vapir::Exception::UnknownFrameException : Vapir::Exception::UnknownObjectException
         message="Unable to locate #{self.class}, using #{@how}"+(@what ? ": "+@what.inspect : '')+(@index ? ", index #{@index}" : "")
         message+="\non container: #{@container.inspect}" if @container

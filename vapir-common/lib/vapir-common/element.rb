@@ -568,8 +568,7 @@ module Vapir
             @what
           end
         when :xpath
-          assert_container
-          @container.locate!
+          assert_container_exists
           unless @container.respond_to?(:element_object_by_xpath)
             raise Vapir::Exception::MissingWayOfFindingObjectException, "Locating by xpath is not supported on the container #{@container.inspect}"
           end
@@ -589,13 +588,13 @@ module Vapir
           by_label=document_object.getElementById(what.for)
           match_candidates(by_label ? [by_label] : [], self.class.specifiers, self.class.all_dom_attr_aliases).first
         when :attributes
-          assert_container
-          @container.locate!
+          assert_container_exists
           specified_attributes=@what
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
           
           candidate_match_at_index(@index, method(:matched_candidates), specifiers, self.class.all_dom_attr_aliases)
         when :index
+          assert_container_exists
           unless @what.nil?
             raise ArgumentError, "'what' was specified, but when 'how'=:index, no 'what' is used (just extra[:index])"
           end
@@ -604,6 +603,7 @@ module Vapir
           end
           candidate_match_at_index(@index, method(:matched_candidates), self.class.specifiers, self.class.all_dom_attr_aliases)
         when :custom
+          assert_container_exists
           # this allows a proc to be given as 'what', which is called yielding candidates, each being 
           # an instanted Element of this class. this might seem a bit odd - instantiating a bunch 
           # of elements in order to figure out which element_object to use in locating this one. 

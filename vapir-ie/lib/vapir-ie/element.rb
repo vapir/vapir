@@ -344,12 +344,12 @@ module Vapir
     
     private
     def element_object_exists?
-      return nil if !@element_object
+      return false if !@element_object
 
       begin
-        doc=container.document_object || (return nil)
-        win=doc.parentWindow || (return nil)
-        document_object=win.document || (return nil) # I don't know why container.document_object != container.document_object.parentWindow.document 
+        doc=container.document_object || (return false)
+        win=doc.parentWindow || (return false)
+        document_object=win.document || (return false) # I don't know why container.document_object != container.document_object.parentWindow.document 
 
         # we need a javascript function to test equality because comparing two WIN32OLEs always returns false (unless they have the same object_id, which these don't) 
         win.execScript("__watir_javascript_equals__=function(a, b){return a==b;}")

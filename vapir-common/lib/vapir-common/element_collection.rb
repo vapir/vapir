@@ -76,6 +76,26 @@ module Vapir
     def last
       at(:last)
     end
+    
+    alias enumerable_select select
+    def select(&block) # :yields: element
+      # TODO: test
+      if @how
+        enumerable_select(&block)
+      else
+        ElementCollection.new(@container, @collection_class, @extra, :custom, block)
+      end
+    end
+    
+    alias enumerable_reject reject
+    def reject(&block) # :yields: element
+      # TODO: test 
+      if @how
+        enumerable_reject(&block)
+      else
+        ElementCollection.new(@container, @collection_class, @extra, :custom, proc{|el| !block.call(el) })
+      end
+    end
       
     alias enumerable_find find
     # returns an element for which the given block returns true (that is, not false or nil) when yielded that element 

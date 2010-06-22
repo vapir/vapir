@@ -778,12 +778,7 @@ module Vapir
         temp = element_by_absolute_xpath(modifiedXpath) # temp = a DOM/COM element
         selectedElements << temp if temp != nil
       end
-      #puts selectedElements.length
-      if selectedElements.length == 0
-        return nil
-      else
-        return selectedElements
-      end
+      return selectedElements
     end
     
     # Method that iterates over IE DOM object and get the elements for the given

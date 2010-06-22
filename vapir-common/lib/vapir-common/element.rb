@@ -315,8 +315,20 @@ module Vapir
         class_array_get('container_collection_methods').each do |container_multiple_method|
           container_module.module_eval do
             # returns an ElementCollection of Elements that are instances of the including class 
-            define_method(container_multiple_method) do
-              ElementCollection.new(self, including_class, extra_for_contained)
+            define_method(container_multiple_method) do |*args|
+              case args.length
+              when 0
+                ElementCollection.new(self, including_class, extra_for_contained)
+              when 1,2
+                first, second=*args
+                how, what, index= *normalize_how_what_index(first, second, including_class)
+                if index
+                  raise ArgumentError, "Cannot specify index on collection method! specified index was #{index.inspect}"
+                end
+                ElementCollection.new(self, including_class, extra_for_contained, how, what)
+              else
+                raise ArgumentError, "wrong number of arguments - expected 0 arguments, 1 argument (hash of attributes), or 2 arguments ('how' and 'what'). got #{args.length}: #{args.inspect}"
+              end
             end
           end
           container_module.module_eval do

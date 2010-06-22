@@ -109,10 +109,6 @@ module Vapir
     end
     alias detect! find!
     
-    def inspect # :nodoc: 
-      "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{map{|el|el.inspect}.join(', ')}>"
-    end
-
     private
     include ElementObjectCandidates
     def element_objects
@@ -141,6 +137,10 @@ module Vapir
       end
     end
     public
+    def inspect # :nodoc: 
+      # todo: include how/what if set 
+      "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{map{|el|el.inspect}.join(', ')}>"
+    end
     def pretty_print(pp) # :nodoc: 
       # todo: include how/what if set 
       pp.object_address_group(self) do

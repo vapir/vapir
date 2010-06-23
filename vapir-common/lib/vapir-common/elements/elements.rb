@@ -386,10 +386,10 @@ module Vapir
       assert_enabled
       any_matched=false
       with_highlight(method_options) do
-        # using #each_with_index (rather than #each) because sometimes the OLE object goes away when a 
+        # using #each_by_index (rather than #each) because sometimes the OLE object goes away when a 
         # new option is selected (seems to be related to javascript events) and it has to be relocated. 
-        # see documentation on ElementCollection#each_with_index vs. #each. 
-        self.options.each_with_index do |option,i|
+        # see documentation on ElementCollection#each_by_index vs. #each. 
+        self.options.each_by_index do |option|
           # javascript events on previous option selections can cause the select list or its options to change, so this may not actually exist. but only check if we've actually done anything. 
           break if any_matched && !option.exists? 
           if yield option

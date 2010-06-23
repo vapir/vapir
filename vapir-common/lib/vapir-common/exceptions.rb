@@ -2,16 +2,15 @@ module Vapir
   module Exception
 
     # Root class for all Vapir Exceptions
-    class VapirException < RuntimeError
-      def initialize(message="")
-        super(message)
-      end
-    end
+    class VapirException < StandardError; end
     
-    class NoBrowserException < VapirException; end
+    # Base class for variouss sorts of errors when a thing does not exist 
+    class ExistenceFailureException < VapirException; end
 
+    class NoBrowserException < ExistenceFailureException; end
+    
     # This exception is thrown if an attempt is made to access an object that doesn't exist
-    class UnknownObjectException < VapirException; end
+    class UnknownObjectException < ExistenceFailureException; end
 
     # This exception is raised if attempting to relocate an Element that was located in a way that does not support relocating 
     class UnableToRelocateException < UnknownObjectException; end

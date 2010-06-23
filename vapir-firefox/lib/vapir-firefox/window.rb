@@ -32,7 +32,7 @@ module Vapir
     end
     # sets this window as the foreground window (MS Windows only)
     def bring_to_front
-      win_window.set_foreground!
+      win_window.really_set_foreground!
     end
   end
 end

@@ -741,17 +741,10 @@ module Vapir
         ensure
           @highlighting=was_highlighting
           if !@highlighting && options[:highlight] && exists? # if we stopped existing during the highlight, don't try to clear. 
-            if Object.const_defined?('WIN32OLE') # if WIN32OLE exists, calling clear_highlight may raise WIN32OLERuntimeError, even though we just checked existence. 
-              exception_to_rescue=WIN32OLERuntimeError
-            else # otherwise, make a dummy class, inheriting from Exception that won't ever be instantiated to be rescued. 
-              exception_to_rescue=(@@dummy_exception ||= Class.new(::Exception))
-            end
-            begin
+            handling_existence_failure do
               clear_highlight(highlight_options)
-            rescue exception_to_rescue
               # apparently despite checking existence above, sometimes the element object actually disappears between checking its existence 
-              # and clear_highlight using it, raising WIN32OLERuntimeError. 
-              # don't actually do anything in the rescue block here. 
+              # and clear_highlight using it, raising WIN32OLERuntimeError. so catch and ignore that with handling_existence_failure
             end
           end
         end

@@ -386,17 +386,19 @@ module Vapir
       assert_enabled
       any_matched=false
       with_highlight(method_options) do
-        # using #each_by_index (rather than #each) because sometimes the OLE object goes away when a 
-        # new option is selected (seems to be related to javascript events) and it has to be relocated. 
-        # see documentation on ElementCollection#each_by_index vs. #each. 
-        self.options.each_by_index do |option|
-          # javascript events on previous option selections can cause the select list or its options to change, so this may not actually exist. but only check if we've actually done anything. 
-          break if any_matched && !option.exists? 
-          if yield option
-            any_matched=true
-            option.set_selected(true, method_options) # note that this fires the onchange event on this SelectList 
-            if !self.exists? || !multiple? # javascript events firing can cause us to stop existing at this point. we should not continue if we don't exist. 
-              break
+        handling_existence_failure do
+          # using #each_by_index (rather than #each) because sometimes the OLE object goes away when a 
+          # new option is selected (seems to be related to javascript events) and it has to be relocated. 
+          # see documentation on ElementCollection#each_by_index vs. #each. 
+          self.options.each_by_index do |option|
+            # javascript events on previous option selections can cause the select list or its options to change, so this may not actually exist. but only check if we've actually done anything. 
+            break if any_matched && !option.exists? 
+            if yield option
+              any_matched=true
+              option.set_selected(true, method_options) # note that this fires the onchange event on this SelectList 
+              if !self.exists? || !multiple? # javascript events firing can cause us to stop existing at this point. we should not continue if we don't exist. 
+                break
+              end
             end
           end
         end

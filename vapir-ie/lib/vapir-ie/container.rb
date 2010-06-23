@@ -21,6 +21,17 @@ module Vapir
     include Vapir::Container
     include Vapir::Exception
     
+    public
+    # see documentation for the common Vapir::Container#handling_existence_failure 
+    def handling_existence_failure(options={})
+      options=handle_options(options, :handle => :ignore)
+      begin
+        yield
+      rescue WIN32OLERuntimeError, Vapir::Exception::ExistenceFailureException
+        handle_existence_failure($!, options)
+      end
+    end
+    public
     # Note: @container is the container of this object, i.e. the container
     # of this container.
     # In other words, for ie.table().this_thing().text_field().set,

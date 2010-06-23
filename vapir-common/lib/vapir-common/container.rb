@@ -112,6 +112,48 @@ module Vapir
       end
       result
     end
+    public
+    # catch exceptions that indicate some failure of something existing. 
+    # 
+    # takes an option, :handle, which indicates how the method should handle an 
+    # encountered exception. 
+    # :handle may be one of:
+    # * :ignore (default) - the exception is ignored and nil is returned. 
+    # * :raise - the exception is raised (same as if this method weren't used at all). 
+    # * :return - returns the exception which was raised. 
+    # * Proc, Method - the proc or method is called with the exception as an argument. 
+    #
+    # If no exception was raised, then the result of the give block is returned. 
+    #--
+    # this may be overridden elsewhere to deal with any other stuff that indicates failure to exist, as it is
+    # to catch WIN32OLERuntimeErrors. 
+    def handling_existence_failure(options={})
+      options=handle_options(options, :handle => :ignore)
+      begin
+        yield
+      rescue Vapir::Exception::ExistenceFailureException
+        handle_existence_failure($!, options)
+      end
+    end
+    private
+    # handles any errors encountered by #handling_existence_failure (either the
+    # common one or a browser-specific one) 
+    def handle_existence_failure(error, options={})
+      options=handle_options(options, :handle => :ignore)
+      case options[:handle]
+      when :raise
+        raise error
+      when :ignore
+        nil
+      when :return
+        error
+      when Proc, Method
+        options[:handle].call(error)
+      else
+        raise ArgumentError, "Don't know what to do when told to handle by :handle => #{options[:handle].inspect}"
+      end
+    end
+    public
     
     def default_extra_for_contained
       extra={:container => self}

@@ -350,17 +350,20 @@ module Vapir
         doc=container.document_object || (return false)
         win=doc.parentWindow || (return false)
         document_object=win.document || (return false) # I don't know why container.document_object != container.document_object.parentWindow.document 
-
-        # we need a javascript function to test equality because comparing two WIN32OLEs always returns false (unless they have the same object_id, which these don't) 
-        win.execScript("__watir_javascript_equals__=function(a, b){return a==b;}")
       rescue WIN32OLERuntimeError
         # if a call to these methods from the above block raised this exception, we don't exist. 
         # if that's not the error, it's unexpected; raise. 
-        if $!.message =~ /unknown property or method `(parentWindow|contentWindow|document|execScript)'/
+        if $!.message =~ /unknown property or method `(parentWindow|contentWindow|document)'/
           return false
         else
           raise
         end
+      end
+      begin
+        # we need a javascript function to test equality because comparing two WIN32OLEs always returns false (unless they have the same object_id, which these don't) 
+        win.execScript("__watir_javascript_equals__=function(a, b){return a==b;}")
+      rescue WIN32OLERuntimeError
+        return false
       end
 
       current_node=@element_object

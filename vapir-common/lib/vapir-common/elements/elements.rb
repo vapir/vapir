@@ -418,8 +418,8 @@ module Vapir
 
     # Unchecks the radio button or check box element.
     # Raises ObjectDisabledException exception if element is disabled.
-    def clear
-      set(false)
+    def clear(options={})
+      set(false, options)
     end
     
   end
@@ -440,17 +440,18 @@ module Vapir
     #
     # Fires the onchange event if value changes. 
     # Fires the onclick event the state is true. 
-    def set(state=true)
-      with_highlight do
+    def set(state=true, options={})
+      options=handle_options(options, :highlight => true, :wait => true)
+      with_highlight(options) do
         assert_enabled
         if checked!=state
           element_object.checked=state
-          fire_event :onchange if exists? # don't fire event if we stopped existing due to change in state 
+          fire_event(:onchange, options) if exists? # don't fire event if we stopped existing due to change in state 
         end
         if state && exists?
-          fire_event :onclick # fire this even if the state doesn't change; javascript can respond to clicking an already-checked radio. 
+          fire_event(:onclick, options) # fire this even if the state doesn't change; javascript can respond to clicking an already-checked radio. 
         end
-        wait
+        wait if options[:wait]
       end
       return self
     end
@@ -468,8 +469,13 @@ module Vapir
     inspect_these :checked
     # Checks this check box, or clears (defaults to setting if no argument is given)
     # Raises ObjectDisabledException exception if element is disabled.
-    def set(state=true)
-      with_highlight do
+    #
+    # takes options:
+    # * :highlight => true/false (defaults to true)
+    # * :wait => true/false (defaults to false)
+    def set(state=true, options={})
+      options=handle_options(options, :highlight => true, :wait => true)
+      with_highlight(options) do
         assert_enabled
         if checked!=state
           if browser_class.name != 'Vapir::Firefox'  # compare by name to not trigger autoload or raise NameError if not loaded 
@@ -477,10 +483,10 @@ module Vapir
             # todo/fix: this is browser-specific stuff, shouldn't it be in the browser-specific class? 
             element_object.checked=state
           end
-          fire_event :onclick if exists?  # sometimes previous actions can cause self to stop existing 
-          fire_event :onchange if exists? 
+          fire_event(:onclick, options) if exists?  # sometimes previous actions can cause self to stop existing 
+          fire_event(:onchange, options) if exists? 
         end
-        wait
+        wait if options[:wait]
       end
       return self
     end

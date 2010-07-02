@@ -98,10 +98,6 @@ module Vapir
     include Firefox::ModalDialogContainer
 
     def self.initialize_jssh_socket
-      # if it already exists and is not nil, then we are clobbering an existing one, presumably dead. but a new socket will not have any objects of the old one, so warn 
-      if class_variable_defined?('@@jssh_socket') && @@jssh_socket 
-        Kernel.warn "WARNING: JSSH_SOCKET RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
-      end
       @@jssh_socket=JsshSocket.new
       @@firewatir_jssh_objects=@@jssh_socket.object("Vapir").assign({})
       @@jssh_socket
@@ -114,6 +110,7 @@ module Vapir
         begin
           @@jssh_socket.assert_socket
         rescue JsshConnectionError
+          Kernel.warn "WARNING: JsshSocket RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
           initialize_jssh_socket
         end
       end

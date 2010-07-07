@@ -239,12 +239,8 @@ module Vapir
           # the Elements that are yielded are instantiated by :element object which cannot be 
           # relocated. 
           #
-          # the alternative to this would be for the calling code to loop over the element collection
-          # for this class on the container - that is, instead of:
-          #   found_div=frame.divs.detect{|div| weird_criteria_for(div) }
-          # which can't be relocated - since element collections use :element object - you'd do
-          #   found_div=frame.div(:custom, proc{|div| weird_criteria_for(div) })
-          # this way, found_div can be relocated. yay! 
+          # this integrates with ElementCollection, where Enumerable methods #detect,
+          # #select, and #reject are overridden to use it. 
           # 
           # the proc should return true (that is, not false or nil) when it likes the given Element - 
           # when it matches what it expects of this Element. 

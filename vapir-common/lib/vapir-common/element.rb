@@ -740,11 +740,10 @@ module Vapir
           result=yield
         ensure
           @highlighting=was_highlighting
-          if !@highlighting && options[:highlight] && exists? # if we stopped existing during the highlight, don't try to clear. 
+          if !@highlighting && options[:highlight]
             handling_existence_failure do
+              assert_exists :force => true
               clear_highlight(highlight_options)
-              # apparently despite checking existence above, sometimes the element object actually disappears between checking its existence 
-              # and clear_highlight using it, raising WIN32OLERuntimeError. so catch and ignore that with handling_existence_failure
             end
           end
         end

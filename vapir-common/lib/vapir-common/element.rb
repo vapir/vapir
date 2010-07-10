@@ -663,10 +663,8 @@ module Vapir
     public
     # Returns whether this element actually exists.
     def exists?
-      begin
-        !!locate
-      rescue Vapir::Exception::UnknownObjectException, Exception::NoMatchingWindowFoundException # if the window itself is gone, certainly we don't exist. 
-        false
+      handling_existence_failure(:handle => proc { return false }) do
+        return !!locate
       end
     end
     alias :exist? :exists?

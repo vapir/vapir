@@ -27,7 +27,8 @@ module Vapir
       options=handle_options(options, :handle => :ignore)
       begin
         yield
-      rescue WIN32OLERuntimeError, NoMethodError, Vapir::Exception::ExistenceFailureException
+      rescue WIN32OLERuntimeError, RuntimeError, NoMethodError, Vapir::Exception::ExistenceFailureException
+        raise if $!.class==RuntimeError && $!.message !~ /HRESULT/ # sometimes WIN32OLE raises a RuntimeError instead of a WIN32OLERuntimeError. only catch a RuntimeError if it's from WIN32OLE, indicated by HRESULT in the error message. 
         handle_existence_failure($!, options)
       end
     end

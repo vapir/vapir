@@ -32,6 +32,7 @@ module Vapir
 
     class WindowException < VapirException; end
     # This exception is thrown if the window cannot be found
+    class WindowGoneException < ExistenceFailureException; end
     class NoMatchingWindowFoundException < WindowException; end
     class WindowFailedToCloseException < WindowException; end
 

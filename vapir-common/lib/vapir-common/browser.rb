@@ -172,7 +172,7 @@ before you invoke Browser.new.
       exists?
     end
     def locate!(options={})
-      locate(options) || raise(Vapir::Exception::NoMatchingWindowFoundException, "The browser window seems to be gone")
+      locate(options) || raise(Vapir::Exception::WindowGoneException, "The browser window seems to be gone")
     end
     def inspect
       "#<#{self.class}:0x#{(self.hash*2).to_s(16)} " + (exists? ? "url=#{url.inspect} title=#{title.inspect}" : "exists?=false") + '>'

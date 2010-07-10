@@ -82,7 +82,7 @@ module Vapir
     attr_reader :containing_modal_dialog
     attr_reader :document_object
     def locate!(options={})
-      exists? || raise(Vapir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
+      exists? || raise(Vapir::Exception::WindowGoneException, "The modal dialog seems to have stopped existing.")
     end
     
     def exists?

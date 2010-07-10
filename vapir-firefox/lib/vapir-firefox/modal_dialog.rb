@@ -125,7 +125,7 @@ module Vapir
       containing_modal_dialog.modal_window
     end
     def locate!(options={})
-      exists? || raise(Vapir::Exception::NoMatchingWindowFoundException, "The modal dialog seems to have stopped existing.")
+      exists? || raise(Vapir::Exception::WindowGoneException, "The modal dialog seems to have stopped existing.")
     end
     
     def exists?

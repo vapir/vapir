@@ -486,18 +486,20 @@ module Vapir
     
     # saves a screenshot of this browser window to the given filename. 
     #
-    # second argument, optional, specifies what area to take a screenshot of. 
-    # - :client takes a screenshot of the client area, which excludes the menu bar and other window trimmings.
-    # - :window (default) takes a screenshot of the full browser window
-    # - :desktop takes a screenshot of the full desktop
-    def screen_capture(filename, dc=:window)
-      if dc==:desktop
-        screenshot_win=WinWindow.desktop_window
-        dc=:window
-      else
-        screenshot_win=win_window
+    # the screenshot format is BMP (DIB), so you should name your files to end with .bmp 
+    #
+    # the last argument is an optional options hash, taking options:
+    # - :dc => (default is :window). may be one of: 
+    #   - :client takes a screenshot of the client area, which excludes the menu bar and other window trimmings.
+    #   - :window (default) takes a screenshot of the full browser window
+    #   - :desktop takes a screenshot of the full desktop
+    def screen_capture(filename, options = {})
+      unless options.is_a?(Hash)
+        dc = options
+        options = {:dc => dc}
+        Kernel.warn("WARNING: The API for #screen_capture has changed and the last argument is now an options hash. Please change calls to this method to specify :dc => #{dc.inspect}")
       end
-      screenshot_win.capture_to_bmp_file(filename, :dc => dc)
+      screen_capture_win_window(filename, options)
     end
     
     def dir

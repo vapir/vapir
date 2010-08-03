@@ -599,6 +599,83 @@ module Vapir
       return self
     end
 
+    # saves a screenshot of this browser window to the given filename. 
+    #
+    # the last argument is an optional options hash, taking options:
+    # - :dc => context to capture (stands for device context). default is :page. may be one of: 
+    #   - :page takes a screenshot of the full page, and none of the browser chrome. this is supported cross-platform. 
+    #   - :client takes a screenshot of the client area, which excludes the menu bar and other window trimmings. 
+    #     only supported on windows. 
+    #   - :window takes a screenshot of the full browser window. only supported on windows. 
+    #   - :desktop takes a screenshot of the full desktop. only supported on windows. 
+    # - :format => a valid format. if :dc is :window, the default is 'png' ('jpeg' is also supported); if :dc is anything else, 'bmp' is both the
+    #   default and the only supported format. 
+    def screen_capture(filename, options = {})
+      options = handle_options(options, :format => nil, :dc => :page)
+      
+      if options[:dc] == :page
+        options[:format] ||= 'png'
+        # this is adapted from Selenium's method Selenium.prototype.doCaptureEntirePageScreenshot
+        
+        window = content_window_object
+        document = window.document
+        document_element = document.documentElement
+        
+        width = document_element.scrollWidth
+        height = document_element.scrollHeight
+        styleWidth = width.to_s + 'px'
+        styleHeight = height.to_s + 'px'
+        
+        canvas = grabCanvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'html:canvas')
+        grabCanvas.style.display = 'none'
+        grabCanvas.width = width
+        grabCanvas.style.width = styleWidth
+        grabCanvas.style.maxWidth = styleWidth
+        grabCanvas.height = height
+        grabCanvas.style.height = styleHeight
+        grabCanvas.style.maxHeight = styleHeight
+        
+        document_element.appendChild(grabCanvas)
+        begin
+          context = canvas.getContext('2d')
+          context.clearRect(0, 0, width, height)
+          context.save()
+          
+          prefs=jssh_socket.Components.classes['@mozilla.org/preferences-service;1'].getService(jssh_socket.Components.interfaces.nsIPrefBranch)
+          background_color = prefs.getCharPref('browser.display.background_color')
+          
+          context.drawWindow(window, 0, 0, width, height, background_color)
+          context.restore()
+          dataUrl = canvas.attr(:toDataURL).pass("image/" + options[:format]) # keep this a JsshObject to avoid passing large quantities of data over the socket more than necessary 
+          
+          nsIoService = jssh_socket.Components.classes["@mozilla.org/network/io-service;1"].getService(jssh_socket.Components.interfaces.nsIIOService)
+          channel = nsIoService.newChannelFromURI(nsIoService.newURI(dataUrl, nil, nil))
+          binaryInputStream = jssh_socket.Components.classes["@mozilla.org/binaryinputstream;1"].createInstance(jssh_socket.Components.interfaces.nsIBinaryInputStream)
+          binaryInputStream.setInputStream(channel.open())
+          numBytes = binaryInputStream.available()
+          utf8_bytes = binaryInputStream.readBytes(numBytes)
+          
+          bytes = utf8_bytes.unpack("U*").pack("C*")
+          
+          File.open(filename, 'wb'){|f| f.write(bytes) }
+          
+          #  nsFile = jssh_socket.Components.classes["@mozilla.org/file/local;1"].createInstance(jssh_socket.Components.interfaces.nsILocalFile)
+          #  nsFile.initWithPath(filename)
+          #  writeFlag = 0x02 # write only
+          #  createFlag = 0x08 # create
+          #  truncateFlag = 0x20 # truncate
+          #  fileOutputStream = jssh_socket.Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(jssh_socket.Components.interfaces.nsIFileOutputStream)
+          #  fileOutputStream.init(nsFile, writeFlag | createFlag | truncateFlag, 0664, nil)
+          #  fileOutputStream.write(bytes, numBytes)
+          #  fileOutputStream.close()
+        ensure
+          document_element.removeChild(grabCanvas)
+        end
+      else
+        screen_capture_win_window(filename, options)
+      end
+    end
+
     # Add an error checker that gets called on every page load.
     # * checker - a Proc object
     def add_checker(checker)

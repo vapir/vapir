@@ -177,6 +177,23 @@ before you invoke Browser.new.
     def inspect
       "#<#{self.class}:0x#{(self.hash*2).to_s(16)} " + (exists? ? "url=#{url.inspect} title=#{title.inspect}" : "exists?=false") + '>'
     end
+    
+    # does the work of #screen_capture when the WinWindow library is being used for that. see #screen_capture documentation (browser-specific)
+    def screen_capture_win_window(filename, options = {})
+      options = handle_options(options, :dc => :window, :format => nil)
+      if options[:format] && !(options[:format].is_a?(String) && options[:format].downcase == 'bmp')
+        raise ArgumentError, ":format was specified as #{options[:format].inspect} but only 'bmp' is supported when :dc is #{options[:dc].inspect}"
+      end
+      if options[:dc] == :desktop
+        win_window.really_set_foreground!
+        screenshot_win=WinWindow.desktop_window
+        options[:dc] = :window
+      else
+        screenshot_win=win_window
+      end
+      screenshot_win.capture_to_bmp_file(filename, :dc => options[:dc])
+    end
+    private :screen_capture_win_window
   end
 
 end

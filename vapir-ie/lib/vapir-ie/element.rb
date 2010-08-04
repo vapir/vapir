@@ -111,7 +111,7 @@ module Vapir
           :shiftLeft => false,
         }
 
-      if %w(onclick onmousedown onmouseup ondblclick onmouseover onmouseout).include?(event_type)
+      if %w(onclick onmousedown onmouseup ondblclick onmouseover onmouseout onmousemove).include?(event_type)
         client_center=self.client_center
 
         button_code=options[:button_code] || 

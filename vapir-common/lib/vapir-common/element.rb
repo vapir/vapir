@@ -320,23 +320,15 @@ module Vapir
     # the block is called within an assert_exists block, so for methods that highlight, the
     # assert_exists can generally be omitted from there. 
     def with_highlight(options={})
-      highlight_option_keys=[:color]
-      #options=handle_options(options, {:highlight => true}, highlight_option_keys)
-      options={:highlight => true}.merge(options)
-      highlight_options=options.reject{|(k,v)| !highlight_option_keys.include?(k) }
       assert_exists do
-        was_highlighting=@highlighting
-        if (!@highlighting && options[:highlight])
-          set_highlight(highlight_options)
-        end
-        @highlighting=true
-        begin
-          result=yield
+        # yeah, this line is an unreadable mess, but I have to skip over it so many times debugging that it's worth just sticking it on one line 
+        (options={:highlight => true}.merge(options)); (was_highlighting=@highlighting); (set_highlight(options) if !@highlighting && options[:highlight]); (@highlighting=true)
+        begin; result=yield
         ensure
           @highlighting=was_highlighting
           if !@highlighting && options[:highlight] && exists? # if we stopped existing during the highlight, don't try to clear. 
             handling_existence_failure do
-              clear_highlight(highlight_options)
+              clear_highlight(options)
               # apparently despite checking existence above, sometimes the element object actually disappears between checking its existence 
               # and clear_highlight using it, raising WIN32OLERuntimeError. so catch and ignore that with handling_existence_failure
             end

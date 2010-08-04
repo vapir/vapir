@@ -98,15 +98,9 @@ module Vapir
     # asserts that this element exists - optionally, takes a block, and other calls to assert_exists
     # over the course of the block will not cause redundant assertions. 
     def assert_exists(options={})
-      was_asserting_exists=@asserting_exists
-      if (!@asserting_exists || options[:force])
-        locate!
-      end
-      @asserting_exists=true
-      begin
-        if block_given?
-          result=yield
-        end
+      # yeah, this line is an unreadable mess, but I have to skip over it so many times debugging that it's worth just sticking it on one line 
+      (was_asserting_exists=@asserting_exists); (locate! if !@asserting_exists || options[:force]); (@asserting_exists=true)
+      begin; result=yield if block_given?
       ensure
         @asserting_exists=was_asserting_exists
       end

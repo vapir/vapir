@@ -78,7 +78,7 @@ module Vapir
         # execScript works, but behaves differently than eval (it doesn't return anything) - but 
         # once an execScript has run, eval is subsequently defined. so, execScript a blank script, 
         # and then try again with eval.
-        document.parentWindow.execScript('null')
+        document_object.parentWindow.execScript('null')
         retried=true
         retry
       end

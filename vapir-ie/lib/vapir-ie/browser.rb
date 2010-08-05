@@ -458,7 +458,7 @@ module Vapir
       require 'nokogiri'
       if @xml_parser_doc == nil
         htmlSource ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTML>\n"
-        htmlSource = html_source(document.body,htmlSource," ")
+        htmlSource = html_source(document_object.body,htmlSource," ")
         htmlSource += "\n</HTML>\n"
         # Angrez: Resolving Jira issue WTR-114
         htmlSource = htmlSource.gsub(/&nbsp;/, '&#160;')
@@ -669,7 +669,7 @@ module Vapir
       curElem = nil
       
       #puts "Hello; Given xpath is : #{xpath}"
-      doc = document
+      doc = document_object
       curElem = doc.getElementsByTagName("body").item(0)
       xpath =~ /^.*\/body\[?\d*\]?\/(.*)/
       xpath = $1

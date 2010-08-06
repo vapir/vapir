@@ -43,6 +43,7 @@ spec = Gem::Specification.new do |s|
     'lib/vapir-common/browser.rb', # the common browser class from which Firefox and IE classes inherit 
     'lib/vapir-common/browsers.rb', # defines stuff for the browsers that use this, most importantly, autoload stuff. todo: don't think this needs a file separate from browser.rb 
     'lib/vapir-common/container.rb', # the common module for all Containers; all common container methods (such as #div, #text_field) are defined on this module 
+    'lib/vapir-common/page_container.rb', # the common page container module for stuff with a document 
     'lib/vapir-common/modal_dialog.rb', # common module for browser-specific ModalDialog classes. 
     'lib/vapir-common/specifier.rb', # various methods related to how vapir specifies elements and coding that on the DOM 
     'lib/vapir-common/element.rb', # the common Element module, included by all browser specific Element classes. 

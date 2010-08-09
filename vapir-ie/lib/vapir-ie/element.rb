@@ -41,15 +41,33 @@ module Vapir
     # Return the outer html of the object - see http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/outerhtml.asp?frame=true
     dom_attr :outerHTML => :outer_html
 
-    # return the text before the element
-    def before_text
-      element_object.getAdjacentText("afterEnd")
-    end
-    
-    # return the text after the element
-    def after_text
+    # text immediately before this element 
+    # 
+    # http://msdn.microsoft.com/en-us/library/ms536427(VS.85).aspx
+    def text_before_begin
       element_object.getAdjacentText("beforeBegin")
     end
+    # text after the start of the element but before all other content in the element
+    # 
+    # http://msdn.microsoft.com/en-us/library/ms536427(VS.85).aspx
+    def text_after_begin
+      element_object.getAdjacentText("afterBegin")
+    end
+    # text immediately before the end of the element but after all other content in the element
+    # 
+    # http://msdn.microsoft.com/en-us/library/ms536427(VS.85).aspx
+    def text_before_end
+      element_object.getAdjacentText("beforeEnd")
+    end
+    # text immediately before this element 
+    #
+    # http://msdn.microsoft.com/en-us/library/ms536427(VS.85).aspx
+    def text_after_end
+      element_object.getAdjacentText("afterEnd")
+    end
+    # strange, counterintuitive aliases from watir 
+    alias before_text text_after_end
+    alias after_text text_before_begin
     
     # Returns the text content of the element.
     dom_attr :innerText => :text

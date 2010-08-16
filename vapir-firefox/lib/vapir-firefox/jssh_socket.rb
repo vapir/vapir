@@ -827,8 +827,8 @@ class JsshObject
   # note that this is javascript, not to be confused with ruby's #instance_of? method. 
   # 
   # example:
-  # window.instanceof(window.jssh_socket.Components.interfaces.nsIDOMChromeWindow)
-  # => true
+  #  window.instanceof(window.jssh_socket.Components.interfaces.nsIDOMChromeWindow)
+  #  => true
   def instanceof(interface)
     jssh_socket.instanceof(self.ref, interface.ref)
   end

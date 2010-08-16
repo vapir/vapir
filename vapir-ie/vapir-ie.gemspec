@@ -61,13 +61,13 @@ spec = Gem::Specification.new do |s|
     'lib/vapir-ie/image.rb',
     'lib/vapir-ie/link.rb',
     'lib/vapir-ie/logger.rb', # logging. (needs much work) 
+    'lib/vapir-ie/clear_tracks.rb', # code to clear cache, history, cookies, etc. 
     'lib/vapir-ie/scripts/select_file.rb', # standalone script to interact with a file upload selector dialog. 
     'lib/vapir-ie/autoit.rb', 'lib/vapir-ie/AutoItX.chm', 'lib/vapir-ie/AutoItX3.dll', # autoit crap. hopefully the last remnants of this will merge into WinWindow. 
     'lib/vapir-ie/IEDialog/Release/IEDialog.dll', # todo: write this in ruby 
     'lib/vapir-ie/win32ole.rb', # loads the correct win32ole and adds #respond_to?. todo: should be written in c. 
     'lib/vapir-ie/win32ole/win32ole.so', # todo: compile this for ruby 1.9 and include both versions 
     'lib/vapir-ie/screen_capture.rb', # this is gone. todo: file will be deleted at some point. 
-    #'lib/vapir-ie/cookiemanager.rb', # todo: delete; this won't be supported by vapir. or at least not using this code. 
     #'lib/vapir-ie/datahandler.rb', #todo: delete. this won't ever be supported by vapir. 
     #'lib/vapir-ie/contrib' # todo: merge what ought to be merged; delete the rest. 
     #'lib/vapir-ie/contrib/ie-new-process.rb', # TODO: maybe merge some of the ideas of this (OpenProcess, TerminateProcess) into WinWindow 

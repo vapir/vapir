@@ -813,6 +813,21 @@ class JsshObject
     pass(*args).val_or_object
   end
   
+  # assuming the javascript object represented is a constructor, this returns a new
+  # instance passing the given arguments. 
+  #
+  #  date_class = jssh_socket.object('Date')
+  #  => #<JsshObject:0x0118eee8 type=function, debug_name=Date>
+  #  date = date_class.new
+  #  => #<JsshObject:0x01188a84 type=object, debug_name=new Date()>
+  #  date.getFullYear
+  #  => 2010
+  #  date_class.new('october 4, 1978').getFullYear
+  #  => 1978
+  def new(*args)
+    JsshObject.new("new #{ref}", jssh_socket, :debug_name => "new #{debug_name}").call(*args)
+  end
+
   # sets the given javascript variable to this object, and returns a JsshObject referring
   # to the variable. 
   #

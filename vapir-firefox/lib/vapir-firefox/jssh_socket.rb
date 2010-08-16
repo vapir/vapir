@@ -608,8 +608,6 @@ class JsshObject
   attr_reader :ref
   # the JsshSocket this JsshObject is on 
   attr_reader :jssh_socket
-  # the type of this javascript object (as returned by JsshSocket#typeof)
-  attr_reader :type
   # whether this represents the result of a function call (if it does, then JsshSocket#typeof won't be called on it)
   attr_reader :function_result
   # this tracks the origins of this object - what calls were made along the way to get it. 

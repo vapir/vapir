@@ -126,17 +126,21 @@ module Vapir
     #
     # Input:
     #   options  - Hash of any of the following options:
-    #     :wait_time - Time to wait for Firefox to start. By default it waits for 2 seconds.
+    #     :timeout  - Time to wait for Firefox to start. By default it waits for 2 seconds.
     #                 This is done because if Firefox is not started and we try to connect
     #                 to jssh on port 9997 an exception is thrown.
     #     :profile  - The Firefox profile to use. If none is specified, Firefox will use
     #                 the last used profile.
     def initialize(options = {})
       if(options.kind_of?(Integer))
-        options = {:wait_time => options}
-        Kernel.warn "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:wait_time => #{options[:wait_time]})\n(called from #{caller.map{|c|"\n"+c}})"
+        options = {:timeout => options}
+        Kernel.warn "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:timeout => #{options[:timeout]})\n(called from #{caller.map{|c|"\n"+c}})"
       end
-      options=handle_options(options, {:wait_time => 20}, [:attach, :goto, :binary_path, :profile])
+      options=handle_options(options, {:timeout => 20}, [:attach, :goto, :binary_path, :profile, :wait_time])
+      if options[:wait_time]
+        Kernel.warn "DEPRECATION WARNING: the :wait_time option for #{self.class.name}.new has been renamed to :timeout for consistency. Please use #{self.class.name}.new(:timeout => #{options[:wait_time]})\n(called from #{caller.map{|c|"\n"+c}})"
+        options[:timeout] = options[:wait_time]
+      end
       if options[:binary_path]
         @binary_path=options[:binary_path]
       end
@@ -161,7 +165,7 @@ module Vapir
             options[:attach]=[:title, //]
           end
         end
-        ::Waiter.try_for(options[:wait_time], :exception => Vapir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:wait_time]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
+        ::Waiter.try_for(options[:timeout], :exception => Vapir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:timeout]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
           begin
             jssh_socket(:reset_if_dead => true).assert_socket
             true

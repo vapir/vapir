@@ -17,9 +17,7 @@ module Vapir
       @@ie_version_parts ||= IE.version.split('.').map{|part| part.to_i }
     end
     class Process
-      # Vapir::IE::Process.start is called by Vapir::IE.new_process and does not start a new process correctly in IE8. 
-      # Calling IE8 with the -nomerge option correctly starts a new process, so call Process.create with this option if 
-      # IE's version is 8 
+      # start a new IE process and return a new Vapir::IE::Process object representing it. 
       def self.start
         require 'win32/process'
         program_files = ENV['ProgramFiles'] || "c:\\Program Files"
@@ -31,19 +29,18 @@ module Vapir
         new process_id
       end
       
+      # takes a process id 
       def initialize process_id
         @process_id = process_id
       end
       attr_reader :process_id
       
-      def window
-        require 'win32/process'
-        Waiter.wait_until do
-          IE.each do | ie |
-            window = ie.ie
-            hwnd = ie.hwnd
-            process_id = Process.process_id_from_hwnd hwnd
-            return window if process_id == @process_id
+      # returns the browser object corresponding to the process id 
+      def browser_object(options={})
+        options=handle_options(options, :timeout => 32)
+        ::Waiter.try_for(options[:timeout], :exception => RuntimeError.new("Could not find a browser for process #{self.inspect}")) do
+          Vapir::IE.browser_objects.detect do |browser_object|
+            @process_id == Process.process_id_from_hwnd(browser_object.hwnd)
           end
         end
       end

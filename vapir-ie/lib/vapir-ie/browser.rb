@@ -70,99 +70,134 @@ module Vapir
     # this contains the list of unique urls that have been visited
     attr_reader :url_list
     
-    # Create a new IE window. Works just like IE.new in Watir 1.4.
-    def self.new_window
-      ie = new true
-      ie._new_window_init
-      ie
+    class << self
+      # Create a new IE Window, starting at the specified url.
+      # If no url is given, start empty.
+      def start(url='about:blank', options={})
+        raise ArgumentError, "URL must be a string; get #{url.inspect}" unless url.is_a?(String)
+        new(options.merge(:goto => url))
+      end
+      alias start_window start
+      
+      # Create a new IE window. Works just like IE.new in Watir 1.4.
+      def new_window(options={})
+        new(options)
+      end
+      # Create a new IE window in a new process. 
+      # This method will not work when
+      # Vapir/Ruby is run under a service (instead of a user).
+      def new_process(options={})
+        new(options.merge(:new_process => true))
+      end
+
+      # Create a new IE window in a new process, starting at the specified URL. 
+      # Same as IE.start.
+      def start_process(url='about:blank', options={})
+        new(options.merge(:new_process => true, :goto => url))
+      end
+
+      # Return a Vapir::IE object for an existing IE window. Window can be
+      # referenced by url, title, or window handle.
+      # Second argument can be either a string or a regular expression in the 
+      # case of of :url or :title. 
+      # IE.attach(:url, 'http://www.google.com')
+      # IE.attach(:title, 'Google')
+      # IE.attach(:hwnd, 528140)
+      # This method will not work when
+      # Vapir/Ruby is run under a service (instead of a user).
+      def attach(how, what, options={})
+        ie = new(options.merge(:attach => [how, what]))
+      end
+      alias find attach
+
+      # Yields successively to each IE window on the current desktop. Takes a block.
+      # This method will not work when
+      # Vapir/Ruby is run under a service (instead of a user).
+      # Yields to the window and its hwnd.
+      def each
+        each_browser_object do |browser_object|
+          yield attach(:browser_object, browser_object)
+        end
+      end
+
+      # yields a WIN32OLE of each IE browser object that is available. 
+      def each_browser_object
+        shell = WIN32OLE.new('Shell.Application')
+        shell.Windows.each do |window|
+          if (window.path =~ /Internet Explorer/ rescue false) && (window.hwnd rescue false)
+            yield window
+          end
+        end
+      end
+      def browser_objects
+        Enumerable::Enumerator.new(self, :each_browser_object)
+      end
+
     end
     
     # Create an IE browser.
-    def initialize suppress_new_window=nil 
-      _new_window_init unless suppress_new_window 
-    end
-    
-    def _new_window_init
-      create_browser_window
-      initialize_options
-      goto 'about:blank' # this avoids numerous problems caused by lack of a document
-    end
-    
-    # Create a new IE Window, starting at the specified url.
-    # If no url is given, start empty.
-    def self.start url=nil
-      start_window url
-    end
-    
-    # Create a new IE window, starting at the specified url.
-    # If no url is given, start empty. Works like IE.start in Watir 1.4.
-    def self.start_window url=nil
-      ie = new_window
-      ie.goto url if url
-      ie
+    #
+    # Takes a hash of options:
+    # - :timeout - the number of seconds to wait for a window to appear when 
+    #   attaching or launching. 
+    # - :goto - a url to which the IE browser will navigate. by default this 
+    #   is 'about:blank' for newly-launched IE instances, and the default is 
+    #   not to navigate anywhere for attached instances. 
+    # - :new_process - true or false, default is false. whether to launch this 
+    #   IE instance as its own process (this has no effect if :attach is 
+    #   specified)
+    # - :attach - a two-element Array of [how, what] where how is one of:
+    #   - :title - a string or regexp matching the title of the browser that
+    #     should be attached to. 
+    #   - :URL - a string or regexp matching the URL of the browser that 
+    #     should be attached to. 
+    #   - :HWND - specifies the HWND of the browser that should be attached to. 
+    #   - :browser_object - this is generally just used internally. 'what' 
+    #     is a WIN32OLE object representing the browser. 
+    def initialize(options = {})
+      if options==true || options==false
+        raise NotImplementedError, "#{self.class.name}.new takes an options hash - passing a boolean for 'suppress_new_window' is no longer supported. Please see the documentation for #{self.class}.new"
+      end
+      options=handle_options(options, {:timeout => 20, :new_process => false}, [:attach, :goto])
+
+      if options[:attach]
+        how, what = *options[:attach]
+        if how== :browser_object
+          @browser_object = what
+        else
+          orig_how=how
+          hows={ :title => proc{|bo| bo.document.title },
+                 :URL => proc{|bo| bo.locationURL },
+                 :HWND => proc{|bo| bo.HWND },
+               }
+          how=hows.keys.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
+          raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how
+          @browser_object = ::Waiter.try_for(options[:timeout], :exception => NoMatchingWindowFoundException.new("Unable to locate a window with #{how} of #{what}")) do
+            self.class.browser_objects.detect do |browser_object|
+              begin
+                Vapir::fuzzy_match(hows[how].call(browser_object), what)
+              rescue WIN32OLERuntimeError, NoMethodError
+                false
+              end
+            end
+          end
+        end
+        initialize_options
+        wait
+      else
+        if options[:new_process]
+          iep = Process.start
+          @browser_object = iep.browser_object(:timeout => options[:timeout])
+          @process_id = iep.process_id
+        else
+          @browser_object = WIN32OLE.new('InternetExplorer.Application')
+        end
+        initialize_options
+        goto('about:blank')
+      end
+      goto(options[:goto]) if options[:goto]
     end
 
-    # Create a new IE window in a new process. 
-    # This method will not work when
-    # Vapir/Ruby is run under a service (instead of a user).
-    def self.new_process
-      ie = new true
-      ie._new_process_init
-      ie
-    end
-    
-    def _new_process_init
-      iep = Process.start
-      @browser_object = iep.window
-      @process_id = iep.process_id
-      initialize_options
-      goto 'about:blank'
-    end
-    
-    # Create a new IE window in a new process, starting at the specified URL. 
-    # Same as IE.start.
-    def self.start_process url=nil
-      ie = new_process
-      ie.goto url if url
-      ie
-    end
-    
-    # Return a Vapir::IE object for an existing IE window. Window can be
-    # referenced by url, title, or window handle.
-    # Second argument can be either a string or a regular expression in the 
-    # case of of :url or :title. 
-    # IE.attach(:url, 'http://www.google.com')
-    # IE.attach(:title, 'Google')
-    # IE.attach(:hwnd, 528140)
-    # This method will not work when
-    # Vapir/Ruby is run under a service (instead of a user).
-    def self.attach how, what
-      ie = new true # don't create window
-      ie._attach_init(how, what)
-      ie
-    end
-    
-    # this method is used internally to attach to an existing window
-    def _attach_init how, what
-      attach_browser_window how, what
-      initialize_options
-      wait
-    end
-
-    # Return an IE object that wraps the given window, typically obtained from
-    # Shell.Application.windows.
-    def self.bind window
-      ie = new true
-      ie.ie = window
-      ie.initialize_options
-      ie
-    end
-  
-    def create_browser_window
-      @browser_object = WIN32OLE.new('InternetExplorer.Application')
-    end
-    private :create_browser_window
-    
     def initialize_options
       self.visible = IE.visible
       self.speed = IE.speed
@@ -227,79 +262,7 @@ module Vapir
       @browser_object.visible = boolean if boolean != @browser_object.visible
     end
     
-    # Yields successively to each IE window on the current desktop. Takes a block.
-    # This method will not work when
-    # Vapir/Ruby is run under a service (instead of a user).
-    # Yields to the window and its hwnd.
-    def self.each
-      shell = WIN32OLE.new('Shell.Application')
-      shell.Windows.each do |window|
-        next unless (window.path =~ /Internet Explorer/ rescue false)
-        next unless (hwnd = window.hwnd rescue false)
-        ie = IE.bind(window)
-        ie.hwnd = hwnd
-        yield ie
-      end
-    end
-
-    # return internet explorer instance as specified. if none is found, 
-    # return nil.
-    # arguments:
-    #   :url, url -- the URL of the IE browser window
-    #   :title, title -- the title of the browser page
-    #   :hwnd, hwnd -- the window handle of the browser window.
-    # This method will not work when
-    # Vapir/Ruby is run under a service (instead of a user).
-    def self.find(how, what)
-      ie_ole = IE._find(how, what)
-      IE.bind ie_ole if ie_ole
-    end
-
-    def self._find(how, what)
-      ieTemp = nil
-      IE.each do |ie|
-        window = ie.ie
-        
-        case how
-        when :url
-          ieTemp = window if Vapir::fuzzy_match(window.locationURL, what)
-        when :title
-          # normal windows explorer shells do not have document
-          # note window.document will fail for "new" browsers
-          begin
-            title = window.locationname
-            title = window.document.title
-          rescue WIN32OLERuntimeError, NoMethodError
-          end
-          ieTemp = window if Vapir::fuzzy_match(title, what)
-        when :hwnd
-          begin
-            ieTemp = window if what == window.HWND
-          rescue WIN32OLERuntimeError, NoMethodError
-          end
-        else
-          raise ArgumentError
-        end
-      end
-      return ieTemp
-    end
-    
-    def attach_browser_window how, what 
-      log "Seeking Window with #{how}: #{what}"
-      ieTemp = nil
-      begin
-        Vapir::until_with_timeout do
-          ieTemp = IE._find how, what
-        end
-      rescue TimeOutException
-        raise NoMatchingWindowFoundException,
-                 "Unable to locate a window with #{how} of #{what}"
-      end
-      @browser_object = ieTemp
-    end
-    private :attach_browser_window
-    
-    # the OLE Internet Explorer object
+    # the WIN32OLE Internet Explorer object
     attr_reader :browser_object
     alias ie browser_object
     
@@ -308,7 +271,10 @@ module Vapir
       assert_exists
       @hwnd ||= @browser_object.hwnd
     end
-    attr_writer :hwnd
+
+    def process_id
+      @process_id ||= IE::Process.process_id_from_hwnd @browser_object.hwnd
+    end
     
     def win_window
       require 'vapir-common/win_window'

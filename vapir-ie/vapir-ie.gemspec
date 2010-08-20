@@ -68,8 +68,6 @@ spec = Gem::Specification.new do |s|
     'lib/vapir-ie/win32ole.rb', # loads the correct win32ole and adds #respond_to?. todo: should be written in c. 
     'lib/vapir-ie/win32ole/win32ole.so', # todo: compile this for ruby 1.9 and include both versions 
     'lib/vapir-ie/screen_capture.rb', # this is gone. todo: file will be deleted at some point. 
-    #'lib/vapir-ie/datahandler.rb', #todo: delete. this won't ever be supported by vapir. 
-    #'lib/vapir-ie/contrib' # todo: merge what ought to be merged; delete the rest. 
     #'lib/vapir-ie/contrib/ie-new-process.rb', # TODO: maybe merge some of the ideas of this (OpenProcess, TerminateProcess) into WinWindow 
   ]
 end

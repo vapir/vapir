@@ -495,11 +495,7 @@ module Vapir
       nil
     end
     def self.window_objects
-      window_objects=[]
-      each_window_object do |window_object|
-        window_objects << window_object
-      end
-      window_objects
+      Enumerator.new(self, :each_window_object)
     end
     
     # return the window jssh object for the browser window with the given title or url.

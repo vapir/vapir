@@ -571,7 +571,8 @@ class JsshSocket
   def object(ref, other={})
     JsshObject.new(ref, self, {:debug_name => ref}.merge(other))
   end
-
+  # takes a reference and returns a new JsshObject representing that reference on this socket, 
+  # stored on this socket's temporary object. 
   def object_in_temp(ref, other={})
     object(ref, other).store_rand_temp
   end

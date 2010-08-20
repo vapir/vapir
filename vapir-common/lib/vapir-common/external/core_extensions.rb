@@ -37,4 +37,9 @@ module Kernel
     proc{|f| f.call(f) }.call(proc{|f| yield proc{|*x| f.call(f).call(*x) } })
   end
   module_function :ycomb
+
+  def warn_with_caller(message)
+    Kernel.warn "#{message}\ncalled from: #{caller[1..-1].map{|c|"\n\t"+c}}"
+  end
+  module_function :warn_with_caller
 end

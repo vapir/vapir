@@ -1,1 +1,5 @@
-module Vapir  module Common    VERSION = 'x.x.x'  endend
+module Vapir
+  module Common
+    VERSION = 'x.x.x'
+  end
+end

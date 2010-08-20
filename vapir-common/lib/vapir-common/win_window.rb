@@ -1053,7 +1053,7 @@ class WinWindow
   #
   # may raise a WinWindow::SystemError from #each_child 
   def children
-    Children.new self
+    Enumerable::Enumerator.new(self, :each_child)
   end
 
   # true if comparing an object of the same class with the same hwnd (integer) 
@@ -1155,6 +1155,10 @@ class WinWindow
     nil
   end
 
+  # Enumerable object that iterates over every available window 
+  #
+  # May raise a WinWindow::SystemError from WinWindow.each_window
+  All = Enumerable::Enumerator.new(WinWindow, :each_window)
 
   # returns the first window found whose text matches what is given
   #
@@ -1244,33 +1248,4 @@ class WinWindow
       self.new(hwnd)
     end
   end
-
-  # Enumerable object that iterates over every available window 
-  #
-  # May raise a WinWindow::SystemError from WinWindow.each_window
-  module All
-    def self.each
-      WinWindow.each_window do |window|
-        yield window
-      end
-    end
-    extend Enumerable
-  end
-
-  # instantiates Enumerable objects that iterate over a WinWindow's children. 
-  #
-  # May raise a WinWindow::SystemError from WinWindow#each_child
-  class Children
-    attr_reader :parentwindow
-    def initialize(parentwindow)
-      @parentwindow=parentwindow
-    end
-    def each
-      parentwindow.each_child do |child_window|
-        yield child_window
-      end
-    end
-    include Enumerable
-  end
-
 end

@@ -131,14 +131,12 @@ module Vapir
     #                 to jssh on port 9997 an exception is thrown.
     #     :profile  - The Firefox profile to use. If none is specified, Firefox will use
     #                 the last used profile.
-    #     :suppress_launch_process - do not create a new firefox process. Connect to an existing one.
-    # TODO: Start the firefox version given by user.
     def initialize(options = {})
       if(options.kind_of?(Integer))
         options = {:wait_time => options}
         Kernel.warn "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:wait_time => #{options[:wait_time]})\n(called from #{caller.map{|c|"\n"+c}})"
       end
-      options=handle_options(options, {:wait_time => 20}, [:attach, :goto, :binary_path])
+      options=handle_options(options, {:wait_time => 20}, [:attach, :goto, :binary_path, :profile])
       if options[:binary_path]
         @binary_path=options[:binary_path]
       end
@@ -153,7 +151,7 @@ module Vapir
         if options[:attach]
           raise Vapir::Exception::NoBrowserException, "cannot attach using #{options[:attach].inspect} - could not connect to Firefox with JSSH"
         else
-          launch_browser
+          launch_browser(options)
           # if we just launched a the browser process, attach to the window
           # that opened when we did that. 
           # but if options[:attach] is explicitly given as false (not nil), 

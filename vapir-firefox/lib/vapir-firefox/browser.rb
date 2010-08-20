@@ -537,6 +537,16 @@ module Vapir
       body_object.textContent
     end
 
+    # the HTTP response status code for the currently loaded document 
+    def response_status_code
+      channel = browser_object.webProgress.currentDocumentChannel
+      if channel.instanceof(jssh_socket.Components.interfaces.nsIHttpChannel)
+        return channel.responseStatus
+      else
+        raise RuntimeError, "expected currentDocumentChannel to be a nsIHttpChannel but it wasn't"
+      end
+    end
+    
     # Maximize the current browser window.
     def maximize()
       browser_window_object.maximize

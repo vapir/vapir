@@ -539,12 +539,12 @@ module Vapir
 
     # the HTTP response status code for the currently loaded document 
     def response_status_code
-      channel = browser_object.webProgress.currentDocumentChannel
-      if channel.instanceof(jssh_socket.Components.interfaces.nsIHttpChannel)
-        return channel.responseStatus
-      else
-        raise RuntimeError, "expected currentDocumentChannel to be a nsIHttpChannel but it wasn't"
-      end
+      channel = nil
+      ::Waiter.try_for(8, :exception => nil) do
+        channel=browser.browser_object.docShell.currentDocumentChannel
+        channel.is_a?(JsshObject) && channel.instanceof(browser.jssh_socket.Components.interfaces.nsIHttpChannel) && channel.respond_to?(:responseStatus)
+      end || raise(RuntimeError, "expected currentDocumentChannel to exist and be a nsIHttpChannel but it wasn't; was #{channel.is_a?(JsshObject) ? channel.toString : channel.inspect}")
+      status = channel.responseStatus
     end
     
     # Maximize the current browser window.

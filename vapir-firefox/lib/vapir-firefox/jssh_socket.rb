@@ -740,6 +740,22 @@ class JsshObject
   # expression is undefined, raises an error (if you want an attribute even if it's 
   # undefined, use #attr). 
   def invoke(attribute, *args)
+    invoke_attr_err_args(attribute, true, *args)
+  end
+  # same as #invoke, but returns nil for undefined attributes rather than raising an
+  # error. this is used by method_missing when passed a question-mark method. 
+  #
+  # example, assuming some jssh_object: 
+  #  > jssh_object.type
+  #  => 'object'
+  #  > jssh_object.some_undefined_attribute
+  #  
+  def invoke?(attribute, *args)
+    invoke_attr_err_args(attribute, false, *args)
+  end
+  def invoke_attr_err_args(attribute, err, *args)
+    attr_obj=attr(attribute)
+    type=attr_obj.type
     attr_obj=attr(attribute)
     type=attr_obj.type
     case type
@@ -747,12 +763,13 @@ class JsshObject
       attr_obj.call(*args)
     else
       if args.empty?
-        attr_obj.val_or_object
+        attr_obj.val_or_object(:error_on_undefined => err)
       else
         raise ArgumentError, "Cannot pass arguments to expression #{attr_obj.ref} of type #{type}"
       end
     end
   end
+  private :invoke_attr_err_args
   
   # returns a JsshObject referencing the given attribute of this object 
   def attr(attribute)
@@ -983,16 +1000,11 @@ class JsshObject
     case special
     when nil
       invoke(method, *args)
+    when '?'
+      invoke?(method, *args)
     when '!'
       got=invoke(method, *args)
       got.is_a?(JsshObject) ? got.val : got
-    when '?'
-      begin
-        got=invoke(method, *args)
-        got.is_a?(JsshObject) ? got.val_str : got
-      rescue JsshUndefinedValueError
-        nil
-      end
     when '='
       attr(method).assign(*args)
     else

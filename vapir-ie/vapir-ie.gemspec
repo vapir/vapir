@@ -2,7 +2,7 @@ $LOAD_PATH << 'lib'
 
 require 'vapir-ie/version'
 
-spec = Gem::Specification.new do |s|
+Vapir::IE::GemSpec = Gem::Specification.new do |s|
   s.name = 'vapir-ie'
   s.version = Vapir::IE::VERSION
   s.summary = 'Library for automating the Internet Explorer browser in Ruby'

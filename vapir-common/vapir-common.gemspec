@@ -2,7 +2,7 @@ $LOAD_PATH << 'lib'
 
 require 'vapir-common/version' # to get our version number 
 
-spec = Gem::Specification.new do |s|
+Vapir::Common::GemSpec = Gem::Specification.new do |s|
   s.name = 'vapir-common'
   s.version = Vapir::Common::VERSION
   s.summary = 'Common basis for Vapir libraries for automating web browsers in Ruby'

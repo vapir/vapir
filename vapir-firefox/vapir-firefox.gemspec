@@ -2,7 +2,7 @@ $LOAD_PATH << 'lib'
 
 require 'vapir-firefox/version.rb'
 
-spec = Gem::Specification.new do |s|
+Vapir::Firefox::GemSpec = Gem::Specification.new do |s|
   s.name = 'vapir-firefox'
   s.version = Vapir::Firefox::VERSION
   s.summary = 'Library for automating the Firefox browser in Ruby'

@@ -64,9 +64,6 @@ module Vapir
     # the last command
     attr_reader :down_load_time
     
-    # the OLE Internet Explorer object
-    attr_accessor :ie
-    
     # access to the logger object
     attr_accessor :logger
     
@@ -116,7 +113,7 @@ module Vapir
     
     def _new_process_init
       iep = Process.start
-      @ie = iep.window
+      @browser_object = iep.window
       @process_id = iep.process_id
       initialize_options
       goto 'about:blank'
@@ -162,7 +159,7 @@ module Vapir
     end
   
     def create_browser_window
-      @ie = WIN32OLE.new('InternetExplorer.Application')
+      @browser_object = WIN32OLE.new('InternetExplorer.Application')
     end
     private :create_browser_window
     
@@ -223,11 +220,11 @@ module Vapir
     
     def visible
       assert_exists
-      @ie.visible
+      @browser_object.visible
     end
     def visible=(boolean)
       assert_exists
-      @ie.visible = boolean if boolean != @ie.visible
+      @browser_object.visible = boolean if boolean != @browser_object.visible
     end
     
     # Yields successively to each IE window on the current desktop. Takes a block.
@@ -298,19 +295,18 @@ module Vapir
         raise NoMatchingWindowFoundException,
                  "Unable to locate a window with #{how} of #{what}"
       end
-      @ie = ieTemp
+      @browser_object = ieTemp
     end
     private :attach_browser_window
     
-    def browser_object
-      assert_exists
-      @ie
-    end
+    # the OLE Internet Explorer object
+    attr_reader :browser_object
+    alias ie browser_object
     
     # Return the current window handle
     def hwnd
       assert_exists
-      @hwnd ||= @ie.hwnd
+      @hwnd ||= @browser_object.hwnd
     end
     attr_writer :hwnd
     
@@ -343,8 +339,8 @@ module Vapir
 
     # Are we attached to an open browser?
     def exists?
-      !!(@ie && begin
-        @ie.name
+      !!(@browser_object && begin
+        @browser_object.name
       rescue WIN32OLERuntimeError, NoMethodError
         raise unless $!.message =~ ExistenceFailureCodesRE
         false
@@ -367,12 +363,12 @@ module Vapir
     
     # Return the title of the document
     def title
-      @ie.document.title
+      @browser_object.document.title
     end
     
     # Return the status of the window, typically from the status bar at the bottom.
     def status
-      return @ie.statusText
+      return @browser_object.statusText
     end
     
     #
@@ -383,7 +379,7 @@ module Vapir
     #  * url - string - the URL to navigate to
     def goto(url)
       assert_exists do
-        @ie.navigate(url)
+        @browser_object.navigate(url)
         wait
         return @down_load_time
       end
@@ -393,7 +389,7 @@ module Vapir
     # an WIN32OLERuntimeError exception is raised if the browser cant go back
     def back
       assert_exists do
-        @ie.GoBack
+        @browser_object.GoBack
         wait
       end
     end
@@ -402,7 +398,7 @@ module Vapir
     # an WIN32OLERuntimeError exception is raised if the browser cant go forward
     def forward
       assert_exists do
-        @ie.GoForward
+        @browser_object.GoForward
         wait
       end
     end
@@ -417,7 +413,7 @@ module Vapir
     # an WIN32OLERuntimeError exception is raised if the browser cant refresh
     def refresh
       assert_exists do
-        @ie.refresh2(RefreshConstants::REFRESH_COMPLETELY)
+        @browser_object.refresh2(RefreshConstants::REFRESH_COMPLETELY)
         wait
       end
     end
@@ -430,13 +426,13 @@ module Vapir
     # Closes the Browser
     def close
       assert_exists
-      @ie.stop
-      @ie.quit
+      @browser_object.stop
+      @browser_object.quit
       # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
       ::Waiter.try_for(32, :exception => WindowFailedToCloseException.new("The browser window did not close"), :interval => 1) do
         begin
           if exists?
-            @ie.quit
+            @browser_object.quit
             false
           else
             true
@@ -446,7 +442,7 @@ module Vapir
           true
         end
       end
-      @ie=nil
+      @browser_object=nil
     end
     
     # Maximize the window (expands to fill the screen)
@@ -513,7 +509,7 @@ module Vapir
     # Return the current document
     def document
       assert_exists
-      return @ie.document
+      return @browser_object.document
     end
     alias document_object document
     
@@ -524,7 +520,7 @@ module Vapir
     # returns the current url, as displayed in the address bar of the browser
     def url
       assert_exists
-      return @ie.LocationURL
+      return @browser_object.LocationURL
     end
 
     # Error checkers

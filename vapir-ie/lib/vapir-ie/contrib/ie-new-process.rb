@@ -17,7 +17,7 @@ end
 module Vapir
   class IE
     def process_id
-      @process_id ||= IEProcess.process_id_from_hwnd @ie.hwnd
+      @process_id ||= IEProcess.process_id_from_hwnd @browser_object.hwnd
     end
     attr_writer :process_id
     def kill

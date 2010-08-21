@@ -290,8 +290,6 @@ module Vapir
     end
     
     private
-    # This function creates a new socket at port 9997 and sets the default values for instance and class variables.
-    # Generatesi UnableToStartJSShException if cannot connect to jssh even after 3 tries.
     def set_defaults(no_of_tries = 0)
       @error_checkers = []
     end

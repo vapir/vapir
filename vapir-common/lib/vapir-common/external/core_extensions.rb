@@ -1,7 +1,7 @@
 class Module
   def alias_deprecated(to, from)
     define_method to do |*args|
-      Kernel.warn "DEPRECATION WARNING: #{self.class.name}\##{to} is deprecated. Please use #{self.class.name}\##{from}\n(called from #{caller.map{|c|"\n"+c}})"
+      Kernel.warn_with_caller "DEPRECATION WARNING: #{self.class.name}\##{to} is deprecated. Please use #{self.class.name}\##{from}"
       send(from, *args)
     end
   end

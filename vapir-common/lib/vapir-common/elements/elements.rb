@@ -746,7 +746,7 @@ module Vapir
   end
   module Table
     def self.create_from_element(container, element)
-      Kernel.warn "DEPRECATION WARNING: create_from_element is deprecated. Please use (element).parent_table (element being the second argument to this function)\n(called from #{caller.map{|c|"\n"+c}})"
+      Kernel.warn_with_caller "DEPRECATION WARNING: create_from_element is deprecated. Please use (element).parent_table (element being the second argument to this function)"
       element.parent_table
     end
 

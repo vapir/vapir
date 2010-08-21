@@ -497,7 +497,7 @@ module Vapir
       unless options.is_a?(Hash)
         dc = options
         options = {:dc => dc}
-        Kernel.warn("WARNING: The API for #screen_capture has changed and the last argument is now an options hash. Please change calls to this method to specify :dc => #{dc.inspect}")
+        Kernel.warn_with_caller("WARNING: The API for #screen_capture has changed and the last argument is now an options hash. Please change calls to this method to specify :dc => #{dc.inspect}")
       end
       screen_capture_win_window(filename, options)
     end

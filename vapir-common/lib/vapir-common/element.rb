@@ -104,7 +104,7 @@ module Vapir
     attr_reader :index
     
     def html
-      Kernel.warn "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)\n(called from #{caller.map{|c|"\n"+c}})"
+      Kernel.warn_with_caller "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)"
       outer_html
     end
 
@@ -400,7 +400,7 @@ module Vapir
     def flash(options={})
       if options.is_a?(Fixnum)
         options={:count => options}
-        Kernel.warn "DEPRECATION WARNING: #{self.class.name}\#flash takes an options hash - passing a number is deprecated. Please use #{self.class.name}\#flash(:count => #{options[:count]})\n(called from #{caller.map{|c|"\n"+c}})"
+        Kernel.warn_with_caller "DEPRECATION WARNING: #{self.class.name}\#flash takes an options hash - passing a number is deprecated. Please use #{self.class.name}\#flash(:count => #{options[:count]})"
       end
       options={:count => 10, :sleep => 0.05}.merge(options)
       #options=handle_options(options, {:count => 10, :sleep => 0.05}, [:color])

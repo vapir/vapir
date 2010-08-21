@@ -158,11 +158,13 @@ module Vapir
     #   - :HWND - specifies the HWND of the browser that should be attached to. 
     #   - :browser_object - this is generally just used internally. 'what' 
     #     is a WIN32OLE object representing the browser. 
+    #   - :wait - true or false, default is true. whether to wait for the browser
+    #     to be ready before continuing. 
     def initialize(options = {})
       if options==true || options==false
         raise NotImplementedError, "#{self.class.name}.new takes an options hash - passing a boolean for 'suppress_new_window' is no longer supported. Please see the documentation for #{self.class}.new"
       end
-      options=handle_options(options, {:timeout => 20, :new_process => false}, [:attach, :goto])
+      options=handle_options(options, {:timeout => 20, :new_process => false, :wait => true}, [:attach, :goto])
 
       if options[:attach]
         how, what = *options[:attach]
@@ -187,7 +189,6 @@ module Vapir
           end
         end
         initialize_options
-        wait
       else
         if options[:new_process]
           iep = Process.start
@@ -200,6 +201,8 @@ module Vapir
         goto('about:blank')
       end
       goto(options[:goto]) if options[:goto]
+      wait if options[:wait]
+      self
     end
 
     def initialize_options

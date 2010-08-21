@@ -114,10 +114,14 @@ module Vapir
       # This method will not work when
       # Vapir/Ruby is run under a service (instead of a user).
       # Yields to the window and its hwnd.
-      def each
+      def each_browser
         each_browser_object do |browser_object|
           yield attach(:browser_object, browser_object)
         end
+      end
+      alias each each_browser
+      def browsers
+        Enumerable::Enumerator.new(self, :each_browser)
       end
 
       # yields a WIN32OLE of each IE browser object that is available. 

@@ -38,22 +38,13 @@ module Vapir
       # returns the browser object corresponding to the process id 
       def browser_object(options={})
         options=handle_options(options, :timeout => 32)
+        require 'vapir-common/win_window'
         ::Waiter.try_for(options[:timeout], :exception => RuntimeError.new("Could not find a browser for process #{self.inspect}")) do
           Vapir::IE.browser_objects.detect do |browser_object|
-            @process_id == Process.process_id_from_hwnd(browser_object.hwnd)
+            @process_id == WinWindow.new(browser_object.hwnd).process_id
           end
         end
       end
-      
-      # Returns the process id for the specifed hWnd.
-      def self.process_id_from_hwnd hwnd
-        require 'Win32API'
-        pid_info = ' ' * 32
-        Win32API.new('user32', 'GetWindowThreadProcessId', 'ip', 'i').
-        call(hwnd, pid_info)
-        process_id =  pid_info.unpack("L")[0]
-      end
-      
     end
   end
 end

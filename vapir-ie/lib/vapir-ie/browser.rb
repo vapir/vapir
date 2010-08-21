@@ -273,14 +273,26 @@ module Vapir
     attr_reader :browser_object
     alias ie browser_object
     
-    # Return the current window handle
+    # Return the window handle of this browser
     def hwnd
       assert_exists
       @hwnd ||= @browser_object.hwnd
     end
 
+    # returns the process id of this browser 
     def process_id
-      @process_id ||= IE::Process.process_id_from_hwnd @browser_object.hwnd
+      @process_id ||= win_window.process_id
+    end
+    # kills this process. NOTE that this process may be running
+    # multiple browsers; killing the process will kill them all. 
+    # use #close to close a single browser. 
+    def kill
+      # todo: drop win32api; use ffi 
+      require 'Win32API'
+      right_to_terminate_process = 1
+      handle = Win32API.new('kernel32.dll', 'OpenProcess', 'lil', 'l').
+      call(right_to_terminate_process, 0, process_id)
+      Win32API.new('kernel32.dll', 'TerminateProcess', 'll', 'l').call(handle, 0)
     end
     
     def win_window

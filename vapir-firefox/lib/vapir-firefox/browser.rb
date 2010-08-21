@@ -695,12 +695,8 @@ module Vapir
       url= document_object.URL
 
       if(url != options[:last_url])
-        # Check for Javascript redirect. As we are connected to Firefox via JSSh. JSSh
-        # doesn't detect any javascript redirects so check it here.
-        # If page redirects to itself that this code will enter in infinite loop.
-        # So we currently don't wait for such a page.
-        # wait variable in JSSh tells if we should wait more for the page to get loaded
-        # or continue. -1 means page is not redirected. Anyother positive values means wait.
+        # check for meta redirects, except for redirects back to the same page (infinite
+        # loop redirects). 
         metas=document_object.getElementsByTagName 'meta'
         wait_time=metas.to_array.map do |meta|
           return_time=true

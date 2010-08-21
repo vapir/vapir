@@ -436,6 +436,7 @@ module Vapir
       set_browser_document
       self
     end
+    private :attach
 
     # Class method to return a browser object if a window matches for how
     # and what. Window can be referenced by url or title.

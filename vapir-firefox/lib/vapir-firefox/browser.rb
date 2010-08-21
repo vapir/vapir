@@ -424,7 +424,7 @@ module Vapir
     #   Instance of newly attached window.
     def attach(how, what)
       @browser_window_object = case how
-      when :jssh_object
+      when :browser_window_object
         what
       else
         find_window(how, what)
@@ -464,7 +464,7 @@ module Vapir
 
     def self.each
       each_browser_window_object do |win|
-        yield self.attach(:jssh_object, win)
+        yield self.attach(:browser_window_object, win)
       end
     end
 

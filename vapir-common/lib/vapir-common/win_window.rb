@@ -3,6 +3,8 @@ require 'vapir-common/waiter'
 
 # Class that wraps useful methods of user32.dll involving windows in MS Windows 
 class WinWindow
+  require 'enumerator'
+  Enumerator = Object.const_defined?('Enumerator') ? ::Enumerator : Enumerable::Enumerator # :nodoc:
   # :stopdoc:
   
   # todo: 
@@ -1053,7 +1055,7 @@ class WinWindow
   #
   # may raise a WinWindow::SystemError from #each_child 
   def children
-    Enumerable::Enumerator.new(self, :each_child)
+    Enumerator.new(self, :each_child)
   end
 
   # true if comparing an object of the same class with the same hwnd (integer) 
@@ -1158,7 +1160,7 @@ class WinWindow
   # Enumerable object that iterates over every available window 
   #
   # May raise a WinWindow::SystemError from WinWindow.each_window
-  All = Enumerable::Enumerator.new(WinWindow, :each_window)
+  All = Enumerator.new(WinWindow, :each_window)
 
   # returns the first window found whose text matches what is given
   #

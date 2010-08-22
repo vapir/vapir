@@ -43,3 +43,9 @@ module Kernel
   end
   module_function :warn_with_caller
 end
+
+require 'enumerator'
+module Vapir
+  Enumerator = Object.const_defined?('Enumerator') ? ::Enumerator : Enumerable::Enumerator
+end
+

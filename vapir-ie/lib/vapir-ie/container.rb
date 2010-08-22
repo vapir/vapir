@@ -27,7 +27,7 @@ module Vapir
       options=handle_options(options, :handle => :ignore)
       begin
         yield
-      rescue WIN32OLERuntimeError, Vapir::Exception::ExistenceFailureException
+      rescue WIN32OLERuntimeError, NoMethodError, Vapir::Exception::ExistenceFailureException
         handle_existence_failure($!, options)
       end
     end

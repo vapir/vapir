@@ -238,11 +238,11 @@ module Vapir
               begin
                 attr_node=candidate.getAttributeNode(attr.to_s)
                 attrs << attr_node.value if attr_node
-              rescue WIN32OLERuntimeError
+              rescue WIN32OLERuntimeError, NoMethodError
               end
               begin
                 attrs << candidate.invoke(attr.to_s)
-              rescue WIN32OLERuntimeError
+              rescue WIN32OLERuntimeError, NoMethodError
               end
             else 
               # this doesn't actually get called anymore, since there are optimizations for both IE and firefox. 
@@ -261,7 +261,7 @@ module Vapir
           if Object.const_defined?('WIN32OLE') && candidate.is_a?(WIN32OLE)
             begin
               match &&= candidate.nodeType==1
-            rescue WIN32OLERuntimeError
+            rescue WIN32OLERuntimeError, NoMethodError
               match=false
             end
           else

@@ -69,7 +69,7 @@ module Vapir
       result=nil
       begin
         result=document_object.parentWindow.eval(source)
-      rescue WIN32OLERuntimeError
+      rescue WIN32OLERuntimeError, NoMethodError
         # don't retry more than once; don't catch anything but the particular thing we're looking for 
         if retried || $!.message !~ /unknown property or method:? `eval'/
           raise
@@ -114,7 +114,7 @@ module Vapir
       doc_or_ret = proc do
         begin
           document_object
-        rescue WIN32OLERuntimeError
+        rescue WIN32OLERuntimeError, NoMethodError
           return
         end
       end
@@ -171,7 +171,7 @@ module Vapir
           frame=document.frames[i.to_s]
           frame_document=begin
             frame.document
-          rescue WIN32OLERuntimeError
+          rescue WIN32OLERuntimeError, NoMethodError
             $!
           end
           case frame_document
@@ -181,7 +181,7 @@ module Vapir
           when WIN32OLE
             # frame has a document - check recursively 
             all_frames_complete?(frame_document, urls)
-          when WIN32OLERuntimeError 
+          when WIN32OLERuntimeError, NoMethodError
             # if we get a WIN32OLERuntimeError with access denied, that is probably a 404 and it's not going 
             # to load, so no reason to keep waiting for it - consider it 'complete' and return true. 
             # there's probably a better method of determining this but I haven't found it yet. 
@@ -190,7 +190,7 @@ module Vapir
             raise RuntimeError, "unknown frame.document: #{frame_document.inspect} (#{frame_document.class})"
           end
         end
-      rescue WIN32OLERuntimeError
+      rescue WIN32OLERuntimeError, NoMethodError
         return $!
       end
     end

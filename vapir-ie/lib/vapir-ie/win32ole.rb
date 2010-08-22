@@ -37,7 +37,7 @@ class WIN32OLE
     @respond_to_cache||=Hash.new do |hash, key|
       hash[key]=begin
         !!self.ole_method(key)
-      rescue WIN32OLERuntimeError
+      rescue WIN32OLERuntimeError, NoMethodError
         false
       end
     end

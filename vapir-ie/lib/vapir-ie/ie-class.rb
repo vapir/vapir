@@ -272,13 +272,13 @@ module Vapir
           begin
             title = window.locationname
             title = window.document.title
-          rescue WIN32OLERuntimeError
+          rescue WIN32OLERuntimeError, NoMethodError
           end
           ieTemp = window if Vapir::fuzzy_match(title, what)
         when :hwnd
           begin
             ieTemp = window if what == window.HWND
-          rescue WIN32OLERuntimeError
+          rescue WIN32OLERuntimeError, NoMethodError
           end
         else
           raise ArgumentError
@@ -344,7 +344,7 @@ module Vapir
     def exists?
       !!(@ie && begin
         @ie.name
-      rescue WIN32OLERuntimeError
+      rescue WIN32OLERuntimeError, NoMethodError
         raise unless $!.message =~ ExistenceFailureCodesRE
         false
       end)
@@ -440,7 +440,7 @@ module Vapir
           else
             true
           end
-        rescue WIN32OLERuntimeError
+        rescue WIN32OLERuntimeError, NoMethodError
           raise unless $!.message =~ ExistenceFailureCodesRE
           true
         end

@@ -333,7 +333,7 @@ module Vapir
           if (scroll_left=el.scrollLeft).is_a?(Numeric) && (scroll_top=el.scrollTop).is_a?(Numeric)
             xy+=Vector[scroll_left, scroll_top]
           end
-        rescue WIN32OLERuntimeError
+        rescue WIN32OLERuntimeError, NoMethodError
           # doesn't respond to those; do nothing. 
         end
         el=el.parentNode
@@ -349,7 +349,7 @@ module Vapir
         doc=container.document_object || (return false)
         win=doc.parentWindow || (return false)
         document_object=win.document || (return false) # I don't know why container.document_object != container.document_object.parentWindow.document 
-      rescue WIN32OLERuntimeError
+      rescue WIN32OLERuntimeError, NoMethodError
         # if a call to these methods from the above block raised this exception, we don't exist. 
         # if that's not the error, it's unexpected; raise. 
         if $!.message =~ /unknown property or method `(parentWindow|contentWindow|document)'/
@@ -361,7 +361,7 @@ module Vapir
       begin
         # we need a javascript function to test equality because comparing two WIN32OLEs always returns false (unless they have the same object_id, which these don't) 
         win.execScript("__watir_javascript_equals__=function(a, b){return a==b;}")
-      rescue WIN32OLERuntimeError
+      rescue WIN32OLERuntimeError, NoMethodError
         return false
       end
 
@@ -373,7 +373,7 @@ module Vapir
             return true
           end
           current_node=current_node.parentNode
-        rescue WIN32OLERuntimeError
+        rescue WIN32OLERuntimeError, NoMethodError
           # two possibilities for why we're here:
           # if the method __watir_javascript_equals__ stops existing, then that probably means the window changed, meaning @element object doesn't exist anymore. 
           # if we encounter an error trying to access parentNode before reaching the current document, @element_object doesn't exist. 

@@ -408,7 +408,7 @@ module Vapir
           begin
             attribute=element_object.method_missing(dom_method_name)
             got_attribute=true
-          rescue WIN32OLERuntimeError
+          rescue WIN32OLERuntimeError, NoMethodError
           end
           if !got_attribute
             if args.length==0
@@ -417,7 +417,7 @@ module Vapir
                   attribute=node.value
                   got_attribute=true
                 end
-              rescue WIN32OLERuntimeError
+              rescue WIN32OLERuntimeError, NoMethodError
               end
             else
               raise ArgumentError, "Arguments were given to #{ruby_method_name} but there is no function #{dom_method_name} to pass them to!"

@@ -28,7 +28,9 @@ module Vapir
       begin
         yield
       rescue WIN32OLERuntimeError, RuntimeError, NoMethodError, Vapir::Exception::ExistenceFailureException
-        raise if $!.class==RuntimeError && $!.message !~ /HRESULT/ # sometimes WIN32OLE raises a RuntimeError instead of a WIN32OLERuntimeError. only catch a RuntimeError if it's from WIN32OLE, indicated by HRESULT in the error message. 
+        if [WIN32OLERuntimeError, RuntimeError, NoMethodError].any?{|klass| $!.is_a?(klass) } && $!.message !~ ExistenceFailureCodesRE
+          raise
+        end
         handle_existence_failure($!, options)
       end
     end

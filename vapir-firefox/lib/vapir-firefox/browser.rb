@@ -211,14 +211,13 @@ module Vapir
     # options as .new
 
     def launch_browser(options = {})
+      ff_options = []
       if(options[:profile])
-        profile_opt = "-no-remote -P #{options[:profile]}"
-      else
-        profile_opt = ""
+        ff_options << ['-no-remote', '-P', options[:profile]]
       end
 
       bin = path_to_bin()
-      @t = Thread.new { system("#{bin} -jssh #{profile_opt}") }
+      @t = Thread.new { system(bin, '-jssh', *ff_options) }
     end
     private :launch_browser
 

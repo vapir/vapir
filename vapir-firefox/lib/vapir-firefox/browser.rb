@@ -479,11 +479,7 @@ module Vapir
       nil
     end
     def self.browser_window_objects
-      window_objects=[]
-      each_browser_window_object do |window_object|
-        window_objects << window_object
-      end
-      window_objects
+      Enumerator.new(self, :each_browser_window_object)
     end
     def self.each_window_object
       mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)

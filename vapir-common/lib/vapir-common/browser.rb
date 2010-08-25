@@ -5,56 +5,9 @@ require 'vapir-common/version'
 require 'vapir-common/browsers'
 
 module Vapir
-  
-=begin rdoc
-
-Watir is a family of open-source drivers for automating web browsers. You
-can use it to write tests that are easy to read and maintain. 
-
-Watir drives browsers the same way people do. It clicks links, fills in forms,
-presses buttons. Watir also checks results, such as whether expected text 
-appears on a page.
-
-The Watir family currently includes support for Internet Explorer (on Windows),
-Firefox (on Windows, Mac and Linux) and Safari (on Mac). 
-
-Project Homepage: http://wtr.rubyforge.org
-
-This Browser module provides a generic interface
-that tests can use to access any browser. The actual browser (and thus
-the actual Watir driver) is determined at runtime based on configuration
-settings.
-
-  require 'vapir'
-  browser = Watir::Browser.new
-  browser.goto 'http://google.com'
-  browser.text_field(:name, 'q').set 'pickaxe'
-  browser.button(:name, 'btnG').click
-  if browser.text.include? 'Programming Ruby'
-    puts 'Text was found'
-  else
-    puts 'Text was not found'
-  end
-
-A comprehensive summary of the Watir API can be found here
-http://wiki.openqa.org/display/WTR/Methods+supported+by+Element
-
-There are two ways to configure the browser that will be used by your tests.
-
-One is to set the +watir_browser+ environment variable to +ie+ or +firefox+. 
-(How you do this depends on your platform.)
-
-The other is to create a file that looks like this.
-
-  browser: ie
-
-And then to add this line to your script, after the require statement and 
-before you invoke Browser.new.
-
-  Watir.options_file = 'path/to/the/file/you/just/created'
-
-=end rdoc
-  
+  # The common Browser class from which classes specific to Firefox or IE browsers inherit. 
+  # 
+  # Calls to this class are delegated to a browser inheriting from this, which is set using config.default_browser
   class Browser
     class << self
       alias __new__ new

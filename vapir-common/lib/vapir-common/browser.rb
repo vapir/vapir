@@ -10,8 +10,8 @@ module Vapir
   # Calls to this class are delegated to a browser inheriting from this, which is set using config.default_browser
   class Browser
     class << self
-      alias __new__ new
-      def inherited(subclass)
+      alias __new__ new # :nodoc:
+      def inherited(subclass) # :nodoc:
         class << subclass
           alias new __new__
         end

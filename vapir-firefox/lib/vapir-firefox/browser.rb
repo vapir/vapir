@@ -216,7 +216,7 @@ module Vapir
     def launch_browser(options = {})
       ff_options = []
       if(options[:profile])
-        ff_options << ['-no-remote', '-P', options[:profile]]
+        ff_options += ['-no-remote', '-P', options[:profile]]
       end
 
       bin = path_to_bin()

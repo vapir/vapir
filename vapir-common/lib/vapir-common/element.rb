@@ -327,7 +327,7 @@ module Vapir
           if !@highlighting && options[:highlight]
             handling_existence_failure do
               assert_exists :force => true
-              clear_highlight(highlight_options)
+              clear_highlight(options)
             end
           end
         end

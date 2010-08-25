@@ -219,6 +219,7 @@ module Vapir
       end
 
       bin = path_to_bin()
+      @self_launched_browser = true
       @t = Thread.new { system(bin, '-jssh', *ff_options) }
     end
     private :launch_browser
@@ -362,7 +363,11 @@ module Vapir
     end
 
     public
-    #   Closes the window.
+    # Closes the browser window.
+    #
+    # This will also quit the browser (see #quit_browser) only if this instance of Vapir::Firefox launched the browser when 
+    # it was created, AND there are no other windows remaining open. On Windows, closing the last browser window quits
+    # the browser anyway; on other operating systems it does not. 
     def close
       assert_exists
       begin
@@ -376,8 +381,7 @@ module Vapir
         @@jssh_socket=nil
       end
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
-@launched_browser_process=false #TODO/FIX: check here if we originally launched the browser process
-      if @launched_browser_process && @@jssh_socket
+      if @self_launched_browser && @@jssh_socket && !self.class.window_objects.any?{ true }
         quit_browser(:force => false)
       end
     end

@@ -392,8 +392,12 @@ module Vapir
     end
 
     # quits the browser. 
+    #
     # quit_browser(:force => true) will force the browser to quit. 
-    def quit_browser(options={})
+    #
+    # if there is no existing connection to JSSH, this will attempt to create one. If that fails, JsshUnableToStart will be raised. 
+    def self.quit_browser(options={})
+      jssh_socket(:reset_if_dead => true).assert_socket
       options=handle_options(options, :force => false)
       # from https://developer.mozilla.org/en/How_to_Quit_a_XUL_Application
       appStartup= jssh_socket.Components.classes['@mozilla.org/toolkit/app-startup;1'].getService(jssh_socket.Components.interfaces.nsIAppStartup)
@@ -418,6 +422,11 @@ module Vapir
 
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
       nil
+    end
+    
+    # see Vapir::Firefox.quit_browser
+    def quit_browser(options={})
+      self.class.quit_browser(options)
     end
 
     #   Used for attaching pop up window to an existing Firefox window, either by url or title.

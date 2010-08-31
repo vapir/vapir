@@ -194,7 +194,10 @@ module Vapir
             end
           end
         else
-          element_object.value = new_value_chars.join('')
+          with_key_down do # simulate at least one keypress
+            assert_exists(:force => true)
+            element_object.value = new_value_chars.join('')
+          end
         end
         if options[:change] && exists?
           handling_existence_failure { fire_event("onChange") }

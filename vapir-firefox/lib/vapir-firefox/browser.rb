@@ -571,11 +571,8 @@ module Vapir
       end
       options={:sleep => false, :last_url => nil, :timeout => 120}.merge(options)
       started=Time.now
-      while browser_object.webProgress.isLoadingDocument
-        sleep 0.1
-        if Time.now - started > options[:timeout]
-          raise "Page Load Timeout"
-        end
+      ::Waiter.try_for(options[:timeout] - (Time.now - started), :exception => "Waiting for the document to finish loading timed out") do
+        browser_object.webProgress.isLoadingDocument==false
       end
 
       # If the redirect is to a download attachment that does not reload this page, this

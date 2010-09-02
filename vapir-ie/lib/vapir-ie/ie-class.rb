@@ -338,6 +338,7 @@ module Vapir
         '0x80010108' => 'The object invoked has disconnected from its clients.',
         '0x800706be' => 'The remote procedure call failed.',
         '0x800706b5' => 'The interface is unknown.',
+        '0x80004002' => 'No such interface supported',
       }.keys.join('|'), Regexp::IGNORECASE)
 
     # Are we attached to an open browser?

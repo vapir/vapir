@@ -109,18 +109,24 @@ module Vapir
     public
     # catch exceptions that indicate some failure of something existing. 
     # 
-    # takes an option, :handle, which indicates how the method should handle an 
-    # encountered exception. 
-    # :handle may be one of:
-    # * :ignore (default) - the exception is ignored and nil is returned. 
-    # * :raise - the exception is raised (same as if this method weren't used at all). 
-    # * :return - returns the exception which was raised. 
-    # * Proc, Method - the proc or method is called with the exception as an argument. 
+    # takes an options hash:
+    # - :handle indicates how the method should handle an encountered exception. value may be:
+    #   - :ignore (default) - the exception is ignored and nil is returned. 
+    #   - :raise - the exception is raised (same as if this method weren't used at all). 
+    #   - :return - returns the exception which was raised. 
+    #   - Proc, Method - the proc or method is called with the exception as an argument. 
+    # - :assert_exists causes the method to check existence before yielding to the block. 
+    #   value may be:
+    #   - :force (default) - assert_exists(:force => true) is called so that existence is checked 
+    #     even if we're inside an assert_exists block already. this is the most common case, since
+    #     this method is generally used when the element may have recently stopped existing.
+    #   - true - assert_exists is called (without the :force option)
+    #   - false - assert_exists is not called. 
     #
     # If no exception was raised, then the result of the give block is returned. 
     #--
     # this may be overridden elsewhere to deal with any other stuff that indicates failure to exist, as it is
-    # to catch WIN32OLERuntimeErrors. 
+    # to catch WIN32OLERuntimeErrors for Vapir::IE. 
     def handling_existence_failure(options={})
       options=handle_options(options, {:assert_exists => :force}, [:handle])
       begin

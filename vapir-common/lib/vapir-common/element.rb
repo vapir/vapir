@@ -265,7 +265,7 @@ module Vapir
     public
     # Returns whether this element actually exists.
     def exists?
-      handling_existence_failure(:handle => proc { return false }) do
+      handling_existence_failure(:handle => proc { return false }, :assert_exists => false) do
         return !!locate
       end
     end

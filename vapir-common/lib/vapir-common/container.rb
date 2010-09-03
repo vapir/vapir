@@ -122,13 +122,23 @@ module Vapir
     # this may be overridden elsewhere to deal with any other stuff that indicates failure to exist, as it is
     # to catch WIN32OLERuntimeErrors. 
     def handling_existence_failure(options={})
-      options=handle_options(options, :handle => :ignore)
+      options=handle_options(options, {:assert_exists => :force}, [:handle])
       begin
+        case options[:assert_exists]
+        when true
+          assert_exists
+        when :force
+          assert_exists(:force => true)
+        when false, nil
+        else
+          raise ArgumentError, "option :assert_exists should be true, false, or :force; got #{options[:assert_exists].inspect}"
+        end
         yield
       rescue Vapir::Exception::ExistenceFailureException
-        handle_existence_failure($!, options)
+        handle_existence_failure($!, options.reject{|k,v| ![:handle].include?(k) })
       end
     end
+    alias base_handling_existence_failure handling_existence_failure # :nodoc:
     private
     # handles any errors encountered by #handling_existence_failure (either the
     # common one or a browser-specific one) 

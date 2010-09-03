@@ -23,10 +23,9 @@ module Vapir
     
     public
     # see documentation for the common Vapir::Container#handling_existence_failure 
-    def handling_existence_failure(options={})
-      options=handle_options(options, :handle => :ignore)
+    def handling_existence_failure(options={}, &block)
       begin
-        yield
+        base_handling_existence_failure(options, &block)
       rescue WIN32OLERuntimeError, RuntimeError, NoMethodError, Vapir::Exception::ExistenceFailureException
         if [WIN32OLERuntimeError, RuntimeError, NoMethodError].any?{|klass| $!.is_a?(klass) } && $!.message !~ ExistenceFailureCodesRE
           raise

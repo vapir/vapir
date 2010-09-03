@@ -199,7 +199,6 @@ module Vapir
           actions.each do |action|
             # javascript stuff responding to previous events can cause self to stop existing, so check at every subsequent step
             handling_existence_failure(:handle => proc{ return result }) do
-              assert_exists :force => true
               result=action.call
             end
           end

@@ -209,11 +209,18 @@ module Vapir
           unless document_object
             raise "No document object found for this #{self.inspect} - needed to search by id for label from #{@container.inspect}"
           end
-          unless what.is_a?(Label)
-            raise "how=:label specified on this #{self.class}, but 'what' is not a Label! what=#{what.inspect} (#{what.class})"
+          label_element = case @what
+          when Label
+            @what.locate!
+            @what
+          when String, Regexp
+            page_container.label(:text, @what)
+          else
+            raise Vapir::Exception::MissingWayOfFindingObjectException, "This #{self.class} was specified as 'how'=:label; 'what' was expected to be a Label element or a String or Regexp to match label text. Given 'what'=#{@what.inspect} (#{@what.class})"
           end
-          what.locate!
-          by_label=document_object.getElementById(what.for)
+          if label_element.exists?
+            by_label=document_object.getElementById(label_element.for)
+          end
           match_candidates(by_label ? [by_label] : [], self.class.specifiers, self.class.all_dom_attr_aliases).first
         when :attributes
           assert_container_exists

@@ -65,6 +65,8 @@ module Vapir
     container_single_method :text_field
     container_collection_method :text_fields
     
+    default_how :name
+    
     dom_attr :size, :maxLength => :maxlength
     alias_deprecated :getContents, :value
     

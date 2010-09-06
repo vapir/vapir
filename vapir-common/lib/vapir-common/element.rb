@@ -304,9 +304,10 @@ module Vapir
     # => #<Vapir::IE::TableBody:0x071af78c how=:index index=:first tagName="TBODY" id="">
     #
     # we get back a Vapir::TableBody. 
-    def to_factory
+    def to_subtype
       self.class.factory(element_object, @extra, @how, @what)
     end
+    alias to_factory to_subtype
 
     # takes a block. sets highlight on this element; calls the block; clears the highlight.
     # the clear is in an ensure block so that you can call return from the given block. 

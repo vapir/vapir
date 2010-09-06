@@ -205,7 +205,7 @@ module Vapir
     def show_all_objects(write_to=$stdout)
       # this used to reject tagNames 'br', 'hr', 'doctype', 'meta', and elements with no tagName
       elements.map do |element| 
-        element=element.to_factory
+        element=element.to_subtype
         write_to.write element.to_s+"\n"
         write_to.write '-'*42+"\n"
         element

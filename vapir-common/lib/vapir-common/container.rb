@@ -165,13 +165,13 @@ module Vapir
     end
     public
     
-    def default_extra_for_contained
+    def base_extra_for_contained
       extra={:container => self}
       extra[:browser]= browser if respond_to?(:browser)
       extra[:page_container]= page_container if respond_to?(:page_container)
       extra
     end
-    alias extra_for_contained default_extra_for_contained
+    alias extra_for_contained base_extra_for_contained
 
     # Checks if this container's text includes the given regexp or string. 
     # Returns true if the container's #text matches the given String or Regexp; otherwise false. 

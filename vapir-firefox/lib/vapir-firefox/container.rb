@@ -44,7 +44,7 @@ module Vapir
     include Vapir::Container
     
     def extra_for_contained
-      default_extra_for_contained.merge(:jssh_socket => jssh_socket)
+      base_extra_for_contained.merge(:jssh_socket => jssh_socket)
     end
 
     public

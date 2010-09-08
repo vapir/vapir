@@ -2,6 +2,7 @@ require 'vapir-common/version'
 require 'vapir-common/external/core_extensions.rb'
 require 'vapir-common/browser'
 require 'vapir-common/exceptions'
+require 'vapir-common/config'
 module Vapir
   def self.require_winwindow
     begin

@@ -631,12 +631,41 @@ class JsshObject
     @jssh_socket=jssh_socket
     @debug_name=other[:debug_name]
     @function_result=other[:function_result]
+    if self.class.always_define_methods && type=='object'
+      define_methods!
+    end
 #    logger.info { "#{self.class} initialized: #{debug_name} (type #{type})" }
   end
 
   # returns the value, via JsshSocket#value_json
   def val
     jssh_socket.value_json(ref, :error_on_undefined => !function_result)
+  end
+  
+  # whether JsshObject shall try to dynamically define methods on initialization, using 
+  # #define_methods! default is false. 
+  def self.always_define_methods
+    unless class_variable_defined?('@@always_define_methods')
+      # if not defined, set the default. 
+      @@always_define_methods=false
+    end
+    @@always_define_methods
+  end
+  # set whether JsshObject shall try to dynamically define methods on initialization, using
+  # #define_methods! 
+  #
+  # I find this useful to set to true in irb, for tab-completion of methods. it may cause
+  # jssh operations to be considerably slower, however. 
+  #
+  # for always setting this in irb, I set this beforehand, overriding the default, 
+  # by including in my .irbrc the following (which doesn't require jssh_socket.rb to be
+  # required):
+  #
+  #  class JsshObject
+  #    @@always_define_methods=true
+  #  end
+  def self.always_define_methods=(val)
+    @@always_define_methods = val
   end
 
   # returns the value just as a string with no attempt to deal with type using json. via JsshSocket#value 
@@ -1028,7 +1057,9 @@ class JsshObject
   # in irb, mostly. 
   def define_methods! # :nodoc:
     metaclass=(class << self; self; end)
-    self.to_hash.keys.grep(/\A[a-z_][a-z0-9_]*\z/i).reject{|k| self.class.method_defined?(k)}.each do |key|
+    keys=jssh_socket.object("function(obj) { var keys=[]; for(var key in obj) { keys.push(key); } return keys; }").pass(self).val
+    
+    keys.grep(/\A[a-z_][a-z0-9_]*\z/i).reject{|k| self.class.method_defined?(k)}.each do |key|
       metaclass.send(:define_method, key) do |*args|
         invoke(key, *args)
       end

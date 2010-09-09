@@ -446,10 +446,10 @@ module Vapir
         assert_enabled
         if checked!=state
           element_object.checked=state
-          fire_event(:onchange, options) if exists? # don't fire event if we stopped existing due to change in state 
+          handling_existence_failure { fire_event(:onchange, options) } # we may stop existing due to change in state 
         end
-        if state && exists?
-          fire_event(:onclick, options) # fire this even if the state doesn't change; javascript can respond to clicking an already-checked radio. 
+        if state
+          handling_existence_failure { fire_event(:onclick, options) } # fire this even if the state doesn't change; javascript can respond to clicking an already-checked radio. 
         end
         wait if options[:wait]
       end
@@ -483,8 +483,8 @@ module Vapir
             # todo/fix: this is browser-specific stuff, shouldn't it be in the browser-specific class? 
             element_object.checked=state
           end
-          fire_event(:onclick, options) if exists?  # sometimes previous actions can cause self to stop existing 
-          fire_event(:onchange, options) if exists? 
+          handling_existence_failure { fire_event(:onclick, options) } # sometimes previous actions can cause self to stop existing 
+          handling_existence_failure { fire_event(:onchange, options) }
         end
         wait if options[:wait]
       end

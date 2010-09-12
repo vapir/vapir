@@ -9,6 +9,11 @@ module Vapir
   # some stuff assumes the element has a defined @container. 
   module Element
     extend ElementHelper
+    include Configurable
+    def configuration_parent
+      @container ? @container.config : @browser ? @browser.config : browser_class.config
+    end
+
     add_specifier({}) # one specifier with no criteria - note that having no specifiers 
                       # would match no elements; having a specifier with no criteria matches any
                       # element.

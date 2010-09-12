@@ -1,5 +1,7 @@
 # vapir-common/browser
 require 'vapir-common/options'
+require 'vapir-common/config'
+
 module Vapir
   
 =begin rdoc
@@ -166,6 +168,12 @@ before you invoke Browser.new.
         self.set_options specified_options
       end
     end
+
+    include Configurable
+    def configuration_parent
+      browser_class.config
+    end
+    
     # locate is used by stuff that uses container. this doesn't actually locate the browser
     # but checks if it (still) exists. 
     def locate(options={})

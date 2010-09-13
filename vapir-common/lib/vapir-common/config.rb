@@ -193,6 +193,30 @@ module Vapir
     def config
       @configuration ||= Configuration.new(configuration_parent)
     end
+    private
+    # takes a hash of given options, a map of config keys, and a list of other allowed keys. 
+    #
+    # the keymap is keyed with keys of the options hash and its values are keys of the Configuration
+    # returned from #config. 
+    #
+    # other allowed keys limit what keys are recognized in the given options hash, and ArgumentError
+    # is raised if unrecognized keys are present (this is done by #handle_options; see that method's
+    # documentation). 
+    # 
+    # returns a hash in which any defined config keys in the keymap which are not already 
+    # defined in the given options are set to their config value. 
+    def options_from_config(given_options, keymap, other_allowed_keys = [])
+      config_options = (keymap.keys - given_options.keys).inject({}) do |opts, key|
+        if given_options.key?(key)
+          opts
+        elsif config.defined_key?(keymap[key])
+          opts.merge(key => config[keymap[key]])
+        else
+          opts
+        end
+      end
+      handle_options(given_options, config_options, other_allowed_keys + keymap.keys)
+    end
   end
   
   @base_configuration=Configuration.new(nil)

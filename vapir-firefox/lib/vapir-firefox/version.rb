@@ -1,5 +1,5 @@
 module Vapir
   class Firefox
-    VERSION = 'x.x.x'
+    VERSION = '0.0.0'
   end
 end

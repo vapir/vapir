@@ -347,9 +347,6 @@ module Vapir
     end
     
     private
-    # The default color for highlighting objects as they are accessed.
-    DEFAULT_HIGHLIGHT_COLOR = "yellow"
-
     # Sets or clears the colored highlighting on the currently active element.
     # set_or_clear - should be 
     # :set - To set highlight
@@ -367,8 +364,7 @@ module Vapir
     end
 
     def set_highlight_color(options={})
-      #options=handle_options(options, :color => DEFAULT_HIGHLIGHT_COLOR)
-      options={:color => DEFAULT_HIGHLIGHT_COLOR}.merge(options)
+      options={:color => config.highlight_color}.merge(options)
       assert_exists do
         @original_color=element_object.style.backgroundColor
         element_object.style.backgroundColor=options[:color]

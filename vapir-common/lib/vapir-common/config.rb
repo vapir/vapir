@@ -219,7 +219,9 @@ module Vapir
     end
   end
   
-  @base_configuration=Configuration.new(nil)
+  @base_configuration=Configuration.new(nil) do |config|
+    config.create_update(:highlight_color, 'yellow')
+  end
   
   @yaml_configuration = Configuration.new(@base_configuration)
   # TODO: bring in YAML config to override base defaults 

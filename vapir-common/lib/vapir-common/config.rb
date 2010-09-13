@@ -1,15 +1,24 @@
 module Vapir
+  # represents a entry in a heirarchy of configuration options 
   class Configuration
     class Error < StandardError; end
     class BadKeyError < Error; end
     class NoValueError < Error; end
     
+    # represents a valid option on a Configuration. consists of a key and criteria
+    # for which a value is valid for that key. 
     class Option
       attr_reader :key, :validator
+      # creates a new option. the options hash (last argument) may specify a 
+      # :validator key which will be used to validate any values attempted to be
+      # assigned to the key this option represents. 
       def initialize(key, hash={})
         @key = key
         @validator = hash[:validator]
       end
+      # takes a value and checks that it is valid, if a validator is specified for 
+      # this option. the validator may map the value to something different, so the
+      # result of this function call should replace the value being used. 
       def validate!(value)
         case @validator
         when nil
@@ -44,13 +53,19 @@ module Vapir
       end
     end
     
+    # the parent Configuration in the heirarchy. may be nil if there is no parent. 
     attr_reader :parent
+    # creates a new Configuration with the given parent. if a block is given, this
+    # Configuration object will be yielded to it. 
     def initialize(parent, &block)
       @parent=parent
       @config_hash = {}
       @recognized_options = {}
       yield(self) if block_given?
     end
+    # if the method invoked looks like assignment (ends with an =), calls to #update with 
+    # the given method as the key and its argument as the value. otherwise calls #read with 
+    # the method as the key. 
     def method_missing(method, *args)
       method=method.to_s
       if method =~ /\A([a-z_][a-z0-9_]*)([=?!])?\z/i
@@ -72,19 +87,26 @@ module Vapir
         return super
       end
     end
+    # alias for #read
     def [](key)
       read(key)
     end
+    # alias for #update 
     def []=(key, value)
       update(key, value)
     end
+    # returns an array of 
     def recognized_keys
       ((@parent ? @parent.recognized_keys : [])+@recognized_options.keys).uniq
     end
+    # returns true if the given key is recognized; false otherwise. may raise BadKeyError
+    # if the given key isn't even a valid format for a key. 
     def recognized_key?(key)
       key = validate_key_format!(key)
       recognized_keys.include?(key)
     end
+    # assert that the given key must be recognized; if it is not recognized, an error 
+    # should be raised. 
     def recognize_key!(key)
       key = validate_key_format!(key)
       unless recognized_key?(key)
@@ -92,13 +114,18 @@ module Vapir
       end
       key
     end
+    # returns true if the given key is defined on this Configuration; returns false if not - 
+    # note that this returns false if the given key is defined on an ancestor Configuration. 
     def locally_defined_key?(key)
       key = validate_key_format!(key)
       @config_hash.key?(key)
     end
+    # returns true if the given key is defined on this Configuration or any of its ancestors. 
     def defined_key?(key)
       locally_defined_key?(key) || (parent && parent.defined_key?(key))
     end
+    # raises an error if the given key is not in an acceptable format. the key should be a string
+    # or symbol consisting of alphanumerics and underscorse, beginning with an alpha or underscore. 
     def validate_key_format!(key)
       unless key.is_a?(String) || key.is_a?(Symbol)
         raise BadKeyError, "key should be a String or Symbol; got #{key.inspect} (#{key.class})"
@@ -110,10 +137,13 @@ module Vapir
       key
     end
     protected
+    # returns a hash of recognized options with the keys being recognized keys and values 
+    # being Option instances. 
     def recognized_options
       (@parent ? @parent.recognized_options : {}).merge(@recognized_options)
     end
     public
+    # creates a new key. options are passed to Option.new; see its documentation. 
     def create(key, options={})
       key=validate_key_format!(key)
       if recognized_key?(key)
@@ -121,6 +151,7 @@ module Vapir
       end
       @recognized_options[key]= Option.new(key, options)
     end
+    # reads the value for the given key. if on value is defined, raises NoValueError. 
     def read(key)
       key = recognize_key! key
       if @config_hash.key?(key)
@@ -131,20 +162,24 @@ module Vapir
         raise NoValueError, "There is no value defined for key #{key}"
       end
     end
+    # updates the given key with the given value. 
     def update(key, value)
       key = recognize_key! key
       value = recognized_options[key].validate! value
       @config_hash[key]=value
     end
+    # creates a new key and updates it with the given value. options are passed to Option.new. 
     def create_update(key, value, options={})
       create(key, options)
       update(key, value)
     end
+    # takes a hash of key/value pairs and calls #update on each pair. 
     def update_hash(hash)
       hash.each do |k,v|
         update(k,v)
       end
     end
+    # deletes the given value from the hash. this does not affect any ancestor Configurations. 
     def delete(key)
       key = check_key key
       @config_hash.delete(key)

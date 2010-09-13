@@ -185,8 +185,11 @@ module Vapir
       @config_hash.delete(key)
     end
   end
+  # module to be included in anything that should have a #config method representing a Configuration. 
   module Configurable
+    # the parent for the Configuration returned from #config 
     attr_accessor :configuration_parent
+    # returns a Configuration object 
     def config
       @configuration ||= Configuration.new(configuration_parent)
     end

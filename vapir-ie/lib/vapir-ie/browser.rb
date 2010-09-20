@@ -217,6 +217,7 @@ module Vapir
         '0x800706be' => 'The remote procedure call failed.',
         '0x800706b5' => 'The interface is unknown.',
         '0x80004002' => 'No such interface supported',
+        '0x80020101' => '<No Description>', # this one gets raised from watir_wrap_native_for_win32ole_two_args when it stops existing 
       }.keys.join('|'), Regexp::IGNORECASE)
 
     # Are we attached to an open browser?

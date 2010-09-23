@@ -220,6 +220,13 @@ module Vapir
   end
   
   @base_configuration=Configuration.new(nil) do |config|
+    config.create(:default_browser, :validator => proc do |val|
+      require 'vapir-common/browsers'
+      unless (val.is_a?(String) || val.is_a?(Symbol)) && (real_key = Vapir::SupportedBrowsers.keys.detect{|key| key.to_s==val.to_s })
+        raise ArgumentError, "default_browser should be a string or symbol matching a supported browser - one of: #{Vapir::SupportedBrowsers.keys.join(', ')}. instead got #{value.inspect}"
+      end
+      real_key
+    end)
     config.create_update(:highlight_color, 'yellow')
   end
   

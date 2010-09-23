@@ -10,7 +10,3 @@ require 'vapir-firefox/config'
 require 'vapir-firefox/browser'
 require 'vapir-firefox/elements'
 require 'vapir-firefox/version'
-
-# this only has an effect if firewatir is required before anyone invokes 
-# Browser.new. Thus it has no effect when Browser.new itself autoloads this library.
-Vapir::Browser.default = 'firefox'

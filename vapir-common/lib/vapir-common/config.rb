@@ -220,6 +220,7 @@ module Vapir
   end
   
   @base_configuration=Configuration.new(nil) do |config|
+    config.create_update(:attach_timeout, 30, :validator => :numeric)
     config.create(:default_browser, :validator => proc do |val|
       require 'vapir-common/browsers'
       unless (val.is_a?(String) || val.is_a?(Symbol)) && (real_key = Vapir::SupportedBrowsers.keys.detect{|key| key.to_s==val.to_s })

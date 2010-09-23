@@ -11,13 +11,11 @@ module Vapir
     include Vapir::Exception
     include IE::PageContainer
     
-    # Maximum number of seconds to wait when attaching to a window
-    @@attach_timeout = 2.0 # default value
-    def self.attach_timeout
-      @@attach_timeout
+    def self.attach_timeout # deprecate
+      config.attach_timeout
     end
-    def self.attach_timeout=(timeout)
-      @@attach_timeout = timeout
+    def self.attach_timeout=(timeout) # deprecate
+      config.attach_timeout = timeout
     end
 
     # Return the options used when creating new instances of IE.
@@ -164,7 +162,8 @@ module Vapir
       if options==true || options==false
         raise NotImplementedError, "#{self.class.name}.new takes an options hash - passing a boolean for 'suppress_new_window' is no longer supported. Please see the documentation for #{self.class}.new"
       end
-      options=handle_options(options, {:timeout => 20, :new_process => false, :wait => true}, [:attach, :goto])
+      options=handle_options(options, {:new_process => false, :wait => true}, [:attach, :goto, :timeout])
+      options = options_from_config(options, {:timeout => :attach_timeout}, [:attach, :goto, :new_process, :wait])
 
       if options[:attach]
         how, what = *options[:attach]

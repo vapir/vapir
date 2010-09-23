@@ -136,7 +136,7 @@ module Vapir
         options = {:timeout => options}
         Kernel.warn_with_caller "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:timeout => #{options[:timeout]})"
       end
-      options = options_from_config(options, {:timeout => :attach_timeout}, [:attach, :goto, :binary_path, :profile, :wait_time])
+      options = options_from_config(options, {:timeout => :attach_timeout, :binary_path => :firefox_binary_path, :profile => :firefox_profile}, [:attach, :goto, :wait_time])
       if options[:wait_time]
         Kernel.warn_with_caller "DEPRECATION WARNING: the :wait_time option for #{self.class.name}.new has been renamed to :timeout for consistency. Please use #{self.class.name}.new(:timeout => #{options[:wait_time]})"
         options[:timeout] = options[:wait_time]

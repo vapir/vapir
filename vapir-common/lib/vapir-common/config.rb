@@ -229,6 +229,7 @@ module Vapir
       real_key
     end)
     config.create_update(:highlight_color, 'yellow')
+    config.create_update(:wait, true, :validator => :boolean)
   end
   
   @yaml_configuration = Configuration.new(@base_configuration)

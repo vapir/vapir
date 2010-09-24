@@ -162,8 +162,7 @@ module Vapir
       if options==true || options==false
         raise NotImplementedError, "#{self.class.name}.new takes an options hash - passing a boolean for 'suppress_new_window' is no longer supported. Please see the documentation for #{self.class}.new"
       end
-      options=handle_options(options, {:new_process => false, :wait => true}, [:attach, :goto, :timeout])
-      options = options_from_config(options, {:timeout => :attach_timeout}, [:attach, :goto, :new_process, :wait])
+      options = options_from_config(options, {:timeout => :attach_timeout, :new_process => :ie_launch_new_process, :wait => :wait}, [:attach, :goto])
 
       if options[:attach]
         how, what = *options[:attach]

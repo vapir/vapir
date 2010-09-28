@@ -230,6 +230,8 @@ module Vapir
     end)
     config.create_update(:highlight_color, 'yellow')
     config.create_update(:wait, true, :validator => :boolean)
+    config.create_update(:type_keys, false, :validator => :boolean)
+    config.create_update(:typing_interval, 0, :validator => :numeric)
   end
   
   @yaml_configuration = Configuration.new(@base_configuration)

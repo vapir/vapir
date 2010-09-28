@@ -172,8 +172,6 @@ module Vapir
           new_value_chars=new_value_chars[0...maxlength]
         end
         element_object.scrollIntoView
-        type_keys=respond_to?(:type_keys) ? self.type_keys : true # TODO: FIX
-        typingspeed=respond_to?(:typingspeed) ? self.typingspeed : 0 # TODO: FIX
         if options[:focus]
           assert_exists(:force => true)
           element_object.focus
@@ -184,9 +182,8 @@ module Vapir
           element_object.select
           fire_event("onSelect")
         end
-        if type_keys
+        if config.type_keys
           (existing_value_chars.length...new_value_chars.length).each do |i|
-#            sleep typingspeed # TODO/FIX
             last_key = (i == new_value_chars.length - 1)
             handling_existence_failure(:handle => (last_key ? :ignore : :raise)) do
               type_key(new_value_chars[i]) do
@@ -194,6 +191,7 @@ module Vapir
                 element_object.value = new_value_chars[0..i].join('')
               end
             end
+            sleep config.typing_interval
           end
         else
           with_key_down do # simulate at least one keypress

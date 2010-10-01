@@ -1082,6 +1082,8 @@ class JsshObject
   def to_json(options={}) # :nodoc:
     ref
   end
+  # for ActiveSupport 3
+  alias encode_json to_json
   
   # returns this object passed through the $A function of the prototype javascript library. 
   def to_js_array
@@ -1246,6 +1248,7 @@ class JsshArray < JsshObject
   def to_json(options={}) # :nodoc:
     ref
   end
+  alias encode_json to_json
 end
 
 # this class represents a hash, or 'object' type in javascript. 
@@ -1277,4 +1280,5 @@ class JsshHash < JsshObject
   def to_json(options={}) # :nodoc:
     ref
   end
+  alias encode_json to_json
 end

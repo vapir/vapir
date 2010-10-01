@@ -89,13 +89,6 @@ module Vapir
       source_index > other.source_index
     end
       
-    def typingspeed
-      @container.typingspeed
-    end
-    def type_keys
-      @type_keys || @container.type_keys
-    end
-    
     private
     # for use with events' button property
     MouseButtonCodes=

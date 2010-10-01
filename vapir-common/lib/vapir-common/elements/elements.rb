@@ -54,6 +54,19 @@ module Vapir
       !disabled
     end
     
+    module WatirInputElementConfigCompatibility
+      def requires_typing
+        Kernel.warn_with_caller "WARNING: #requires_typing is deprecated; please use the new config framework with config.type_keys="
+        config.type_keys = true
+        self
+      end
+      def abhors_typing
+        Kernel.warn_with_caller "WARNING: #abhors_typing is deprecated; please use the new config framework with config.type_keys="
+        config.type_keys = false
+        self
+      end
+    end
+    include WatirInputElementConfigCompatibility
   end
   module TextField
     extend ElementHelper

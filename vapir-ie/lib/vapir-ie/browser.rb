@@ -34,15 +34,6 @@ module Vapir
     # might be set after initialization. Setting them beforehand (e.g. from
     # the command line) will affect the class, otherwise it is only a temporary
     # effect
-    @@speed = $FAST_SPEED ? :fast : :slow
-    def self.speed
-      return :fast if $FAST_SPEED
-      @@speed
-    end
-    def self.speed= x
-      $FAST_SPEED = nil
-      @@speed = x
-    end
     @@visible = $HIDE_IE ? false : true
     def self.visible
       return false if $HIDE_IE
@@ -205,7 +196,6 @@ module Vapir
 
     def initialize_options
       self.visible = IE.visible
-      self.speed = IE.speed
 
       @element_object = nil
       @page_container = self
@@ -215,49 +205,6 @@ module Vapir
       @url_list = []
     end
 
-    # Specifies the speed that commands will be executed at. Choices are:
-    # * :slow (default)
-    # * :fast 
-    # * :zippy
-    # With IE#speed=  :zippy, text fields will be entered at once, instead of
-    # character by character (default).
-    def speed= how_fast
-      case how_fast
-      when :zippy then
-        @typingspeed = 0
-        @pause_after_wait = 0.01
-        @type_keys = false
-        @speed = :fast
-      when :fast then
-        @typingspeed = 0
-        @pause_after_wait = 0.01
-        @type_keys = true
-        @speed = :fast
-      when :slow then
-        @typingspeed = 0.08
-        @pause_after_wait = 0.1
-        @type_keys = true
-        @speed = :slow
-      else
-        raise ArgumentError, "Invalid speed: #{how_fast}"
-      end
-    end
-    
-    def speed
-      return @speed if @speed == :slow
-      return @type_keys ? :fast : :zippy
-    end
-    
-    # deprecated: use speed = :fast instead
-    def set_fast_speed
-      self.speed = :fast
-    end
-
-    # deprecated: use speed = :slow instead
-    def set_slow_speed
-      self.speed = :slow
-    end
-    
     def visible
       assert_exists
       @browser_object.visible

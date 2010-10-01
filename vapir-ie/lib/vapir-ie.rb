@@ -16,9 +16,6 @@ end
 # Make Internet Explorer invisible. -b stands for background
 $HIDE_IE ||= ARGV.delete('-b')
 
-# Run fast
-$FAST_SPEED = ARGV.delete('-f')
-
 # Eat the -s command line switch (deprecated)
 ARGV.delete('-s')
 

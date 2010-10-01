@@ -39,10 +39,6 @@ module Vapir
     # In other words, for ie.table().this_thing().text_field().set,
     # container of this_thing is the table.
     
-    # This is used to change the typing speed when entering text on a page.
-    attr_accessor :typingspeed
-    attr_accessor :type_keys
-    
     def copy_test_config(container) # only used by form and frame
       @typingspeed = container.typingspeed
       @type_keys = container.type_keys

@@ -87,15 +87,6 @@ module Vapir
       end
     end
     alias_deprecated :dragContentsTo, :drag_contents_to
-    
-    def requires_typing
-      @type_keys = true
-      self
-    end
-    def abhors_typing
-      @type_keys = false
-      self
-    end
   end
   
   # this class can be used to access hidden field objects

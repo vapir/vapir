@@ -153,4 +153,66 @@ before you invoke Browser.new.
     private :screen_capture_win_window
   end
 
+  module WatirConfigCompatibility
+    if defined?($FAST_SPEED)
+      Kernel.warn "WARNING: The $FAST_SPEED global is gone. Please use the new config framework, and unset that global to silence this warning."
+      Vapir.config.typing_interval=0
+      Vapir.config.type_keys=false
+    end
+    Speeds = {
+      :zippy => {
+        :typing_interval => 0,
+        :type_keys => false,
+      },
+      :fast => {
+        :typing_interval => 0,
+        :type_keys => true,
+      },
+      :slow => {
+        :typing_interval => 0.08,
+        :type_keys => true,
+      },
+    }.freeze
+    module Speed
+      def speed
+        if self==Vapir::Browser
+          return browser_class.speed
+        end
+        Kernel.warn_with_caller "WARNING: #speed is deprecated; please use the new config framework with config.typing_interval and config.type_keys"
+        Speeds.keys.detect do |speed_key|
+          Speeds[speed_key].all? do |config_key, value|
+            config[config_key] == value
+          end
+        end || :other
+      end
+      def speed=(speed_key)
+        if self==Vapir::Browser
+          return browser_class.speed=speed_key
+        end
+        Kernel.warn_with_caller "WARNING: #speed= is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        unless Speeds.key?(speed_key)
+          raise ArgumentError, "Invalid speed: #{speed_key}. expected #{Speeds.keys.map{|k| k.inspect }.join(', ')}"
+        end
+        Speeds[speed_key].each do |config_key, value|
+          config[config_key]=value
+        end
+      end
+      def set_slow_speed
+        if self==Vapir::Browser
+          return browser_class.set_slow_speed
+        end
+        Kernel.warn_with_caller "WARNING: #set_slow_speed is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        self.speed= :slow
+      end
+      def set_fast_speed
+        if self==Vapir::Browser
+          return browser_class.set_fast_speed
+        end
+        Kernel.warn_with_caller "WARNING: #set_fast_speed is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        self.speed= :fast
+      end
+    end
+    Vapir::Browser.send(:extend, Speed)
+    Vapir::Browser.send(:include, Speed)
+  end
 end

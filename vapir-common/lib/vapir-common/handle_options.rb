@@ -6,7 +6,7 @@
 def handle_options(given_options, default_options, other_allowed_keys=[])
   given_options=given_options.dup
   unless (unknown_keys=(given_options.keys-default_options.keys-other_allowed_keys)).empty?
-    raise ArgumentError, "Unknown options: #{(given_options.keys-default_options.keys).map(&:inspect).join(', ')}. Known options are #{(default_options.keys+other_allowed_keys).map(&:inspect).join(', ')}"
+    raise ArgumentError, "Unknown options: #{unknown_keys.map(&:inspect).join(', ')}. Known options are #{(default_options.keys+other_allowed_keys).uniq.map(&:inspect).join(', ')}"
   end
   (default_options.keys-given_options.keys).each do |key|
     given_options[key]=default_options[key]

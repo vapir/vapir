@@ -21,8 +21,6 @@ Vapir::Common::GemSpec = Gem::Specification.new do |s|
   #s.requirements = []
   s.require_path = 'lib'
 
-  s.add_dependency 'user-choices', '>= 0'
-
   s.rdoc_options += [
     '--title', 'Vapir-Common',
     '--accessor', 'dom_attr=R', # TODO: fix this if at all possible 

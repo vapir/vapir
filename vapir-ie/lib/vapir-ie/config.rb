@@ -7,6 +7,11 @@ module Vapir
 
   # add ie-specific stuff to base, and then bring them in from env and yaml 
   @base_configuration.create_update(:ie_launch_new_process, false, :validator => :boolean)
+  @base_configuration.create_update(:browser_visible, true, :validator => :boolean)
+  if defined?($HIDE_IE)
+    Kernel.warn "WARNING: The $HIDE_IE global is gone. Please use the new config framework, and unset that global to silence this warning."
+    Vapir.config.browser_visible=false
+  end
   @env_configuration.update_env
   class IE
     @configuration_parent = Vapir.config

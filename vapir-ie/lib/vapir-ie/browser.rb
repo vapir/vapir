@@ -22,21 +22,6 @@ module Vapir
         send "#{name}=", value
       end
     end
-    # The globals $FAST_SPEED and $HIDE_IE are checked both at initialization 
-    # and later, because they
-    # might be set after initialization. Setting them beforehand (e.g. from
-    # the command line) will affect the class, otherwise it is only a temporary
-    # effect
-    @@visible = $HIDE_IE ? false : true
-    def self.visible
-      return false if $HIDE_IE
-      @@visible
-    end
-    def self.visible= x
-      $HIDE_IE = nil
-      @@visible = x
-    end
-        
     # IE inserts some element whose tagName is empty and just acts as block level element
     # Probably some IE method of cleaning things
     # To pass the same to the xml parser we need to give some name to empty tagName
@@ -142,11 +127,11 @@ module Vapir
     #     is a WIN32OLE object representing the browser. 
     #   - :wait - true or false, default is true. whether to wait for the browser
     #     to be ready before continuing. 
-    def initialize(options = {})
-      if options==true || options==false
+    def initialize(method_options = {})
+      if method_options==true || method_options==false
         raise NotImplementedError, "#{self.class.name}.new takes an options hash - passing a boolean for 'suppress_new_window' is no longer supported. Please see the documentation for #{self.class}.new"
       end
-      options = options_from_config(options, {:timeout => :attach_timeout, :new_process => :ie_launch_new_process, :wait => :wait}, [:attach, :goto])
+      options = options_from_config(method_options, {:timeout => :attach_timeout, :new_process => :ie_launch_new_process, :wait => :wait, :visible => :browser_visible}, [:attach, :goto])
 
       if options[:attach]
         how, what = *options[:attach]
@@ -171,6 +156,10 @@ module Vapir
           end
         end
         initialize_options
+        if method_options.key?(:visible)
+          # only set visibility if it's explicitly in the options given to the method - don't set from config when using attach 
+          self.visible= method_options[:visible]
+        end
       else
         if options[:new_process]
           iep = Process.start
@@ -180,6 +169,7 @@ module Vapir
           @browser_object = WIN32OLE.new('InternetExplorer.Application')
         end
         initialize_options
+        self.visible= options[:visible]
         goto('about:blank')
       end
       goto(options[:goto]) if options[:goto]
@@ -188,7 +178,6 @@ module Vapir
     end
 
     def initialize_options
-      self.visible = IE.visible
 
       @element_object = nil
       @page_container = self
@@ -202,9 +191,9 @@ module Vapir
       assert_exists
       @browser_object.visible
     end
-    def visible=(boolean)
+    def visible=(visibility)
       assert_exists
-      @browser_object.visible = boolean if boolean != @browser_object.visible
+      @browser_object.visible = visibility
     end
     
     # the WIN32OLE Internet Explorer object
@@ -795,4 +784,17 @@ module Vapir
     end
     
   end # class IE
+  module WatirConfigCompatibility
+    module Visible
+      def visible
+        Kernel.warn_with_caller "WARNING: #visible is deprecated; please use the new config framework with config.browser_visible"
+        config.browser_visible
+      end
+      def visible= visibility
+        Kernel.warn_with_caller "WARNING: #visible= is deprecated; please use the new config framework with config.browser_visible="
+        config.browser_visible=visibility
+      end
+    end
+    Vapir::IE.send(:extend, Visible)
+  end
 end

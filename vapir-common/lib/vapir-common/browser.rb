@@ -173,6 +173,23 @@ before you invoke Browser.new.
         :type_keys => true,
       },
     }.freeze
+    module WatirBrowserClassConfigCompatibility
+      def attach_timeout
+        if self==Vapir::Browser
+          return browser_class.attach_timeout
+        end
+        Kernel.warn_with_caller "WARNING: #attach_timeout is deprecated; please use the new config framework with config.attach_timeout"
+        config.attach_timeout
+      end
+      def attach_timeout=(timeout)
+        if self==Vapir::Browser
+          return browser_class.attach_timeout=timeout
+        end
+        Kernel.warn_with_caller "WARNING: #attach_timeout= is deprecated; please use the new config framework with config.attach_timeout="
+        config.attach_timeout = timeout
+      end
+    end
+    Vapir::Browser.send(:extend, WatirBrowserClassConfigCompatibility)
     module Speed
       def speed
         if self==Vapir::Browser

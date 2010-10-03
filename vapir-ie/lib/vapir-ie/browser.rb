@@ -11,13 +11,6 @@ module Vapir
     include Vapir::Exception
     include IE::PageContainer
     
-    def self.attach_timeout # deprecate
-      config.attach_timeout
-    end
-    def self.attach_timeout=(timeout) # deprecate
-      config.attach_timeout = timeout
-    end
-
     # Return the options used when creating new instances of IE.
     # BUG: this interface invites misunderstanding/misuse such as IE.options[:speed] = :zippy]
     def self.options

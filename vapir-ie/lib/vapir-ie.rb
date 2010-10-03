@@ -16,7 +16,5 @@ require 'vapir-common/waiter'
 module Vapir
   include Vapir::Exception
 
-  # Directory containing the watir.rb file
-  @@dir = File.expand_path(File.dirname(__FILE__))
 
 end

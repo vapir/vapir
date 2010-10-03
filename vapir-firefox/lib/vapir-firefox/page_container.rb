@@ -5,9 +5,7 @@ module Vapir
   module Firefox::PageContainer
     include Vapir::PageContainer
     include Firefox::Container
-    #def content_window_object
-    #  document_object.parentWindow
-    #end
+
     def text
       document_element.textContent
     end

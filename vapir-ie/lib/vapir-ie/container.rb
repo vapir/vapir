@@ -33,28 +33,9 @@ module Vapir
         handle_existence_failure($!, options)
       end
     end
-    public
-    # Note: @container is the container of this object, i.e. the container
-    # of this container.
-    # In other words, for ie.table().this_thing().text_field().set,
-    # container of this_thing is the table.
-    
-    def copy_test_config(container) # only used by form and frame
-      @typingspeed = container.typingspeed
-      @type_keys = container.type_keys
-    end
-    private :copy_test_config
-    
     # Write the specified string to the log.
     def log(what)
       @container.logger.debug(what) if @logger
     end
-    
-#    def set_container container
-#      @container = container 
-#      @page_container = container.page_container
-#    end
-        
-    private
   end # module
 end

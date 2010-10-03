@@ -90,14 +90,6 @@ before you invoke Browser.new.
         ensure_overridden
         browser_class.attach(how, what)
       end
-      def set_options options
-        unless self==browser_closs
-          browser_class.set_options options
-        end
-      end
-      def options
-        self==browser_class ? {} : browser_class.options
-      end
 
       def browser_class
         key = Vapir.config.default_browser
@@ -174,6 +166,29 @@ before you invoke Browser.new.
       },
     }.freeze
     module WatirBrowserClassConfigCompatibility
+      OptionsKeys = [:speed, :attach_timeout, :visible]
+      def options
+        if self==Vapir::Browser
+          return browser_class.options
+        end
+        Kernel.warn_with_caller "WARNING: #options is deprecated; please use the new config framework"
+        OptionsKeys.inject({}) do |hash, key|
+          respond_to?(key) ? hash.merge(key => self.send(key)) : hash
+        end.freeze
+      end
+      def set_options(options)
+        if self==Vapir::Browser
+          return browser_class.set_options options
+        end
+        Kernel.warn_with_caller "WARNING: #set_options is deprecated; please use the new config framework"
+        
+        unless (unknown_options = options.keys - OptionsKeys.select{|key| respond_to?("#{key}=")}).empty?
+          raise ArgumentError, "unknown options: #{unknown_options.inspect}"
+        end
+        options.each do |key, value|
+          self.send("#{key}=", value)
+        end
+      end
       def attach_timeout
         if self==Vapir::Browser
           return browser_class.attach_timeout

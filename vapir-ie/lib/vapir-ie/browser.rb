@@ -11,17 +11,6 @@ module Vapir
     include Vapir::Exception
     include IE::PageContainer
     
-    # Return the options used when creating new instances of IE.
-    # BUG: this interface invites misunderstanding/misuse such as IE.options[:speed] = :zippy]
-    def self.options
-      {:speed => self.speed, :visible => self.visible, :attach_timeout => self.attach_timeout}
-    end
-    # set values for options used when creating new instances of IE.
-    def self.set_options options
-      options.each do |name, value|
-        send "#{name}=", value
-      end
-    end
     # IE inserts some element whose tagName is empty and just acts as block level element
     # Probably some IE method of cleaning things
     # To pass the same to the xml parser we need to give some name to empty tagName

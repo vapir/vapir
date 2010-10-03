@@ -122,6 +122,11 @@ module Vapir
       end
       options = options_from_config(method_options, {:timeout => :attach_timeout, :new_process => :ie_launch_new_process, :wait => :wait, :visible => :browser_visible}, [:attach, :goto])
 
+      @error_checkers = []
+      
+      @logger = DefaultLogger.new
+      @url_list = []
+
       if options[:attach]
         how, what = *options[:attach]
         if how== :browser_object
@@ -144,7 +149,6 @@ module Vapir
             end
           end
         end
-        initialize_options
         if method_options.key?(:visible)
           # only set visibility if it's explicitly in the options given to the method - don't set from config when using attach 
           self.visible= method_options[:visible]
@@ -157,23 +161,12 @@ module Vapir
         else
           @browser_object = WIN32OLE.new('InternetExplorer.Application')
         end
-        initialize_options
         self.visible= options[:visible]
         goto('about:blank')
       end
       goto(options[:goto]) if options[:goto]
       wait if options[:wait]
       self
-    end
-
-    def initialize_options
-
-      @element_object = nil
-      @page_container = self
-      @error_checkers = []
-      
-      @logger = DefaultLogger.new
-      @url_list = []
     end
 
     def visible

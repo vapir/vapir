@@ -16,11 +16,9 @@ module Vapir
     # returns the last evaluated expression. 
     # raises an error if the given javascript errors. 
     def execute_script(javascript)
-      jssh_socket.object("function(js, window){ return eval('with(window){ '+js+' }'); }").call(javascript, content_window_object)
-      #sandbox=jssh_socket.Components.utils.Sandbox(content_window_object)
-      #sandbox.window=content_window_object
-      #sandbox.document=content_window_object.document
-      #return jssh_socket.Components.utils.evalInSandbox(javascript, sandbox)
+      sandbox=jssh_socket.Components.utils.Sandbox(content_window_object)
+      sandbox.window=content_window_object.window
+      return jssh_socket.Components.utils.evalInSandbox('with(window) { '+javascript+' }', sandbox)
     end
 
     # Returns the html of the document

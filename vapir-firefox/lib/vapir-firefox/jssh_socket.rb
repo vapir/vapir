@@ -623,7 +623,7 @@ class JsshObject
   # initializes a JsshObject with a string of javascript containing a reference to
   # the object, and a  JsshSocket that the object is defined on. 
   def initialize(ref, jssh_socket, other={})
-    other={:debug_name => ref, :function_result => false}.merge(other)
+    other={:debug_name => ref, :function_result => false, :define_methods => self.class.always_define_methods}.merge(other)
     raise ArgumentError, "Empty object reference!" if !ref || ref==''
     raise ArgumentError, "Reference must be a string - got #{ref.inspect} (#{ref.class.name})" unless ref.is_a?(String)
     raise ArgumentError, "Not given a JsshSocket, instead given #{jssh_socket.inspect} (#{jssh_socket.class.name})" unless jssh_socket.is_a?(JsshSocket)
@@ -631,7 +631,7 @@ class JsshObject
     @jssh_socket=jssh_socket
     @debug_name=other[:debug_name]
     @function_result=other[:function_result]
-    if self.class.always_define_methods && type=='object'
+    if other[:define_methods] && type=='object'
       define_methods!
     end
 #    logger.info { "#{self.class} initialized: #{debug_name} (type #{type})" }
@@ -799,11 +799,11 @@ class JsshObject
   private :invoke_attr_err_args
   
   # returns a JsshObject referencing the given attribute of this object 
-  def attr(attribute)
+  def attr(attribute, options={})
     unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
       raise JsshSyntaxError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
     end
-    JsshObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
+    JsshObject.new("#{ref}.#{attribute}", jssh_socket, {:debug_name => "#{debug_name}.#{attribute}"}.merge(options))
   end
 
   # assigns the given ruby value (converted to_jssh) to the reference
@@ -1048,7 +1048,7 @@ class JsshObject
       got=invoke(method, *args)
       got.is_a?(JsshObject) ? got.val : got
     when '='
-      attr(method).assign(*args)
+      attr(method, :define_methods => false).assign(*args)
     else
       Object.instance_method(:method_missing).bind(self).call(method, *args) # this shouldn't happen 
     end

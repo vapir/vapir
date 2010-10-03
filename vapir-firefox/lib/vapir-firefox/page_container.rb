@@ -15,9 +15,12 @@ module Vapir
     # evaluates a given javascript string. 
     # returns the last evaluated expression. 
     # raises an error if the given javascript errors. 
-    def execute_script(javascript)
+    def execute_script(javascript, other_variables={})
       sandbox=jssh_socket.Components.utils.Sandbox(content_window_object)
       sandbox.window=content_window_object.window
+      other_variables.each do |name, var|
+        sandbox[name]=var
+      end
       return jssh_socket.Components.utils.evalInSandbox('with(window) { '+javascript+' }', sandbox)
     end
 

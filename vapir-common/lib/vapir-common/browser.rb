@@ -71,25 +71,33 @@ before you invoke Browser.new.
         browser=browser_class.new *args, &block
         browser
       end
-      # makes sure that the class methods of Browser that call to the class methods of browser_class 
-      # are overridden so that Browser class methods aren't inherited causing infinite loop. 
-      def ensure_overridden
-        if self==browser_class
-          raise NotImplementedError, "This method must be overridden by #{self}!"
-        end
-      end
+      alias new_window new
 
-      # Create a new instance as with #new and start the browser on the
-      # specified url.
-      def start url
-        ensure_overridden
-        browser_class.start url
+      # Create a new browser instance, starting at the specified url.
+      # If no url is given, start at about:blank.
+      def start(url='about:blank', options={})
+        raise ArgumentError, "URL must be a string; got #{url.inspect}" unless url.is_a?(String)
+        new(options.merge(:goto => url))
       end
-      # Attach to an existing browser.
-      def attach(how, what)
-        ensure_overridden
-        browser_class.attach(how, what)
+      alias start_window start
+
+      # Attach to an existing browser window. Returns an instance of the current default browser class. 
+      #
+      # the window to be attached to can be
+      # referenced by url, title, or window handle ('how' argument)
+      #
+      # The 'what' argument can be either a string or a regular expression, in the 
+      # case of of :url or :title. 
+      #
+      #  Vapir::Browser.attach(:url, 'http://www.google.com')
+      #  Vapir::Browser.attach(:title, 'Google')
+      #  Vapir::Browser.attach(:hwnd, 528140)
+      #
+      # see the implementing browser's +new+ method for more details on what may be passed. 
+      def attach(how, what, options={})
+        new(options.merge(:attach => [how, what]))
       end
+      alias find attach
 
       def browser_class
         key = Vapir.config.default_browser

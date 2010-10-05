@@ -27,18 +27,6 @@ module Vapir
     attr_reader :url_list
     
     class << self
-      # Create a new IE Window, starting at the specified url.
-      # If no url is given, start empty.
-      def start(url='about:blank', options={})
-        raise ArgumentError, "URL must be a string; get #{url.inspect}" unless url.is_a?(String)
-        new(options.merge(:goto => url))
-      end
-      alias start_window start
-      
-      # Create a new IE window. Works just like IE.new in Watir 1.4.
-      def new_window(options={})
-        new(options)
-      end
       # Create a new IE window in a new process. 
       # This method will not work when
       # Vapir/Ruby is run under a service (instead of a user).
@@ -51,20 +39,6 @@ module Vapir
       def start_process(url='about:blank', options={})
         new(options.merge(:new_process => true, :goto => url))
       end
-
-      # Return a Vapir::IE object for an existing IE window. Window can be
-      # referenced by url, title, or window handle.
-      # Second argument can be either a string or a regular expression in the 
-      # case of of :url or :title. 
-      # IE.attach(:url, 'http://www.google.com')
-      # IE.attach(:title, 'Google')
-      # IE.attach(:hwnd, 528140)
-      # This method will not work when
-      # Vapir/Ruby is run under a service (instead of a user).
-      def attach(how, what, options={})
-        ie = new(options.merge(:attach => [how, what]))
-      end
-      alias find attach
 
       # Yields successively to each IE window on the current desktop. Takes a block.
       # This method will not work when

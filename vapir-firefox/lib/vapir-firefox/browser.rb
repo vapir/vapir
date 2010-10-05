@@ -224,14 +224,6 @@ module Vapir
     end
     private :launch_browser
 
-    # Creates a new instance of Firefox. Loads the URL and return the instance.
-    # Input:
-    #   url - url of the page to be loaded.
-    def self.start(url)
-      new(:goto => url)
-    end
-    
-
     # Loads the given url in the browser. Waits for the page to get loaded.
     def goto(url)
       assert_exists
@@ -486,19 +478,9 @@ module Vapir
     end
     private :attach
 
-    # Class method to return a browser object if a window matches for how
-    # and what. Window can be referenced by url or title.
-    # The second argument can be either a string or a regular expression.
-    # Vapir::Browser.attach(:url, 'http://www.google.com')
-    # Vapir::Browser.attach(:title, 'Google')
-    def self.attach how, what
-      new(:attach => [how, what])
-    end
-
     # loads up a new window in an existing process
     # Vapir::Browser.attach() with no arguments passed the attach method will create a new window
     # this will only be called one time per instance we're only ever going to run in 1 window
-
     def open_window
       begin
         @browser_window_name="firewatir_window_%.16x"%rand(2**64)

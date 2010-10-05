@@ -55,7 +55,6 @@ spec = Gem::Specification.new do |s|
     'lib/vapir-common/options.rb', # todo: 
     'lib/vapir-common/testcase.rb', # todo: move to unittests? 
     'lib/vapir-common/waiter.rb', # todo: move to external
-    'lib/vapir-common/win_window.rb', # todo: move to external 
     'lib/vapir-common/external/core_extensions.rb',
   ]
 end

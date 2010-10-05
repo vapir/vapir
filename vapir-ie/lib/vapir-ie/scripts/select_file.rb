@@ -45,7 +45,7 @@ unless (2..3).include?(ARGV.size) && browser_hwnd =~ /^\d+$/ && browser_hwnd.to_
 end
 
 require 'rubygems' # win_window needs this for FFI 
-require 'vapir-common/win_window'
+require 'winwindow'
 require 'vapir-common/waiter'
 require 'vapir-common/exceptions'
 

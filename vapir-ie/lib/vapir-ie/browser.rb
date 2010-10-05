@@ -296,7 +296,7 @@ module Vapir
     end
     
     def win_window
-      require 'vapir-common/win_window'
+      Vapir.require_winwindow
       @win_window||= WinWindow.new(hwnd)
     end
     

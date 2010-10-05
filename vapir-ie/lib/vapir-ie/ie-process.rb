@@ -38,7 +38,7 @@ module Vapir
       # returns the browser object corresponding to the process id 
       def browser_object(options={})
         options=handle_options(options, :timeout => 32)
-        require 'vapir-common/win_window'
+        Vapir.require_winwindow
         ::Waiter.try_for(options[:timeout], :exception => RuntimeError.new("Could not find a browser for process #{self.inspect}")) do
           Vapir::IE.browser_objects.detect do |browser_object|
             @process_id == WinWindow.new(browser_object.hwnd).process_id

@@ -22,12 +22,13 @@ Vapir::IE::GemSpec = Gem::Specification.new do |s|
   s.requirements = ['Microsoft Windows', 'Internet Explorer']
   s.require_path = 'lib'
 
-  s.add_dependency 'win32-process', '>= 0.5.5' # TODO: check this
-  s.add_dependency 'windows-pr', '>= 0.6.6'
   s.add_dependency 'vapir-common', '= ' + Vapir::IE::VERSION
-  s.add_dependency 'nokogiri'
-  s.add_dependency 'ffi', '>= 0.5.4'
+  s.add_dependency 'win32-process', '~> 0.5.5' # TODO: check this
+  s.add_dependency 'windows-pr', '~> 0.6.6'
+  s.add_dependency 'nokogiri', '~> 1.4.0'
+  s.add_dependency 'ffi', '>= 0.5.4', '< 1.0.0'
   s.add_dependency 'winwindow', '~> 0.4.0'
+
 
   s.rdoc_options += [
     '--title', 'Vapir-IE',

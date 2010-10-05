@@ -47,7 +47,7 @@ end # module
 require 'vapir-common/handle_options'
 
 class WaiterError < StandardError; end
-class Waiter
+module Waiter
   # Tries for +time+ seconds to get the desired result from the given block. Stops when either:
   # 1. The :condition option (which should be a proc) returns true (that is, not false or nil)
   # 2. The block returns true (that is, anything but false or nil) if no :condition option is given

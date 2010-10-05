@@ -191,7 +191,7 @@ module Vapir
         when :element_object
           assert_no_index
           if @element_object # if @element_object is already set, it must not exist, since we check #element_object_exists? above. 
-            raise Vapir::Exception::UnableToRelocateException, "This #{self.class.name} was specified using #{how.inspect} and cannot be relocated."
+            raise Vapir::Exception::UnableToRelocateException, "This #{self.class.name} has stopped existing. Tried to relocate it, but it was specified using #{how.inspect} and cannot be relocated."
           else
             @what
           end

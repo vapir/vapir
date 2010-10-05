@@ -27,7 +27,7 @@ module Vapir
       begin
         base_handling_existence_failure(options, &block)
       rescue WIN32OLERuntimeError, RuntimeError, NoMethodError, Vapir::Exception::ExistenceFailureException
-        if [WIN32OLERuntimeError, RuntimeError, NoMethodError].any?{|klass| $!.is_a?(klass) } && $!.message !~ ExistenceFailureCodesRE
+        if [WIN32OLERuntimeError, RuntimeError, NoMethodError].any?{|klass| $!.is_a?(klass) } && $!.message !~ Vapir::IE::ExistenceFailureCodesRE
           raise
         end
         handle_existence_failure($!, options)

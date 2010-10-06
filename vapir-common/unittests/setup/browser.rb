@@ -1,6 +1,6 @@
 # setup/browser
 require 'vapir-common/browser'
-case Vapir.options[:browser]
+case Vapir.config.default_browser.to_s
 when 'ie'
   $LOAD_PATH.unshift File.expand_path($watir_dev_lib)
 when 'firefox'

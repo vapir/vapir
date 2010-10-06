@@ -270,6 +270,9 @@ module Vapir
     end
     
     # the WIN32OLE Internet Explorer object
+    #
+    # See: http://msdn.microsoft.com/en-us/library/aa752085%28v=VS.85%29.aspx
+    # and http://msdn.microsoft.com/en-us/library/aa752084%28v=VS.85%29.aspx
     attr_reader :browser_object
     alias ie browser_object
     

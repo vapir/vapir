@@ -27,6 +27,7 @@ spec = Gem::Specification.new do |s|
   s.add_dependency 'vapir-common', '= ' + Vapir::IE::VERSION
   s.add_dependency 'nokogiri'
   s.add_dependency 'ffi', '>= 0.5.4'
+  s.add_dependency 'winwindow', '~> 0.4.0'
 
   s.rdoc_options += [
     '--title', 'Vapir-IE',

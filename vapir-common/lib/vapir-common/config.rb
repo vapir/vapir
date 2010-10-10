@@ -58,6 +58,9 @@ module Vapir
     # creates a new Configuration with the given parent. if a block is given, this
     # Configuration object will be yielded to it. 
     def initialize(parent, &block)
+      unless parent==nil || parent.is_a?(Configuration)
+        raise TypeError, "expected parent to be a Configuration; got #{parent.inspect}"
+      end
       @parent=parent
       @config_hash = {}
       @recognized_options = {}

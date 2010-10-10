@@ -12,7 +12,7 @@ module Vapir
     Kernel.warn "WARNING: The $HIDE_IE global is gone. Please use the new config framework, and unset that global to silence this warning."
     Vapir.config.browser_visible=false
   end
-  @env_configuration.update_env
+  @configurations.update_from_source
   class IE
     @configuration_parent = Vapir.config
     extend Configurable

@@ -222,7 +222,63 @@ module Vapir
     end
   end
   
-  @base_configuration=Configuration.new(nil) do |config|
+  class HashConfigurationWithOtherStuff < Configuration
+    attr_accessor :key_prefix
+    def unprefixed_recognized_key(prefixed_key)
+      key_prefix=self.key_prefix || ''
+      if prefixed_key.is_a?(String) || prefixed_key.is_a?(Symbol)
+        prefixed_key=prefixed_key.to_s
+        if prefixed_key[0...key_prefix.length].downcase==key_prefix.downcase
+          key=prefixed_key[key_prefix.length..-1]
+          if recognized_key?(key)
+            return key
+          end
+        end
+      end
+      return nil
+    end
+    def update_from_source
+      config_hash.each do |hash_key, value|
+        if key=unprefixed_recognized_key(hash_key)
+          update(key, value)
+        end
+      end
+    end
+  end
+  class YamlConfiguration < HashConfigurationWithOtherStuff
+    attr_reader :yaml_file
+    def initialize(parent, yaml_file)
+      super(parent)
+      @yaml_file=yaml_file
+      update_from_source
+    end
+    def config_hash
+      if yaml_file && File.exists?(yaml_file)
+        require 'yaml'
+        @loaded_yaml ||= YAML.load_file(yaml_file) # don't want to reload this every time #update_from_source is called 
+        if @loaded_yaml.is_a?(Hash)
+          @loaded_yaml
+        elsif @loaded_yaml == false || @loaded_yaml == nil
+          {}
+        else
+          raise ArgumentError, "Attempted to load Vapir configuration from the YAML file at #{yaml_file.inspect}, but its contents parsed as a #{@loaded_yaml.class}; expected a hash.\nYAML.load_file(#{yaml_file.inspect}) = #{@loaded_yaml.inspect}"
+        end
+      else
+        {}
+      end
+    end
+  end
+
+  @configurations = []
+  def (@configurations).update_from_source
+    self.each do |c|
+      if c.respond_to?(:update_from_source)
+        c.update_from_source 
+      end
+    end
+  end
+
+  @configurations.push(@base_configuration=Configuration.new(nil) do |config|
     config.create_update(:attach_timeout, 30, :validator => :numeric)
     config.create(:default_browser, :validator => proc do |val|
       require 'vapir-common/browsers'
@@ -235,26 +291,32 @@ module Vapir
     config.create_update(:wait, true, :validator => :boolean)
     config.create_update(:type_keys, false, :validator => :boolean)
     config.create_update(:typing_interval, 0, :validator => :numeric)
-  end
+  end)
   
-  @yaml_configuration = Configuration.new(@base_configuration)
-  # TODO: bring in YAML config to override base defaults 
-  
-  @env_configuration = Configuration.new(@yaml_configuration)
-  class << @env_configuration
-    def update_env
-      ENV.each do |env_key, value|
-        if env_key =~ /\Avapir_(.*)\z/i
-          key = $1
-          if recognized_key?(key)
-            update(key, value)
-          end
-        end
-      end
+  # adapted from rubygems.rb
+  home_dir = ENV['HOME'] || ENV['USERPROFILE'] || (ENV['HOMEDRIVE'] && ENV['HOMEPATH'] && "#{ENV['HOMEDRIVE']}:#{ENV['HOMEPATH']}") || begin
+    File.expand_path("~")
+  rescue
+    if File::ALT_SEPARATOR
+      "C:/"
+    else
+      "/"
     end
   end
-  @env_configuration.update_env
   
-  @configuration_parent = @env_configuration
+  @configurations.push(@home_yaml_configuration = YamlConfiguration.new(@configurations.last, File.join(home_dir, '.vapir_config.yaml')))
+  @configurations.push(@pwd_yaml_configuration = YamlConfiguration.new(@configurations.last, File.join(Dir.pwd, 'vapir_config.yaml')))
+  
+  env_config_yaml = (env_yaml_key = ENV.keys.detect{|key| key.downcase == 'vapir_config_yaml' }) && ENV[env_yaml_key]
+  env_config_yaml_file = env_config_yaml && (File.directory?(env_config_yaml) ? File.join(env_config_yaml, 'vapir_config.yaml') : env_config_yaml)
+  @configurations.push(@env_yaml_configuration = YamlConfiguration.new(@configurations.last, env_config_yaml_file))
+  @configurations.push(@env_configuration = HashConfigurationWithOtherStuff.new(@configurations.last))
+  @env_configuration.key_prefix='vapir_'
+  def (@env_configuration).config_hash
+    ENV
+  end
+  @env_configuration.update_from_source
+  
+  @configuration_parent = @configurations.last
   extend Configurable # makes Vapir.config which is the in-process user-configurable one, overriding base, yaml, and env 
 end

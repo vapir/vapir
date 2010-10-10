@@ -8,7 +8,7 @@ module Vapir
   # add firefox-specific stuff to base, and then bring them in from env and yaml 
   @base_configuration.create(:firefox_profile)
   @base_configuration.create(:firefox_binary_path)
-  @env_configuration.update_env
+  @configurations.update_from_source
   class Firefox
     @configuration_parent = Vapir.config
     extend Configurable

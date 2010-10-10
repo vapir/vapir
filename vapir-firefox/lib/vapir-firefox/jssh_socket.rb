@@ -48,6 +48,27 @@ class Object # :nodoc:all
     ActiveSupport::JSON.encode(self)
   end
 end
+class Regexp # :nodoc:all
+  # Returns a javascript encoding of a Regexp. (not JSON, seeing as Regexp isn't defined in JSON). 
+  #
+  # not using ActiveSupport's, because it doen't work with empty regexps and doesn't deal with flags properly. 
+  def to_jssh
+    # work around ActiveSupport::JSON bug which encodes empty regexp as // - which is a comment in javascript 
+    js_source = source.empty? ? "/(?:)/" : inspect
+
+    # get the flags javascript recognizes - not the same ones a ruby. TODO: check up on 'x' flag? 
+    js_flags = {Regexp::MULTILINE => 'm', Regexp::IGNORECASE => 'i'}.inject("") do |flags, (bit, flag)|
+      flags + (options & bit > 0 ? flag : '')
+    end
+    
+    js_source.sub!(/\w*\z/, '') # drop ruby flags 
+    js_source + js_flags
+  end
+  def to_json(options={})
+    to_jssh
+  end
+  alias encode_json to_json
+end
 
 # base exception class for all exceptions raised from Jssh sockets and objects. 
 class JsshError < StandardError;end

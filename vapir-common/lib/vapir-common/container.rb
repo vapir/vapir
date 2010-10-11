@@ -192,6 +192,22 @@ module Vapir
     end
     alias contains_text contains_text?
 
+    # for a common module, such as a TextField, returns an elements-specific class (such as
+    # Firefox::TextField) that inherits from the base_element_class of self. That is, this returns
+    # a sibling class, as it were, of whatever class inheriting from Element is instantiated.
+    def element_class_for(common_module)
+      element_class=nil
+      ObjectSpace.each_object(Class) do |klass|
+        if klass < common_module && klass < base_element_class
+          element_class= klass
+        end
+      end
+      unless element_class
+        raise RuntimeError, "No class found that inherits from both #{common_module} and #{base_element_class}"
+      end
+      element_class
+    end
+    
     # shows the available objects on the current container.
     # This is usually only used for debugging or writing new test scripts.
     # This is a nice feature to help find out what HTML objects are on a page

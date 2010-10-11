@@ -187,6 +187,18 @@ module Vapir
       key = check_key key
       @config_hash.delete(key)
     end
+    
+    # temporarily set the given keys of this configuration to the given values, yield to the block, 
+    # and restore to the original configuration before returning. 
+    def with_config(hash, &block)
+      begin
+        orig_config_hash = @config_hash.dup
+        update_hash hash
+        return yield
+      ensure
+        @config_hash = orig_config_hash
+      end
+    end
   end
   # module to be included in anything that should have a #config method representing a Configuration. 
   module Configurable
@@ -195,6 +207,10 @@ module Vapir
     # returns a Configuration object 
     def config
       @configuration ||= Configuration.new(configuration_parent)
+    end
+    # see Configuration#with_config
+    def with_config(hash, &block)
+      @configuration.with_config(hash, &block)
     end
     private
     # takes a hash of given options, a map of config keys, and a list of other allowed keys. 

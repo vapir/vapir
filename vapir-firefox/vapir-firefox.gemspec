@@ -22,7 +22,6 @@ Vapir::Firefox::GemSpec = Gem::Specification.new do |s|
 
   s.add_dependency 'vapir-common', '= ' + Vapir::Firefox::VERSION
   s.add_dependency 'json', '>= 0' # TODO: put the right min version here 
-  s.add_dependency 'activesupport', '>= 0' # TODO: put the right min version here 
 
   s.rdoc_options += [
     '--title', 'Vapir-Firefox',

@@ -262,10 +262,69 @@ module Vapir
             end
           end
         end
+        element_module = self
+        # define both bang-methods (like #text_field!) and not (#text_field) with corresponding :locate option for element_by_howwhat
+        [ {:method_name => method_name, :locate => true}, 
+          {:method_name => method_name.to_s+'!', :locate => :assert},
+          {:method_name => method_name.to_s+'?', :locate => :nil_unless_exists},
+        ].each do |method_hash|
+          Vapir::Container.module_eval do
+            define_method(method_hash[:method_name]) do |how, *what_args| # can't take how, what as args because blocks don't do default values so it will want 2 args
+              #locate! # make sure self is located before trying contained stuff 
+              what=what_args.shift # what is the first what_arg
+              other_attribute_keys=element_class_for(element_module).container_method_extra_args
+              if what_args.size>other_attribute_keys.length
+                raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}"
+              end
+              if what_args.size == 0
+                other_attributes= nil
+              else
+                other_attributes={}
+                what_args.each_with_index do |arg, i|
+                  other_attributes[other_attribute_keys[i]]=arg
+                end
+              end
+              element_by_howwhat(element_class_for(element_module), how, what, :locate => method_hash[:locate], :other_attributes => other_attributes)
+            end
+          end
+        end
       end
     end
     def container_collection_method(*method_names)
       class_array_append 'container_collection_methods', *method_names
+      element_module=self
+      method_names.each do |container_multiple_method|
+        Vapir::Container.module_eval do
+          # returns an ElementCollection of Elements that are instances of the including class 
+          define_method(container_multiple_method) do |*args|
+            case args.length
+            when 0
+              ElementCollection.new(self, element_class_for(element_module), extra_for_contained)
+            when 1,2
+              first, second=*args
+              how, what, index= *normalize_how_what_index(first, second, element_class_for(element_module))
+              if index
+                raise ArgumentError, "Cannot specify index on collection method! specified index was #{index.inspect}"
+              end
+              ElementCollection.new(self, element_class_for(element_module), extra_for_contained, how, what)
+            else
+              raise ArgumentError, "wrong number of arguments - expected 0 arguments, 1 argument (hash of attributes), or 2 arguments ('how' and 'what'). got #{args.length}: #{args.inspect}"
+            end
+          end
+          define_method('child_'+container_multiple_method.to_s) do
+            ElementCollection.new(self, element_class_for(element_module), extra_for_contained.merge(:candidates => :childNodes))
+          end
+          define_method('show_'+container_multiple_method.to_s) do |*io|
+            io=io.first||$stdout # io is a *array so that you don't have to give an arg (since procs don't do default args)
+            element_collection=ElementCollection.new(self, element_class_for(element_module), extra_for_contained)
+            io.write("There are #{element_collection.length} #{container_multiple_method}\n")
+            element_collection.each do |element|
+              io.write(element.to_s)
+            end
+          end
+          alias_deprecated "show#{container_multiple_method.to_s.capitalize}", "show_"+container_multiple_method.to_s
+        end
+      end
     end
 
     include ElementClassAndModuleMethods
@@ -273,77 +332,6 @@ module Vapir
     def included(including_class)
       including_class.send :extend, ElementClassAndModuleMethods
       
-      # get Container modules that the including_class includes (ie, Vapir::Firefox::TextField includes the Vapir::Firefox::Container Container module)
-      container_modules=including_class.included_modules.select do |mod|
-        mod.included_modules.include?(Vapir::Container)
-      end
-  
-      container_modules.each do |container_module|
-        class_array_get('container_single_methods').each do |container_single_method|
-          # define both bang-methods (like #text_field!) and not (#text_field) with corresponding :locate option for element_by_howwhat
-          [ {:method_name => container_single_method, :locate => true}, 
-            {:method_name => container_single_method.to_s+'!', :locate => :assert},
-            {:method_name => container_single_method.to_s+'?', :locate => :nil_unless_exists},
-          ].each do |method_hash|
-            unless container_module.method_defined?(method_hash[:method_name])
-              container_module.module_eval do
-                define_method(method_hash[:method_name]) do |how, *what_args| # can't take how, what as args because blocks don't do default values so it will want 2 args
-                  #locate! # make sure self is located before trying contained stuff 
-                  what=what_args.shift # what is the first what_arg
-                  other_attribute_keys=including_class.container_method_extra_args
-                  if what_args.size>other_attribute_keys.length
-                    raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}"
-                  end
-                  if what_args.size == 0
-                    other_attributes= nil
-                  else
-                    other_attributes={}
-                    what_args.each_with_index do |arg, i|
-                      other_attributes[other_attribute_keys[i]]=arg
-                    end
-                  end
-                  element_by_howwhat(including_class, how, what, :locate => method_hash[:locate], :other_attributes => other_attributes)
-                end
-              end
-            end
-          end
-        end
-        class_array_get('container_collection_methods').each do |container_multiple_method|
-          container_module.module_eval do
-            # returns an ElementCollection of Elements that are instances of the including class 
-            define_method(container_multiple_method) do |*args|
-              case args.length
-              when 0
-                ElementCollection.new(self, including_class, extra_for_contained)
-              when 1,2
-                first, second=*args
-                how, what, index= *normalize_how_what_index(first, second, including_class)
-                if index
-                  raise ArgumentError, "Cannot specify index on collection method! specified index was #{index.inspect}"
-                end
-                ElementCollection.new(self, including_class, extra_for_contained, how, what)
-              else
-                raise ArgumentError, "wrong number of arguments - expected 0 arguments, 1 argument (hash of attributes), or 2 arguments ('how' and 'what'). got #{args.length}: #{args.inspect}"
-              end
-            end
-          end
-          container_module.module_eval do
-            define_method('child_'+container_multiple_method.to_s) do
-              ElementCollection.new(self, including_class, extra_for_contained.merge(:candidates => :childNodes))
-            end
-            define_method('show_'+container_multiple_method.to_s) do |*io|
-              io=io.first||$stdout # io is a *array so that you don't have to give an arg (since procs don't do default args)
-              element_collection=ElementCollection.new(self, including_class, extra_for_contained)
-              io.write("There are #{element_collection.length} #{container_multiple_method}\n")
-              element_collection.each do |element|
-                io.write(element.to_s)
-              end
-            end
-            alias_deprecated "show#{container_multiple_method.to_s.capitalize}", "show_"+container_multiple_method.to_s
-          end
-        end
-      end
-
       # copy constants (like Specifiers) onto classes when inherited
       # this is here to set the constants of the Element modules below onto the actual classes that instantiate 
       # per-browser (Vapir::IE::TextField, Vapir::Firefox::TextField, etc) so that calling #const_defined? on those 

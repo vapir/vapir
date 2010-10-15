@@ -141,7 +141,7 @@ module Vapir
       unless specifiers_list.is_a?(Enumerable) && specifiers_list.all?{|spec| spec.is_a?(Hash)}
         raise ArgumentError, "specifiers_list should be a list of Hashes!"
       end
-      if candidates.length != 0 && Object.const_defined?('JsshObject') && (candidates.is_a?(JsshObject) || candidates.all?{|c| c.is_a?(JsshObject)})
+      if Object.const_defined?('JsshObject') && (candidates.is_a?(JsshObject) || (candidates.length != 0 && candidates.all?{|c| c.is_a?(JsshObject)}))
         # optimize for JSSH by moving code to the other side of the socket, rather than talking across it a whole lot
         # this javascript should be exactly the same as the ruby in the else (minus WIN32OLE optimization) - 
         # just written in javascript instead of ruby. 

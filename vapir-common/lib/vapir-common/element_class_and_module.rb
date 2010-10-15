@@ -12,19 +12,19 @@ module Vapir
     #
     # if you give a different how/what (third and fourth arguments, optional), then those are passed
     # to the Element constructor. 
-    def factory(element_object, extra={}, how=nil, what=nil)
+    def factory(element_object, extra={}, *howwhat)
       curr_klass=self
       # since this gets included in the Element modules, too, check where we are 
       unless self.is_a?(Class) && self < Vapir::Element
         raise TypeError, "factory was called on #{self} (#{self.class}), which is not a Class that is < Element"
       end
-      if how
-        # use how and what as given
-      elsif what
-        raise ArgumentError, "'what' was given as #{what.inspect} (#{what.class}) but how was not given"
+      how, what = *case howwhat.length
+      when 0
+        [:element_object, element_object]
+      when 2
+        howwhat
       else
-        how=:element_object
-        what=element_object
+        raise ArgumentError, "There should be either no how/what arguments, or two (one how, one what); got #{howwhat.length}: #{howwhat.inspect}"
       end
       ObjectSpace.each_object(Class) do |klass|
         if klass < curr_klass

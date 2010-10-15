@@ -81,9 +81,9 @@ module Vapir
     public
     
     dom_attr :id
-    inspect_this :how
+    inspect_this_if :how
     inspect_this_if(:what) do |element|
-      ![:element_object, :index].include?(element.how) # if how==:element_object, don't show the element object in inspect. if how==:index, what is nil. 
+      ![:element_object, nil].include?(element.how) # if how==:element_object, don't show the element object in inspect. if no how/what, don't show anything for them. 
     end
     inspect_this_if(:index) # uses the default 'if'; shows index if it's not nil 
     inspect_these :tag_name, :id
@@ -120,7 +120,7 @@ module Vapir
     # after they've done their stuff
     def default_initialize(how, what, extra={})
       @how, @what=how, what
-      raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol)
+      raise ArgumentError, "how (first argument) should be a Symbol, not: #{how.inspect}" unless how.is_a?(Symbol) || how==nil
       @extra=extra
       @index=begin
         valid_symbols=[:first, :last]
@@ -232,13 +232,10 @@ module Vapir
           specifiers=self.class.specifiers.map{|spec| spec.merge(specified_attributes)}
           
           candidate_match_at_index(@index, method(:matched_candidates), specifiers, self.class.all_dom_attr_aliases)
-        when :index
+        when nil
           assert_container_exists
           unless @what.nil?
-            raise ArgumentError, "'what' was specified, but when 'how'=:index, no 'what' is used (just extra[:index])"
-          end
-          unless @index
-            raise ArgumentError, "'how' was given as :index but no index was given"
+            raise ArgumentError, "'what' was specified, but 'how' was not given (is nil)"
           end
           candidate_match_at_index(@index, method(:matched_candidates), self.class.specifiers, self.class.all_dom_attr_aliases)
         when :custom
@@ -308,11 +305,11 @@ module Vapir
     # For example, if we have a table, get its first element, and call #to_factory on it:
     #
     # a_table=browser.tables.first
-    # => #<Vapir::IE::Table:0x071bc70c how=:index index=:first tagName="TABLE">
+    # => #<Vapir::IE::Table:0x071bc70c index=:first tagName="TABLE">
     # a_element=a_table.elements.first
-    # => #<Vapir::IE::Element:0x071b856c how=:index index=:first tagName="TBODY" id="">
+    # => #<Vapir::IE::Element:0x071b856c index=:first tagName="TBODY" id="">
     # a_element.to_factory
-    # => #<Vapir::IE::TableBody:0x071af78c how=:index index=:first tagName="TBODY" id="">
+    # => #<Vapir::IE::TableBody:0x071af78c index=:first tagName="TBODY" id="">
     #
     # we get back a Vapir::TableBody. 
     def to_subtype

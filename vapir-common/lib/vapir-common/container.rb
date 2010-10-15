@@ -52,7 +52,11 @@ module Vapir
     def normalize_how_what_index(first, second, klass)
       case first
       when nil
-        raise Vapir::Exception::MissingWayOfFindingObjectException, "no first argument (how) was given!"
+        if second==nil
+          how, what, index = nil, nil, nil
+        else
+          raise Vapir::Exception::MissingWayOfFindingObjectException, "first argument ('how') was nil but second argument ('what') was given as #{second.inspect}"
+        end
       when Hash
         how=:attributes
         what=first.dup
@@ -74,8 +78,8 @@ module Vapir
             else
               raise Vapir::Exception::MissingWayOfFindingObjectException, "Cannot search using arguments #{first.inspect} (#{first.class}) and #{second.inspect} (#{second.class})"
             end
-          elsif first==:index # this is different because the index number doesn't go in the 'what'
-            how=first
+          elsif first==:index # index isn't a real 'how' 
+            how=nil
             what=nil
             index=second
           else

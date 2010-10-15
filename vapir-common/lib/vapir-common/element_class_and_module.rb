@@ -271,9 +271,11 @@ module Vapir
           {:method_name => method_name.to_s+'?', :locate => :nil_unless_exists},
         ].each do |method_hash|
           Vapir::Container.module_eval do
-            define_method(method_hash[:method_name]) do |how, *what_args| # can't take how, what as args because blocks don't do default values so it will want 2 args
+            define_method(method_hash[:method_name]) do |*args| # can't take how, what as args because blocks don't do default values so it will want 2 args
               #locate! # make sure self is located before trying contained stuff 
-              what=what_args.shift # what is the first what_arg
+              how=args.shift
+              what=args.shift
+              what_args=args
               other_attribute_keys=element_class_for(element_module).container_method_extra_args
               if what_args.size>other_attribute_keys.length
                 raise ArgumentError, "\##{method_hash[:method_name]} takes 1 to #{2+other_attribute_keys.length} arguments! Got #{([how, what]+what_args).map{|a|a.inspect}.join(', ')}}"

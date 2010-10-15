@@ -43,8 +43,7 @@ module Vapir
     def each_with_element_index # :yields: element, index
       index=1
       element_objects.each do |element_object|
-        how, what= *(@how ? [@how, @what] : [:index, nil])
-        yield @collection_class.new(how, what, @extra.merge(:index => index, :element_object => element_object, :locate => false)), index
+        yield @collection_class.new(@how, @what, @extra.merge(:index => index, :element_object => element_object, :locate => false)), index
         index+=1
       end
       self
@@ -64,9 +63,7 @@ module Vapir
     end
     # returns the element at the given index in the collection. indices start at 1. 
     def at(index)
-      how, what= *(@how ? [@how, @what] : [:index, nil])
-      
-      @collection_class.new(how, what, @extra.merge(:index => index))
+      @collection_class.new(@how, @what, @extra.merge(:index => index))
     end
     # returns the first element in the collection. 
     def first

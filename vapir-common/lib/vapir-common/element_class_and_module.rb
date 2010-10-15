@@ -34,7 +34,7 @@ module Vapir
           end
         end
       end
-      curr_klass.new(how, what, extra)
+      curr_klass.new(how, what, extra.merge(:element_object => element_object, :locate => false))
     end
     
     # takes any number of arguments, where each argument is either:

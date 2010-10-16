@@ -306,7 +306,7 @@ module Vapir
       method_options={:highlight => true, :wait => true}.merge(method_options)
       with_highlight(method_options) do
         state_was=element_object.selected
-        element_object.selected=state
+        element_object.selected=state # TODO: if state is false and this isn't an option of a multiple select list, should this error? 
         if @extra[:select_list] && state_was != state
           @extra[:select_list].fire_event(:onchange, method_options)
         end

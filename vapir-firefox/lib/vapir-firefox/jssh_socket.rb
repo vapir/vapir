@@ -1030,6 +1030,9 @@ class JsshObject
   def ==(operand)
     operand.is_a?(JsshObject) && binary_operator('==', operand)
   end
+  def triple_equals(operand)
+    operand.is_a?(JsshObject) && binary_operator('===', operand)
+  end
   # inequality, using the > operator in javascript 
   def >(operand)
     binary_operator('>', operand)

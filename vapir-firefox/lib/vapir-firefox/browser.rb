@@ -765,7 +765,12 @@ module Vapir
 
     def current_os
       @current_os ||= begin
-        platform= RUBY_PLATFORM =~ /java/ ? java.lang.System.getProperty("os.name") : RUBY_PLATFORM
+        platform= if RUBY_PLATFORM =~ /java/
+          require 'java'
+          java.lang.System.getProperty("os.name")
+        else
+          RUBY_PLATFORM
+        end
         case platform
         when /mswin|windows|mingw32/i
           :windows

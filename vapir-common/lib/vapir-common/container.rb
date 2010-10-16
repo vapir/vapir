@@ -198,7 +198,7 @@ module Vapir
     def element_class_for(common_module)
       element_class=nil
       ObjectSpace.each_object(Class) do |klass|
-        if klass < common_module && klass < base_element_class
+        if klass < common_module && klass <= base_element_class && (!element_class || element_class < klass)
           element_class= klass
         end
       end

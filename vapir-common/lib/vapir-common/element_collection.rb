@@ -57,6 +57,9 @@ module Vapir
         yield element
       end
     end
+    def by_index
+      Enumerator.new(self, :each_by_index)
+    end
     # returns the element at the given index in the collection. indices start at 1. 
     def [](index)
       at(index)

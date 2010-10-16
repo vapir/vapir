@@ -143,6 +143,9 @@ module Vapir
         end
         by_xpath=@container.element_objects_by_xpath(@what)
         match_candidates(by_xpath, @collection_class.specifiers, @collection_class.all_dom_attr_aliases)
+      when :css
+        assert_container_exists
+        match_candidates(@container.containing_object.querySelectorAll(@what), @collection_class.specifiers, @collection_class.all_dom_attr_aliases)
       when :attributes
         specified_attributes=@what
         specifiers=@collection_class.specifiers.map{|spec| spec.merge(specified_attributes)}

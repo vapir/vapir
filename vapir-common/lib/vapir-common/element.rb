@@ -208,6 +208,9 @@ module Vapir
           assert_no_index
           by_xpath=@container.element_object_by_xpath(@what)
           match_candidates(by_xpath ? [by_xpath] : [], self.class.specifiers, self.class.all_dom_attr_aliases).first
+        when :css
+          assert_container_exists
+          candidate_match_at_index(@index, method(:match_candidates), @container.containing_object.querySelectorAll(@what), self.class.specifiers, self.class.all_dom_attr_aliases)
         when :label
           assert_no_index
           unless document_object

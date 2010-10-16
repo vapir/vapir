@@ -19,5 +19,8 @@ module Vapir
     def page_container
       self
     end
+    def active_element
+      base_element_class.new(nil, nil, extra_for_contained.merge(:candidates => proc{|container| [container.document_object.activeElement] })).to_subtype
+    end
   end
 end

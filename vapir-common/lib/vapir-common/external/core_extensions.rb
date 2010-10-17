@@ -60,7 +60,7 @@ module Kernel
   module_function :ycomb
 
   def warn_with_caller(message)
-    Kernel.warn "#{message}\ncalled from: #{caller[1..-1].map{|c|"\n\t"+c}}"
+    Kernel.warn "#{message}\ncalled from: #{caller[1..-1].map{|c|"\n\t"+c}.join('')}"
   end
   module_function :warn_with_caller
 end

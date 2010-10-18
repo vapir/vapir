@@ -588,6 +588,74 @@ module Vapir
     def to_a
       rows.map{|row| row.cells.map{|cell| cell.text.strip}}
     end
+    
+    # Returns an array of hashes representing this table. This assumes that the table has one row 
+    # with header information and any number of rows with data. Each element of the array is a hash 
+    # whose keys are the header values (every hash has the same keys), and whose values correspond 
+    # to the current row. 
+    #
+    #  +--------------+---------------+
+    #  | First Header | Second Header |
+    #  | First Data 1 | Second Data 1 |
+    #  | First Data 2 | Second Data 2 |
+    #  +--------------+---------------+
+    #
+    # Given the above table, #to_hashes will return 
+    #  [{'First Header' => 'First Data 1', 'Second Header' => 'Second Data 1'}, {'First Header' => 'First Data 2', 'Second Header' => 'Second Data 2'}]
+    #
+    # This method will correctly account for colSpans and return text from all cells underneath a 
+    # given header on one row. However, this method makes no attempt to deal with any rowSpans and 
+    # will probably not work with any table with rowSpans in either the header row or data rows. 
+    #
+    # options:
+    # - :header_count (default 1) - the number of rows before the table data start. 
+    # - :header_index (default whatever :header_count is) - the index of the row that contains 
+    #   header data which will be the keys of the hashes returned. (1-indexed) 
+    # - :footer_count (default 0) - the number of rows to discard from the end, being footer 
+    #   information and not table data. 
+    # - :separator (default ' ') - used to join cells when there is more than one cell 
+    #   underneath a header. 
+    def to_hashes(options={})
+      options=handle_options(options, {:header_count => 1, :footer_count => 0, :separator => ' '}, [:header_index])
+      options[:header_index]||=options[:header_count]
+      
+      col_headings=rows[options[:header_index]].cells.map do |cell|
+        {:colSpan => cell.colSpan || 1, :text => cell.text.strip}
+      end
+      
+      body_range=(options[:header_count]+1 .. self.row_count-options[:footer_count])
+      return body_range.map do |row_index|
+        row=rows[row_index]
+        # cells_by_heading will contain an array of arrays of table cells 
+        # underneath the col_heading corresponding to cells_by_heading's array index. 
+        # if cells do not line up underneath the column heading, exception is raised. 
+        cells_by_heading=[]
+        curr_heading_index=0
+        cols_in_curr_heading=0
+        row.cells.each do |cell|
+          curr_heading=col_headings[curr_heading_index]
+          cells_by_heading[curr_heading_index] ||= []
+          cells_by_heading[curr_heading_index] << cell
+          cols_in_curr_heading += cell.colSpan || 1
+          if cols_in_curr_heading == curr_heading[:colSpan]
+            curr_heading_index+=1
+            cols_in_curr_heading=0
+          elsif cols_in_curr_heading > curr_heading[:colSpan]
+            raise "Cells underneath heading #{curr_heading[:text].inspect} do not line up!"
+          end # else, we haven't got all the cells under the current heading; keep going
+        end
+        if curr_heading_index > col_headings.length
+          raise "Too many cells for the headings!"
+        elsif curr_heading_index < col_headings.length
+          raise "Too few cells for the headings!"
+        end
+        
+        col_headings.zip(cells_by_heading).inject({}) do |row_hash, (heading, cells)|
+          cell_texts=cells.map(&:text).join(options[:separator]).strip
+          row_hash.merge(heading[:text] => cell_texts)
+        end
+      end
+    end
 
     # iterates through the rows in the table. Yields a TableRow object
     def each_row

@@ -192,14 +192,6 @@ module Vapir
       end
     end
     
-#    def self.firefox_is_running?
-      # TODO/FIX: implement!
-#      true
-#    end
-#    def firefox_is_running?
-#      self.class.firefox_is_running?
-#    end
-
     def mozilla_window_class_name
       'MozillaUIWindowClass'
     end

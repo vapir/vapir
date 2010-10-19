@@ -202,7 +202,7 @@ module Vapir
     
     def exists?
       # jssh_socket may be nil if the window has closed 
-      jssh_socket && browser_window_object && jssh_socket.object('getWindows()').to_js_array.include(browser_window_object)
+      jssh_socket && browser_window_object && self.class.browser_window_objects.include?(browser_window_object)
     end
     
     # Launches firebox browser

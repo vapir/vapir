@@ -104,7 +104,6 @@ module Vapir
     attr_reader :index
     
     def html
-      Kernel.warn_with_caller "#html is deprecated, please use #outer_html or #inner_html. #html currently returns #outer_html (note that it previously returned inner_html on firefox)"
       outer_html
     end
 

@@ -575,6 +575,31 @@ class JsshSocket
     object(ref).store_rand_temp
   end
   
+  # represents the root of the space seen by the JsshSocket, and implements #method_missing to 
+  # return objects at the root level. for example, jssh_socket.root.Components will return the 
+  # top-level Components object; jssh_socket.root.ctypes will return the ctypes top-level object 
+  # if that is defined. This does not behave in the same way a JsshObject's #method_missing - 
+  # functions are not called; undefined values do not error. so, for example, 
+  # jssh_socket.root.getWindows will not call that function, it will just return the function
+  # object. and jssh_socket.root.thisdoesntexist will not error; it will return a reference
+  # to the undefined top-level object 'thisdoesnotexist'. this may be improved in the future 
+  # to behave more like JsshObject's method_missing. 
+  def root
+    jssh_socket=self
+    @root ||= begin
+      root = Object.new
+      (class << root; self; end).send(:define_method, :method_missing) do |method|
+        method=method.to_s
+        if method.to_s =~ /\A([a-z_][a-z0-9_]*)\z/i
+          jssh_socket.object(method)
+        else
+          super
+        end
+      end
+      root
+    end
+  end
+  
   # Creates and returns a JsshObject representing a function. 
   #
   # Takes any number of arguments, which should be strings or symbols, which are arguments to the 

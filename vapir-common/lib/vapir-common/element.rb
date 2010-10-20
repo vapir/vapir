@@ -322,13 +322,16 @@ module Vapir
 
     # takes a block. sets highlight on this element; calls the block; clears the highlight.
     # the clear is in an ensure block so that you can call return from the given block. 
-    # doesn't actually perform the highlighting if argument do_highlight is false. 
+    #
+    # takes an options hash; every argument is ignored except :highlight, which defaults to true; 
+    # if set to false then the highlighting won't actually happen, the block will just be called
+    # and its value returned. 
     #
     # also, you can nest these safely; it checks if you're already highlighting before trying
     # to set and subsequently clear the highlight. 
     #
-    # the block is called within an assert_exists block, so for methods that highlight, the
-    # assert_exists can generally be omitted from there. 
+    # the block is called within an #assert_exists block, so methods that highlight don't need to 
+    # also check existence as that'd be redundant. 
     def with_highlight(options={})
       assert_exists do
         # yeah, this line is an unreadable mess, but I have to skip over it so many times debugging that it's worth just sticking it on one line 

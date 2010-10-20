@@ -307,12 +307,12 @@ module Vapir
     #
     # For example, if we have a table, get its first element, and call #to_factory on it:
     #
-    # a_table=browser.tables.first
-    # => #<Vapir::IE::Table:0x071bc70c index=:first tagName="TABLE">
-    # a_element=a_table.elements.first
-    # => #<Vapir::IE::Element:0x071b856c index=:first tagName="TBODY" id="">
-    # a_element.to_factory
-    # => #<Vapir::IE::TableBody:0x071af78c index=:first tagName="TBODY" id="">
+    #  a_table=browser.tables.first
+    #  => #<Vapir::IE::Table:0x071bc70c index=:first tagName="TABLE">
+    #  a_element=a_table.elements.first
+    #  => #<Vapir::IE::Element:0x071b856c index=:first tagName="TBODY" id="">
+    #  a_element.to_factory
+    #  => #<Vapir::IE::TableBody:0x071af78c index=:first tagName="TBODY" id="">
     #
     # we get back a Vapir::TableBody. 
     def to_subtype

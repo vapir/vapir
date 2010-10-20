@@ -7,52 +7,81 @@ base = File.dirname(__FILE__)
 end
 require 'vapir-common/external/core_extensions.rb'
 
-desc 'Build rdoc'
-task :rdoc do
-  load 'vapir-ie/vapir-ie.gemspec'
-  load 'vapir-firefox/vapir-firefox.gemspec'
-  load 'vapir-common/vapir-common.gemspec'
-  exclude = %w(
-    vapir-firefox/lib/vapir-firefox/jssh_socket.rb
-    vapir-ie/lib/vapir-ie/win32ole/win32ole.c
-  )
-  rdoc_argvs=[ exclude.map{|file| ['--exclude', file]}.flatten +
-    %W(
-      --title Vapir\ #{Vapir::Common::VERSION}
-      --op vapir_rdoc
-    ) + (Vapir::Common::GemSpec.files.map{|f| File.join('vapir-common', f)} +
-         Vapir::Firefox::GemSpec.files.map{|f| File.join('vapir-firefox', f)} +
-         Vapir::IE::GemSpec.files.map{|f| File.join('vapir-ie', f)} -
-         exclude),
-    %W(
-      --title Vapir-IE\ #{Vapir::IE::VERSION}
-      --op vapir_ie_rdoc
-      --main Vapir::IE
-    ) + (Vapir::Common::GemSpec.files.map{|f| File.join('vapir-common', f)} +
-         Vapir::IE::GemSpec.files.map{|f| File.join('vapir-ie', f)} -
-         exclude),
-    %W(
-      --title Vapir-Firefox\ #{Vapir::Firefox::VERSION}
-      --op vapir_firefox_rdoc
-      --main Vapir::Firefox
-    ) + (Vapir::Common::GemSpec.files.map{|f| File.join('vapir-common', f)} +
-         Vapir::Firefox::GemSpec.files.map{|f| File.join('vapir-firefox', f)} -
-         exclude),
-    %w(
-      --title JsshObject\ JsshSocket
-      --op jssh_rdoc
-      --main JsshObject
-      vapir-firefox/lib/vapir-firefox/jssh_socket.rb
-    ),
-  ].map{|argv| %w(-f html  --tab-width 2  --show-hash  --inline-source  --template hanna  --charset=UTF-8)+argv } # these will be common to all of them
+def rdoc(hash)
+  default_stuff = {:format => 'html', :"tab-width" => 2, :"show-hash" => nil, :"inline-source" => nil, :template => 'hanna', :charset => 'UTF-8'}
+  hash = default_stuff.merge(hash)
+#  STDOUT.puts hash.inspect
+  options = (hash.keys-[:files]).inject([]) do |list, key|
+    value = hash[key]
+    ddkey="--#{key}"
+    list + case value
+    when nil
+      [ddkey]
+    when Array
+      value.inject([]){|vlist, value_part| vlist+[ddkey, value_part.to_s]}
+    else
+      [ddkey, value.to_s]
+    end
+  end
+  options+=(hash[:files] || [])
+#  STDOUT.puts options.inspect
+  if hash[:op] && File.exists?(hash[:op])
+    require 'fileutils'
+    FileUtils.rm_r(hash[:op])
+  end
 
   gem 'hanna'
   require 'hanna/version'
   Hanna::require_rdoc
   require 'rdoc/rdoc'
-  rdoc_argvs.each do |argv|
-    RDoc::RDoc.new.document(argv)
+  RDoc::RDoc.new.document(options)
+end
+
+def common_files
+  @common_files ||= begin
+    load 'vapir-common/vapir-common.gemspec'
+    Vapir::Common::GemSpec.files.map{|f| File.join('vapir-common', f)}
   end
+end
+def ie_files
+  @ie_files ||= begin
+    load 'vapir-ie/vapir-ie.gemspec'
+    Vapir::IE::GemSpec.files.map{|f| File.join('vapir-ie', f)}
+  end
+end
+def ff_files
+  @ff_files ||= begin
+    load 'vapir-firefox/vapir-firefox.gemspec'
+    Vapir::Firefox::GemSpec.files.map{|f| File.join('vapir-firefox', f)}
+  end
+end
+def exclude
+  @exclude ||= %w(
+    vapir-firefox/lib/vapir-firefox/jssh_socket.rb
+    vapir-ie/lib/vapir-ie/win32ole/win32ole.c
+  )
+end
+
+desc 'Build all rdoc'
+task :rdoc => [:vapir_rdoc, :vapir_ie_rdoc, :vapir_ff_rdoc, :jssh_rdoc]
+desc 'Build Vapir rdoc'
+task :vapir_rdoc do
+  require 'vapir-common/version'
+  rdoc(:op => 'vapir_rdoc', :title => "Vapir #{Vapir::Common::VERSION}", :files => (common_files + ie_files + ff_files).select{|file| file =~ /\.rb$/ } - exclude, :exclude => exclude)
+end
+desc 'Build Vapir-IE rdoc'
+task :vapir_ie_rdoc do
+  require 'vapir-ie/version'
+  rdoc(:op => 'vapir_ie_rdoc', :title => "Vapir-IE #{Vapir::IE::VERSION}", :files => (common_files + ie_files).select{|file| file =~ /\.rb$/ } - exclude, :exclude => exclude)
+end
+desc 'Build Vapir-Firefox rdoc'
+task :vapir_ff_rdoc do
+  require 'vapir-firefox/version'
+  rdoc(:op => 'vapir_ff_rdoc', :title => "Vapir-Firefox #{Vapir::Firefox::VERSION}", :files => (common_files + ff_files).select{|file| file =~ /\.rb$/ } - exclude, :exclude => exclude)
+end
+desc 'Build JsshObject, JsshSocket rdoc'
+task :jssh_rdoc do
+  rdoc(:op => 'jssh_rdoc', :title => 'JsshObject JsshSocket', :main => 'JsshObject', :files => ['vapir-firefox/lib/vapir-firefox/jssh_socket.rb'])
 end
 
 desc "check files for things that appear wrong: not in a gemfile; contains a carriage return; or wrong mode"

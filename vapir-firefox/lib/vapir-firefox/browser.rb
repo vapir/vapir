@@ -239,6 +239,40 @@ module Vapir
       wait
     end
 
+    # Performs a HTTP POST action to an arbitrary URL with the given data. The data are represented 
+    # to this method as a Hash, which is converted to the standard form of &-separated key=value 
+    # strings POST data use. 
+    # 
+    # The data hash should be keyed with strings or symbols (which are converted to strings before 
+    # being sent along), and its values should all be strings. 
+    #
+    # If no post_data_hash is given, the body of the POST is empty. 
+    def post_to(url, post_data_hash={})
+      require 'cgi'
+      raise ArgumentError, "post_data_hash must be a Hash" unless post_data_hash.is_a?(Hash)
+      dataString = post_data_hash.map do |(key, val)|
+        unless key.is_a?(String) || key.is_a?(Symbol)
+          raise ArgumentError
+        end
+        unless val.is_a?(String)
+          raise ArgumentError
+        end
+        CGI.escape(key.to_s)+'='+CGI.escape(val)
+      end.join("&")
+      stringStream = jssh_socket.Components.classes["@mozilla.org/io/string-input-stream;1"].createInstance(jssh_socket.Components.interfaces.nsIStringInputStream)
+      if jssh_socket.object('function(key, object){return (key in object);}').call('data', stringStream) # TODO: this is quite ugly; do something with it. 
+        stringStream.data=dataString
+      else
+        stringStream.setData(dataString, dataString.unpack("U*").length)
+      end
+      postData = jssh_socket.Components.classes["@mozilla.org/network/mime-input-stream;1"].createInstance(jssh_socket.Components.interfaces.nsIMIMEInputStream)
+      postData.addHeader("Content-Type", "application/x-www-form-urlencoded")
+      postData.addContentLength = true
+      postData.setData(stringStream)
+
+      browser_object.loadURIWithFlags(url, 0, nil, nil, postData)
+    end
+
     # Loads the previous page (if there is any) in the browser. Waits for the page to get loaded.
     def back
       if browser_object.canGoBack

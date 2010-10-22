@@ -23,15 +23,10 @@ module Vapir
     attr_reader :jssh_socket
     
     def outer_html
-orig_siblings_length = (parentNode = element_object.parentNode) && parentNode.childNodes.length
-      
       temp_parent_element=document_object.createElement('div')
       temp_parent_element.appendChild(element_object.cloneNode(true))
       self_outer_html=temp_parent_element.innerHTML
       
-new_siblings_length = (parentNode = element_object.parentNode) && parentNode.childNodes.length
-#debug code:
-raise "the parent somehow changed - had #{orig_siblings_length} children; now has #{new_siblings_length}" unless orig_siblings_length==new_siblings_length
       return self_outer_html
     end
     alias outerHTML outer_html

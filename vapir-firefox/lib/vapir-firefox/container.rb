@@ -79,5 +79,77 @@ module Vapir
         base_element_class.factory(element_object, extra_for_contained)
       end
     end
+
+    # returns the visible text contained on this object. 
+    def visible_text
+      visible_text_nodes.join('')
+    end
+    # returns a JsshObject representing an array (in javascript) of the visible text nodes of this container. same as
+    # the Vapir::Common #visible_text_nodes implementation, but much much faster. 
+    def visible_text_nodes
+      text_nodes = jssh_socket.object(%Q(
+        function(element_object, document_object)
+        { var Ycomb = function(gen){ return function(f){ return f(f); }(function(f){ return gen(function(){ return f(f).apply(null, arguments); }); }); }; // TODO: move this somewhere better - jssh_socket? 
+          var recurse_text_nodes = Ycomb(function(recurse)
+          { return function(node, parent_visibility)
+            { if(node.nodeType==1 || node.nodeType==9)
+              { var style = node.nodeType==1 ? document_object.defaultView.getComputedStyle(node, null) : null;
+                var our_visibility = style && style.visibility;
+                if(!(our_visibility && $A(['hidden', 'collapse', 'visible']).include(our_visibility.toLowerCase())))
+                { our_visibility = parent_visibility;
+                }
+                var display = style && style.display;
+                if(display && display.toLowerCase()=='none')
+                { return [];
+                }
+                else
+                { return $A(node.childNodes).inject([], function(result, child_node)
+                  { return result.concat(recurse(child_node, our_visibility));
+                  });
+                }
+              }
+              else if(node.nodeType==3)
+              { if(parent_visibility && $A(['hidden', 'collapse']).include(parent_visibility.toLowerCase()))
+                { return [];
+                }
+                else
+                { return [node.data];
+                }
+              }
+              else
+              { return [];
+              }
+            };
+          });
+          var element_to_check = element_object;
+          var real_visibility = null;
+          while(element_to_check)
+          { var style = element_to_check.nodeType==1 ? document_object.defaultView.getComputedStyle(element_object, null) : null;
+            if(style)
+            { // only pay attention to the innermost definition that really defines visibility - one of 'hidden', 'collapse' (only for table elements), 
+              // or 'visible'. ignore 'inherit'; keep looking upward. 
+              // this makes it so that if we encounter an explicit 'visible', we don't pay attention to any 'hidden' further up. 
+              // this style is inherited - may be pointless for firefox, but IE uses the 'inherited' value. not sure if/when ff does.
+              if(real_visibility==null && (visibility=style.visibility))
+              { var visibility=visibility.toLowerCase();
+                if($A(['hidden', 'collapse', 'visible']).include(visibility))
+                { real_visibility=visibility;
+                }
+              }
+              // check for display property. this is not inherited, and a parent with display of 'none' overrides an immediate visibility='visible' 
+              var display=style.display;
+              if(display && (display=display.toLowerCase())=='none')
+              { // if display is none, then this element is not visible, and thus has no visible text nodes underneath. 
+                return [];
+              }
+            }
+            element_to_check=element_to_check.parentNode;
+          }
+          return recurse_text_nodes(element_object, real_visibility);
+        }
+      )).call(containing_object, document_object).to_array
+    end
+    alias ff_visible_text_nodes visible_text_nodes # this is needed so that Firefox::Element can clobber common's Element#visible_text_nodes, until I move that to common Container#visible_text_nodes 
+
   end
 end # module 

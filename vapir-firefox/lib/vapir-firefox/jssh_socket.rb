@@ -626,28 +626,8 @@ class JsshSocket
         method=method.to_s
         if method =~ /\A([a-z_][a-z0-9_]*)([=?!])?\z/i
           method = $1
-          special = $2
-          obj=jssh_socket.object(method)
-          if special=='='
-            jssh_socket.object(method, :define_methods => false).assign(*args)
-          else
-            type=obj.type
-            if type=='function'
-              obj=obj.pass(*args)
-            elsif !args.empty?
-              raise ArgumentError, "Cannot pass arguments to Javascript object #{obj.inspect}"
-            end
-            case special
-            when nil
-              obj.val_or_object
-            when '?'
-              obj.val_or_object(:error_on_undefined => false)
-            when '!'
-              obj.val
-            else # this shouldn't happen
-              super
-            end
-          end
+          suffix = $2
+          jssh_socket.object(method).assign_or_call_or_val_or_object_by_suffix(suffix, *args)
         else
           # don't deal with any special character crap 
           super
@@ -781,7 +761,7 @@ class JsshObject
   # initializes a JsshObject with a string of javascript containing a reference to
   # the object, and a  JsshSocket that the object is defined on. 
   def initialize(ref, jssh_socket, other={})
-    other={:debug_name => ref, :function_result => false, :define_methods => self.class.always_define_methods}.merge(other)
+    other={:debug_name => ref, :function_result => false}.merge(other)
     raise ArgumentError, "Empty object reference!" if !ref || ref==''
     raise ArgumentError, "Reference must be a string - got #{ref.inspect} (#{ref.class.name})" unless ref.is_a?(String)
     raise ArgumentError, "Not given a JsshSocket, instead given #{jssh_socket.inspect} (#{jssh_socket.class.name})" unless jssh_socket.is_a?(JsshSocket)
@@ -789,9 +769,6 @@ class JsshObject
     @jssh_socket=jssh_socket
     @debug_name=other[:debug_name]
     @function_result=other[:function_result]
-    if other[:define_methods] && type=='object'
-      define_methods!
-    end
 #    logger.info { "#{self.class} initialized: #{debug_name} (type #{type})" }
   end
 
@@ -809,7 +786,7 @@ class JsshObject
     end
     @@always_define_methods
   end
-  # set whether JsshObject shall try to dynamically define methods on initialization, using
+  # set whether JsshObject shall try to dynamically define methods in #val_or_object, using
   # #define_methods! 
   #
   # I find this useful to set to true in irb, for tab-completion of methods. it may cause
@@ -899,10 +876,13 @@ class JsshObject
   #
   # if this is a function result, this will store the result in a temporary location (thereby
   # calling the function to acquire the result) before making the above decision. 
+  #
+  # this method also calls #define_methods! on this if JsshObject.always_define_methods is true. 
+  # this can be overridden in the options hash using the :define_methods key (true or false). 
   def val_or_object(options={})
-    options={:error_on_undefined=>true}.merge(options)
+    options={:error_on_undefined=>true, :define_methods => self.class.always_define_methods}.merge(options)
     if function_result # calling functions multiple times is bad, so store in temp before figuring out what to do with it
-      store_rand_object_key(jssh_socket.temp_object).val_or_object(:error_on_undefined => false)
+      store_rand_object_key(jssh_socket.temp_object).val_or_object(options.merge(:error_on_undefined => false))
     else
       case self.type
       when 'undefined'
@@ -914,7 +894,35 @@ class JsshObject
       when 'boolean','number','string','null'
         val
       else # 'function','object', or anything else 
+        if options[:define_methods] && type=='object'
+          define_methods!
+        end
         self
+      end
+    end
+  end
+  # does the work of #method_missing to determine whether to call a function what to return based 
+  # on the defined behavior of the given suffix. see #method_missing for more. information. 
+  def assign_or_call_or_val_or_object_by_suffix(suffix, *args)
+    if suffix=='='
+      assign(*args)
+    else
+      obj = if type=='function'
+        pass(*args)
+      elsif !args.empty?
+        raise ArgumentError, "Cannot pass arguments to Javascript object #{inspect} (ref = #{ref})"
+      else
+        self
+      end
+      case suffix
+      when nil
+        obj.val_or_object
+      when '?'
+        obj.val_or_object(:error_on_undefined => false)
+      when '!'
+        obj.val
+      else
+        raise ArgumentError, "suffix should be one of: nil, '?', '!', '='; got: #{suffix.inspect}"
       end
     end
   end
@@ -925,7 +933,7 @@ class JsshObject
   # expression is undefined, raises an error (if you want an attribute even if it's 
   # undefined, use #attr). 
   def invoke(attribute, *args)
-    invoke_attr_err_args(attribute, true, *args)
+    attr(attribute).assign_or_call_or_val_or_object_by_suffix(nil, *args)
   end
   # same as #invoke, but returns nil for undefined attributes rather than raising an
   # error. this is used by method_missing when passed a question-mark method. 
@@ -936,32 +944,15 @@ class JsshObject
   #  > jssh_object.some_undefined_attribute
   #  
   def invoke?(attribute, *args)
-    invoke_attr_err_args(attribute, false, *args)
+    attr(attribute).assign_or_call_or_val_or_object_by_suffix('?', *args)
   end
-  def invoke_attr_err_args(attribute, err, *args)
-    attr_obj=attr(attribute)
-    type=attr_obj.type
-    attr_obj=attr(attribute)
-    type=attr_obj.type
-    case type
-    when 'function'
-      attr_obj.call(*args)
-    else
-      if args.empty?
-        attr_obj.val_or_object(:error_on_undefined => err)
-      else
-        raise ArgumentError, "Cannot pass arguments to expression #{attr_obj.ref} of type #{type}"
-      end
-    end
-  end
-  private :invoke_attr_err_args
   
   # returns a JsshObject referencing the given attribute of this object 
   def attr(attribute, options={})
     unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
       raise JsshSyntaxError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
     end
-    JsshObject.new("#{ref}.#{attribute}", jssh_socket, {:debug_name => "#{debug_name}.#{attribute}"}.merge(options))
+    JsshObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
   end
 
   # assigns the given ruby value (converted to javascript) to the reference
@@ -1197,23 +1188,11 @@ class JsshObject
     method=method.to_s
     if method =~ /\A([a-z_][a-z0-9_]*)([=?!])?\z/i
       method = $1
-      special = $2
-    else # don't deal with any special character crap 
-      #Object.instance_method(:method_missing).bind(self).call(method, *args) # let Object#method_missing raise its usual error 
-      return super
-    end
-    case special
-    when nil
-      invoke(method, *args)
-    when '?'
-      invoke?(method, *args)
-    when '!'
-      got=invoke(method, *args)
-      got.is_a?(JsshObject) ? got.val : got
-    when '='
-      attr(method, :define_methods => false).assign(*args)
+      suffix = $2
+      attr(method).assign_or_call_or_val_or_object_by_suffix(suffix, *args)
     else
-      Object.instance_method(:method_missing).bind(self).call(method, *args) # this shouldn't happen 
+      # don't deal with any special character crap 
+      super
     end
   end
   # calls define_method for each key of this object as a hash. useful for tab-completing attributes 
@@ -1239,14 +1218,14 @@ class JsshObject
     method=method.to_s
     if method =~ /^([a-z_][a-z0-9_]*)([=?!])?$/i
       method = $1
-      special = $2
+      suffix = $2
     else # don't deal with any special character crap 
       return false
     end
 
     if self.type=='undefined'
       return false
-    elsif special=='='
+    elsif suffix=='='
       if self.type=='object'
         return true # yeah, you can generally assign attributes to objects
       else

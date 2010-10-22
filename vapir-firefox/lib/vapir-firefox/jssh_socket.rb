@@ -864,15 +864,16 @@ class JsshObject
   end
   
   # checks the type of this object, and if it is a type that can be simply converted to a ruby
-  # object via jason, returns the ruby value. that occurs if the type is one of:
+  # object via json, returns the ruby value. that occurs if the type is one of:
   # 
   # 'boolean','number','string','null'
   #
   # otherwise - if the type is something else (probably 'function' or 'object'; or maybe something else)
   # then this JsshObject is returned. 
   # 
-  # if self is undefined in javascript, then behavor depends on the options hash. if :error_on_undefined is
-  # true, then nil is returned; otherwise JsshUndefinedValueError is raised. 
+  # if the object this refers to is undefined in javascript, then behavor depends on the options 
+  # hash. if :error_on_undefined is true, then nil is returned; otherwise JsshUndefinedValueError 
+  # is raised. 
   #
   # if this is a function result, this will store the result in a temporary location (thereby
   # calling the function to acquire the result) before making the above decision. 

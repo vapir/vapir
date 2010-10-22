@@ -1035,13 +1035,6 @@ class JsshObject
   end
   public
   
-  # stores this object in a randomly-named top-level variable with the given prefix followed by an underscore, and returns the stored object. 
-  def store_rand_prefix(prefix)
-    store_rand_named do |r|
-      prefix+"_"+r
-    end
-  end
-
   # stores this object in a random key of the given object and returns the stored object. 
   def store_rand_object_key(object)
     raise ArgumentError("Object is not a JsshObject: got #{object.inspect}") unless object.is_a?(JsshObject)

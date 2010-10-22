@@ -271,6 +271,7 @@ module Vapir
       postData.setData(stringStream)
 
       browser_object.loadURIWithFlags(url, 0, nil, nil, postData)
+      wait
     end
 
     # Loads the previous page (if there is any) in the browser. Waits for the page to get loaded.

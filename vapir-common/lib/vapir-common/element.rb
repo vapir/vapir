@@ -520,7 +520,7 @@ module Vapir
               end
             end
           when 3 # TODO: name a constant TEXT_NODE, rather than magic number 
-            if ['hidden','collapse'].include?(parent_visibility)
+            if parent_visibility && ['hidden','collapse'].include?(parent_visibility.downcase)
               []
             else
               [e_obj.data]

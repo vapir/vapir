@@ -34,14 +34,14 @@ module Vapir
         end
       end
       extra=extra_for_contained.merge(:index => index)
-      case other[:locate]
-      when :assert, true, false
-        element=klass.new(how, what, extra.merge(:locate => other[:locate]))
-      when :nil_unless_exists
+      extra.merge!(other[:extra]) if other[:extra]
+      if !other.key?(:locate)
+        element=klass.new(how, what, extra)
+      elsif other[:locate]==:nil_unless_exists
         element=klass.new(how, what, extra.merge(:locate => true))
         element.exists? ? element : nil
       else
-        raise ArgumentError, "Unrecognized value given for :locate: #{other[:locate].inspect} (#{other[:locate].class})"
+        element=klass.new(how, what, extra.merge(:locate => other[:locate]))
       end
     end
     

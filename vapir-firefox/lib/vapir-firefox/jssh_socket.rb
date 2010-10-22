@@ -143,7 +143,7 @@ class JsshSocket
       @expecting_extra_maybe=true
       raise JsshError, "Something went wrong initializing native JSON - message #{ret.inspect}"
     end
-    temp_object.assign({})
+    root.JsshTemp={}
   end
 
   private
@@ -706,17 +706,17 @@ class JsshSocket
   #
   # really, temporary values could be stored anywhere. this just gives one nice consistent designated place to stick them. 
   def temp_object
-    @temp_object ||= object('JsshTemp')
+    @temp_object ||= root.JsshTemp
   end
   # returns a JsshObject representing the Components top-level javascript object. 
   #
   # https://developer.mozilla.org/en/Components_object
   def Components
-    @components ||= object('Components')
+    @components ||= root.Components
   end
   # returns a JsshObject representing the return value of JSSH's builtin getWindows() function. 
   def getWindows
-    @getwindows ||= object('getWindows()')
+    root.getWindows
   end
   # raises an informative error if the socket is down for some reason 
   def assert_socket

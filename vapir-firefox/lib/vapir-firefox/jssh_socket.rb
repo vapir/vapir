@@ -1030,6 +1030,8 @@ class JsshObject
   def ==(operand)
     operand.is_a?(JsshObject) && binary_operator('==', operand)
   end
+  # javascript triple-equals (===) operator. very different from ruby's tripl-equals operator - 
+  # in javascript this means "really really equal"; in ruby it means "sort of equal-ish" 
   def triple_equals(operand)
     operand.is_a?(JsshObject) && binary_operator('===', operand)
   end

@@ -595,6 +595,23 @@ module Vapir
     end
   end
   module HasRowsAndColumns
+    # returns a TableRow which is a row of this of this Table or TBody (not in a nested table). 
+    # takes the usual arguments for specifying what you want - see http://github.com/vapir/vapir/wiki/Locators
+    def row(first=nil, second=nil)
+      element_by_howwhat(element_class_for(Vapir::TableRow), first, second, :extra => {:candidates => :rows})
+    end
+    
+    # returns a TableCell which is a cell of this of this Table or TBody (not in a nested table). 
+    # takes the usual arguments for specifying what you want - see http://github.com/vapir/vapir/wiki/Locators
+    def cell(first=nil, second=nil)
+      element_by_howwhat(element_class_for(Vapir::TableCell), first, second, :extra => {:candidates => proc do |container|
+        container_object=container.element_object
+        object_collection_to_enumerable(container_object.rows).inject([]) do |candidates, row|
+          candidates+object_collection_to_enumerable(row.cells).to_a
+        end
+      end})
+    end
+    
     # Returns a 2 dimensional array of text contents of each row and column of the table or tbody.
     def to_a
       rows.map{|row| row.cells.map{|cell| cell.text.strip}}
@@ -760,6 +777,12 @@ module Vapir
     # Returns an ElementCollection of cells in the row 
     element_collection :cells, :cells, TableCell
     
+    # returns a TableCell which is a cell of this of this row (not in a nested table). 
+    # takes the usual arguments for specifying what you want - see http://github.com/vapir/vapir/wiki/Locators
+    def cell(first=nil, second=nil)
+      element_by_howwhat(element_class_for(Vapir::TableCell), first, second, :extra => {:candidates => :cells})
+    end
+
     #   Iterate over each cell in the row.
     def each_cell
       cells.each do |cell|

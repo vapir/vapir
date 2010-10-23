@@ -423,6 +423,14 @@ module Vapir
       def quit_browser(options={})
         jssh_socket(:reset_if_dead => true).assert_socket
         options=handle_options(options, :force => false)
+        
+        got_pid = begin
+          pid # this caches pid for use in #process_running? after the socket is gone 
+          true
+        rescue NotImplementedError
+          false
+        end
+        
         # from https://developer.mozilla.org/en/How_to_Quit_a_XUL_Application
         appStartup= jssh_socket.Components.classes['@mozilla.org/toolkit/app-startup;1'].getService(jssh_socket.Components.interfaces.nsIAppStartup)
         quitSeverity = options[:force] ? jssh_socket.Components.interfaces.nsIAppStartup.eForceQuit : jssh_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
@@ -435,15 +443,18 @@ module Vapir
         rescue JsshConnectionError
           Vapir::Firefox.uninitialize_jssh_socket
         end
-        # TODO/FIX: poll to wait for the process itself to finish? the socket closes (which we wait for 
-        # above) before the process itself has exited, so if Firefox.new is called between the socket 
-        # closing and the process exiting, Firefox pops up with:
-        #  Close Firefox
-        #  A copy of Firefox is already open. Only one copy of Firefox can be open at a time.
-        #  [OK]
-        # until that's implemented, just wait for an arbitrary amount of time. (ick)
-        sleep 2
-      
+        checked_process_not_running = got_pid && begin
+          ::Waiter.try_for(16, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
+            !process_running?
+          end
+          true
+        rescue NotImplementedError
+          false
+        end
+        unless checked_process_not_running
+          sleep 4 # various OS's or Firefox versions may not be able to do #process_running? - in this case, just give it a few seconds. 
+        end
+        
         @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
         nil
       end

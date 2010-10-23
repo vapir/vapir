@@ -481,6 +481,41 @@ module Vapir
           getpid.call()
         end
       end
+      
+      # calls #pid (which may raise NotImplementedError - see its doc) and attempts to determine 
+      # whether the currently-attached firefox process is still running. will raise 
+      # NotImplementedError if it can't determine this. 
+      def process_running?
+        case current_os
+        when :windows
+          kernel32 = Vapir::Firefox.instance_eval do # define this on the class for reuse 
+            @kernel32 ||= begin
+              require 'ffi'
+              kernel32 = Module.new
+              kernel32.send :extend, FFI::Library
+              kernel32.ffi_lib 'kernel32'
+              kernel32.ffi_convention :stdcall
+              kernel32.attach_function :OpenProcess, [:ulong, :char, :ulong], :pointer
+              kernel32.attach_function :GetExitCodeProcess, [:pointer, :pointer], :char
+              kernel32.const_set('PROCESS_QUERY_INFORMATION', 0x0400)
+              kernel32.const_set('STILL_ACTIVE', 259)
+              kernel32
+            end
+          end
+          process_handle = kernel32.OpenProcess(kernel32::PROCESS_QUERY_INFORMATION, 0, pid)
+          exit_code=FFI::MemoryPointer.new(:ulong)
+          result = kernel32.GetExitCodeProcess(process_handle, exit_code)
+          if result == 0
+            raise "GetExitCodeProcess failed"
+          end
+          return exit_code.get_ulong(0)==kernel32::STILL_ACTIVE
+        when :linux, :macosx
+          `ps -p #{pid}`
+          $? == 0
+        else
+          raise NotImplementedError
+        end
+      end
 
       # returns a symbol representing the platform we're currently running on - currently 
       # implemented platforms are :windows, :macosx, and :linux. raises NotImplementedError if the 

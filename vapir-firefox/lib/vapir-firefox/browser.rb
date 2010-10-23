@@ -418,43 +418,44 @@ module Vapir
       quit_browser(:force => false)
     end
 
-    # quits the browser. 
-    #
-    # quit_browser(:force => true) will force the browser to quit. 
-    #
-    # if there is no existing connection to JSSH, this will attempt to create one. If that fails, JsshUnableToStart will be raised. 
-    def self.quit_browser(options={})
-      jssh_socket(:reset_if_dead => true).assert_socket
-      options=handle_options(options, :force => false)
-      # from https://developer.mozilla.org/en/How_to_Quit_a_XUL_Application
-      appStartup= jssh_socket.Components.classes['@mozilla.org/toolkit/app-startup;1'].getService(jssh_socket.Components.interfaces.nsIAppStartup)
-      quitSeverity = options[:force] ? jssh_socket.Components.interfaces.nsIAppStartup.eForceQuit : jssh_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
-      begin
-        appStartup.quit(quitSeverity)
-        ::Waiter.try_for(8, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
-          @@jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
-          false
+    module FirefoxClassAndInstanceMethods
+      # quits the browser. 
+      #
+      # quit_browser(:force => true) will force the browser to quit. 
+      #
+      # if there is no existing connection to JSSH, this will attempt to create one. If that fails, JsshUnableToStart will be raised. 
+      def quit_browser(options={})
+        jssh_socket(:reset_if_dead => true).assert_socket
+        options=handle_options(options, :force => false)
+        # from https://developer.mozilla.org/en/How_to_Quit_a_XUL_Application
+        appStartup= jssh_socket.Components.classes['@mozilla.org/toolkit/app-startup;1'].getService(jssh_socket.Components.interfaces.nsIAppStartup)
+        quitSeverity = options[:force] ? jssh_socket.Components.interfaces.nsIAppStartup.eForceQuit : jssh_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
+        begin
+          appStartup.quit(quitSeverity)
+          ::Waiter.try_for(8, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
+            @@jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
+            false
+          end
+        rescue JsshConnectionError
+          @@jssh_socket=nil
         end
-      rescue JsshConnectionError
-        @@jssh_socket=nil
+        # TODO/FIX: poll to wait for the process itself to finish? the socket closes (which we wait for 
+        # above) before the process itself has exited, so if Firefox.new is called between the socket 
+        # closing and the process exiting, Firefox pops up with:
+        #  Close Firefox
+        #  A copy of Firefox is already open. Only one copy of Firefox can be open at a time.
+        #  [OK]
+        # until that's implemented, just wait for an arbitrary amount of time. (ick)
+        sleep 2
+      
+        @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
+        nil
       end
-      # TODO/FIX: poll to wait for the process itself to finish? the socket closes (which we wait for 
-      # above) before the process itself has exited, so if Firefox.new is called between the socket 
-      # closing and the process exiting, Firefox pops up with:
-      #  Close Firefox
-      #  A copy of Firefox is already open. Only one copy of Firefox can be open at a time.
-      #  [OK]
-      # until that's implemented, just wait for an arbitrary amount of time. (ick)
-      sleep 2
+    end
+    include FirefoxClassAndInstanceMethods
+    extend FirefoxClassAndInstanceMethods
 
-      @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
-      nil
-    end
     
-    # see Vapir::Firefox.quit_browser
-    def quit_browser(options={})
-      self.class.quit_browser(options)
-    end
 
     #   Used for attaching pop up window to an existing Firefox window, either by url or title.
     #   ff.attach(:url, 'http://www.google.com')

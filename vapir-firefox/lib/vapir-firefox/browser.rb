@@ -116,6 +116,10 @@ module Vapir
       end
       @@jssh_socket
     end
+    def self.uninitialize_jssh_socket
+      @@jssh_socket=nil
+      @@firewatir_jssh_objects=nil
+    end
     def jssh_socket(options=nil)
       options ? self.class.jssh_socket(options) : @@jssh_socket
     end
@@ -403,12 +407,12 @@ module Vapir
         ::Waiter.try_for(32, :exception => Exception::WindowFailedToCloseException.new("The browser window did not close")) do
           !exists?
         end
-        @@jssh_socket.assert_socket
+        jssh_socket.assert_socket
       rescue JsshConnectionError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
-        @@jssh_socket=nil
+        Vapir::Firefox.uninitialize_jssh_socket
       end
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
-      if @self_launched_browser && @@jssh_socket && !self.class.window_objects.any?{ true }
+      if @self_launched_browser && jssh_socket && !self.class.window_objects.any?{ true }
         quit_browser(:force => false)
       end
     end
@@ -433,11 +437,11 @@ module Vapir
         begin
           appStartup.quit(quitSeverity)
           ::Waiter.try_for(8, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
-            @@jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
+            jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
             false
           end
         rescue JsshConnectionError
-          @@jssh_socket=nil
+          Vapir::Firefox.uninitialize_jssh_socket
         end
         # TODO/FIX: poll to wait for the process itself to finish? the socket closes (which we wait for 
         # above) before the process itself has exited, so if Firefox.new is called between the socket 

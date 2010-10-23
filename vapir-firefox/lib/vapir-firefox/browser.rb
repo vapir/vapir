@@ -455,6 +455,30 @@ module Vapir
         @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
         nil
       end
+
+      # returns a symbol representing the platform we're currently running on - currently 
+      # implemented platforms are :windows, :macosx, and :linux. raises NotImplementedError if the 
+      # current platform isn't one of those. 
+      def current_os
+        @current_os ||= begin
+          platform= if RUBY_PLATFORM =~ /java/
+            require 'java'
+            java.lang.System.getProperty("os.name")
+          else
+            RUBY_PLATFORM
+          end
+          case platform
+          when /mswin|windows|mingw32/i
+            :windows
+          when /darwin|mac os/i
+            :macosx
+          when /linux/i
+            :linux
+          else
+            raise NotImplementedError, "Unidentified platform #{platform}"
+          end
+        end
+      end
     end
     include FirefoxClassAndInstanceMethods
     extend FirefoxClassAndInstanceMethods
@@ -749,27 +773,6 @@ module Vapir
       end
       raise "unable to locate Firefox executable" if path.nil? || path.empty?
       path
-    end
-
-    def current_os
-      @current_os ||= begin
-        platform= if RUBY_PLATFORM =~ /java/
-          require 'java'
-          java.lang.System.getProperty("os.name")
-        else
-          RUBY_PLATFORM
-        end
-        case platform
-        when /mswin|windows|mingw32/i
-          :windows
-        when /darwin|mac os/i
-          :macosx
-        when /linux/i
-          :linux
-        else
-          raise "Unidentified platform #{platform}"
-        end
-      end
     end
 
     def path_from_registry

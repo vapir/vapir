@@ -224,7 +224,7 @@ module Vapir
 
       bin = path_to_bin()
       @self_launched_browser = true
-      @t = Thread.new { system(bin, '-jssh', *ff_options) }
+      @t = Thread.new { system(bin, '-jssh', *ff_options) } # TODO: launch process in such a way that @pid can be noted 
     end
     private :launch_browser
 

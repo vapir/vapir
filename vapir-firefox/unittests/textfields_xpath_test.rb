@@ -91,12 +91,14 @@ class TC_Fields_XPath < Test::Unit::TestCase
 
     tag_method :test_JS_Events, :fails_on_ie
     def test_JS_Events
+      browser.with_config(:type_keys => true) do
         browser.text_field!(:xpath , "//input[@name='events_tester']").set('p')
         # the following line has an extra key down/up (but not press) at the begining, as we mimic the delete key being pressed
         assert_equal(['keydown', 'keyup']+['keydown', 'keypress', 'keyup'], browser.text_field!(:xpath , "//textarea[@name='events_text']").value.split("\n").reject{|v| v.empty?})
         browser.button!(:xpath , "//input[@value = 'Clear Events Box']").click
         browser.text_field!(:xpath , "//input[@name='events_tester']").set('ab')
         assert_equal(['keydown', 'keyup']+['keydown', 'keypress', 'keyup']*'ab'.length, browser.text_field!(:xpath , "//textarea[@name='events_text']").value.split("\n").reject{|v| v.empty?})
+      end
     end
 
     def test_password

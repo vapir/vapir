@@ -151,6 +151,7 @@ class TC_Fields < Test::Unit::TestCase
     
     tag_method :test_JS_Events, :fails_on_ie
     def test_JS_Events
+      Vapir.with_config(:type_keys => true) do
         browser.text_field!(:name, 'events_tester').set('p')
         # the following line has an extra key down/up (but not press) at the begining, as we mimic the delete key being pressed
         assert_equal(['keydown', 'keyup']+['keydown', 'keypress', 'keyup'], browser.text_field(:name, 'events_text').value.split("\n").reject{|v| v.empty?})
@@ -161,6 +162,7 @@ class TC_Fields < Test::Unit::TestCase
         browser.text_field!(:name, "events_text").set("angrez\nsingh")
         browser.text_field!(:name, "events_text").append("\n") 
         browser.text_field!(:name, "events_text").append("singh") #\\nsupel")
+      end
     end
     
     def test_password

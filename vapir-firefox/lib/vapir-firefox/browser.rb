@@ -455,6 +455,32 @@ module Vapir
         @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
         nil
       end
+      
+      # returns the pid of the currently-attached Firefox process. 
+      #
+      # This only works on Firefox >= 3.6, on platforms supported (see #current_os), and raises 
+      # NotImplementedError if it can't get the pid. 
+      def pid
+        @pid ||= begin
+          lib, pidfunction = *case current_os
+          when :macosx
+            ["libc.dylib", 'getpid']
+          when :linux
+            ["libc.so.6", 'getpid']
+          when :windows
+            ['kernel32', 'GetCurrentProcessId']
+          else
+            raise NotImplementedError, "don't know how to get pid for #{current_os}"
+          end
+          begin
+            ctypes = jssh_socket.Components.utils.import("resource://gre/modules/ctypes.jsm").ctypes
+          rescue JsshJavascriptError
+            raise NotImplementedError, "Firefox 3.6 or greater is required for this method.\n\nOriginal error from firefox: #{$!.class}: #{$!.message}", $!.backtrace
+          end
+          getpid = ctypes.open(lib).declare(pidfunction, ctypes.default_abi, ctypes.int32_t)
+          getpid.call()
+        end
+      end
 
       # returns a symbol representing the platform we're currently running on - currently 
       # implemented platforms are :windows, :macosx, and :linux. raises NotImplementedError if the 

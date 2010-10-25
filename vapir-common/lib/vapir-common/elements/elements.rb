@@ -738,6 +738,7 @@ module Vapir
         nil
       end
     end
+    #--
     # I was going to define #cell_count(index=nil) here as an alternative to #column_count
     # but it seems confusing; to me #cell_count on a Table would count up all the cells in
     # all rows, so going to avoid confusion and not do it. 
@@ -783,7 +784,7 @@ module Vapir
       element_by_howwhat(element_class_for(Vapir::TableCell), first, second, :extra => {:candidates => :cells})
     end
 
-    #   Iterate over each cell in the row.
+    # Iterate over each cell in the row. same as #cells.each. 
     def each_cell
       cells.each do |cell|
         yield cell
@@ -796,11 +797,14 @@ module Vapir
       cells[index]
     end
     
+    # the number of columns in this row, accounting for cells with a colspan attribute greater than 1 
     def column_count
       cells.inject(0) do |count, cell|
         count+ (cell.colSpan || 1)
       end
     end
+    
+    # the number of cells in this row 
     def cell_count
       cells.length
     end

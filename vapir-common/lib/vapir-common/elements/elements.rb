@@ -88,12 +88,12 @@ module Vapir
     # to be consistent with similar methods #set and #append, returns the new value, though this will always be a blank string. 
     # 
     # takes options: 
-    # :blur => true/false; whether or not to fire the onblur event when done.
-    # :highlight => true/false
+    # - :blur => true/false; whether or not to fire the onblur event when done.
+    # - :highlight => true/false
     #
-    #   Raises UnknownObjectException if the object can't be found
-    #   Raises ObjectDisabledException if the object is disabled
-    #   Raises ObjectReadOnlyException if the object is read only
+    # Raises UnknownObjectException if the object can't be found
+    # Raises ObjectDisabledException if the object is disabled
+    # Raises ObjectReadOnlyException if the object is read only
     def clear(options={})
       options={:blur => true, :change => true, :select => true, :focus => true}.merge(options)
       assert_enabled
@@ -167,12 +167,12 @@ module Vapir
     # returns the new value of the text field. this may not include all of what is given if there is a maxlength on the field. 
     #
     # takes options: 
-    # :blur => true/false; whether or not to file the onblur event when done.
-    # :highlight => true/false
+    # - :blur => true/false; whether or not to file the onblur event when done.
+    # - :highlight => true/false
     #
-    #   Raises UnknownObjectException if the object cant be found
-    #   Raises ObjectDisabledException if the object is disabled
-    #   Raises ObjectReadOnlyException if the object is read only
+    # Raises UnknownObjectException if the object cant be found
+    # Raises ObjectDisabledException if the object is disabled
+    # Raises ObjectReadOnlyException if the object is read only
     def append(value, options={})
       options={:blur => true, :change => true, :select => true, :focus => true}.merge(options)
       assert_enabled
@@ -227,12 +227,12 @@ module Vapir
     # returns the new value of the text field. this may be shorter than what is given if there is a maxlength on the field. 
     # 
     # takes options: 
-    # :blur => true/false; whether or not to file the onblur event when done.
-    # :highlight => true/false
+    # - :blur => true/false; whether or not to file the onblur event when done.
+    # - :highlight => true/false
     #
-    #   Raises UnknownObjectException if the object cant be found
-    #   Raises ObjectDisabledException if the object is disabled
-    #   Raises ObjectReadOnlyException if the object is read only
+    # Raises UnknownObjectException if the object cant be found
+    # Raises ObjectDisabledException if the object is disabled
+    # Raises ObjectReadOnlyException if the object is read only
     def set(value, options={})
       with_highlight(options) do
         clear(options.merge(:blur => false, :change => false))

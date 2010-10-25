@@ -579,7 +579,9 @@ module Vapir
       @container
     end
     
+    # the Vapir::Browser this element is on
     attr_reader :browser
+    # the Vapir::PageContainer containing this element (a Browser, Frame, or ModalDialogDocument) 
     attr_reader :page_container
 
     def document_object

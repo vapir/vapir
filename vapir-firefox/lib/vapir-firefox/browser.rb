@@ -586,35 +586,37 @@ module Vapir
     end
     private :open_window
 
-    def self.each
-      each_browser_window_object do |win|
-        yield self.attach(:browser_window_object, win)
+    class << self
+      def each
+        each_browser_window_object do |win|
+          yield self.attach(:browser_window_object, win)
+        end
       end
-    end
-
-    def self.each_browser_window_object
-      mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
-      enumerator=mediator.getEnumerator("navigator:browser")
-      while enumerator.hasMoreElements
-        win=enumerator.getNext
-        yield win
+    
+      def each_browser_window_object
+        mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
+        enumerator=mediator.getEnumerator("navigator:browser")
+        while enumerator.hasMoreElements
+          win=enumerator.getNext
+          yield win
+        end
+        nil
       end
-      nil
-    end
-    def self.browser_window_objects
-      Enumerator.new(self, :each_browser_window_object)
-    end
-    def self.each_window_object
-      mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
-      enumerator=mediator.getEnumerator(nil)
-      while enumerator.hasMoreElements
-        win=enumerator.getNext
-        yield win
+      def browser_window_objects
+        Enumerator.new(self, :each_browser_window_object)
       end
-      nil
-    end
-    def self.window_objects
-      Enumerator.new(self, :each_window_object)
+      def each_window_object
+        mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
+        enumerator=mediator.getEnumerator(nil)
+        while enumerator.hasMoreElements
+          win=enumerator.getNext
+          yield win
+        end
+        nil
+      end
+      def window_objects
+        Enumerator.new(self, :each_window_object)
+      end
     end
     
     # return the window jssh object for the browser window with the given title or url.

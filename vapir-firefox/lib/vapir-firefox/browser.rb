@@ -622,7 +622,7 @@ module Vapir
     end
     
     # return the window jssh object for the browser window with the given title or url.
-    #   how - :url or :title
+    #   how - :url, :title, or :name
     #   what - string or regexp
     #
     # Start searching windows in reverse order so that we attach/find the latest opened window.
@@ -630,6 +630,7 @@ module Vapir
       orig_how=how
       hows={ :title => proc{|content_window| content_window.title },
              :URL => proc{|content_window| content_window.location.href },
+             :name => proc{|content_window| content_window.name },
            }
       how=hows.keys.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
       raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how

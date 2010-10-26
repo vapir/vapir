@@ -86,6 +86,8 @@ module Vapir
     #   - :URL - a string or regexp matching the URL of the browser that 
     #     should be attached to. 
     #   - :HWND - specifies the HWND of the browser that should be attached to. 
+    #   - :name - the name of the window (as specified in the second argument to a 
+    #     window.open() javascript call) 
     #   - :browser_object - this is generally just used internally. 'what' 
     #     is a WIN32OLE object representing the browser. 
     #   - :wait - true or false, default is true. whether to wait for the browser
@@ -109,6 +111,7 @@ module Vapir
           orig_how=how
           hows={ :title => proc{|bo| bo.document.title },
                  :URL => proc{|bo| bo.locationURL },
+                 :name => proc{|bo| bo.document.parentWindow.name },
                  :HWND => proc{|bo| bo.HWND },
                }
           how=hows.keys.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}

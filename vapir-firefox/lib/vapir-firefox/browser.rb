@@ -587,12 +587,15 @@ module Vapir
     private :open_window
 
     class << self
-      def each
+      def each_browser
         each_browser_window_object do |win|
           yield self.attach(:browser_window_object, win)
         end
       end
-    
+      alias each each_browser
+      def browsers
+        Enumerator.new(self, :each_browser)
+      end
       def each_browser_window_object
         mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
         enumerator=mediator.getEnumerator("navigator:browser")

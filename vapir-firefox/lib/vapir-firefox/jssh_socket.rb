@@ -622,6 +622,23 @@ class JsshSocket
     object("function(#{arg_names.join(", ")})#{nl}{ #{function_body} #{nl}}")
   end
   
+  # takes a hash of arguments with keys that are strings or symbols that will be variables in the 
+  # scope of the function in javascript, and a block which results in a string which should be the 
+  # body of a javascript function. calls the given function with the given arguments. 
+  #
+  # an example:
+  #  jssh_socket.call_function(:x => 3, :y => {:z => 'foobar'}) do
+  #    "return x + y['z'].length;"
+  #  end
+  # 
+  # will return 9. 
+  def call_function(arguments_hash={}, &block)
+    argument_names, argument_vals = *arguments_hash.inject([[],[]]) do |(names, vals),(name, val)|
+      [names + [name], vals + [val]]
+    end
+    function(*argument_names, &block).call(*argument_vals)
+  end
+
   # returns a JsshObject representing a designated top-level object for temporary storage of stuff
   # on this socket. 
   #

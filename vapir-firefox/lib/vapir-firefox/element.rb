@@ -215,6 +215,46 @@ raise "the parent somehow changed - had #{orig_siblings_length} children; now ha
     def wait(options={})
       @container.wait(options)
     end
+    
+    # Checks this element and its parents for display: none or visibility: hidden, these are 
+    # the most common methods to hide an html element. Returns false if this seems to be hidden
+    # or a parent is hidden. 
+    def visible? 
+      assert_exists do
+        jssh_socket.call_function(:element_to_check => element_object, :document_object => document_object) do %Q(
+          var really_visible=null;
+          while(element_to_check) //&& !(element_to_check instanceof Components.interfaces.nsIDOMDocument)
+          { var style = element_to_check.nodeType==1 ? document_object.defaultView.getComputedStyle(element_to_check, null) : null;
+            if(style)
+            { // only pay attention to the innermost definition that really defines visibility - one of 'hidden', 'collapse' (only for table elements), 
+              // or 'visible'. ignore 'inherit'; keep looking upward. 
+              // this makes it so that if we encounter an explicit 'visible', we don't pay attention to any 'hidden' further up. 
+              // this style is inherited - may be pointless for firefox, but IE uses the 'inherited' value. not sure if/when ff does.
+              var visibility=style && style.visibility;
+              if(really_visible==null && visibility)
+              { visibility=visibility.toLowerCase();
+                if(visibility=='hidden' || visibility=='collapse')
+                { really_visible=false;
+                  return false; // don't need to continue knowing it's not visible. 
+                }
+                else if(visibility=='visible')
+                { really_visible=true; // we don't return true yet because a parent with display of 'none' can override 
+                }
+              }
+              // check for display property. this is not inherited, and a parent with display of 'none' overrides an immediate visibility='visible' 
+              var display=style && style.display;
+              if(display && display.toLowerCase()=='none')
+              { return false;
+              }
+            }
+            element_to_check=element_to_check.parentNode;
+          }
+          return true;
+        )
+        end
+      end
+    end
+    
 
     def self.element_object_style(element_object, document_object)
       if element_object.nodeType==1 #element_object.instanceof(element_object.jssh_socket.Components.interfaces.nsIDOMDocument)

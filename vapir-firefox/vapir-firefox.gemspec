@@ -40,6 +40,7 @@ Vapir::Firefox::GemSpec = Gem::Specification.new do |s|
     'lib/vapir/firefox.rb', # same as the above file 
     'lib/vapir/ff.rb', # shortcut so you can require 'vapir/ff', for the lazy people 
     'lib/vapir-firefox/version.rb', 
+    'lib/vapir-firefox/config.rb',
     'lib/vapir-firefox/browser.rb', # defines the browser class. 
     'lib/vapir-firefox/container.rb', # the container module which defines methods for accessing contained elements. mostly in common. 
     'lib/vapir-firefox/page_container.rb', # the page container module for stuff with a document 

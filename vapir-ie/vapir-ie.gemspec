@@ -46,6 +46,7 @@ Vapir::IE::GemSpec = Gem::Specification.new do |s|
     'lib/vapir-ie.rb', # does the work of requiring what is needed to load all of vapir-ie's environment 
     'lib/vapir/ie.rb', # lets you require 'vapir/ie' rather than require 'vapir-ie', in line with watir's require 'watir/ie' 
     'lib/vapir-ie/version.rb',
+    'lib/vapir-ie/config.rb',
     'lib/vapir-ie/browser.rb', # the Vapir::IE class representing an IE browser. 
     'lib/vapir-ie/ie-process.rb', # todo: this might be merged into the browser class file. 
     'lib/vapir-ie/process.rb', # todo: merge with the previous file. not sure to where. 

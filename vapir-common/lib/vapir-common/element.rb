@@ -472,12 +472,6 @@ module Vapir
       end
       return true
     end
-    private
-    # this is defined on each class to reflect the browser's particular implementation. 
-    def element_object_style(element_object, document_object)
-      self.class.element_object_style(element_object, document_object)
-    end
-    public
     
     # returns an array of all text nodes below this element in the DOM heirarchy 
     def text_nodes

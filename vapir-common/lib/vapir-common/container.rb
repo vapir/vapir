@@ -195,6 +195,12 @@ module Vapir
       end
     end
     alias contains_text contains_text?
+    
+    # this is defined on each class to reflect the browser's particular implementation. 
+    def element_object_style(element_object, document_object)
+      base_element_class.element_object_style(element_object, document_object)
+    end
+    private :element_object_style
 
     # for a common module, such as a TextField, returns an elements-specific class (such as
     # Firefox::TextField) that inherits from the base_element_class of self. That is, this returns

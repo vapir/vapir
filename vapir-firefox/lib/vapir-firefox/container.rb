@@ -80,10 +80,6 @@ module Vapir
       end
     end
 
-    # returns the visible text contained on this object. 
-    def visible_text
-      visible_text_nodes.join('')
-    end
     # returns a JsshObject representing an array (in javascript) of the visible text nodes of this container. same as
     # the Vapir::Common #visible_text_nodes implementation, but much much faster. 
     def visible_text_nodes
@@ -149,7 +145,6 @@ module Vapir
         }
       )).call(containing_object, document_object).to_array
     end
-    alias ff_visible_text_nodes visible_text_nodes # this is needed so that Firefox::Element can clobber common's Element#visible_text_nodes, until I move that to common Container#visible_text_nodes 
 
   end
 end # module 

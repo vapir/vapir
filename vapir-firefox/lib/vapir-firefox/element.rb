@@ -201,11 +201,6 @@ module Vapir
       click(options.merge(:wait => false))
     end
 
-    # returns the visible text nodes of the element. 
-    def visible_text_nodes
-      ff_visible_text_nodes # this is just here to use the fast Vapir::Firefox::Container#ff_visible_text_nodes instead of the slow Vapir::Element#visible_text_nodes 
-    end
-
     # Waits for the browser to finish loading, if it is loading. See Firefox#wait. 
     def wait(options={})
       @container.wait(options)

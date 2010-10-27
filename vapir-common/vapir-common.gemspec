@@ -46,6 +46,7 @@ Vapir::Common::GemSpec = Gem::Specification.new do |s|
     'lib/vapir-common/page_container.rb', # the common page container module for stuff with a document 
     'lib/vapir-common/modal_dialog.rb', # common module for browser-specific ModalDialog classes. 
     'lib/vapir-common/specifier.rb', # various methods related to how vapir specifies elements and coding that on the DOM 
+    'lib/vapir-common/element_class_and_module.rb', # module of methods to be defined on the metaclass of both common Element modules and and browser-specific Element classes 
     'lib/vapir-common/element.rb', # the common Element module, included by all browser specific Element classes. 
     'lib/vapir-common/elements/elements.rb', # defines the common element modules. todo: split this across more files. 
     'lib/vapir-common/element_collection.rb', # 

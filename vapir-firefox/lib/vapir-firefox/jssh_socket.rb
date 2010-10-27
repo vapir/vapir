@@ -1026,10 +1026,10 @@ class JsshObject
   # a JsshObject referring to the stored object. 
   def store_rand_named(&name_proc)
     base=36
-    length=6
+    length=32
     begin
       name=name_proc.call(("%#{length}s"%rand(base**length).to_s(base)).tr(' ','0'))
-    end while JsshObject.new(name,jssh_socket).type!='undefined'
+    end #while JsshObject.new(name,jssh_socket).type!='undefined'
     # okay, more than one iteration is ridiculously unlikely, sure, but just to be safe. 
     store(name, false)
   end

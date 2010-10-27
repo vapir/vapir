@@ -87,10 +87,7 @@ end
 desc "check files for things that appear wrong: not in a gemfile; contains a carriage return; or wrong mode"
 task :checkfiles do
   should_be_gemfiles = Dir['vapir-*/lib/**/*']-Dir['vapir-ie/lib/vapir-ie/IEDialog/*'].select(&File.method(:file?))
-  are_gemfiles = %w(Common Firefox IE).inject([]) do |files, libname|
-    load "vapir-#{libname.downcase}/vapir-#{libname.downcase}.gemspec"
-    files + Vapir.const_get(libname)::GemSpec.files.map{|f| File.join("vapir-#{libname.downcase}", f) }
-  end
+  are_gemfiles = common_files + ff_files + ie_files
   ycomb do |recurse|
     proc do |dir|
       (Dir.entries(dir || '.')-['.', '..', '.git']).each do |entry|

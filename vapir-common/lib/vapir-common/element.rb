@@ -253,7 +253,7 @@ module Vapir
           # the proc should return true (that is, not false or nil) when it likes the given Element - 
           # when it matches what it expects of this Element. 
           candidate_match_at_index(@index, method(:matched_candidates), self.class.specifiers, self.class.all_dom_attr_aliases) do |candidate|
-            what.call(self.class.new(:element_object, candidate, @extra))
+            what.call(self.class.new(:element_object, candidate, @container.extra_for_contained))
           end
         else
           raise Vapir::Exception::MissingWayOfFindingObjectException, "Unknown 'how' given: #{@how.inspect} (#{@how.class}). 'what' was #{@what.inspect} (#{@what.class})"

@@ -182,39 +182,41 @@ module Vapir
     def visible_text_nodes
       # TODO: needs tests 
       assert_exists do
-        # define a nice recursive function to iterate down through the children 
-        recurse_text_nodes=proc do |rproc, e_obj, parent_visibility|
-          case e_obj.nodeType
-          when 1 # TODO: name a constant ELEMENT_NODE, rather than magic number 
-            style=element_object_style(e_obj, document_object)
-            our_visibility = style && (visibility=style.invoke('visibility'))
-            unless our_visibility && ['hidden', 'collapse', 'visible'].include?(our_visibility=our_visibility.strip.downcase)
-              our_visibility = parent_visibility
-            end
-            if (display=style.invoke('display')) && display.strip.downcase=='none'
-              []
-            else
-              object_collection_to_enumerable(e_obj.childNodes).inject([]) do |result, c_obj|
-                result + rproc.call(rproc, c_obj, our_visibility)
+        recurse_text_nodes=ycomb do |recurse|
+          proc do |node, parent_visibility|
+            case node.nodeType
+            when 1, 9 # TODO: name a constant ELEMENT_NODE, rather than magic number 
+              style= node.nodeType==1 ? base_element_class.element_object_style(node, document_object) : nil
+              our_visibility = style && (visibility=style.invoke('visibility'))
+              unless our_visibility && ['hidden', 'collapse', 'visible'].include?(our_visibility=our_visibility.strip.downcase)
+                our_visibility = parent_visibility
               end
-            end
-          when 3 # TODO: name a constant TEXT_NODE, rather than magic number 
-            if parent_visibility && ['hidden','collapse'].include?(parent_visibility.downcase)
-              []
+              display = style && style.invoke('display')
+              if display && display.strip.downcase=='none'
+                []
+              else
+                Vapir::Element.object_collection_to_enumerable(node.childNodes).inject([]) do |result, child_node|
+                  result + recurse.call(child_node, our_visibility)
+                end
+              end
+            when 3 # TODO: name a constant TEXT_NODE, rather than magic number 
+              if parent_visibility && ['hidden','collapse'].include?(parent_visibility.downcase)
+                []
+              else
+                [node.data]
+              end
             else
-              [e_obj.data]
+              #Kernel.warn("ignoring node of type #{node.nodeType}")
+              []
             end
-          else
-            #Kernel.warn("ignoring node of type #{e_obj.nodeType}")
-            []
           end
         end
   
         # determine the current visibility and display. TODO: this is copied/adapted from #visible?; should DRY 
-        element_to_check=element_object
+        element_to_check=containing_object
         real_visibility=nil
         while element_to_check #&& !element_to_check.instanceof(nsIDOMDocument)
-          if (style=element_object_style(element_to_check, document_object))
+          if (style=base_element_class.element_object_style(element_to_check, document_object))
             # only pay attention to the innermost definition that really defines visibility - one of 'hidden', 'collapse' (only for table elements), 
             # or 'visible'. ignore 'inherit'; keep looking upward. 
             # this makes it so that if we encounter an explicit 'visible', we don't pay attention to any 'hidden' further up. 
@@ -234,7 +236,7 @@ module Vapir
           end
           element_to_check=element_to_check.parentNode
         end
-        recurse_text_nodes.call(recurse_text_nodes, element_object, real_visibility)
+        recurse_text_nodes.call(containing_object, real_visibility)
       end
     end
     # returns an visible text inside this element by concatenating text nodes below this element in the DOM heirarchy which are visible.

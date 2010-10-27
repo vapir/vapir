@@ -51,6 +51,7 @@ Vapir::Common::GemSpec = Gem::Specification.new do |s|
     'lib/vapir-common/elements/elements.rb', # defines the common element modules. todo: split this across more files. 
     'lib/vapir-common/element_collection.rb', # 
     'lib/vapir-common/elements.rb', # shortcut to load all of the common element modules 
+    'lib/vapir-common/keycodes.rb', # keycodes for javascript events 
     'lib/vapir-common/exceptions.rb', # exceptions used by vapir 
     'lib/vapir-common/handle_options.rb', # todo: move to external lib stuff
     'lib/vapir-common/options.rb', # todo: 

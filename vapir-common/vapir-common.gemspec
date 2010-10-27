@@ -40,6 +40,7 @@ Vapir::Common::GemSpec = Gem::Specification.new do |s|
     'lib/vapir.rb', # does the same stuff as the above two files. nice so that you can just require 'vapir' and let autoloads deal with the rest. 
     'lib/watir-vapir.rb', # defines the Watir and FireWatir namespaces for compatibility with existing code using Watir 
     'lib/vapir-common/version.rb',
+    'lib/vapir-common/config.rb', # defines Configurable module included in any configurable vapir object, and Configuration class that is returned by that method. 
     'lib/vapir-common/browser.rb', # the common browser class from which Firefox and IE classes inherit 
     'lib/vapir-common/browsers.rb', # defines stuff for the browsers that use this, most importantly, autoload stuff. todo: don't think this needs a file separate from browser.rb 
     'lib/vapir-common/container.rb', # the common module for all Containers; all common container methods (such as #div, #text_field) are defined on this module 

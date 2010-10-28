@@ -287,8 +287,9 @@ module Vapir
     end
   end
 
+  # :stopdoc:
   @configurations = []
-  def (@configurations).update_from_source
+  def (@configurations).update_from_source # :nodoc:
     self.each do |c|
       if c.respond_to?(:update_from_source)
         c.update_from_source 
@@ -337,5 +338,6 @@ module Vapir
   @env_configuration.update_from_source
   
   @configuration_parent = @configurations.last
+  # :startdoc:
   extend Configurable # makes Vapir.config which is the in-process user-configurable one, overriding base, yaml, and env 
 end

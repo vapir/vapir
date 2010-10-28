@@ -57,17 +57,18 @@ module Waiter
   #
   # Returns the value of the block, which can be handy for things that return nil on failure and some 
   # other object on success, like Enumerable#detect for example: 
-  # found_thing=Waiter.try_for(30) { all_things().detect {|thing| thing.name=="Bill" } }
+  #  found_thing=Waiter.try_for(30){ all_things().detect{|thing| thing.name=="Bill" } }
   #
   # Examples:
-  # Waiter.try_for(30) do
-  #   Time.now.year == 2015
-  # end
+  #  Waiter.try_for(30) do
+  #    Time.now.year == 2015
+  #  end
   # Raises a WaiterError unless it is called between the last 30 seconds of December 31, 2014 and the end of 2015
   #
-  # Waiter.try_for(365.242199*24*60*60, :interval => 0.1, :exception => nil, :condition => proc{ 2+2==5 }) do
-  #   STDERR.puts "any decisecond now ..."
-  # end
+  #  Waiter.try_for(365*24*60*60, :interval => 0.1, :exception => nil, :condition => proc{ 2+2==5 }) do
+  #    STDERR.puts "any decisecond now ..."
+  #  end
+  # 
   # Complains to STDERR for one year, every tenth of a second, as long as 2+2 does not equal 5. Does not 
   # raise an exception if 2+2 does not become equal to 5. 
   def self.try_for(time, options={})

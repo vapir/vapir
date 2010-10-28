@@ -824,8 +824,10 @@ class JsshObject
     end
   end
   
-  # returns javascript instanceof operator on this and the given interface (expected to be a JsshObject)
-  # note that this is javascript, not to be confused with ruby's #instance_of? method. 
+  # calls the javascript instanceof operator on this object and the given interface (expected to 
+  # be a JsshObject) note that the javascript instanceof operator is not to be confused with 
+  # ruby's #instance_of? method - this takes a javascript interface; #instance_of? takes a ruby 
+  # module.
   # 
   # example:
   #  window.instanceof(window.jssh_socket.Components.interfaces.nsIDOMChromeWindow)
@@ -929,22 +931,17 @@ class JsshObject
     end
   end
   
-  # returns a JsshObject representing the given attribute. Checks the type, and if 
-  # it is a function, references the _return value_ of the function (with the given
-  # arguments, if any, which are in ruby, converted to javascript). If the type of the 
-  # expression is undefined, raises an error (if you want an attribute even if it's 
-  # undefined, use #attr). 
+  # returns a JsshObject representing the given attribute. Checks the type, and if it is a 
+  # function, calls the function with any arguments given (which are converted to javascript) 
+  # and returns the return value of the function (or nil if the function returns undefined). 
+  #
+  # If the attribute is undefined, raises an error (if you want an attribute even if it's 
+  # undefined, use #invoke? or #attr). 
   def invoke(attribute, *args)
     attr(attribute).assign_or_call_or_val_or_object_by_suffix(nil, *args)
   end
   # same as #invoke, but returns nil for undefined attributes rather than raising an
-  # error. this is used by method_missing when passed a question-mark method. 
-  #
-  # example, assuming some jssh_object: 
-  #  > jssh_object.type
-  #  => 'object'
-  #  > jssh_object.some_undefined_attribute
-  #  
+  # error. 
   def invoke?(attribute, *args)
     attr(attribute).assign_or_call_or_val_or_object_by_suffix('?', *args)
   end
@@ -1064,13 +1061,15 @@ class JsshObject
     sub(key).val_or_object(:error_on_undefined => false)
   end
 
-  # assigns the given ruby value (passed through json via JsshSocket#assign_json) to the given subscript
-  # (key is converted to javascript). 
+  # assigns the given ruby value (which is converted to javascript) to the given subscript
+  # (the key is also converted to javascript). 
   def []=(key, value)
     self.sub(key).assign(value)
   end
 
-  # calls a binary operator (in javascript) with self and another operand 
+  # calls a binary operator (in javascript) with self and another operand.
+  #
+  # the operator should be string of javascript; the operand will be converted to javascript. 
   def binary_operator(operator, operand)
     JsshObject.new("(#{ref}#{operator}#{JsshSocket.to_javascript(operand)})", jssh_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JsshObject) ? operand.debug_name : JsshSocket.to_javascript(operand)})").val_or_object
   end
@@ -1123,46 +1122,34 @@ class JsshObject
   # method_missing handles unknown method calls in a way that makes it possible to write 
   # javascript-like syntax in ruby, to some extent. 
   #
+  # method_missing checks the attribute of the represented javascript object with with the name of the given method. if that 
+  # attribute refers to a function, then that function is called with any given arguments 
+  # (like #invoke does). If that attribute is undefined, an error will be raised, unless a '?' 
+  # suffix is used (see below). 
+  #
   # method_missing will only try to deal with methods that look like /^[a-z_][a-z0-9_]*$/i - no
   # special characters, only alphanumeric/underscores, starting with alpha or underscore - with
   # the exception of three special behaviors:
   # 
-  # If the method ends with an equals sign (=), it does assignment - it calls #assign on the given attribute 
-  # to do the assignment and returns the assigned value. 
+  # If the method ends with an equals sign (=), it does assignment - it calls #assign on the given 
+  # attribute, with the given (single) argument, to do the assignment and returns the assigned 
+  # value. 
   #
-  # If the method ends with a bang (!), then it will attempt to get the value (using json) of the
-  # reference, using JsshObject#val. For simple types (null, string, boolean, number), this is what 
-  # happens by default anyway. With other types (usually the 'object' type), attempting to 
-  # convert to json can raise errors or cause infinite recursion, so is not attempted. but if you 
-  # have an object or an array that you know you can json-ize, you can use ! to force that. 
+  # If the method ends with a bang (!), then it will attempt to get the value of the reference, 
+  # using JsshObject#val, which converts the javascript to json and then to ruby. For simple types 
+  # (null, string, boolean, number), this is what gets returned anyway. With other types (usually 
+  # the 'object' type), attempting to convert to json can raise errors or cause infinite 
+  # recursion, so is not attempted. but if you have an object or an array that you know you can 
+  # json-ize, you can use ! to force that. 
   #
-  # If the method ends with a question mark (?), then it will attempt to get a string representing the
-  # value, using JsshObject#val_str. This is safer than ! because the javascript conversion to json 
-  # can error. This also catches the JsshUndefinedValueError that can occur, and just returns nil
-  # for undefined stuff. 
+  # If the method ends with a question mark (?), then if the attribute is undefined, no error is 
+  # raised (as usually happens) - instead nil is just returned. 
   #
-  # otherwise, method_missing calls to #invoke, and returns a JsshObject, a string, a boolean, a number, or
-  # null - see documentation for #invoke. 
+  # otherwise, method_missing behaves like #invoke, and returns a JsshObject, a string, a boolean, 
+  # a number, or null. 
   #
-  # Since #invoke returns a JsshObject for javascript objects, this means that you can string together 
-  # method_missings and the result looks rather like javascript.
-  #
-  # this lets you do things like:
-  # 
-  #  >> jssh_socket.object('getWindows()').length
-  #  => 2
-  #  >> jssh_socket.object('getWindows()')[1].getBrowser.contentDocument?
-  #  => "[object XPCNativeWrapper [object HTMLDocument]]"
-  #  >> document=jssh_socket.object('getWindows()')[1].getBrowser.contentDocument
-  #  => #<JsshObject:0x34f01fc @ref="getWindows()[1].getBrowser().contentDocument" ...>
-  #  >> document.title
-  #  => "ruby - Google Search"
-  #  >> document.forms[0].q.value
-  #  => "ruby"
-  #  >> document.forms[0].q.value='foobar'
-  #  => "foobar"
-  #  >> document.forms[0].q.value
-  #  => "foobar"
+  # Since method_missing returns a JsshObject for javascript objects, this means that you can 
+  # string together method_missings and the result looks rather like javascript.
   #--
   # $A and $H, used below, are methods of the Prototype javascript library, which add nice functional 
   # methods to arrays and hashes - see http://www.prototypejs.org/

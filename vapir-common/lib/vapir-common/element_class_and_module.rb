@@ -1,3 +1,5 @@
+require 'vapir-common/container'
+
 module Vapir
   # this module is for methods that should go on both common element modules (ie, TextField) as well
   # as browser-specific element classes (ie, Firefox::TextField). 

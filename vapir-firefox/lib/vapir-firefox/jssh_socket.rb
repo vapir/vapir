@@ -568,36 +568,93 @@ class JsshSocket
 
   # takes a reference and returns a new JsshObject representing that reference on this socket. 
   # ref should be a string representing a reference in javascript. 
-  def object(ref)
-    JsshObject.new(ref, self, :debug_name => ref)
+  def object(ref, other={})
+    JsshObject.new(ref, self, {:debug_name => ref}.merge(other))
   end
-  def object_in_temp(ref)
-    object(ref).store_rand_temp
+
+  def object_in_temp(ref, other={})
+    object(ref, other).store_rand_temp
   end
   
   # represents the root of the space seen by the JsshSocket, and implements #method_missing to 
-  # return objects at the root level. for example, jssh_socket.root.Components will return the 
-  # top-level Components object; jssh_socket.root.ctypes will return the ctypes top-level object 
-  # if that is defined. This does not behave in the same way a JsshObject's #method_missing - 
-  # functions are not called; undefined values do not error. so, for example, 
-  # jssh_socket.root.getWindows will not call that function, it will just return the function
-  # object. and jssh_socket.root.thisdoesntexist will not error; it will return a reference
-  # to the undefined top-level object 'thisdoesnotexist'. this may be improved in the future 
-  # to behave more like JsshObject's method_missing. 
+  # return objects at the root level in a similar manner to JsshObject's #method_missing. 
+  #
+  # for example, jssh_socket.root.Components will return the top-level Components object; 
+  # jssh_socket.root.ctypes will return the ctypes top-level object if that is defined, or error 
+  # if not. 
+  #
+  # if the object is a function, then it will be called with any given arguments:
+  #  >> jssh_socket.root.getWindows
+  #  => #<JsshObject:0x0254d150 type=object, debug_name=getWindows()>
+  #  >> jssh_socket.root.eval("3+2")
+  #  => 5
+  #
+  # If any arguments are given to an object that is not a function, you will get an error: 
+  #  >> jssh_socket.root.Components('wat')
+  #  ArgumentError: Cannot pass arguments to Javascript object #<JsshObject:0x02545978 type=object, debug_name=Components>
+  #
+  # special behaviors exist for the suffixes !, ?, and =. 
+  #
+  # - '?' suffix returns nil if the object does not exist, rather than raising an exception. for
+  #   example:
+  #    >> jssh_socket.root.foo
+  #    JsshUndefinedValueError: undefined expression represented by #<JsshObject:0x024c3ae0 type=undefined, debug_name=foo> (javascript reference is foo)
+  #    >> jssh_socket.root.foo?
+  #    => nil
+  # - '=' suffix sets the named object to what is given, for example:
+  #    >> jssh_socket.root.foo?
+  #    => nil
+  #    >> jssh_socket.root.foo={:x => ['y', 'z']}
+  #    => {:x=>["y", "z"]}
+  #    >> jssh_socket.root.foo
+  #    => #<JsshObject:0x024a3510 type=object, debug_name=foo>
+  # - '!' suffix tries to convert the value to json in javascrit and back from json to ruby, even 
+  #   when it might be unsafe (causing infinite rucursion or other errors). for example:
+  #    >> jssh_socket.root.foo!
+  #    => {"x"=>["y", "z"]}
+  #   it can be used with function results that would normally result in a JsshObject:
+  #    >> jssh_socket.root.eval!("[1, 2, 3]")
+  #    => [1, 2, 3]
+  #   and of course it can error if you try to do something you shouldn't:
+  #    >> jssh_socket.root.getWindows!
+  #    JsshError::NS_ERROR_FAILURE: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIJSON.encode]
   def root
     jssh_socket=self
-    @root ||= begin
+#    @root ||= begin
       root = Object.new
-      (class << root; self; end).send(:define_method, :method_missing) do |method|
+      (class << root; self; end).send(:define_method, :method_missing) do |method, *args|
         method=method.to_s
-        if method.to_s =~ /\A([a-z_][a-z0-9_]*)\z/i
-          jssh_socket.object(method)
+        if method =~ /\A([a-z_][a-z0-9_]*)([=?!])?\z/i
+          method = $1
+          special = $2
+          obj=jssh_socket.object(method)
+          if special=='='
+            jssh_socket.object(method, :define_methods => false).assign(*args)
+          else
+            type=obj.type
+            if type=='function'
+              obj=obj.pass(*args)
+            elsif !args.empty?
+              raise ArgumentError, "Cannot pass arguments to Javascript object #{obj.inspect}"
+            end
+            case special
+            when nil
+              obj.val_or_object
+            when '?'
+              obj.val_or_object(:error_on_undefined => false)
+            when '!'
+              obj.val
+            else # this shouldn't happen
+              super
+            end
+          end
         else
+          # don't deal with any special character crap 
           super
         end
       end
       root
-    end
+#    end
   end
   
   # Creates and returns a JsshObject representing a function. 

@@ -575,6 +575,53 @@ class JsshSocket
     object(ref).store_rand_temp
   end
   
+  # Creates and returns a JsshObject representing a function. 
+  #
+  # Takes any number of arguments, which should be strings or symbols, which are arguments to the 
+  # javascript function. 
+  #
+  # The javascript function is specified as the result of a block which must be given to 
+  # #function. 
+  #
+  # An example:
+  #   jssh_socket.function(:a, :b) do
+  #     "return a+b;"
+  #   end
+  #   => #<JsshObject:0x0248e78c type=function, debug_name=function(a, b){ return a+b; }>
+  #
+  # This is exactly the same as doing 
+  #   jssh_socket.object("function(a, b){ return a+b; }")
+  # but it is a bit more concise and reads a bit more ruby-like. 
+  #
+  # a longer example to return the text of a thing (rather contrived, but, it works): 
+  #
+  #   jssh_socket.function(:node) do %q[
+  #     if(node.nodeType==3)
+  #     { return node.data;
+  #     }
+  #     else if(node.nodeType==1)
+  #     { return node.textContent;
+  #     }
+  #     else
+  #     { return "what?";
+  #     }
+  #   ]
+  #   end.call(some_node)
+  def function(*arg_names)
+    unless arg_names.all?{|arg| (arg.is_a?(String) || arg.is_a?(Symbol)) && arg.to_s =~ /\A[a-z_][a-z0-9_]*\z/i }
+      raise ArgumentError, "Arguments to \#function should be strings or symbols representing the names of arguments to the function. got #{arg_names.inspect}"
+    end
+    unless block_given?
+      raise ArgumentError, "\#function should be given a block which results in a string representing the body of a javascript function. no block was given!"
+    end
+    function_body = yield
+    unless function_body.is_a?(String)
+      raise ArgumentError, "The block given to \#function must return a string representing the body of a javascript function! instead got #{function_body.inspect}"
+    end
+    nl = function_body.include?("\n") ? "\n" : ""
+    object("function(#{arg_names.join(", ")})#{nl}{ #{function_body} #{nl}}")
+  end
+  
   # returns a JsshObject representing a designated top-level object for temporary storage of stuff
   # on this socket. 
   #

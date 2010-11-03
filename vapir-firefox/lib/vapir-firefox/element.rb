@@ -181,14 +181,13 @@ module Vapir
           mouse_down_event=create_event_object('mousedown', options)
           mouse_up_event=create_event_object('mouseup', options)
           click_event=create_event_object('click', options)
-          click_func=jssh_socket.object("(function(element_object, mouse_down_event, mouse_up_event, click_event)
-          { return function()
+          content_window_object.setTimeout(jssh_socket.call_function(:element_object => element_object, :mouse_down_event => mouse_down_event, :mouse_up_event => mouse_up_event, :click_event => click_event) do 
+          " return function()
             { element_object.dispatchEvent(mouse_down_event);
               element_object.dispatchEvent(mouse_up_event);
               element_object.dispatchEvent(click_event);
-            };
-          })").pass(element_object, mouse_down_event, mouse_up_event, click_event)
-          content_window_object.setTimeout(click_func, 0)
+            };"
+          end, 0)
         end
       end
       result

@@ -258,27 +258,18 @@ module Vapir
     
     private
     def element_object_exists?
-#      parent=@element_object
-#      while true
-#        return false unless parent # if we encounter a parent such that parentNode is nil, we aren't on the document. 
-#        return true if parent==document_object # if we encounter the document as a parent, we are on the document. 
-#        new_parent=parent.parentNode
-#        raise(RuntimeError, "Circular reference in parents!") if new_parent==parent
-#        parent=new_parent
-#      end
-      # above is horrendously slow; optimized below. 
       return false unless @element_object
-      return jssh_socket.object("(function(parent, document_object)
-      { while(true)
+      return jssh_socket.call_function(:parent => @element_object, :document_object => container.document_object) do  # use the container's document so that frames look at their parent document, not their own document
+      " while(true)
         { if(!parent)
-          { return false;
+          { return false; // if we encounter a parent such that parentNode is nil, we aren't on the document. 
           }
-          if(parent==document_object)
+          if(parent==document_object) // if we encounter the document as a parent, we are on the document. 
           { return true;
           }
           parent=parent.parentNode;
-        }
-      })").call(@element_object, container.document_object) # use the container's document so that frames look at their parent document, not their own document 
+        }"
+      end
     end
   
   end # Element

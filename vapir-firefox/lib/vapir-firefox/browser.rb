@@ -237,13 +237,13 @@ module Vapir
     # If no post_data_hash is given, the body of the POST is empty. 
     def post_to(url, post_data_hash={})
       require 'cgi'
-      raise ArgumentError, "post_data_hash must be a Hash" unless post_data_hash.is_a?(Hash)
+      raise ArgumentError, "post_data_hash must be a Hash!" unless post_data_hash.is_a?(Hash)
       dataString = post_data_hash.map do |(key, val)|
         unless key.is_a?(String) || key.is_a?(Symbol)
-          raise ArgumentError
+          raise ArgumentError, "post_data_hash keys must be strings or symbols; got key #{key.inspect} in hash #{post_data_hash.inspect}"
         end
         unless val.is_a?(String)
-          raise ArgumentError
+          raise ArgumentError, "post_data_hash values must all be string;s got value #{val.inspect} in hash #{post_data_hash.inspect}"
         end
         CGI.escape(key.to_s)+'='+CGI.escape(val)
       end.join("&")

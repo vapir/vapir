@@ -248,7 +248,7 @@ module Vapir
         CGI.escape(key.to_s)+'='+CGI.escape(val)
       end.join("&")
       stringStream = jssh_socket.Components.classes["@mozilla.org/io/string-input-stream;1"].createInstance(jssh_socket.Components.interfaces.nsIStringInputStream)
-      if jssh_socket.object('function(key, object){return (key in object);}').call('data', stringStream) # TODO: this is quite ugly; do something with it. 
+      if stringStream.to_hash.key?('data')
         stringStream.data=dataString
       else
         stringStream.setData(dataString, dataString.unpack("U*").length)

@@ -1406,6 +1406,10 @@ class JsshHash < JsshObject
     keyfunc="function(obj) { var keys=[]; for(var key in obj) { keys.push(key); } return keys; }"
     @keys=jssh_socket.object(keyfunc).pass(self).val
   end
+  # returns whether the given key is a defined key of this javascript object 
+  def key?(key)
+    jssh_socket.call_function(:obj => self, :key => key){ "return key in obj;" }
+  end
   # yields each key and value 
   def each(&block) # :yields: key, value
     keys.each do |key|

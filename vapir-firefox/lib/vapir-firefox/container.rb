@@ -83,9 +83,8 @@ module Vapir
     # returns a JsshObject representing an array (in javascript) of the visible text nodes of this container. same as
     # the Vapir::Common #visible_text_nodes implementation, but much much faster. 
     def visible_text_nodes
-      text_nodes = jssh_socket.object(%Q(
-        function(element_object, document_object)
-        { var Ycomb = function(gen){ return function(f){ return f(f); }(function(f){ return gen(function(){ return f(f).apply(null, arguments); }); }); }; // TODO: move this somewhere better - jssh_socket? 
+      text_nodes = jssh_socket.call_function(:element_object => containing_object, :document_object => document_object) do %Q(
+          var Ycomb = function(gen){ return function(f){ return f(f); }(function(f){ return gen(function(){ return f(f).apply(null, arguments); }); }); }; // TODO: move this somewhere better - jssh_socket? 
           var recurse_text_nodes = Ycomb(function(recurse)
           { return function(node, parent_visibility)
             { if(node.nodeType==1 || node.nodeType==9)
@@ -142,8 +141,8 @@ module Vapir
             element_to_check=element_to_check.parentNode;
           }
           return recurse_text_nodes(element_object, real_visibility);
-        }
-      )).call(containing_object, document_object).to_array
+      )
+      end.to_array
     end
 
   end

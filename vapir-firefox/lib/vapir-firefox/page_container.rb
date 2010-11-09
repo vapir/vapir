@@ -53,8 +53,8 @@ module Vapir
 
     # Returns the html of the document
     def outer_html
-      jssh_socket.object("(function(document)
-      { var temp_el=document.createElement('div');
+      jssh_socket.call_function(:document => document_object) do %Q(
+        var temp_el=document.createElement('div');
         for(var i in document.childNodes)
         { try
           { temp_el.appendChild(document.childNodes[i].cloneNode(true));
@@ -63,7 +63,8 @@ module Vapir
           {}
         }
         return temp_el.innerHTML;
-      })").call(document_object)
+      )
+      end
     end
     alias html outer_html
   end

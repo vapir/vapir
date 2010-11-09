@@ -325,16 +325,15 @@ module Vapir
       # Details : http://zenit.senecac.on.ca/wiki/index.php/Mozilla.dev.tech.xul#What_is_an_example_of_addProgressListener.3F
       @browser_jssh_objects[:listener_object]={}
       listener_object=@browser_jssh_objects[:listener_object]
-      listener_object[:QueryInterface]=jssh_socket.object(
-        "function(aIID)
-         { if(aIID.equals(Components.interfaces.nsIWebProgressListener) || aIID.equals(Components.interfaces.nsISupportsWeakReference) || aIID.equals(Components.interfaces.nsISupports))
+      listener_object[:QueryInterface]=jssh_socket.function(:aIID) do %Q(
+           if(aIID.equals(Components.interfaces.nsIWebProgressListener) || aIID.equals(Components.interfaces.nsISupportsWeakReference) || aIID.equals(Components.interfaces.nsISupports))
            { return this;
            }
            throw Components.results.NS_NOINTERFACE;
-         }")
-      listener_object[:onStateChange]= jssh_socket.object(
-        "function(aWebProgress, aRequest, aStateFlags, aStatus)
-         { var requests_in_progress=#{@requests_in_progress.ref};
+      )
+      end
+      listener_object[:onStateChange]= jssh_socket.function(:aWebProgress, :aRequest, :aStateFlag, :aStatus) do %Q(
+           var requests_in_progress=#{@requests_in_progress.ref};
            if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
            { #{@updated_at_epoch_ms.ref}=new Date().getTime();
              #{browser_object.ref}=#{browser_window_object.ref}.getBrowser();
@@ -370,7 +369,8 @@ module Vapir
                --i;
              }
            }*/
-         }")
+      )
+      end
       browser_object.addProgressListener(listener_object)
     end
 

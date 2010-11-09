@@ -65,8 +65,7 @@ module Vapir
         event=create_event_object(event_type, options)
         if !options[:wait]
           raise "need a content window on which to setTimeout if we are not waiting" unless content_window_object
-          fire_event_func=jssh_socket.object("(function(element_object, event){return function(){element_object.dispatchEvent(event)};})").pass(element_object, event)
-          content_window_object.setTimeout(fire_event_func, 0)
+          content_window_object.setTimeout(jssh_socket.call_function(:element_object => element_object, :event => event){ "return function(){ element_object.dispatchEvent(event) };" }, 0)
           nil
         else
           result=element_object.dispatchEvent(event)

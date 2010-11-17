@@ -646,61 +646,61 @@ module Vapir
       
       if options[:dc] == :page
         options[:format] ||= 'png'
-        # this is adapted from Selenium's method Selenium.prototype.doCaptureEntirePageScreenshot
-        
-        window = content_window_object
-        document = window.document
-        document_element = document.documentElement
-        
-        width = document_element.scrollWidth
-        height = document_element.scrollHeight
-        styleWidth = width.to_s + 'px'
-        styleHeight = height.to_s + 'px'
-        
-        canvas = grabCanvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'html:canvas')
-        grabCanvas.style.display = 'none'
-        grabCanvas.width = width
-        grabCanvas.style.width = styleWidth
-        grabCanvas.style.maxWidth = styleWidth
-        grabCanvas.height = height
-        grabCanvas.style.height = styleHeight
-        grabCanvas.style.maxHeight = styleHeight
-        
-        document_element.appendChild(grabCanvas)
-        begin
-          context = canvas.getContext('2d')
-          context.clearRect(0, 0, width, height)
-          context.save()
+        jssh_socket.call_function(:window => content_window_object, :options => options, :filename => File.expand_path(filename)) do
+        %q(
+          // this is adapted from Selenium's method Selenium.prototype.doCaptureEntirePageScreenshot
+          var document = window.document;
+          var document_element = document.documentElement;
+          var width = document_element.scrollWidth;
+          var height = document_element.scrollHeight;
+          var styleWidth = width.toString() + 'px';
+          var styleHeight = height.toString() + 'px';
+
+          var canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'html:canvas'), grabCanvas=canvas;
+          grabCanvas.style.display = 'none';
+          grabCanvas.width = width;
+          grabCanvas.style.width = styleWidth;
+          grabCanvas.style.maxWidth = styleWidth;
+          grabCanvas.height = height;
+          grabCanvas.style.height = styleHeight;
+          grabCanvas.style.maxHeight = styleHeight;
           
-          prefs=jssh_socket.Components.classes['@mozilla.org/preferences-service;1'].getService(jssh_socket.Components.interfaces.nsIPrefBranch)
-          background_color = prefs.getCharPref('browser.display.background_color')
-          
-          context.drawWindow(window, 0, 0, width, height, background_color)
-          context.restore()
-          dataUrl = canvas.attr(:toDataURL).pass("image/" + options[:format]) # keep this a JsshObject to avoid passing large quantities of data over the socket more than necessary 
-          
-          nsIoService = jssh_socket.Components.classes["@mozilla.org/network/io-service;1"].getService(jssh_socket.Components.interfaces.nsIIOService)
-          channel = nsIoService.newChannelFromURI(nsIoService.newURI(dataUrl, nil, nil))
-          binaryInputStream = jssh_socket.Components.classes["@mozilla.org/binaryinputstream;1"].createInstance(jssh_socket.Components.interfaces.nsIBinaryInputStream)
-          binaryInputStream.setInputStream(channel.open())
-          numBytes = binaryInputStream.available()
-          utf8_bytes = binaryInputStream.readBytes(numBytes)
-          
-          bytes = utf8_bytes.unpack("U*").pack("C*")
-          
-          File.open(filename, 'wb'){|f| f.write(bytes) }
-          
-          #  nsFile = jssh_socket.Components.classes["@mozilla.org/file/local;1"].createInstance(jssh_socket.Components.interfaces.nsILocalFile)
-          #  nsFile.initWithPath(filename)
-          #  writeFlag = 0x02 # write only
-          #  createFlag = 0x08 # create
-          #  truncateFlag = 0x20 # truncate
-          #  fileOutputStream = jssh_socket.Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(jssh_socket.Components.interfaces.nsIFileOutputStream)
-          #  fileOutputStream.init(nsFile, writeFlag | createFlag | truncateFlag, 0664, nil)
-          #  fileOutputStream.write(bytes, numBytes)
-          #  fileOutputStream.close()
-        ensure
-          document_element.removeChild(grabCanvas)
+          document_element.appendChild(canvas);
+          try
+          {
+            var context = canvas.getContext('2d');
+            context.clearRect(0, 0, width, height);
+            context.save();
+            
+            var prefs=Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefBranch);
+            var background_color = prefs.getCharPref('browser.display.background_color');
+            
+            context.drawWindow(window, 0, 0, width, height, background_color);
+            context.restore();
+            var dataUrl = canvas.toDataURL("image/" + options['format']);
+            
+            var nsIoService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+            var channel = nsIoService.newChannelFromURI(nsIoService.newURI(dataUrl, null, null));
+            var binaryInputStream = Components.classes["@mozilla.org/binaryinputstream;1"].createInstance(Components.interfaces.nsIBinaryInputStream);
+            binaryInputStream.setInputStream(channel.open());
+            var numBytes = binaryInputStream.available();
+            var bytes = binaryInputStream.readBytes(numBytes);
+
+            var nsFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+            nsFile.initWithPath(filename);
+            var writeFlag = 0x02; // write only
+            var createFlag = 0x08; // create
+            var truncateFlag = 0x20; // truncate
+            var fileOutputStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
+            fileOutputStream.init(nsFile, writeFlag | createFlag | truncateFlag, 0664, null);
+            fileOutputStream.write(bytes, numBytes);
+            fileOutputStream.close();
+            document_element.removeChild(canvas);
+          }
+          catch(e)
+          { document_element.removeChild(canvas);
+          }
+        )
         end
       else
         screen_capture_win_window(filename, options)

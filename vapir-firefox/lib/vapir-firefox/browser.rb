@@ -800,12 +800,36 @@ module Vapir
 
     # the HTTP response status code for the currently loaded document 
     def response_status_code
+      current_document_channel_object.responseStatus
+    end
+    # a hash of the response headers returned for the currently loaded document 
+    def response_headers
+      firefox_socket.call_function(:channel => current_document_channel_object) do %Q{
+        var headers={};
+        channel.visitResponseHeaders({visitHeader: function(header, value){ headers[header]=value; }});
+        return headers;
+      }
+      end.val.freeze
+    end
+    # a hash of the request headers the browser sent for the currently loaded document 
+    def request_headers
+      firefox_socket.call_function(:channel => current_document_channel_object) do %Q{
+        var headers={};
+        channel.visitRequestHeaders({visitHeader: function(header, value){ headers[header]=value; }});
+        return headers;
+      }
+      end.val.freeze
+    end
+    # a nsIHttpChannel for the currently loaded document - the browser's docShell.currentDocumentChannel 
+    #
+    # see https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIHttpChannel
+    def current_document_channel_object
       channel = nil
       ::Waiter.try_for(8, :exception => nil) do
         channel=browser.browser_object.docShell.currentDocumentChannel
         channel.is_a?(JavascriptObject) && channel.instanceof(browser.firefox_socket.Components.interfaces.nsIHttpChannel) && channel.respond_to?(:responseStatus)
       end || raise(RuntimeError, "expected currentDocumentChannel to exist and be a nsIHttpChannel but it wasn't; was #{channel.is_a?(JavascriptObject) ? channel.toString : channel.inspect}")
-      status = channel.responseStatus
+      channel
     end
     
     # Maximize the current browser window.

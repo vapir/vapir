@@ -98,6 +98,7 @@ module Vapir
     include Firefox::ModalDialogContainer
 
     def self.initialize_jssh_socket
+      uninitialize_jssh_socket
       @@jssh_socket=JsshSocket.new
       @@firewatir_jssh_objects=@@jssh_socket.object("Vapir").assign({})
       @@jssh_socket

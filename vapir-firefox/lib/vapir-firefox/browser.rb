@@ -97,13 +97,16 @@ module Vapir
     include Firefox::Window
     include Firefox::ModalDialogContainer
 
-    def self.initialize_jssh_socket
+    # initializes a JsshSocket and stores in a class variable. 
+    def self.initialize_jssh_socket # :nodoc:
       uninitialize_jssh_socket
       @@jssh_socket=JsshSocket.new
       @@firewatir_jssh_objects=@@jssh_socket.object("Vapir").assign({})
       @@jssh_socket
     end
-    def self.jssh_socket(options={})
+    # returns a connected JsshSocket. pass :reset_if_dead => true if you suspect an existing 
+    # socket may be dead, and you want a new one. a warning will be printed if this occurs. 
+    def self.jssh_socket(options={}) # :nodoc:
       if options[:reset] || !(class_variable_defined?('@@jssh_socket') && @@jssh_socket)
         initialize_jssh_socket
       end
@@ -117,7 +120,8 @@ module Vapir
       end
       @@jssh_socket
     end
-    def self.uninitialize_jssh_socket
+    # unsets a the current jssh socket 
+    def self.uninitialize_jssh_socket # :nodoc:
       @@jssh_socket=nil
       @@firewatir_jssh_objects=nil
     end

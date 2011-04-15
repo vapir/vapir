@@ -101,11 +101,13 @@ module Vapir
       if respond_to?(:browser_object)
         ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser was still busy after #{options[:timeout]} seconds") do
           return unless exists?
-          !browser_object.busy
+          handling_existence_failure(:handle => proc { false }) { !browser_object.busy }
         end
         ::Waiter.try_for(options[:timeout]-(Time.now-start_load_time), :interval => options[:interval], :exception => "The browser's readyState was still not ready for interaction after #{options[:timeout]} seconds") do
           return unless exists?
-          [WebBrowserReadyState::Interactive, WebBrowserReadyState::Complete].include?(browser_object.readyState)
+          handling_existence_failure(:handle => proc { false }) do
+            [WebBrowserReadyState::Interactive, WebBrowserReadyState::Complete].include?(browser_object.readyState)
+          end
         end
       end
       # if the document object is gone, then we want to just return. 

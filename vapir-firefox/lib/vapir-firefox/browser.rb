@@ -185,6 +185,12 @@ module Vapir
       end
       @browser_jssh_objects = jssh_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
       
+      @pid = begin
+        self.pid
+      rescue NotImplementedError
+        nil
+      end
+      
       if options[:attach]
         attach(*options[:attach])
       else
@@ -397,16 +403,27 @@ module Vapir
     # the browser anyway; on other operating systems it does not. 
     def close
       assert_exists
+      # we expect the browser may exit if there are no windows which aren't ourself. except on mac. 
+      expect_exit = !self.class.window_objects.any?{|other_window| other_window != self.browser_window_object } && current_os != :macosx
       begin
         browser_window_object.close
         # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
         ::Waiter.try_for(32, :exception => Exception::WindowFailedToCloseException.new("The browser window did not close")) do
           !exists?
         end
-        jssh_socket.assert_socket
+        if expect_exit
+          ::Waiter.try_for(8, :exception => nil) do
+            jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
+            false
+          end
+        else
+          jssh_socket.assert_socket
+        end
       rescue JsshConnectionError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
         Vapir::Firefox.uninitialize_jssh_socket
+        wait_for_process_exit(@pid)
       end
+        
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
       if @self_launched_browser && jssh_socket && !self.class.window_objects.any?{ true }
         quit_browser(:force => false)
@@ -428,11 +445,10 @@ module Vapir
         jssh_socket(:reset_if_dead => true).assert_socket
         options=handle_options(options, :force => false)
         
-        got_pid = begin
-          pid # this caches pid for use in #process_running? after the socket is gone 
-          true
+        pid = @pid || begin
+          self.pid
         rescue NotImplementedError
-          false
+          nil
         end
         
         # from https://developer.mozilla.org/en/How_to_Quit_a_XUL_Application
@@ -447,17 +463,8 @@ module Vapir
         rescue JsshConnectionError
           Vapir::Firefox.uninitialize_jssh_socket
         end
-        checked_process_not_running = got_pid && begin
-          ::Waiter.try_for(16, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
-            !process_running?
-          end
-          true
-        rescue NotImplementedError
-          false
-        end
-        unless checked_process_not_running
-          sleep config.firefox_quit_sleep_time # various OS's or Firefox versions may not be able to do #process_running? - in this case, just give it a few seconds. 
-        end
+        
+        wait_for_process_exit(pid)
         
         @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
         nil
@@ -468,7 +475,7 @@ module Vapir
       # This only works on Firefox >= 3.6, on platforms supported (see #current_os), and raises 
       # NotImplementedError if it can't get the pid. 
       def pid
-        @pid ||= begin
+        begin
           begin
             ctypes = jssh_socket.Components.utils.import("resource://gre/modules/ctypes.jsm").ctypes
           rescue JsshJavascriptError
@@ -489,10 +496,9 @@ module Vapir
         end
       end
       
-      # calls #pid (which may raise NotImplementedError - see its doc) and attempts to determine 
-      # whether the currently-attached firefox process is still running. will raise 
+      # attempts to determine whether the given process is still running. will raise 
       # NotImplementedError if it can't determine this. 
-      def process_running?
+      def process_running?(pid)
         case current_os
         when :windows
           kernel32 = Vapir::Firefox.instance_eval do # define this on the class for reuse 
@@ -521,6 +527,20 @@ module Vapir
           $? == 0
         else
           raise NotImplementedError
+        end
+      end
+
+      # waits until the Firefox process with the given pid has exited. 
+      #
+      # if no pid is given, waits the configured amount of time until it is safe to assume
+      # the pfirefox process has exited. 
+      def wait_for_process_exit(pid)
+        if pid
+          ::Waiter.try_for(16, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
+            !process_running?(pid)
+          end
+        else
+          sleep config.firefox_quit_sleep_time
         end
       end
 

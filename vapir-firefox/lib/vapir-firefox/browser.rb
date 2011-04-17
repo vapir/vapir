@@ -145,7 +145,7 @@ module Vapir
         options = {:timeout => options}
         Kernel.warn_with_caller "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:timeout => #{options[:timeout]})"
       end
-      options = options_from_config(options, {:timeout => :attach_timeout, :binary_path => :firefox_binary_path, :profile => :firefox_profile}, [:attach, :goto, :wait_time])
+      options = options_from_config(options, {:timeout => :attach_timeout, :binary_path => :firefox_binary_path, :profile => :firefox_profile, :wait => :wait}, [:attach, :goto, :wait_time])
       if options[:wait_time]
         Kernel.warn_with_caller "DEPRECATION WARNING: the :wait_time option for #{self.class.name}.new has been renamed to :timeout for consistency. Please use #{self.class.name}.new(:timeout => #{options[:wait_time]})"
         options[:timeout] = options[:wait_time]
@@ -195,6 +195,7 @@ module Vapir
       if options[:goto]
         goto(options[:goto])
       end
+      wait if options[:wait]
     end
     
     def mozilla_window_class_name

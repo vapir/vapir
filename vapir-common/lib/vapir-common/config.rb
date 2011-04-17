@@ -1,3 +1,4 @@
+require 'vapir-common/handle_options'
 module Vapir
   # represents a entry in a heirarchy of configuration options 
   class Configuration
@@ -12,9 +13,10 @@ module Vapir
       # creates a new option. the options hash (last argument) may specify a 
       # :validator key which will be used to validate any values attempted to be
       # assigned to the key this option represents. 
-      def initialize(key, hash={})
+      def initialize(key, options={})
         @key = key
-        @validator = hash[:validator]
+        options = handle_options(options, {}, [:validator])
+        @validator = options[:validator]
       end
       # takes a value and checks that it is valid, if a validator is specified for 
       # this option. the validator may map the value to something different, so the

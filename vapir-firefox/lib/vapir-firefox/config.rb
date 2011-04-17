@@ -8,6 +8,7 @@ module Vapir
   # add firefox-specific stuff to base, and then bring them in from env and yaml 
   @base_configuration.create(:firefox_profile)
   @base_configuration.create(:firefox_binary_path)
+  @base_configuration.create_update(:firefox_quit_sleep_time, 4, :validator => :numeric)
   @configurations.update_from_source
   class Firefox
     @configuration_parent = Vapir.config

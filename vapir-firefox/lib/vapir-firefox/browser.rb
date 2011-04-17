@@ -453,7 +453,7 @@ module Vapir
           false
         end
         unless checked_process_not_running
-          sleep 4 # various OS's or Firefox versions may not be able to do #process_running? - in this case, just give it a few seconds. 
+          sleep config.firefox_quit_sleep_time # various OS's or Firefox versions may not be able to do #process_running? - in this case, just give it a few seconds. 
         end
         
         @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil

@@ -88,15 +88,17 @@ class TC_Fields_XPath < Test::Unit::TestCase
   end
   
   def test_JS_Events
-    browser.text_field!(:xpath , "//input[@name='events_tester']/").set('p')
-    
-    # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
-    assert_equal(['keydown', 'keyup']+['keydown', 'keypress', 'keyup'], browser.text_field!(:xpath , "//textarea[@name='events_text']/").value.split(/\r?\n/).reject{|l| l.empty? })
-    browser.button!(:value , "Clear Events Box").click
-    browser.text_field!(:xpath , "//input[@name='events_tester']/").set('ab')
-    
-    # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
-    assert_equal(['keydown', 'keyup']+['keydown', 'keypress', 'keyup']*2, browser.text_field!(:xpath , "//textarea[@name='events_text']/").value.split(/\r?\n/).reject{|l| l.empty? })
+    Vapir.with_config(:type_keys => true) do
+      browser.text_field!(:xpath , "//input[@name='events_tester']/").set('p')
+      
+      # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
+      assert_equal(['keydown', 'keyup']+['keydown', 'keypress', 'keyup'], browser.text_field!(:xpath , "//textarea[@name='events_text']/").value.split(/\r?\n/).reject{|l| l.empty? })
+      browser.button!(:value , "Clear Events Box").click
+      browser.text_field!(:xpath , "//input[@name='events_tester']/").set('ab')
+      
+      # the following line has an extra keypress at the begining, as we mimic the delete key being pressed
+      assert_equal(['keydown', 'keyup']+['keydown', 'keypress', 'keyup']*2, browser.text_field!(:xpath , "//textarea[@name='events_text']/").value.split(/\r?\n/).reject{|l| l.empty? })
+    end
   end
   
   def test_password

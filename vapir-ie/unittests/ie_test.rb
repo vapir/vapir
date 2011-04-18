@@ -4,6 +4,7 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..') unless $SETUP_LOADED
 require 'vapir-ie/win32ole'
 require 'unittests/ie_mock'
+gem 'test-unit'
 require 'test/unit'
 
 class TC_ie < Test::Unit::TestCase

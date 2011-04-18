@@ -2,6 +2,7 @@
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..', 'lib')
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..', '..', 'vapir-common', 'lib')
+gem 'test-unit'
 require 'test/unit'
 require 'vapir-ie'
 require 'vapir-ie/contrib/ie-new-process'

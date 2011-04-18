@@ -1,6 +1,7 @@
 # Not intended to be run as part of a larger suite.
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', '..') unless $SETUP_LOADED
+gem 'test-unit'
 require 'test/unit'
 require 'vapir'
 require 'vapir-ie/process'

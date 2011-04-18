@@ -113,7 +113,7 @@ module Vapir
         # of this browser, this process will handle the former, and we'll spawn another to do the
         # latter.
         require 'win32/process'
-        require 'vapir-common/win_window'
+        Vapir.require_winwindow
         rubyw_exe= File.join(Config::CONFIG['bindir'], 'rubyw')
         error_file_name=File.expand_path(File.join(File.dirname(__FILE__), 'scripts', 'select_file_error_status.marshal_dump'))
         select_file_script=File.expand_path(File.join(File.dirname(__FILE__), 'scripts', 'select_file.rb'))

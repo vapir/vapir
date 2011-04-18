@@ -410,7 +410,9 @@ module Vapir
     def flash(options={})
       if options.is_a?(Fixnum)
         options={:count => options}
-        Kernel.warn_with_caller "DEPRECATION WARNING: #{self.class.name}\#flash takes an options hash - passing a number is deprecated. Please use #{self.class.name}\#flash(:count => #{options[:count]})"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "DEPRECATION WARNING: #{self.class.name}\#flash takes an options hash - passing a number is deprecated. Please use #{self.class.name}\#flash(:count => #{options[:count]})"
+        end
       end
       options={:count => 10, :sleep => 0.05}.merge(options)
       #options=handle_options(options, {:count => 10, :sleep => 0.05}, [:color])

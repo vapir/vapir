@@ -307,19 +307,27 @@ module Vapir
     end
     module WatirContainerConfigCompatibility
       def type_keys
-        Kernel.warn_with_caller "WARNING: #type_keys is deprecated; please use the new config framework with config.type_keys"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #type_keys is deprecated; please use the new config framework with config.type_keys"
+        end
         config.type_keys
       end
       def type_keys=(arg) # deprecate
-        Kernel.warn_with_caller "WARNING: #type_keys= is deprecated; please use the new config framework with config.type_keys="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #type_keys= is deprecated; please use the new config framework with config.type_keys="
+        end
         config.type_keys= arg
       end
       def typingspeed
-        Kernel.warn_with_caller "WARNING: #typingspeed is deprecated; please use the new config framework with config.typing_interval"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #typingspeed is deprecated; please use the new config framework with config.typing_interval"
+        end
         config.typing_interval
       end
       def typingspeed=(arg)
-        Kernel.warn_with_caller "WARNING: #typingspeed= is deprecated; please use the new config framework with config.typing_interval="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #typingspeed= is deprecated; please use the new config framework with config.typing_interval="
+        end
         config.typing_interval=arg
       end
     end

@@ -108,7 +108,9 @@ module Vapir
 
   module WatirConfigCompatibility
     if defined?($FAST_SPEED)
-      Kernel.warn "WARNING: The $FAST_SPEED global is gone. Please use the new config framework, and unset that global to silence this warning."
+      if config.warn_deprecated
+        Kernel.warn "WARNING: The $FAST_SPEED global is gone. Please use the new config framework, and unset that global to silence this warning."
+      end
       Vapir.config.typing_interval=0
       Vapir.config.type_keys=false
     end
@@ -132,7 +134,9 @@ module Vapir
         if self==Vapir::Browser
           return browser_class.options
         end
-        Kernel.warn_with_caller "WARNING: #options is deprecated; please use the new config framework"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #options is deprecated; please use the new config framework"
+        end
         OptionsKeys.inject({}) do |hash, key|
           respond_to?(key) ? hash.merge(key => self.send(key)) : hash
         end.freeze
@@ -141,7 +145,9 @@ module Vapir
         if self==Vapir::Browser
           return browser_class.set_options options
         end
-        Kernel.warn_with_caller "WARNING: #set_options is deprecated; please use the new config framework"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #set_options is deprecated; please use the new config framework"
+        end
         
         unless (unknown_options = options.keys - OptionsKeys.select{|key| respond_to?("#{key}=")}).empty?
           raise ArgumentError, "unknown options: #{unknown_options.inspect}"
@@ -154,14 +160,18 @@ module Vapir
         if self==Vapir::Browser
           return browser_class.attach_timeout
         end
-        Kernel.warn_with_caller "WARNING: #attach_timeout is deprecated; please use the new config framework with config.attach_timeout"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #attach_timeout is deprecated; please use the new config framework with config.attach_timeout"
+        end
         config.attach_timeout
       end
       def attach_timeout=(timeout)
         if self==Vapir::Browser
           return browser_class.attach_timeout=timeout
         end
-        Kernel.warn_with_caller "WARNING: #attach_timeout= is deprecated; please use the new config framework with config.attach_timeout="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #attach_timeout= is deprecated; please use the new config framework with config.attach_timeout="
+        end
         config.attach_timeout = timeout
       end
     end
@@ -171,7 +181,9 @@ module Vapir
         if self==Vapir::Browser
           return browser_class.speed
         end
-        Kernel.warn_with_caller "WARNING: #speed is deprecated; please use the new config framework with config.typing_interval and config.type_keys"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #speed is deprecated; please use the new config framework with config.typing_interval and config.type_keys"
+        end
         Speeds.keys.detect do |speed_key|
           Speeds[speed_key].all? do |config_key, value|
             config[config_key] == value
@@ -182,7 +194,9 @@ module Vapir
         if self==Vapir::Browser
           return browser_class.speed=speed_key
         end
-        Kernel.warn_with_caller "WARNING: #speed= is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #speed= is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        end
         unless Speeds.key?(speed_key)
           raise ArgumentError, "Invalid speed: #{speed_key}. expected #{Speeds.keys.map{|k| k.inspect }.join(', ')}"
         end
@@ -194,14 +208,18 @@ module Vapir
         if self==Vapir::Browser
           return browser_class.set_slow_speed
         end
-        Kernel.warn_with_caller "WARNING: #set_slow_speed is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #set_slow_speed is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        end
         self.speed= :slow
       end
       def set_fast_speed
         if self==Vapir::Browser
           return browser_class.set_fast_speed
         end
-        Kernel.warn_with_caller "WARNING: #set_fast_speed is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #set_fast_speed is deprecated; please use the new config framework with config.typing_interval= and config.type_keys="
+        end
         self.speed= :fast
       end
     end

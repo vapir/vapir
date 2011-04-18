@@ -56,12 +56,16 @@ module Vapir
     
     module WatirInputElementConfigCompatibility
       def requires_typing
-        Kernel.warn_with_caller "WARNING: #requires_typing is deprecated; please use the new config framework with config.type_keys="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #requires_typing is deprecated; please use the new config framework with config.type_keys="
+        end
         config.type_keys = true
         self
       end
       def abhors_typing
-        Kernel.warn_with_caller "WARNING: #abhors_typing is deprecated; please use the new config framework with config.type_keys="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #abhors_typing is deprecated; please use the new config framework with config.type_keys="
+        end
         config.type_keys = false
         self
       end
@@ -857,7 +861,9 @@ module Vapir
   end
   module Table
     def self.create_from_element(container, element)
-      Kernel.warn_with_caller "DEPRECATION WARNING: create_from_element is deprecated. Please use (element).parent_table (element being the second argument to this function)"
+      if config.warn_deprecated
+        Kernel.warn_with_caller "DEPRECATION WARNING: create_from_element is deprecated. Please use (element).parent_table (element being the second argument to this function)"
+      end
       element.parent_table
     end
 

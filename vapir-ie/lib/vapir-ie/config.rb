@@ -9,7 +9,9 @@ module Vapir
   @base_configuration.create_update(:ie_launch_new_process, false, :validator => :boolean)
   @base_configuration.create_update(:browser_visible, true, :validator => :boolean)
   if defined?($HIDE_IE)
-    Kernel.warn "WARNING: The $HIDE_IE global is gone. Please use the new config framework, and unset that global to silence this warning."
+    if config.warn_deprecated
+      Kernel.warn "WARNING: The $HIDE_IE global is gone. Please use the new config framework, and unset that global to silence this warning."
+    end
     Vapir.config.browser_visible=false
   end
   @configurations.update_from_source

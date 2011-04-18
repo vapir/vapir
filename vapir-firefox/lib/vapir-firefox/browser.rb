@@ -143,11 +143,15 @@ module Vapir
     def initialize(options = {})
       if(options.kind_of?(Integer))
         options = {:timeout => options}
-        Kernel.warn_with_caller "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:timeout => #{options[:timeout]})"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "DEPRECATION WARNING: #{self.class.name}.new takes an options hash - passing a number is deprecated. Please use #{self.class.name}.new(:timeout => #{options[:timeout]})"
+        end
       end
       options = options_from_config(options, {:timeout => :attach_timeout, :binary_path => :firefox_binary_path, :profile => :firefox_profile, :wait => :wait}, [:attach, :goto, :wait_time])
       if options[:wait_time]
-        Kernel.warn_with_caller "DEPRECATION WARNING: the :wait_time option for #{self.class.name}.new has been renamed to :timeout for consistency. Please use #{self.class.name}.new(:timeout => #{options[:wait_time]})"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "DEPRECATION WARNING: the :wait_time option for #{self.class.name}.new has been renamed to :timeout for consistency. Please use #{self.class.name}.new(:timeout => #{options[:wait_time]})"
+        end
         options[:timeout] = options[:wait_time]
       end
       if options[:binary_path]

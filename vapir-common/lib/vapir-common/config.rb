@@ -309,6 +309,7 @@ module Vapir
     config.create_update(:wait, true, :validator => :boolean)
     config.create_update(:type_keys, false, :validator => :boolean)
     config.create_update(:typing_interval, 0, :validator => :numeric)
+    config.create_update(:warn_deprecated, true, :validator => :boolean)
   end)
   
   # adapted from rubygems.rb

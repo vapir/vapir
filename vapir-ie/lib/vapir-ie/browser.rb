@@ -368,7 +368,9 @@ module Vapir
       unless options.is_a?(Hash)
         dc = options
         options = {:dc => dc}
-        Kernel.warn_with_caller("WARNING: The API for #screen_capture has changed and the last argument is now an options hash. Please change calls to this method to specify :dc => #{dc.inspect}")
+        if config.warn_deprecated
+          Kernel.warn_with_caller("WARNING: The API for #screen_capture has changed and the last argument is now an options hash. Please change calls to this method to specify :dc => #{dc.inspect}")
+        end
       end
       screen_capture_win_window(filename, options)
     end
@@ -746,11 +748,15 @@ module Vapir
   module WatirConfigCompatibility
     module Visible
       def visible
-        Kernel.warn_with_caller "WARNING: #visible is deprecated; please use the new config framework with config.browser_visible"
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #visible is deprecated; please use the new config framework with config.browser_visible"
+        end
         config.browser_visible
       end
       def visible= visibility
-        Kernel.warn_with_caller "WARNING: #visible= is deprecated; please use the new config framework with config.browser_visible="
+        if config.warn_deprecated
+          Kernel.warn_with_caller "WARNING: #visible= is deprecated; please use the new config framework with config.browser_visible="
+        end
         config.browser_visible=visibility
       end
     end

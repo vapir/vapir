@@ -1,5 +1,5 @@
 module Vapir
   module Common
-    VERSION = '0.0.0'
+    VERSION = '1.8.0'
   end
 end

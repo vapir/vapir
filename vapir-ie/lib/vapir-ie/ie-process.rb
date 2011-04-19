@@ -41,7 +41,7 @@ module Vapir
         Vapir.require_winwindow
         ::Waiter.try_for(options[:timeout], :exception => RuntimeError.new("Could not find a browser for process #{self.inspect}")) do
           Vapir::IE.browser_objects.detect do |browser_object|
-            @process_id == WinWindow.new(browser_object.hwnd).process_id
+            @process_id == WinWindow.new(Vapir::IE.fix_win32ole_hwnd(browser_object.hwnd)).process_id
           end
         end
       end

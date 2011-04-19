@@ -109,11 +109,12 @@ module Vapir
           @browser_object = what
         else
           orig_how=how
-          hows={ :title => proc{|bo| bo.document.title },
-                 :URL => proc{|bo| bo.locationURL },
-                 :name => proc{|bo| bo.document.parentWindow.name },
-                 :HWND => proc{|bo| bo.HWND },
-               }
+          hows={
+            :title => proc{|bo| bo.document.title },
+            :URL => proc{|bo| bo.locationURL },
+            :name => proc{|bo| bo.document.parentWindow.name },
+            :HWND => proc{|bo| Vapir::IE.fix_win32ole_hwnd(bo.HWND) },
+          }
           how=hows.keys.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
           raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how
           @browser_object = ::Waiter.try_for(options[:timeout], :exception => NoMatchingWindowFoundException.new("Unable to locate a window with #{how} of #{what}")) do
@@ -165,7 +166,14 @@ module Vapir
     # Return the window handle of this browser
     def hwnd
       assert_exists
-      @hwnd ||= @browser_object.hwnd
+      @hwnd ||= Vapir::IE.fix_win32ole_hwnd(@browser_object.HWND)
+    end
+    
+    # win32ole's #HWND method casts to signed somewhere along its way, so returns 
+    # a negative number. this is wrong, WinWindow will reject it (correctly), so we 
+    # need to fix. 
+    def self.fix_win32ole_hwnd(win32ole_hwnd)
+      win32ole_hwnd < 0 ? win32ole_hwnd % 2**32 : win32ole_hwnd
     end
 
     # returns the process id of this browser 

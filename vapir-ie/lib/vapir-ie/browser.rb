@@ -179,8 +179,7 @@ module Vapir
       # todo: drop win32api; use ffi 
       require 'Win32API'
       right_to_terminate_process = 1
-      handle = Win32API.new('kernel32.dll', 'OpenProcess', 'lil', 'l').
-      call(right_to_terminate_process, 0, process_id)
+      handle = Win32API.new('kernel32.dll', 'OpenProcess', 'lil', 'l').call(right_to_terminate_process, 0, process_id)
       Win32API.new('kernel32.dll', 'TerminateProcess', 'll', 'l').call(handle, 0)
     end
     

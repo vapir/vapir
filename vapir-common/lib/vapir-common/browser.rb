@@ -143,7 +143,7 @@ module Vapir
       end
       def set_options(options)
         if self==Vapir::Browser
-          return browser_class.set_options options
+          return browser_class.set_options(options)
         end
         if config.warn_deprecated
           Kernel.warn_with_caller "WARNING: #set_options is deprecated; please use the new config framework"

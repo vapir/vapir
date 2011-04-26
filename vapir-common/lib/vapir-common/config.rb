@@ -5,6 +5,7 @@ module Vapir
     class Error < StandardError; end
     class BadKeyError < Error; end
     class NoValueError < Error; end
+    class InvalidValueError < Error; end
     
     # represents a valid option on a Configuration. consists of a key and criteria
     # for which a value is valid for that key. 
@@ -34,7 +35,7 @@ module Vapir
           when 'false', false
             false
           else
-            raise ArgumentError, "value should look like a boolean for key #{key}; instead got #{value.inspect}"
+            raise InvalidValueError, "value should look like a boolean for key #{key}; instead got #{value.inspect}"
           end
         when :numeric
           case value
@@ -44,10 +45,10 @@ module Vapir
             begin
               Float(value)
             rescue ArgumentError
-              raise ArgumentError, "value should look like a number for key #{key}; instead got #{value.inspect}"
+              raise InvalidValueError, "value should look like a number for key #{key}; instead got #{value.inspect}"
             end
           else
-            raise ArgumentError, "value should look like a number for key #{key}; instead got #{value.inspect}"
+            raise InvalidValueError, "value should look like a number for key #{key}; instead got #{value.inspect}"
           end
         else
           raise ArgumentError, "invalid validator given: #{@validotor.inspect}\nvalidator should be nil for unspecified, a Proc, or a symbol indicating a known validator type"

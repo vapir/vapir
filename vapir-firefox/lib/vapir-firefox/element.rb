@@ -15,7 +15,7 @@ module Vapir
       @firefox_socket||= (extra[:container].firefox_socket if extra[:container])
       @firefox_socket||= (what.firefox_socket if how==:element_object)
       unless @firefox_socket
-        raise RuntimeError, "No JSSH socket given! Firefox elements need this (specified in the :firefox_socket key of the extra hash)"
+        raise RuntimeError, "No firefox socket given! Firefox elements need this (specified in the :firefox_socket key of the extra hash)"
       end
       default_initialize(how, what, extra)
     end
@@ -84,7 +84,7 @@ module Vapir
         :right => 2,
       }
 
-    # returns an object representing an event (a jssh object) 
+    # returns an object representing an event (a javascript object) 
     def create_event_object(event_type, options)
       event_type = event_type.to_s.downcase # in case event_type was given as a symbol
       if event_type =~ /\Aon(.*)\z/i

@@ -119,7 +119,7 @@ module Vapir
       end
       @@firefox_socket
     end
-    # unsets a the current jssh socket 
+    # unsets a the current firefox socket 
     def self.uninitialize_firefox_socket # :nodoc:
       @@firefox_socket=nil
     end
@@ -314,7 +314,7 @@ module Vapir
       @error_checkers = []
     end
 
-    #   Sets the document, window and browser variables to point to correct object in JSSh.
+    #   Sets the document, window and browser variables to point to correct objects.
     def set_browser_document
       unless browser_window_object
         raise "Window must be set (using open_window or attach) before the browser document can be set!"
@@ -449,7 +449,7 @@ module Vapir
       #
       # quit_browser(:force => true) will force the browser to quit. 
       #
-      # if there is no existing connection to JSSH, this will attempt to create one. If that fails, JsshUnableToStart will be raised. 
+      # if there is no existing connection to firefox, this will attempt to create one. If that fails, JsshUnableToStart will be raised. 
       def quit_browser(options={})
         firefox_socket(:reset_if_dead => true).assert_socket
         options=handle_options(options, :force => false)
@@ -629,7 +629,7 @@ module Vapir
       end
     end
     
-    # return the window jssh object for the browser window with the given title or url.
+    # return the window javascript object for the browser window with the given title or url.
     #   how - :url, :title, or :name
     #   what - string or regexp
     #

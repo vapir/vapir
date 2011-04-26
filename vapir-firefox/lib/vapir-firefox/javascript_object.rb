@@ -48,10 +48,10 @@ class JavascriptObject
   # #define_methods! 
   #
   # I find this useful to set to true in irb, for tab-completion of methods. it may cause
-  # jssh operations to be considerably slower, however. 
+  # operations to be considerably slower, however. 
   #
   # for always setting this in irb, I set this beforehand, overriding the default, 
-  # by including in my .irbrc the following (which doesn't require firefox_socket.rb to be
+  # by including in my .irbrc the following (which doesn't require this file to be
   # required):
   #
   #  class JavascriptObject

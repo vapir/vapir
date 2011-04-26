@@ -142,7 +142,7 @@ module Vapir
         raise ArgumentError, "specifiers_list should be a list of Hashes!"
       end
       if Object.const_defined?('JavascriptObject') && (candidates.is_a?(JavascriptObject) || (candidates.length != 0 && candidates.all?{|c| c.is_a?(JavascriptObject)}))
-        # optimize for JSSH by moving code to the other side of the socket, rather than talking across it a whole lot
+        # optimize for firefox by moving code to the other side of the socket, rather than talking across it a whole lot
         # this javascript should be exactly the same as the ruby in the else (minus WIN32OLE optimization) - 
         # just written in javascript instead of ruby. 
         #

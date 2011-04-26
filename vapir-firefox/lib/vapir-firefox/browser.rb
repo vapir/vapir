@@ -101,7 +101,6 @@ module Vapir
     def self.initialize_firefox_socket # :nodoc:
       uninitialize_firefox_socket
       @@firefox_socket=JsshSocket.new
-      @@firewatir_jssh_objects=@@firefox_socket.object("Vapir").assign({})
       @@firefox_socket
     end
     # returns a connected JsshSocket. pass :reset_if_dead => true if you suspect an existing 
@@ -123,7 +122,6 @@ module Vapir
     # unsets a the current jssh socket 
     def self.uninitialize_firefox_socket # :nodoc:
       @@firefox_socket=nil
-      @@firewatir_jssh_objects=nil
     end
     def firefox_socket(options=nil)
       options ? self.class.firefox_socket(options) : @@firefox_socket
@@ -187,7 +185,7 @@ module Vapir
           end
         end
       end
-      @browser_jssh_objects = firefox_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
+      @browser_objects = firefox_socket.object('{}').store_rand_temp
       
       @pid = begin
         self.pid
@@ -321,7 +319,7 @@ module Vapir
       unless browser_window_object
         raise "Window must be set (using open_window or attach) before the browser document can be set!"
       end
-      @browser_object=@browser_jssh_objects[:browser]= ::Waiter.try_for(2, :exception => Vapir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
+      @browser_object=@browser_objects[:browser]= ::Waiter.try_for(2, :exception => Vapir::Exception::NoMatchingWindowFoundException.new("The browser could not be found on the specified Firefox window!")) do
         if browser_window_object.respond_to?(:getBrowser)
           browser_window_object.getBrowser
         end
@@ -333,19 +331,19 @@ module Vapir
       @content_window_object=browser_object.contentWindow
         # note that browser_window_object.content is the same thing, but simpler to refer to stuff on browser_object since that is updated by the nsIWebProgressListener below
       @body_object=document_object.body
-      @browser_jssh_objects[:requests_in_progress]=[]
-      @requests_in_progress=@browser_jssh_objects[:requests_in_progress].to_array
-      @browser_jssh_objects[:unmatched_stopped_requests_count]=0
+      @browser_objects[:requests_in_progress]=[]
+      @requests_in_progress=@browser_objects[:requests_in_progress].to_array
+      @browser_objects[:unmatched_stopped_requests_count]=0
       
-      @updated_at_epoch_ms=@browser_jssh_objects.attr(:updated_at_epoch_ms).assign_expr('new Date().getTime()')
+      @updated_at_epoch_ms=@browser_objects.attr(:updated_at_epoch_ms).assign_expr('new Date().getTime()')
       @updated_at_offset=Time.now.to_f-firefox_socket.value_json('new Date().getTime()')/1000.0
     
       # Add eventlistener for browser window so that we can reset the document back whenever there is redirect
       # or browser loads on its own after some time. Useful when you are searching for flight results etc and
       # page goes to search page after that it goes automatically to results page.
       # Details : http://zenit.senecac.on.ca/wiki/index.php/Mozilla.dev.tech.xul#What_is_an_example_of_addProgressListener.3F
-      @browser_jssh_objects[:listener_object]={}
-      listener_object=@browser_jssh_objects[:listener_object]
+      @browser_objects[:listener_object]={}
+      listener_object=@browser_objects[:listener_object]
       listener_object[:QueryInterface]=firefox_socket.function(:aIID) do %Q(
            if(aIID.equals(Components.interfaces.nsIWebProgressListener) || aIID.equals(Components.interfaces.nsISupportsWeakReference) || aIID.equals(Components.interfaces.nsISupports))
            { return this;
@@ -372,7 +370,7 @@ module Vapir
                }
              }
              if(!matched)
-             { #{@browser_jssh_objects.attr(:unmatched_stopped_requests_count).ref}++; //.push({webProgress: aWebProgress, request: aRequest, stateFlags: aStateFlags, status: aStatus});
+             { #{@browser_objects.attr(:unmatched_stopped_requests_count).ref}++; //.push({webProgress: aWebProgress, request: aRequest, stateFlags: aStateFlags, status: aStatus});
                // count any stop requests that we fail to match so that we can compare that count to the number of unmatched start requests. 
              }
            }
@@ -590,7 +588,7 @@ module Vapir
       watcher=firefox_socket.Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(firefox_socket.Components.interfaces.nsIWindowWatcher)
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
       
-      @browser_window_object=@browser_jssh_objects[:browser_window]=watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'resizable', nil)
+      @browser_window_object=@browser_objects[:browser_window]=watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'resizable', nil)
       return @browser_window_object
     end
     private :open_window
@@ -728,7 +726,7 @@ module Vapir
         end
       end
       ::Waiter.try_for(options[:timeout] - (Time.now - started), :exception => "Waiting for requests in progress to complete timed out.") do
-        @requests_in_progress.length<=@browser_jssh_objects[:unmatched_stopped_requests_count]
+        @requests_in_progress.length<=@browser_objects[:unmatched_stopped_requests_count]
       end
       run_error_checks
       return self

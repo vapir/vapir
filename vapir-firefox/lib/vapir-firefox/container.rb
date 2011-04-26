@@ -80,7 +80,7 @@ module Vapir
       end
     end
 
-    # returns a JsshObject representing an array (in javascript) of the visible text nodes of this container. same as
+    # returns a JavascriptObject representing an array (in javascript) of the visible text nodes of this container. same as
     # the Vapir::Common #visible_text_nodes implementation, but much much faster. 
     def visible_text_nodes
       text_nodes = jssh_socket.call_function(:element_object => containing_object, :document_object => document_object) do %Q(

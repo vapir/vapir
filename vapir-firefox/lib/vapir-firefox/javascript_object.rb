@@ -1,8 +1,8 @@
 # represents a javascript object in ruby. 
-class JsshObject
-  # the reference to the javascript object this JsshObject represents 
+class JavascriptObject
+  # the reference to the javascript object this JavascriptObject represents 
   attr_reader :ref
-  # the JsshSocket this JsshObject is on 
+  # the JsshSocket this JavascriptObject is on 
   attr_reader :jssh_socket
   # whether this represents the result of a function call (if it does, then JsshSocket#typeof won't be called on it)
   attr_reader :function_result
@@ -16,7 +16,7 @@ class JsshObject
 # :startdoc:
 
   public
-  # initializes a JsshObject with a string of javascript containing a reference to
+  # initializes a JavascriptObject with a string of javascript containing a reference to
   # the object, and a  JsshSocket that the object is defined on. 
   def initialize(ref, jssh_socket, other={})
     other={:debug_name => ref, :function_result => false}.merge(other)
@@ -35,7 +35,7 @@ class JsshObject
     jssh_socket.value_json(ref, :error_on_undefined => !function_result)
   end
   
-  # whether JsshObject shall try to dynamically define methods on initialization, using 
+  # whether JavascriptObject shall try to dynamically define methods on initialization, using 
   # #define_methods! default is false. 
   def self.always_define_methods
     unless class_variable_defined?('@@always_define_methods')
@@ -44,7 +44,7 @@ class JsshObject
     end
     @@always_define_methods
   end
-  # set whether JsshObject shall try to dynamically define methods in #val_or_object, using
+  # set whether JavascriptObject shall try to dynamically define methods in #val_or_object, using
   # #define_methods! 
   #
   # I find this useful to set to true in irb, for tab-completion of methods. it may cause
@@ -54,7 +54,7 @@ class JsshObject
   # by including in my .irbrc the following (which doesn't require jssh_socket.rb to be
   # required):
   #
-  #  class JsshObject
+  #  class JavascriptObject
   #    @@always_define_methods=true
   #  end
   def self.always_define_methods=(val)
@@ -82,7 +82,7 @@ class JsshObject
   end
   
   # calls the javascript instanceof operator on this object and the given interface (expected to 
-  # be a JsshObject) note that the javascript instanceof operator is not to be confused with 
+  # be a JavascriptObject) note that the javascript instanceof operator is not to be confused with 
   # ruby's #instance_of? method - this takes a javascript interface; #instance_of? takes a ruby 
   # module.
   # 
@@ -107,7 +107,7 @@ class JsshObject
   # returns the type of object that is reported by the javascript toString() method, which
   # returns such as "[object Object]" or "[object XPCNativeWrapper [object HTMLDocument]]"
   # This method returns 'Object' or 'XPCNativeWrapper [object HTMLDocument]' respectively.
-  # Raises an error if this JsshObject points to something other than a javascript 'object'
+  # Raises an error if this JavascriptObject points to something other than a javascript 'object'
   # type ('function' or 'number' or whatever)
   #
   # this isn't used, doesn't seem useful, and may go away in the future. 
@@ -129,7 +129,7 @@ class JsshObject
   # 'boolean','number','string','null'
   #
   # otherwise - if the type is something else (probably 'function' or 'object'; or maybe something else)
-  # then this JsshObject is returned. 
+  # then this JavascriptObject is returned. 
   # 
   # if the object this refers to is undefined in javascript, then behavor depends on the options 
   # hash. if :error_on_undefined is true, then nil is returned; otherwise JsshUndefinedValueError 
@@ -138,7 +138,7 @@ class JsshObject
   # if this is a function result, this will store the result in a temporary location (thereby
   # calling the function to acquire the result) before making the above decision. 
   #
-  # this method also calls #define_methods! on this if JsshObject.always_define_methods is true. 
+  # this method also calls #define_methods! on this if JavascriptObject.always_define_methods is true. 
   # this can be overridden in the options hash using the :define_methods key (true or false). 
   def val_or_object(options={})
     options={:error_on_undefined=>true, :define_methods => self.class.always_define_methods}.merge(options)
@@ -188,7 +188,7 @@ class JsshObject
     end
   end
   
-  # returns a JsshObject representing the given attribute. Checks the type, and if it is a 
+  # returns a JavascriptObject representing the given attribute. Checks the type, and if it is a 
   # function, calls the function with any arguments given (which are converted to javascript) 
   # and returns the return value of the function (or nil if the function returns undefined). 
   #
@@ -203,18 +203,18 @@ class JsshObject
     attr(attribute).assign_or_call_or_val_or_object_by_suffix('?', *args)
   end
   
-  # returns a JsshObject referencing the given attribute of this object 
+  # returns a JavascriptObject referencing the given attribute of this object 
   def attr(attribute, options={})
     unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
       raise JsshSyntaxError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
     end
-    JsshObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
+    JavascriptObject.new("#{ref}.#{attribute}", jssh_socket, :debug_name => "#{debug_name}.#{attribute}")
   end
 
   # assigns the given ruby value (converted to javascript) to the reference
   # for this object. returns self. 
   def assign(val)
-    @debug_name="(#{debug_name}=#{val.is_a?(JsshObject) ? val.debug_name : JsshSocket.to_javascript(val)})"
+    @debug_name="(#{debug_name}=#{val.is_a?(JavascriptObject) ? val.debug_name : JsshSocket.to_javascript(val)})"
     result=assign_expr(JsshSocket.to_javascript(val))
 #    logger.info { "#{self.class} assigned: #{debug_name} (type #{type})" }
     result
@@ -230,13 +230,13 @@ class JsshObject
     self
   end
   
-  # returns a JsshObject for the result of calling the function represented by this object, passing 
+  # returns a JavascriptObject for the result of calling the function represented by this object, passing 
   # the given arguments, which are converted to javascript. if this is not a function, javascript will raise an error. 
   def pass(*args)
-    JsshObject.new("#{ref}(#{args.map{|arg| JsshSocket.to_javascript(arg)}.join(', ')})", jssh_socket, :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JsshObject) ? arg.debug_name : JsshSocket.to_javascript(arg)}.join(', ')})")
+    JavascriptObject.new("#{ref}(#{args.map{|arg| JsshSocket.to_javascript(arg)}.join(', ')})", jssh_socket, :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JavascriptObject) ? arg.debug_name : JsshSocket.to_javascript(arg)}.join(', ')})")
   end
   
-  # returns the value (via JsshSocket#value_json) or a JsshObject (see #val_or_object) of the return 
+  # returns the value (via JsshSocket#value_json) or a JavascriptObject (see #val_or_object) of the return 
   # value of this function (assumes this object is a function) passing it the given arguments (which 
   # are converted to javascript). 
   #
@@ -249,28 +249,28 @@ class JsshObject
   # instance passing the given arguments. 
   #
   #  date_class = jssh_socket.object('Date')
-  #  => #<JsshObject:0x0118eee8 type=function, debug_name=Date>
+  #  => #<JavascriptObject:0x0118eee8 type=function, debug_name=Date>
   #  date = date_class.new
-  #  => #<JsshObject:0x01188a84 type=object, debug_name=new Date()>
+  #  => #<JavascriptObject:0x01188a84 type=object, debug_name=new Date()>
   #  date.getFullYear
   #  => 2010
   #  date_class.new('october 4, 1978').getFullYear
   #  => 1978
   def new(*args)
-    JsshObject.new("new #{ref}", jssh_socket, :debug_name => "new #{debug_name}").call(*args)
+    JavascriptObject.new("new #{ref}", jssh_socket, :debug_name => "new #{debug_name}").call(*args)
   end
 
-  # sets the given javascript variable to this object, and returns a JsshObject referring
+  # sets the given javascript variable to this object, and returns a JavascriptObject referring
   # to the variable. 
   #
   #  >> foo=document.getElementById('guser').store('foo')
-  #  => #<JsshObject:0x2dff870 @ref="foo" ...>
+  #  => #<JavascriptObject:0x2dff870 @ref="foo" ...>
   #  >> foo.tagName
   #  => "DIV"
   #
   # the second argument is only used internally and shouldn't be used. 
   def store(js_variable, somewhere_meaningful=true)
-    stored=JsshObject.new(js_variable, jssh_socket, :function_result => false, :debug_name => somewhere_meaningful ? "(#{js_variable}=#{debug_name})" : debug_name)
+    stored=JavascriptObject.new(js_variable, jssh_socket, :function_result => false, :debug_name => somewhere_meaningful ? "(#{js_variable}=#{debug_name})" : debug_name)
     stored.assign_expr(self.ref)
     stored
   end
@@ -278,13 +278,13 @@ class JsshObject
   private
   # takes a block which, when yielded a random key, should result in a random reference. this checks
   # that the reference is not already in use and stores this object in that reference, and returns 
-  # a JsshObject referring to the stored object. 
+  # a JavascriptObject referring to the stored object. 
   def store_rand_named(&name_proc)
     base=36
     length=32
     begin
       name=name_proc.call(("%#{length}s"%rand(base**length).to_s(base)).tr(' ','0'))
-    end #while JsshObject.new(name,jssh_socket).type!='undefined'
+    end #while JavascriptObject.new(name,jssh_socket).type!='undefined'
     # okay, more than one iteration is ridiculously unlikely, sure, but just to be safe. 
     store(name, false)
   end
@@ -292,7 +292,7 @@ class JsshObject
   
   # stores this object in a random key of the given object and returns the stored object. 
   def store_rand_object_key(object)
-    raise ArgumentError("Object is not a JsshObject: got #{object.inspect}") unless object.is_a?(JsshObject)
+    raise ArgumentError("Object is not a JavascriptObject: got #{object.inspect}") unless object.is_a?(JavascriptObject)
     store_rand_named do |r|
       object.sub(r).ref
     end
@@ -303,15 +303,15 @@ class JsshObject
     store_rand_object_key(jssh_socket.temp_object)
   end
 
-  # returns a JsshObject referring to a subscript of this object, specified as a ruby object converted to 
+  # returns a JavascriptObject referring to a subscript of this object, specified as a ruby object converted to 
   # javascript. 
   #
-  # similar to [], but [] calls #val_or_object; this always returns a JsshObject. 
+  # similar to [], but [] calls #val_or_object; this always returns a JavascriptObject. 
   def sub(key)
-    JsshObject.new("#{ref}[#{JsshSocket.to_javascript(key)}]", jssh_socket, :debug_name => "#{debug_name}[#{key.is_a?(JsshObject) ? key.debug_name : JsshSocket.to_javascript(key)}]")
+    JavascriptObject.new("#{ref}[#{JsshSocket.to_javascript(key)}]", jssh_socket, :debug_name => "#{debug_name}[#{key.is_a?(JavascriptObject) ? key.debug_name : JsshSocket.to_javascript(key)}]")
   end
 
-  # returns a JsshObject referring to a subscript of this object, or a value if it is simple (see #val_or_object)
+  # returns a JavascriptObject referring to a subscript of this object, or a value if it is simple (see #val_or_object)
   #
   # subscript is specified as ruby (converted to javascript). 
   def [](key)
@@ -328,7 +328,7 @@ class JsshObject
   #
   # the operator should be string of javascript; the operand will be converted to javascript. 
   def binary_operator(operator, operand)
-    JsshObject.new("(#{ref}#{operator}#{JsshSocket.to_javascript(operand)})", jssh_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JsshObject) ? operand.debug_name : JsshSocket.to_javascript(operand)})").val_or_object
+    JavascriptObject.new("(#{ref}#{operator}#{JsshSocket.to_javascript(operand)})", jssh_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JavascriptObject) ? operand.debug_name : JsshSocket.to_javascript(operand)})").val_or_object
   end
   # addition, using the + operator in javascript 
   def +(operand)
@@ -352,12 +352,12 @@ class JsshObject
   end
   # returns true if the javascript object represented by this is equal to the given operand. 
   def ==(operand)
-    operand.is_a?(JsshObject) && binary_operator('==', operand)
+    operand.is_a?(JavascriptObject) && binary_operator('==', operand)
   end
   # javascript triple-equals (===) operator. very different from ruby's tripl-equals operator - 
   # in javascript this means "really really equal"; in ruby it means "sort of equal-ish" 
   def triple_equals(operand)
-    operand.is_a?(JsshObject) && binary_operator('===', operand)
+    operand.is_a?(JavascriptObject) && binary_operator('===', operand)
   end
   # inequality, using the > operator in javascript 
   def >(operand)
@@ -393,7 +393,7 @@ class JsshObject
   # value. 
   #
   # If the method ends with a bang (!), then it will attempt to get the value of the reference, 
-  # using JsshObject#val, which converts the javascript to json and then to ruby. For simple types 
+  # using JavascriptObject#val, which converts the javascript to json and then to ruby. For simple types 
   # (null, string, boolean, number), this is what gets returned anyway. With other types (usually 
   # the 'object' type), attempting to convert to json can raise errors or cause infinite 
   # recursion, so is not attempted. but if you have an object or an array that you know you can 
@@ -402,10 +402,10 @@ class JsshObject
   # If the method ends with a question mark (?), then if the attribute is undefined, no error is 
   # raised (as usually happens) - instead nil is just returned. 
   #
-  # otherwise, method_missing behaves like #invoke, and returns a JsshObject, a string, a boolean, 
+  # otherwise, method_missing behaves like #invoke, and returns a JavascriptObject, a string, a boolean, 
   # a number, or null. 
   #
-  # Since method_missing returns a JsshObject for javascript objects, this means that you can 
+  # Since method_missing returns a JavascriptObject for javascript objects, this means that you can 
   # string together method_missings and the result looks rather like javascript.
   #--
   # $A and $H, used below, are methods of the Prototype javascript library, which add nice functional 
@@ -413,9 +413,9 @@ class JsshObject
   # You can use these methods with method_missing just like any other:
   #
   #  >> js_hash=jssh_socket.object('$H')
-  #  => #<JsshObject:0x2beb598 @ref="$H" ...>
+  #  => #<JavascriptObject:0x2beb598 @ref="$H" ...>
   #  >> js_arr=jssh_socket.object('$A')
-  #  => #<JsshObject:0x2be40e0 @ref="$A" ...>
+  #  => #<JavascriptObject:0x2be40e0 @ref="$A" ...>
   # 
   #  >> js_arr.call(document.body.childNodes).pluck! :tagName
   #  => ["TEXTAREA", "DIV", "NOSCRIPT", "DIV", "DIV", "DIV", "BR", "TABLE", "DIV", "DIV", "DIV", "TEXTAREA", "DIV", "DIV", "SCRIPT"]
@@ -495,17 +495,17 @@ class JsshObject
   def to_js_hash_safe
     jssh_socket.object('$_H').call(self)
   end
-  # returns a JsshArray representing this object 
+  # returns a JavascriptArray representing this object 
   def to_array
-    JsshArray.new(self.ref, self.jssh_socket, :debug_name => debug_name)
+    JavascriptArray.new(self.ref, self.jssh_socket, :debug_name => debug_name)
   end
-  # returns a JsshHash representing this object 
+  # returns a JavascriptHash representing this object 
   def to_hash
-    JsshHash.new(self.ref, self.jssh_socket, :debug_name => debug_name)
+    JavascriptHash.new(self.ref, self.jssh_socket, :debug_name => debug_name)
   end
-  # returns a JsshDOMNode representing this object 
+  # returns a JavascriptDOMNode representing this object 
   def to_dom
-    JsshDOMNode.new(self.ref, self.jssh_socket, :debug_name => debug_name)
+    JavascriptDOMNode.new(self.ref, self.jssh_socket, :debug_name => debug_name)
   end
 
   # returns a ruby Hash. each key/value pair of this object
@@ -519,7 +519,7 @@ class JsshObject
   # * :recurse => a number or nil. if it's a number, then this will recurse to that
   #   depth. If it's nil, this won't recurse at all. 
   #
-  # below the specified recursion level, this will return this JsshObject rather than recursing
+  # below the specified recursion level, this will return this JavascriptObject rather than recursing
   # down into it. 
   #
   # this function isn't expected to raise any errors, since encountered errors are set as 
@@ -540,7 +540,7 @@ class JsshObject
       rescue JsshError
         $!
       end
-      hash[key]=if val.is_a?(JsshObject)
+      hash[key]=if val.is_a?(JavascriptObject)
         val.to_ruby_hash(next_options)
       else
         val
@@ -573,11 +573,11 @@ class JsshObject
   end
 end
 
-# represents a node on the DOM. not substantially from JsshObject, but #inspect 
+# represents a node on the DOM. not substantially from JavascriptObject, but #inspect 
 # is more informative, and #dump is defined for extensive debug info. 
 #
 # This class is mostly useful for debug, not used anywhere in production at the moment. 
-class JsshDOMNode < JsshObject
+class JavascriptDOMNode < JavascriptObject
   def inspect_stuff # :nodoc:
     [:nodeName, :nodeType, :nodeValue, :tagName, :textContent, :id, :name, :value, :type, :className, :hidden].map do |attrn|
       attr=attr(attrn)
@@ -627,14 +627,14 @@ end
 # this class represents a javascript array - that is, a javascript object that has a 'length' 
 # attribute which is a non-negative integer, and returns elements at each subscript from 0
 # to less than than that length. 
-class JsshArray < JsshObject
+class JavascriptArray < JavascriptObject
   # yields the element at each subscript of this javascript array, from 0 to self.length. 
   def each
     length=self.length
     raise JsshError, "length #{length.inspect} is not a non-negative integer on #{self.ref}" unless length.is_a?(Integer) && length >= 0
     for i in 0...length
       element=self[i]
-      if element.is_a?(JsshObject)
+      if element.is_a?(JavascriptObject)
         # yield a more permanent reference than the array subscript 
         element=element.store_rand_temp
       end
@@ -645,7 +645,7 @@ class JsshArray < JsshObject
 end
 
 # this class represents a hash, or 'object' type in javascript. 
-class JsshHash < JsshObject
+class JavascriptHash < JavascriptObject
   # returns an array of keys of this javascript object 
   def keys
     @keys=jssh_socket.call_function(:obj => self){ "var keys=[]; for(var key in obj) { keys.push(key); } return keys;" }.val

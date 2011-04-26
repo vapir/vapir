@@ -338,7 +338,7 @@ class JsshSocket
       "["+object.map{|element| to_javascript(element) }.join(", ")+"]"
     elsif object.is_a?(Hash)
       "{"+object.map{|(key, value)| to_javascript(key)+": "+to_javascript(value) }.join(", ")+"}"
-    elsif object.is_a?(JsshObject)
+    elsif object.is_a?(JavascriptObject)
       object.ref
     elsif [true, false, nil].include?(object) || [Integer, Float, String, Symbol].any?{|klass| object.is_a?(klass) }
       object.to_json
@@ -567,19 +567,19 @@ class JsshSocket
     end
   end
 
-  # takes a reference and returns a new JsshObject representing that reference on this socket. 
+  # takes a reference and returns a new JavascriptObject representing that reference on this socket. 
   # ref should be a string representing a reference in javascript. 
   def object(ref, other={})
-    JsshObject.new(ref, self, {:debug_name => ref}.merge(other))
+    JavascriptObject.new(ref, self, {:debug_name => ref}.merge(other))
   end
-  # takes a reference and returns a new JsshObject representing that reference on this socket, 
+  # takes a reference and returns a new JavascriptObject representing that reference on this socket, 
   # stored on this socket's temporary object. 
   def object_in_temp(ref, other={})
     object(ref, other).store_rand_temp
   end
   
   # represents the root of the space seen by the JsshSocket, and implements #method_missing to 
-  # return objects at the root level in a similar manner to JsshObject's #method_missing. 
+  # return objects at the root level in a similar manner to JavascriptObject's #method_missing. 
   #
   # for example, jssh_socket.root.Components will return the top-level Components object; 
   # jssh_socket.root.ctypes will return the ctypes top-level object if that is defined, or error 
@@ -587,20 +587,20 @@ class JsshSocket
   #
   # if the object is a function, then it will be called with any given arguments:
   #  >> jssh_socket.root.getWindows
-  #  => #<JsshObject:0x0254d150 type=object, debug_name=getWindows()>
+  #  => #<JavascriptObject:0x0254d150 type=object, debug_name=getWindows()>
   #  >> jssh_socket.root.eval("3+2")
   #  => 5
   #
   # If any arguments are given to an object that is not a function, you will get an error: 
   #  >> jssh_socket.root.Components('wat')
-  #  ArgumentError: Cannot pass arguments to Javascript object #<JsshObject:0x02545978 type=object, debug_name=Components>
+  #  ArgumentError: Cannot pass arguments to Javascript object #<JavascriptObject:0x02545978 type=object, debug_name=Components>
   #
   # special behaviors exist for the suffixes !, ?, and =. 
   #
   # - '?' suffix returns nil if the object does not exist, rather than raising an exception. for
   #   example:
   #    >> jssh_socket.root.foo
-  #    JsshUndefinedValueError: undefined expression represented by #<JsshObject:0x024c3ae0 type=undefined, debug_name=foo> (javascript reference is foo)
+  #    JsshUndefinedValueError: undefined expression represented by #<JavascriptObject:0x024c3ae0 type=undefined, debug_name=foo> (javascript reference is foo)
   #    >> jssh_socket.root.foo?
   #    => nil
   # - '=' suffix sets the named object to what is given, for example:
@@ -609,12 +609,12 @@ class JsshSocket
   #    >> jssh_socket.root.foo={:x => ['y', 'z']}
   #    => {:x=>["y", "z"]}
   #    >> jssh_socket.root.foo
-  #    => #<JsshObject:0x024a3510 type=object, debug_name=foo>
+  #    => #<JavascriptObject:0x024a3510 type=object, debug_name=foo>
   # - '!' suffix tries to convert the value to json in javascrit and back from json to ruby, even 
   #   when it might be unsafe (causing infinite rucursion or other errors). for example:
   #    >> jssh_socket.root.foo!
   #    => {"x"=>["y", "z"]}
-  #   it can be used with function results that would normally result in a JsshObject:
+  #   it can be used with function results that would normally result in a JavascriptObject:
   #    >> jssh_socket.root.eval!("[1, 2, 3]")
   #    => [1, 2, 3]
   #   and of course it can error if you try to do something you shouldn't:
@@ -639,7 +639,7 @@ class JsshSocket
 #    end
   end
   
-  # Creates and returns a JsshObject representing a function. 
+  # Creates and returns a JavascriptObject representing a function. 
   #
   # Takes any number of arguments, which should be strings or symbols, which are arguments to the 
   # javascript function. 
@@ -651,7 +651,7 @@ class JsshSocket
   #   jssh_socket.function(:a, :b) do
   #     "return a+b;"
   #   end
-  #   => #<JsshObject:0x0248e78c type=function, debug_name=function(a, b){ return a+b; }>
+  #   => #<JavascriptObject:0x0248e78c type=function, debug_name=function(a, b){ return a+b; }>
   #
   # This is exactly the same as doing 
   #   jssh_socket.object("function(a, b){ return a+b; }")
@@ -703,20 +703,20 @@ class JsshSocket
     function(*argument_names, &block).call(*argument_vals)
   end
 
-  # returns a JsshObject representing a designated top-level object for temporary storage of stuff
+  # returns a JavascriptObject representing a designated top-level object for temporary storage of stuff
   # on this socket. 
   #
   # really, temporary values could be stored anywhere. this just gives one nice consistent designated place to stick them. 
   def temp_object
     @temp_object ||= root.JsshTemp
   end
-  # returns a JsshObject representing the Components top-level javascript object. 
+  # returns a JavascriptObject representing the Components top-level javascript object. 
   #
   # https://developer.mozilla.org/en/Components_object
   def Components
     @components ||= root.Components
   end
-  # returns a JsshObject representing the return value of JSSH's builtin getWindows() function. 
+  # returns a JavascriptObject representing the return value of JSSH's builtin getWindows() function. 
   def getWindows
     root.getWindows
   end

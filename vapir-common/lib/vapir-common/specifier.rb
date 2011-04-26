@@ -127,7 +127,7 @@ module Vapir
       # return:
       if candidates.is_a?(Array)
         candidates
-      elsif Object.const_defined?('JsshObject') && candidates.is_a?(JsshObject)
+      elsif Object.const_defined?('JavascriptObject') && candidates.is_a?(JavascriptObject)
         candidates.to_array
       elsif Object.const_defined?('WIN32OLE') && candidates.is_a?(WIN32OLE)
         candidates.send :extend, Enumerable
@@ -141,15 +141,15 @@ module Vapir
       unless specifiers_list.is_a?(Enumerable) && specifiers_list.all?{|spec| spec.is_a?(Hash)}
         raise ArgumentError, "specifiers_list should be a list of Hashes!"
       end
-      if Object.const_defined?('JsshObject') && (candidates.is_a?(JsshObject) || (candidates.length != 0 && candidates.all?{|c| c.is_a?(JsshObject)}))
+      if Object.const_defined?('JavascriptObject') && (candidates.is_a?(JavascriptObject) || (candidates.length != 0 && candidates.all?{|c| c.is_a?(JavascriptObject)}))
         # optimize for JSSH by moving code to the other side of the socket, rather than talking across it a whole lot
         # this javascript should be exactly the same as the ruby in the else (minus WIN32OLE optimization) - 
         # just written in javascript instead of ruby. 
         #
         # Note that the else block works perfectly fine, but is much much slower due to the amount of 
         # socket activity. 
-        jssh_socket= candidates.is_a?(JsshObject) ? candidates.jssh_socket : candidates.first.jssh_socket
-        match_candidates_js=JsshObject.new("
+        jssh_socket= candidates.is_a?(JavascriptObject) ? candidates.jssh_socket : candidates.first.jssh_socket
+        match_candidates_js=JavascriptObject.new("
           (function(candidates, specifiers_list, aliases)
           { candidates=$A(candidates);
             specifiers_list=$A(specifiers_list);

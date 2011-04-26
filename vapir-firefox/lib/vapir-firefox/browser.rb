@@ -673,8 +673,8 @@ module Vapir
       channel = nil
       ::Waiter.try_for(8, :exception => nil) do
         channel=browser.browser_object.docShell.currentDocumentChannel
-        channel.is_a?(JsshObject) && channel.instanceof(browser.jssh_socket.Components.interfaces.nsIHttpChannel) && channel.respond_to?(:responseStatus)
-      end || raise(RuntimeError, "expected currentDocumentChannel to exist and be a nsIHttpChannel but it wasn't; was #{channel.is_a?(JsshObject) ? channel.toString : channel.inspect}")
+        channel.is_a?(JavascriptObject) && channel.instanceof(browser.jssh_socket.Components.interfaces.nsIHttpChannel) && channel.respond_to?(:responseStatus)
+      end || raise(RuntimeError, "expected currentDocumentChannel to exist and be a nsIHttpChannel but it wasn't; was #{channel.is_a?(JavascriptObject) ? channel.toString : channel.inspect}")
       status = channel.responseStatus
     end
     

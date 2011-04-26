@@ -656,7 +656,7 @@ module Vapir
     def object_collection_to_enumerable(object)
       if object.is_a?(Enumerable)
         object
-      elsif Object.const_defined?('JsshObject') && object.is_a?(JsshObject)
+      elsif Object.const_defined?('JavascriptObject') && object.is_a?(JavascriptObject)
         object.to_array
       elsif Object.const_defined?('WIN32OLE') && object.is_a?(WIN32OLE)
         array=[]

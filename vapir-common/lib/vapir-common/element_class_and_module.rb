@@ -4,7 +4,7 @@ module Vapir
   # this module is for methods that should go on both common element modules (ie, TextField) as well
   # as browser-specific element classes (ie, Firefox::TextField). 
   module ElementClassAndModuleMethods
-    # takes an element_object (JsshObject or WIN32OLE), and finds the most specific class 
+    # takes an element_object (JavascriptObject or WIN32OLE), and finds the most specific class 
     # that is < self whose specifiers match it. Returns an instance of that class using the given
     # element_object. 
     #

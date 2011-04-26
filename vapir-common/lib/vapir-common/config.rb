@@ -50,6 +50,14 @@ module Vapir
           else
             raise InvalidValueError, "value should look like a number for key #{key}; instead got #{value.inspect}"
           end
+        when :positive_integer
+          if value.is_a?(Integer) && value > 0
+            value
+          elsif value.is_a?(String) && value.strip =~ /\A\d+\z/ && value.to_i > 0
+            value.to_i
+          else
+            raise InvalidValueError, "value should be a positive integer; got #{value.inspect}"
+          end
         else
           raise ArgumentError, "invalid validator given: #{@validotor.inspect}\nvalidator should be nil for unspecified, a Proc, or a symbol indicating a known validator type"
         end

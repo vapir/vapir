@@ -112,8 +112,8 @@ module Vapir
       if options[:reset_if_dead]
         begin
           @@firefox_socket.assert_socket
-        rescue JsshConnectionError
-          Kernel.warn "WARNING: JsshSocket RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
+        rescue FirefoxSocketConnectionError
+          Kernel.warn "WARNING: Firefox socket RESET: resetting connection to firefox. Any active javascript references will not exist on the new socket!"
           initialize_firefox_socket
         end
       end
@@ -161,7 +161,7 @@ module Vapir
       # error if running without jssh, we don't want to kill their current window (mac only)
       begin
         firefox_socket(:reset_if_dead => true).assert_socket
-      rescue JsshError
+      rescue FirefoxSocketConnectionError
         # here we're going to assume that since it's not connecting, we need to launch firefox. 
         if options[:attach]
           raise Vapir::Exception::NoBrowserException, "cannot attach using #{options[:attach].inspect} - could not connect to Firefox with JSSH"
@@ -180,7 +180,7 @@ module Vapir
           begin
             firefox_socket(:reset_if_dead => true).assert_socket
             true
-          rescue JsshUnableToStart
+          rescue FirefoxSocketUnableToStart
             false
           end
         end
@@ -428,7 +428,7 @@ module Vapir
         else
           firefox_socket.assert_socket
         end
-      rescue JsshConnectionError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
+      rescue FirefoxSocketConnectionError # the socket may disconnect when we close the browser, causing the FirefoxSocket to complain 
         Vapir::Firefox.uninitialize_firefox_socket
         wait_for_process_exit(@pid)
       end
@@ -449,7 +449,7 @@ module Vapir
       #
       # quit_browser(:force => true) will force the browser to quit. 
       #
-      # if there is no existing connection to firefox, this will attempt to create one. If that fails, JsshUnableToStart will be raised. 
+      # if there is no existing connection to firefox, this will attempt to create one. If that fails, FirefoxSocketUnableToStart will be raised. 
       def quit_browser(options={})
         firefox_socket(:reset_if_dead => true).assert_socket
         options=handle_options(options, :force => false)
@@ -469,7 +469,7 @@ module Vapir
             firefox_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
             false
           end
-        rescue JsshConnectionError
+        rescue FirefoxSocketConnectionError
           Vapir::Firefox.uninitialize_firefox_socket
         end
         
@@ -487,7 +487,7 @@ module Vapir
         begin
           begin
             ctypes = firefox_socket.Components.utils.import("resource://gre/modules/ctypes.jsm").ctypes
-          rescue JsshJavascriptError
+          rescue FirefoxSocketJavascriptError
             raise NotImplementedError, "Firefox 3.6 or greater is required for this method.\n\nOriginal error from firefox: #{$!.class}: #{$!.message}", $!.backtrace
           end
           lib, pidfunction, abi = *case current_os

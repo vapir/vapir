@@ -41,19 +41,19 @@ require 'vapir-firefox/javascript_object'
 # :startdoc:
 
 # base exception class for all exceptions raised from Jssh sockets and objects. 
-class JsshError < StandardError;end
+class FirefoxSocketError < StandardError;end
 # this exception covers all connection errors either on startup or during usage. often it represents an Errno error such as Errno::ECONNRESET. 
-class JsshConnectionError < JsshError;end
+class FirefoxSocketConnectionError < FirefoxSocketError;end
 # This exception is thrown if we are unable to connect to JSSh.
-class JsshUnableToStart < JsshConnectionError;end
+class FirefoxSocketUnableToStart < FirefoxSocketConnectionError;end
 # Represents an error encountered on the javascript side, caught in a try/catch block. 
-class JsshJavascriptError < JsshError
+class FirefoxSocketJavascriptError < FirefoxSocketError
   attr_accessor :source, :js_err, :lineNumber, :stack, :fileName
 end
 # represents a syntax error in javascript. 
-class JsshSyntaxError < JsshJavascriptError;end
+class FirefoxSocketSyntaxError < FirefoxSocketJavascriptError;end
 # raised when a javascript value is expected to be defined but is undefined
-class JsshUndefinedValueError < JsshJavascriptError;end
+class FirefoxSocketUndefinedValueError < FirefoxSocketJavascriptError;end
 
 # A JsshSocket represents a connection to Firefox over a socket opened to the JSSH extension. It 
 # does the work of interacting with the socket and translating ruby values to javascript and back. 
@@ -116,13 +116,13 @@ class JsshSocket < FirefoxSocket
       read=read_value
       if !read
         @expecting_extra_maybe=true
-        raise JsshUnableToStart, "Something went wrong initializing - no response" 
+        raise FirefoxSocketUnableToStart, "Something went wrong initializing - no response" 
       elsif read != welcome
         @expecting_extra_maybe=true
-        raise JsshUnableToStart, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
+        raise FirefoxSocketUnableToStart, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
       end
     rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
-      err=JsshUnableToStart.new("Could not connect to JSSH sever #{@ip}:#{@port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
+      err=FirefoxSocketUnableToStart.new("Could not connect to JSSH sever #{@ip}:#{@port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
       err.set_backtrace($!.backtrace)
       raise err
     end
@@ -130,7 +130,7 @@ class JsshSocket < FirefoxSocket
       ret=send_and_read(File.read(PrototypeFile))
       if ret != "done!"
         @expecting_extra_maybe=true
-        raise JsshError, "Something went wrong loading Prototype - message #{ret.inspect}"
+        raise FirefoxSocketError, "Something went wrong loading Prototype - message #{ret.inspect}"
       end
     end
     ret=send_and_read("(function()
@@ -143,7 +143,7 @@ class JsshSocket < FirefoxSocket
     })()")
     if ret != "done!"
       @expecting_extra_maybe=true
-      raise JsshError, "Something went wrong initializing native JSON - message #{ret.inspect}"
+      raise FirefoxSocketError, "Something went wrong initializing native JSON - message #{ret.inspect}"
     end
     root.JsshTemp={}
   end
@@ -202,7 +202,7 @@ class JsshSocket < FirefoxSocket
           @expecting_prompt=false
         else
           value_string << clear_error
-          raise JsshError, "Expected a prompt! received unexpected data #{value_string.inspect}. maybe left on the socket by last evaluated expression? last expression was:\n\n#{@last_expression}"
+          raise FirefoxSocketError, "Expected a prompt! received unexpected data #{value_string.inspect}. maybe left on the socket by last evaluated expression? last expression was:\n\n#{@last_expression}"
         end
       end
       if !@expecting_prompt 
@@ -215,7 +215,7 @@ class JsshSocket < FirefoxSocket
             # rather unlikely, but maybe we just received part of the number so far - ignore
           else
             @expecting_extra_maybe=true
-            raise JsshError, "Expected length! unexpected data with no preceding length received: #{value_string.inspect}"
+            raise FirefoxSocketError, "Expected length! unexpected data with no preceding length received: #{value_string.inspect}"
           end
         end
         if expected_size
@@ -228,7 +228,7 @@ class JsshSocket < FirefoxSocket
       
       # Kernel.select seems to indicate that a dead socket is ready to read, and returns endless blank strings to recv. rather irritating. 
       if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd==''}
-        raise JsshConnectionError, "Socket seems to no longer be connected"
+        raise FirefoxSocketConnectionError, "Socket seems to no longer be connected"
       end
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end
@@ -240,7 +240,7 @@ class JsshSocket < FirefoxSocket
           # if all we got was the prompt, just stick it on the value here so that the code below will deal with setting @execting_prompt correctly 
           value_string << cleared_error
         else
-          raise JsshError, "We finished receiving but the socket was still ready to send! extra data received were: #{cleared_error}"
+          raise FirefoxSocketError, "We finished receiving but the socket was still ready to send! extra data received were: #{cleared_error}"
         end
       end
       @expecting_extra_maybe=false
@@ -256,7 +256,7 @@ class JsshSocket < FirefoxSocket
         @expecting_prompt=false
       else
         @expecting_extra_maybe=true if value_string_length < expected_size
-        raise JsshError, "Expected a value of size #{expected_size}; received data of size #{value_string_length}: #{value_string.inspect}"
+        raise FirefoxSocketError, "Expected a value of size #{expected_size}; received data of size #{value_string_length}: #{value_string.inspect}"
       end
     else
        if value_string =~ /#{Regexp.escape(PROMPT)}\z/ # what if the value happens to end with the same string as the prompt? 
@@ -315,12 +315,12 @@ class JsshSocket < FirefoxSocket
   # creates a ruby exception from the given information and raises it. 
   def js_error(errclassname, message, source, stuff={})
     errclass=if errclassname
-      unless JsshError.const_defined?(errclassname)
-        JsshError.const_set(errclassname, Class.new(JsshJavascriptError))
+      unless FirefoxSocketError.const_defined?(errclassname)
+        FirefoxSocketError.const_set(errclassname, Class.new(FirefoxSocketJavascriptError))
       end
-      JsshError.const_get(errclassname)
+      FirefoxSocketError.const_get(errclassname)
     else
-      JsshJavascriptError
+      FirefoxSocketJavascriptError
     end
     err=errclass.new("#{message}\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
     err.source=source
@@ -398,7 +398,7 @@ class JsshSocket < FirefoxSocket
       when "function"
         call(js_expr, *args)
       when "undefined"
-        raise JsshUndefinedValueError, "undefined expression #{js_expr.inspect}"
+        raise FirefoxSocketUndefinedValueError, "undefined expression #{js_expr.inspect}"
       else
         if !args.empty?
           raise ArgumentError, "Cannot pass arguments to expression #{js_expr.inspect} of type #{type}"
@@ -434,10 +434,10 @@ class JsshSocket < FirefoxSocket
   def error_or_val_json(val, js)
     if !val || val==''
       @expecting_extra_maybe=true
-      raise JsshError, "received no value! may have timed out waiting for a value that was not coming."
+      raise FirefoxSocketError, "received no value! may have timed out waiting for a value that was not coming."
     end
     if val=~ /\ASyntaxError: /
-      raise JsshSyntaxError, val
+      raise FirefoxSocketSyntaxError, val
     end
     errord_and_val=parse_json(val)
     unless errord_and_val.is_a?(Hash) && errord_and_val.keys.sort == ['errored', 'value'].sort
@@ -509,7 +509,7 @@ class JsshSocket < FirefoxSocket
       when "function"
         call_json(js_expr, *args)
       when "undefined"
-        raise JsshUndefinedValueError, "undefined expression #{js_expr}"
+        raise FirefoxSocketUndefinedValueError, "undefined expression #{js_expr}"
       else
         if !args.empty?
           raise ArgumentError, "Cannot pass arguments to expression #{js_expr.inspect} of type #{type}"
@@ -522,7 +522,7 @@ class JsshSocket < FirefoxSocket
   # raises error if the prototype library (needed for JSON stuff in javascript) has not been loaded
   def ensure_prototype
     unless prototype
-      raise JsshError, "This functionality requires the prototype library; cannot be called on a Jssh session that has not loaded the Prototype library"
+      raise FirefoxSocketError, "This functionality requires the prototype library; cannot be called on a Jssh session that has not loaded the Prototype library"
     end
   end
 
@@ -601,7 +601,7 @@ class JsshSocket < FirefoxSocket
   # - '?' suffix returns nil if the object does not exist, rather than raising an exception. for
   #   example:
   #    >> jssh_socket.root.foo
-  #    JsshUndefinedValueError: undefined expression represented by #<JavascriptObject:0x024c3ae0 type=undefined, debug_name=foo> (javascript reference is foo)
+  #    FirefoxSocketUndefinedValueError: undefined expression represented by #<JavascriptObject:0x024c3ae0 type=undefined, debug_name=foo> (javascript reference is foo)
   #    >> jssh_socket.root.foo?
   #    => nil
   # - '=' suffix sets the named object to what is given, for example:
@@ -620,7 +620,7 @@ class JsshSocket < FirefoxSocket
   #    => [1, 2, 3]
   #   and of course it can error if you try to do something you shouldn't:
   #    >> jssh_socket.root.getWindows!
-  #    JsshError::NS_ERROR_FAILURE: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIJSON.encode]
+  #    FirefoxSocketError::NS_ERROR_FAILURE: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIJSON.encode]
   def root
     jssh_socket=self
 #    @root ||= begin
@@ -730,10 +730,10 @@ class JsshSocket < FirefoxSocket
         [value('"foo"'), "foo"]
       end
     rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
-      raise(JsshConnectionError, "Encountered a socket error while checking the socket.\n#{$!.class}\n#{$!.message}", $!.backtrace)
+      raise(FirefoxSocketConnectionError, "Encountered a socket error while checking the socket.\n#{$!.class}\n#{$!.message}", $!.backtrace)
     end
     unless expected==actual
-      raise JsshError, "The socket seems to have a problem: sent #{expected.inspect} but got back #{actual.inspect}"
+      raise FirefoxSocketError, "The socket seems to have a problem: sent #{expected.inspect} but got back #{actual.inspect}"
     end
   end
   

@@ -118,7 +118,7 @@ class JavascriptObject
         self.toString! =~ /\A\[object\s+(.*)\]\Z/
         $1
       else
-        raise JsshError, "Type is #{type}, not object"
+        raise FirefoxSocketJavascriptError, "Type is #{type}, not object"
       end
     end
   end
@@ -132,7 +132,7 @@ class JavascriptObject
   # then this JavascriptObject is returned. 
   # 
   # if the object this refers to is undefined in javascript, then behavor depends on the options 
-  # hash. if :error_on_undefined is true, then nil is returned; otherwise JsshUndefinedValueError 
+  # hash. if :error_on_undefined is true, then nil is returned; otherwise FirefoxSocketUndefinedValueError 
   # is raised. 
   #
   # if this is a function result, this will store the result in a temporary location (thereby
@@ -150,7 +150,7 @@ class JavascriptObject
         if !options[:error_on_undefined]
           nil
         else
-          raise JsshUndefinedValueError, "undefined expression represented by #{self.inspect} (javascript reference is #{@ref})"
+          raise FirefoxSocketUndefinedValueError, "undefined expression represented by #{self.inspect} (javascript reference is #{@ref})"
         end
       when 'boolean','number','string','null'
         val
@@ -206,7 +206,7 @@ class JavascriptObject
   # returns a JavascriptObject referencing the given attribute of this object 
   def attr(attribute, options={})
     unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
-      raise JsshSyntaxError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
+      raise FirefoxSocketSyntaxError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
     end
     JavascriptObject.new("#{ref}.#{attribute}", firefox_socket, :debug_name => "#{debug_name}.#{attribute}")
   end
@@ -531,13 +531,13 @@ class JavascriptObject
     next_options=options.merge(:recurse => options[:recurse]-1)
     begin
       keys=self.to_hash.keys
-    rescue JsshError
+    rescue FirefoxSocketError
       return self
     end
     keys.inject({}) do |hash, key|
       val=begin
         self[key]
-      rescue JsshError
+      rescue FirefoxSocketError
         $!
       end
       hash[key]=if val.is_a?(JavascriptObject)
@@ -631,7 +631,7 @@ class JavascriptArray < JavascriptObject
   # yields the element at each subscript of this javascript array, from 0 to self.length. 
   def each
     length=self.length
-    raise JsshError, "length #{length.inspect} is not a non-negative integer on #{self.ref}" unless length.is_a?(Integer) && length >= 0
+    raise FirefoxSocketError, "length #{length.inspect} is not a non-negative integer on #{self.ref}" unless length.is_a?(Integer) && length >= 0
     for i in 0...length
       element=self[i]
       if element.is_a?(JavascriptObject)

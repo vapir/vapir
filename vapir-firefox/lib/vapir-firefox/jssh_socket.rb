@@ -1,6 +1,7 @@
 require 'json'
 require 'socket'
 require 'timeout'
+require 'vapir-firefox/firefox_socket/base'
 require 'vapir-firefox/javascript_object'
 #require 'logger'
 
@@ -56,7 +57,7 @@ class JsshUndefinedValueError < JsshJavascriptError;end
 
 # A JsshSocket represents a connection to Firefox over a socket opened to the JSSH extension. It 
 # does the work of interacting with the socket and translating ruby values to javascript and back. 
-class JsshSocket
+class JsshSocket < FirefoxSocket
   # :stopdoc:
 #  def self.logger
 #    @@logger||=begin

@@ -1,6 +1,7 @@
 require 'json'
 require 'socket'
 require 'timeout'
+require 'vapir-firefox/javascript_object'
 #require 'logger'
 
 # :stopdoc:

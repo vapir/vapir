@@ -85,7 +85,7 @@ require 'vapir-common/waiter'
 require 'vapir-common/browser'
 require 'vapir-firefox/window'
 require 'vapir-firefox/modal_dialog'
-require 'vapir-firefox/jssh_socket'
+require 'vapir-firefox/firefox_socket/jssh'
 require 'vapir-firefox/container'
 require 'vapir-firefox/page_container'
 

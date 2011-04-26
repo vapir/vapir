@@ -10,17 +10,17 @@ module Vapir
 
     # Creates new instance of Firefox::Element. 
     def initialize(how, what, extra={})
-      @jssh_socket=extra[:jssh_socket]
-      @jssh_socket||= (extra[:browser].jssh_socket if extra[:browser])
-      @jssh_socket||= (extra[:container].jssh_socket if extra[:container])
-      @jssh_socket||= (what.jssh_socket if how==:element_object)
-      unless @jssh_socket
-        raise RuntimeError, "No JSSH socket given! Firefox elements need this (specified in the :jssh_socket key of the extra hash)"
+      @firefox_socket=extra[:firefox_socket]
+      @firefox_socket||= (extra[:browser].firefox_socket if extra[:browser])
+      @firefox_socket||= (extra[:container].firefox_socket if extra[:container])
+      @firefox_socket||= (what.firefox_socket if how==:element_object)
+      unless @firefox_socket
+        raise RuntimeError, "No JSSH socket given! Firefox elements need this (specified in the :firefox_socket key of the extra hash)"
       end
       default_initialize(how, what, extra)
     end
 
-    attr_reader :jssh_socket
+    attr_reader :firefox_socket
     
     def outer_html
       temp_parent_element=document_object.createElement('div')
@@ -65,7 +65,7 @@ module Vapir
         event=create_event_object(event_type, options)
         if !options[:wait]
           raise "need a content window on which to setTimeout if we are not waiting" unless content_window_object
-          content_window_object.setTimeout(jssh_socket.call_function(:element_object => element_object, :event => event){ "return function(){ element_object.dispatchEvent(event) };" }, 0)
+          content_window_object.setTimeout(firefox_socket.call_function(:element_object => element_object, :event => event){ "return function(){ element_object.dispatchEvent(event) };" }, 0)
           nil
         else
           result=element_object.dispatchEvent(event)
@@ -180,7 +180,7 @@ module Vapir
           mouse_down_event=create_event_object('mousedown', options)
           mouse_up_event=create_event_object('mouseup', options)
           click_event=create_event_object('click', options)
-          content_window_object.setTimeout(jssh_socket.call_function(:element_object => element_object, :mouse_down_event => mouse_down_event, :mouse_up_event => mouse_up_event, :click_event => click_event) do 
+          content_window_object.setTimeout(firefox_socket.call_function(:element_object => element_object, :mouse_down_event => mouse_down_event, :mouse_up_event => mouse_up_event, :click_event => click_event) do 
           " return function()
             { element_object.dispatchEvent(mouse_down_event);
               element_object.dispatchEvent(mouse_up_event);
@@ -209,7 +209,7 @@ module Vapir
     # or a parent is hidden. 
     def visible? 
       assert_exists do
-        jssh_socket.call_function(:element_to_check => element_object, :document_object => document_object) do %Q(
+        firefox_socket.call_function(:element_to_check => element_object, :document_object => document_object) do %Q(
           var really_visible=null;
           while(element_to_check) //&& !(element_to_check instanceof Components.interfaces.nsIDOMDocument)
           { var style = element_to_check.nodeType==1 ? document_object.defaultView.getComputedStyle(element_to_check, null) : null;
@@ -245,7 +245,7 @@ module Vapir
     
 
     def self.element_object_style(element_object, document_object)
-      if element_object.nodeType==1 #element_object.instanceof(element_object.jssh_socket.Components.interfaces.nsIDOMDocument)
+      if element_object.nodeType==1 #element_object.instanceof(element_object.firefox_socket.Components.interfaces.nsIDOMDocument)
         document_object.defaultView.getComputedStyle(element_object, nil)
       else
         nil
@@ -258,7 +258,7 @@ module Vapir
     private
     def element_object_exists?
       return false unless @element_object
-      return jssh_socket.call_function(:parent => @element_object, :document_object => container.document_object) do  # use the container's document so that frames look at their parent document, not their own document
+      return firefox_socket.call_function(:parent => @element_object, :document_object => container.document_object) do  # use the container's document so that frames look at their parent document, not their own document
       " while(true)
         { if(!parent)
           { return false; // if we encounter a parent such that parentNode is nil, we aren't on the document. 

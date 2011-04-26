@@ -31,8 +31,8 @@ module Vapir
     end
     
     def exists?
-      # jssh_socket may be nil if the window has closed 
-      @modal_window && @browser.jssh_socket && @browser.jssh_socket.object('getWindows()').to_js_array.include(@modal_window)
+      # firefox_socket may be nil if the window has closed 
+      @modal_window && @browser.firefox_socket && @browser.firefox_socket.object('getWindows()').to_js_array.include(@modal_window)
     end
     
     def text
@@ -107,7 +107,7 @@ module Vapir
 
     def initialize(containing_modal_dialog, options={})
       options=handle_options(options, :timeout => ModalDialog::DEFAULT_TIMEOUT, :error => true)
-      @jssh_socket=containing_modal_dialog.browser.jssh_socket
+      @firefox_socket=containing_modal_dialog.browser.firefox_socket
       @browser_object=containing_modal_dialog.modal_window.getBrowser
 
       @containing_modal_dialog=containing_modal_dialog
@@ -139,6 +139,6 @@ module Vapir
       end
     end
     
-    attr_reader :jssh_socket
+    attr_reader :firefox_socket
   end
 end

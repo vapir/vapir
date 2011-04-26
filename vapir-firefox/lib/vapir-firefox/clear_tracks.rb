@@ -9,11 +9,11 @@ module Vapir
       #  ["cache", "cookies", "offlineApps", "history", "formdata", "downloads", "passwords", "sessions", "siteSettings"]
       def sanitizer # :nodoc:
         @@sanitizer ||= begin
-          sanitizer_class = jssh_socket.object('Sanitizer')
+          sanitizer_class = firefox_socket.object('Sanitizer')
           if sanitizer_class.type=='undefined'
-            loader = jssh_socket.Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(jssh_socket.Components.interfaces.mozIJSSubScriptLoader)
+            loader = firefox_socket.Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(firefox_socket.Components.interfaces.mozIJSSubScriptLoader)
             loader.loadSubScript("chrome://browser/content/sanitize.js")
-            sanitizer_class = jssh_socket.object('Sanitizer')
+            sanitizer_class = firefox_socket.object('Sanitizer')
           end 
           sanitizer_class.new
         end
@@ -24,7 +24,7 @@ module Vapir
       end
       def clear_cookies
         sanitizer.items.cookies.clear()
-        #cookie_manager = jssh_socket.Components.classes["@mozilla.org/cookiemanager;1"].getService(jssh_socket.Components.interfaces.nsICookieManager)
+        #cookie_manager = firefox_socket.Components.classes["@mozilla.org/cookiemanager;1"].getService(firefox_socket.Components.interfaces.nsICookieManager)
         #cookie_manager.removeAll()
       end
       def clear_cache

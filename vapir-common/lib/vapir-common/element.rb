@@ -449,7 +449,7 @@ module Vapir
     def visible? 
       assert_exists do
         element_to_check=element_object
-        #nsIDOMDocument=jssh_socket.Components.interfaces.nsIDOMDocument
+        #nsIDOMDocument=firefox_socket.Components.interfaces.nsIDOMDocument
         really_visible=nil
         while element_to_check #&& !element_to_check.instanceof(nsIDOMDocument)
           if (style=element_object_style(element_to_check, document_object))

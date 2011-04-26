@@ -98,35 +98,35 @@ module Vapir
     include Firefox::ModalDialogContainer
 
     # initializes a JsshSocket and stores in a class variable. 
-    def self.initialize_jssh_socket # :nodoc:
-      uninitialize_jssh_socket
-      @@jssh_socket=JsshSocket.new
-      @@firewatir_jssh_objects=@@jssh_socket.object("Vapir").assign({})
-      @@jssh_socket
+    def self.initialize_firefox_socket # :nodoc:
+      uninitialize_firefox_socket
+      @@firefox_socket=JsshSocket.new
+      @@firewatir_jssh_objects=@@firefox_socket.object("Vapir").assign({})
+      @@firefox_socket
     end
     # returns a connected JsshSocket. pass :reset_if_dead => true if you suspect an existing 
     # socket may be dead, and you want a new one. a warning will be printed if this occurs. 
-    def self.jssh_socket(options={}) # :nodoc:
-      if options[:reset] || !(class_variable_defined?('@@jssh_socket') && @@jssh_socket)
-        initialize_jssh_socket
+    def self.firefox_socket(options={}) # :nodoc:
+      if options[:reset] || !(class_variable_defined?('@@firefox_socket') && @@firefox_socket)
+        initialize_firefox_socket
       end
       if options[:reset_if_dead]
         begin
-          @@jssh_socket.assert_socket
+          @@firefox_socket.assert_socket
         rescue JsshConnectionError
           Kernel.warn "WARNING: JsshSocket RESET: resetting jssh socket. Any active javascript references will not exist on the new socket!"
-          initialize_jssh_socket
+          initialize_firefox_socket
         end
       end
-      @@jssh_socket
+      @@firefox_socket
     end
     # unsets a the current jssh socket 
-    def self.uninitialize_jssh_socket # :nodoc:
-      @@jssh_socket=nil
+    def self.uninitialize_firefox_socket # :nodoc:
+      @@firefox_socket=nil
       @@firewatir_jssh_objects=nil
     end
-    def jssh_socket(options=nil)
-      options ? self.class.jssh_socket(options) : @@jssh_socket
+    def firefox_socket(options=nil)
+      options ? self.class.firefox_socket(options) : @@firefox_socket
     end
 
     # Description: 
@@ -162,7 +162,7 @@ module Vapir
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
       begin
-        jssh_socket(:reset_if_dead => true).assert_socket
+        firefox_socket(:reset_if_dead => true).assert_socket
       rescue JsshError
         # here we're going to assume that since it's not connecting, we need to launch firefox. 
         if options[:attach]
@@ -180,14 +180,14 @@ module Vapir
         end
         ::Waiter.try_for(options[:timeout], :exception => Vapir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:timeout]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
           begin
-            jssh_socket(:reset_if_dead => true).assert_socket
+            firefox_socket(:reset_if_dead => true).assert_socket
             true
           rescue JsshUnableToStart
             false
           end
         end
       end
-      @browser_jssh_objects = jssh_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
+      @browser_jssh_objects = firefox_socket.object('{}').store_rand_object_key(@@firewatir_jssh_objects) # this is an object that holds stuff for this browser 
       
       @pid = begin
         self.pid
@@ -226,8 +226,8 @@ module Vapir
     end
     
     def exists?
-      # jssh_socket may be nil if the window has closed 
-      jssh_socket && browser_window_object && self.class.browser_window_objects.include?(browser_window_object)
+      # firefox_socket may be nil if the window has closed 
+      firefox_socket && browser_window_object && self.class.browser_window_objects.include?(browser_window_object)
     end
     
     # Launches firebox browser
@@ -270,13 +270,13 @@ module Vapir
         end
         CGI.escape(key.to_s)+'='+CGI.escape(val)
       end.join("&")
-      stringStream = jssh_socket.Components.classes["@mozilla.org/io/string-input-stream;1"].createInstance(jssh_socket.Components.interfaces.nsIStringInputStream)
+      stringStream = firefox_socket.Components.classes["@mozilla.org/io/string-input-stream;1"].createInstance(firefox_socket.Components.interfaces.nsIStringInputStream)
       if stringStream.to_hash.key?('data')
         stringStream.data=dataString
       else
         stringStream.setData(dataString, dataString.unpack("U*").length)
       end
-      postData = jssh_socket.Components.classes["@mozilla.org/network/mime-input-stream;1"].createInstance(jssh_socket.Components.interfaces.nsIMIMEInputStream)
+      postData = firefox_socket.Components.classes["@mozilla.org/network/mime-input-stream;1"].createInstance(firefox_socket.Components.interfaces.nsIMIMEInputStream)
       postData.addHeader("Content-Type", "application/x-www-form-urlencoded")
       postData.addContentLength = true
       postData.setData(stringStream)
@@ -338,7 +338,7 @@ module Vapir
       @browser_jssh_objects[:unmatched_stopped_requests_count]=0
       
       @updated_at_epoch_ms=@browser_jssh_objects.attr(:updated_at_epoch_ms).assign_expr('new Date().getTime()')
-      @updated_at_offset=Time.now.to_f-jssh_socket.value_json('new Date().getTime()')/1000.0
+      @updated_at_offset=Time.now.to_f-firefox_socket.value_json('new Date().getTime()')/1000.0
     
       # Add eventlistener for browser window so that we can reset the document back whenever there is redirect
       # or browser loads on its own after some time. Useful when you are searching for flight results etc and
@@ -346,14 +346,14 @@ module Vapir
       # Details : http://zenit.senecac.on.ca/wiki/index.php/Mozilla.dev.tech.xul#What_is_an_example_of_addProgressListener.3F
       @browser_jssh_objects[:listener_object]={}
       listener_object=@browser_jssh_objects[:listener_object]
-      listener_object[:QueryInterface]=jssh_socket.function(:aIID) do %Q(
+      listener_object[:QueryInterface]=firefox_socket.function(:aIID) do %Q(
            if(aIID.equals(Components.interfaces.nsIWebProgressListener) || aIID.equals(Components.interfaces.nsISupportsWeakReference) || aIID.equals(Components.interfaces.nsISupports))
            { return this;
            }
            throw Components.results.NS_NOINTERFACE;
       )
       end
-      listener_object[:onStateChange]= jssh_socket.function(:aWebProgress, :aRequest, :aStateFlag, :aStatus) do %Q(
+      listener_object[:onStateChange]= firefox_socket.function(:aWebProgress, :aRequest, :aStateFlag, :aStatus) do %Q(
            var requests_in_progress=#{@requests_in_progress.ref};
            if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
            { #{@updated_at_epoch_ms.ref}=new Date().getTime();
@@ -424,19 +424,19 @@ module Vapir
         end
         if expect_exit
           ::Waiter.try_for(8, :exception => nil) do
-            jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
+            firefox_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
             false
           end
         else
-          jssh_socket.assert_socket
+          firefox_socket.assert_socket
         end
       rescue JsshConnectionError # the socket may disconnect when we close the browser, causing the JsshSocket to complain 
-        Vapir::Firefox.uninitialize_jssh_socket
+        Vapir::Firefox.uninitialize_firefox_socket
         wait_for_process_exit(@pid)
       end
         
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
-      if @self_launched_browser && jssh_socket && !self.class.window_objects.any?{ true }
+      if @self_launched_browser && firefox_socket && !self.class.window_objects.any?{ true }
         quit_browser(:force => false)
       end
     end
@@ -453,7 +453,7 @@ module Vapir
       #
       # if there is no existing connection to JSSH, this will attempt to create one. If that fails, JsshUnableToStart will be raised. 
       def quit_browser(options={})
-        jssh_socket(:reset_if_dead => true).assert_socket
+        firefox_socket(:reset_if_dead => true).assert_socket
         options=handle_options(options, :force => false)
         
         pid = @pid || begin
@@ -463,16 +463,16 @@ module Vapir
         end
         
         # from https://developer.mozilla.org/en/How_to_Quit_a_XUL_Application
-        appStartup= jssh_socket.Components.classes['@mozilla.org/toolkit/app-startup;1'].getService(jssh_socket.Components.interfaces.nsIAppStartup)
-        quitSeverity = options[:force] ? jssh_socket.Components.interfaces.nsIAppStartup.eForceQuit : jssh_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
+        appStartup= firefox_socket.Components.classes['@mozilla.org/toolkit/app-startup;1'].getService(firefox_socket.Components.interfaces.nsIAppStartup)
+        quitSeverity = options[:force] ? firefox_socket.Components.interfaces.nsIAppStartup.eForceQuit : firefox_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
         begin
           appStartup.quit(quitSeverity)
           ::Waiter.try_for(8, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
-            jssh_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
+            firefox_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
             false
           end
         rescue JsshConnectionError
-          Vapir::Firefox.uninitialize_jssh_socket
+          Vapir::Firefox.uninitialize_firefox_socket
         end
         
         wait_for_process_exit(pid)
@@ -488,7 +488,7 @@ module Vapir
       def pid
         begin
           begin
-            ctypes = jssh_socket.Components.utils.import("resource://gre/modules/ctypes.jsm").ctypes
+            ctypes = firefox_socket.Components.utils.import("resource://gre/modules/ctypes.jsm").ctypes
           rescue JsshJavascriptError
             raise NotImplementedError, "Firefox 3.6 or greater is required for this method.\n\nOriginal error from firefox: #{$!.class}: #{$!.message}", $!.backtrace
           end
@@ -587,7 +587,7 @@ module Vapir
       begin
         @browser_window_name="firewatir_window_%.16x"%rand(2**64)
       end while self.class.browser_window_objects.any?{|browser_window_object| browser_window_object.name == @browser_window_name }
-      watcher=jssh_socket.Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(jssh_socket.Components.interfaces.nsIWindowWatcher)
+      watcher=firefox_socket.Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(firefox_socket.Components.interfaces.nsIWindowWatcher)
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
       
       @browser_window_object=@browser_jssh_objects[:browser_window]=watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'resizable', nil)
@@ -606,7 +606,7 @@ module Vapir
         Enumerator.new(self, :each_browser)
       end
       def each_browser_window_object
-        mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
+        mediator=firefox_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(firefox_socket.Components.interfaces.nsIWindowMediator)
         enumerator=mediator.getEnumerator("navigator:browser")
         while enumerator.hasMoreElements
           win=enumerator.getNext
@@ -618,7 +618,7 @@ module Vapir
         Enumerator.new(self, :each_browser_window_object)
       end
       def each_window_object
-        mediator=jssh_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(jssh_socket.Components.interfaces.nsIWindowMediator)
+        mediator=firefox_socket.Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(firefox_socket.Components.interfaces.nsIWindowMediator)
         enumerator=mediator.getEnumerator(nil)
         while enumerator.hasMoreElements
           win=enumerator.getNext
@@ -673,7 +673,7 @@ module Vapir
       channel = nil
       ::Waiter.try_for(8, :exception => nil) do
         channel=browser.browser_object.docShell.currentDocumentChannel
-        channel.is_a?(JavascriptObject) && channel.instanceof(browser.jssh_socket.Components.interfaces.nsIHttpChannel) && channel.respond_to?(:responseStatus)
+        channel.is_a?(JavascriptObject) && channel.instanceof(browser.firefox_socket.Components.interfaces.nsIHttpChannel) && channel.respond_to?(:responseStatus)
       end || raise(RuntimeError, "expected currentDocumentChannel to exist and be a nsIHttpChannel but it wasn't; was #{channel.is_a?(JavascriptObject) ? channel.toString : channel.inspect}")
       status = channel.responseStatus
     end
@@ -750,7 +750,7 @@ module Vapir
       
       if options[:dc] == :page
         options[:format] ||= 'png'
-        jssh_socket.call_function(:window => content_window_object, :options => options, :filename => File.expand_path(filename)) do
+        firefox_socket.call_function(:window => content_window_object, :options => options, :filename => File.expand_path(filename)) do
         %q(
           // this is adapted from Selenium's method Selenium.prototype.doCaptureEntirePageScreenshot
           var document = window.document;

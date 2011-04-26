@@ -43,17 +43,17 @@ module Vapir
     #  >> browser.execute_script('element.PercentLoaded()', :element => browser.element(:tag_name => 'embed').element_object)
     #  => 100
     def execute_script(javascript, other_variables={})
-      sandbox=jssh_socket.Components.utils.Sandbox(content_window_object)
+      sandbox=firefox_socket.Components.utils.Sandbox(content_window_object)
       sandbox.window=content_window_object.window
       other_variables.each do |name, var|
         sandbox[name]=var
       end
-      return jssh_socket.Components.utils.evalInSandbox('with(window) { '+javascript+' }', sandbox)
+      return firefox_socket.Components.utils.evalInSandbox('with(window) { '+javascript+' }', sandbox)
     end
 
     # Returns the html of the document
     def outer_html
-      jssh_socket.call_function(:document => document_object) do %Q(
+      firefox_socket.call_function(:document => document_object) do %Q(
         var temp_el=document.createElement('div');
         for(var i in document.childNodes)
         { try

@@ -148,7 +148,7 @@ module Vapir
         #
         # Note that the else block works perfectly fine, but is much much slower due to the amount of 
         # socket activity. 
-        jssh_socket= candidates.is_a?(JavascriptObject) ? candidates.jssh_socket : candidates.first.jssh_socket
+        firefox_socket= candidates.is_a?(JavascriptObject) ? candidates.firefox_socket : candidates.first.firefox_socket
         match_candidates_js=JavascriptObject.new("
           (function(candidates, specifiers_list, aliases)
           { candidates=$A(candidates);
@@ -214,7 +214,7 @@ module Vapir
             });
             return matched_candidates;
           })
-        ", jssh_socket, :debug_name => 'match_candidates_function')
+        ", firefox_socket, :debug_name => 'match_candidates_function')
         matched_candidates=match_candidates_js.call(candidates, specifiers_list, aliases)
         if block_given?
           matched_candidates.to_array.each do |matched_candidate|

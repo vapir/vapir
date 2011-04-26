@@ -44,7 +44,7 @@ module Vapir
     include Vapir::Container
     
     def extra_for_contained
-      base_extra_for_contained.merge(:jssh_socket => jssh_socket)
+      base_extra_for_contained.merge(:firefox_socket => firefox_socket)
     end
 
     public
@@ -52,7 +52,7 @@ module Vapir
     #   Refer: https://developer.mozilla.org/en/DOM/document.evaluate
     def element_objects_by_xpath(xpath)
       elements=[]
-      result=document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
+      result=document_object.evaluate(xpath, containing_object, nil, firefox_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
       while element=result.iterateNext
         elements << element
       end
@@ -62,7 +62,7 @@ module Vapir
     # Returns the first element object that matches the given XPath query.
     #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
     def element_object_by_xpath(xpath)
-      document_object.evaluate(xpath, containing_object, nil, jssh_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
+      document_object.evaluate(xpath, containing_object, nil, firefox_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
     end
 
     # Returns the first element that matches the given xpath expression or query.
@@ -83,8 +83,8 @@ module Vapir
     # returns a JavascriptObject representing an array (in javascript) of the visible text nodes of this container. same as
     # the Vapir::Common #visible_text_nodes implementation, but much much faster. 
     def visible_text_nodes
-      text_nodes = jssh_socket.call_function(:element_object => containing_object, :document_object => document_object) do %Q(
-          var Ycomb = function(gen){ return function(f){ return f(f); }(function(f){ return gen(function(){ return f(f).apply(null, arguments); }); }); }; // TODO: move this somewhere better - jssh_socket? 
+      text_nodes = firefox_socket.call_function(:element_object => containing_object, :document_object => document_object) do %Q(
+          var Ycomb = function(gen){ return function(f){ return f(f); }(function(f){ return gen(function(){ return f(f).apply(null, arguments); }); }); }; // TODO: move this somewhere better - firefox_socket? 
           var recurse_text_nodes = Ycomb(function(recurse)
           { return function(node, parent_visibility)
             { if(node.nodeType==1 || node.nodeType==9)

@@ -631,7 +631,7 @@ class JavascriptArray < JavascriptObject
   # yields the element at each subscript of this javascript array, from 0 to self.length. 
   def each
     length=self.length
-    raise FirefoxSocketError, "length #{length.inspect} is not a non-negative integer on #{self.ref}" unless length.is_a?(Integer) && length >= 0
+    raise FirefoxSocketJavascriptError, "length #{length.inspect} is not a non-negative integer on #{self.ref}" unless length.is_a?(Integer) && length >= 0
     for i in 0...length
       element=self[i]
       if element.is_a?(JavascriptObject)

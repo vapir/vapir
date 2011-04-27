@@ -272,7 +272,7 @@ class FirefoxSocket
         given=$1.to_i
         string[0...(-given)].unpack("U*").length
       else # otherwise, this is some other issue we weren't expecting; we will not rescue it. 
-        raise
+        raise($!.class, $!.message+"\n\ngetting utf8 length of string #{string.inspect}", $!.backtrace)
       end
     end
   end

@@ -33,5 +33,9 @@ class JsshSocket < FirefoxSocket
       raise FirefoxSocketError, "Something went wrong initializing native JSON - message #{ret.inspect}"
     end
   end
-end
 
+  # returns a JavascriptObject representing the return value of JSSH's builtin getWindows() function. 
+  def getWindows
+    root.getWindows
+  end
+end

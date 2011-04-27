@@ -196,7 +196,16 @@ module Vapir
       end
       
       if options[:attach]
-        attach(*options[:attach])
+        how, what = *options[:attach]
+        @browser_window_object = case how
+        when :browser_window_object
+          what
+        else
+          ::Waiter.try_for(options[:timeout], :exception => Vapir::Exception::NoMatchingWindowFoundException.new("Unable to locate a window with #{how} of #{what}")) do
+            find_window(how, what)
+          end
+        end
+        set_browser_document
       else
         open_window
       end
@@ -575,33 +584,7 @@ module Vapir
     include FirefoxClassAndInstanceMethods
     extend FirefoxClassAndInstanceMethods
 
-    
-
-    #   Used for attaching pop up window to an existing Firefox window, either by url or title.
-    #   ff.attach(:url, 'http://www.google.com')
-    #   ff.attach(:title, 'Google')
-    #
-    # Output:
-    #   Instance of newly attached window.
-    def attach(how, what)
-      @browser_window_object = case how
-      when :browser_window_object
-        what
-      else
-        find_window(how, what)
-      end
-      
-      unless @browser_window_object
-        raise Exception::NoMatchingWindowFoundException.new("Unable to locate window, using #{how} and #{what}")
-      end
-      set_browser_document
-      self
-    end
-    private :attach
-
     # loads up a new window in an existing process
-    # Vapir::Browser.attach() with no arguments passed the attach method will create a new window
-    # this will only be called one time per instance we're only ever going to run in 1 window
     def open_window
       begin
         @browser_window_name="firewatir_window_%.16x"%rand(2**64)

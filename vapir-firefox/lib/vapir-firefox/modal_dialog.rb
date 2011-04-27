@@ -32,7 +32,7 @@ module Vapir
     
     def exists?
       # firefox_socket may be nil if the window has closed 
-      @modal_window && @browser.firefox_socket && @browser.firefox_socket.object('getWindows()').to_js_array.include(@modal_window)
+      @modal_window && @browser.firefox_socket && @browser.class.window_objects.any?{|window_object| window_object==@modal_window }
     end
     
     def text

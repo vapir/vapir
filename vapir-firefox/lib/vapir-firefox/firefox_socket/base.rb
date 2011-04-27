@@ -143,7 +143,8 @@ class FirefoxSocket
       @expecting_extra_maybe=true
       raise FirefoxSocketError, "Something went wrong initializing native JSON - message #{ret.inspect}"
     end
-    root.JsshTemp={}
+    root.VapirTemp={}
+    @temp_object = root.VapirTemp
   end
 
   private
@@ -688,9 +689,7 @@ class FirefoxSocket
   # on this socket. 
   #
   # really, temporary values could be stored anywhere. this just gives one nice consistent designated place to stick them. 
-  def temp_object
-    @temp_object ||= root.JsshTemp
-  end
+  attr_reader :temp_object
   # returns a JavascriptObject representing the Components top-level javascript object. 
   #
   # https://developer.mozilla.org/en/Components_object

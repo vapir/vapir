@@ -123,18 +123,7 @@ class FirefoxSocket
       @expecting_extra_maybe=true
       raise FirefoxSocketError, "Something went wrong loading Prototype - message #{ret.inspect}"
     end
-    ret=send_and_read("(function()
-    { nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
-      nativeJSON_encode_length=function(object)
-      { var encoded=nativeJSON.encode(object);
-        return encoded.length.toString()+\"\\n\"+encoded;
-      }
-      return 'done!';
-    })()")
-    if ret != "done!"
-      @expecting_extra_maybe=true
-      raise FirefoxSocketError, "Something went wrong initializing native JSON - message #{ret.inspect}"
-    end
+    initialize_length_json_writer
     root.VapirTemp={}
     @temp_object = root.VapirTemp
   end

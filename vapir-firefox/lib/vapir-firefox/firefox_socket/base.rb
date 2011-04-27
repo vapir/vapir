@@ -114,7 +114,7 @@ class FirefoxSocket
       @expecting_extra_maybe=false
       eat_welcome_message
     rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
-      err=FirefoxSocketUnableToStart.new("Could not connect to JSSH sever #{host}:#{port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
+      err=FirefoxSocketUnableToStart.new("Could not connect to Firefox on #{host}:#{port}. Ensure that Firefox is running and has the extension listening on that port, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
       err.set_backtrace($!.backtrace)
       raise err
     end

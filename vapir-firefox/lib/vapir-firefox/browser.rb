@@ -97,13 +97,13 @@ module Vapir
     include Firefox::Window
     include Firefox::ModalDialogContainer
 
-    # initializes a JsshSocket and stores in a class variable. 
+    # initializes a FirefoxSocket and stores in a class variable. 
     def self.initialize_firefox_socket # :nodoc:
       uninitialize_firefox_socket
       @@firefox_socket=JsshSocket.new
       @@firefox_socket
     end
-    # returns a connected JsshSocket. pass :reset_if_dead => true if you suspect an existing 
+    # returns a connected FirefoxSocket. pass :reset_if_dead => true if you suspect an existing 
     # socket may be dead, and you want a new one. a warning will be printed if this occurs. 
     def self.firefox_socket(options={}) # :nodoc:
       if options[:reset] || !(class_variable_defined?('@@firefox_socket') && @@firefox_socket)

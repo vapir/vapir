@@ -2,9 +2,9 @@
 class JavascriptObject
   # the reference to the javascript object this JavascriptObject represents 
   attr_reader :ref
-  # the JsshSocket this JavascriptObject is on 
+  # the FirefoxSocket this JavascriptObject is on 
   attr_reader :firefox_socket
-  # whether this represents the result of a function call (if it does, then JsshSocket#typeof won't be called on it)
+  # whether this represents the result of a function call (if it does, then FirefoxSocket#typeof won't be called on it)
   attr_reader :function_result
   # this tracks the origins of this object - what calls were made along the way to get it. 
   attr_reader :debug_name
@@ -17,12 +17,12 @@ class JavascriptObject
 
   public
   # initializes a JavascriptObject with a string of javascript containing a reference to
-  # the object, and a  JsshSocket that the object is defined on. 
+  # the object, and a FirefoxSocket that the object is defined on. 
   def initialize(ref, firefox_socket, other={})
     other={:debug_name => ref, :function_result => false}.merge(other)
     raise ArgumentError, "Empty object reference!" if !ref || ref==''
     raise ArgumentError, "Reference must be a string - got #{ref.inspect} (#{ref.class.name})" unless ref.is_a?(String)
-    raise ArgumentError, "Not given a JsshSocket, instead given #{firefox_socket.inspect} (#{firefox_socket.class.name})" unless firefox_socket.is_a?(JsshSocket)
+    raise ArgumentError, "Not given a FirefoxSocket, instead given #{firefox_socket.inspect} (#{firefox_socket.class.name})" unless firefox_socket.is_a?(FirefoxSocket)
     @ref=ref
     @firefox_socket=firefox_socket
     @debug_name=other[:debug_name]
@@ -30,7 +30,7 @@ class JavascriptObject
 #    logger.info { "#{self.class} initialized: #{debug_name} (type #{type})" }
   end
 
-  # returns the value, via JsshSocket#value_json
+  # returns the value, via FirefoxSocket#value_json
   def val
     firefox_socket.value_json(ref, :error_on_undefined => !function_result)
   end
@@ -61,10 +61,10 @@ class JavascriptObject
     @@always_define_methods = val
   end
 
-  # returns the value just as a string with no attempt to deal with type using json. via JsshSocket#value 
+  # returns the value just as a string with no attempt to deal with type using json. via FirefoxSocket#value 
   #
   # note that this can be slow if it evaluates to a blank string. for example, if ref is just ""
-  # then JsshSocket#value will wait DEFAULT_SOCKET_TIMEOUT seconds for data that is not to come. 
+  # then FirefoxSocket#value will wait DEFAULT_SOCKET_TIMEOUT seconds for data that is not to come. 
   # this also happens with functions that return undefined. if ref="function(){do_some_stuff;}" 
   # (with no return), it will also wait DEFAULT_SOCKET_TIMEOUT. 
   def val_str
@@ -214,8 +214,8 @@ class JavascriptObject
   # assigns the given ruby value (converted to javascript) to the reference
   # for this object. returns self. 
   def assign(val)
-    @debug_name="(#{debug_name}=#{val.is_a?(JavascriptObject) ? val.debug_name : JsshSocket.to_javascript(val)})"
-    result=assign_expr(JsshSocket.to_javascript(val))
+    @debug_name="(#{debug_name}=#{val.is_a?(JavascriptObject) ? val.debug_name : FirefoxSocket.to_javascript(val)})"
+    result=assign_expr(FirefoxSocket.to_javascript(val))
 #    logger.info { "#{self.class} assigned: #{debug_name} (type #{type})" }
     result
   end
@@ -223,8 +223,8 @@ class JavascriptObject
   def assign_expr(val)
     firefox_socket.value_json("(function(val){#{ref}=val; return null;}(#{val}))")
     @type=nil # uncache this 
-    # don't want to use JsshSocket#assign_json because converting the result of the assignment (that is, the expression assigned) to json is error-prone and we don't really care about the result. 
-    # don't want to use JsshSocket#assign because the result can be blank and cause send_and_read to wait for data that's not coming - also 
+    # don't want to use FirefoxSocket#assign_json because converting the result of the assignment (that is, the expression assigned) to json is error-prone and we don't really care about the result. 
+    # don't want to use FirefoxSocket#assign because the result can be blank and cause send_and_read to wait for data that's not coming - also 
     # using a json function is better because it catches errors much more elegantly. 
     # so, wrap it in a function that returns nil. 
     self
@@ -233,10 +233,10 @@ class JavascriptObject
   # returns a JavascriptObject for the result of calling the function represented by this object, passing 
   # the given arguments, which are converted to javascript. if this is not a function, javascript will raise an error. 
   def pass(*args)
-    JavascriptObject.new("#{ref}(#{args.map{|arg| JsshSocket.to_javascript(arg)}.join(', ')})", firefox_socket, :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JavascriptObject) ? arg.debug_name : JsshSocket.to_javascript(arg)}.join(', ')})")
+    JavascriptObject.new("#{ref}(#{args.map{|arg| FirefoxSocket.to_javascript(arg)}.join(', ')})", firefox_socket, :function_result => true, :debug_name => "#{debug_name}(#{args.map{|arg| arg.is_a?(JavascriptObject) ? arg.debug_name : FirefoxSocket.to_javascript(arg)}.join(', ')})")
   end
   
-  # returns the value (via JsshSocket#value_json) or a JavascriptObject (see #val_or_object) of the return 
+  # returns the value (via FirefoxSocket#value_json) or a JavascriptObject (see #val_or_object) of the return 
   # value of this function (assumes this object is a function) passing it the given arguments (which 
   # are converted to javascript). 
   #
@@ -308,7 +308,7 @@ class JavascriptObject
   #
   # similar to [], but [] calls #val_or_object; this always returns a JavascriptObject. 
   def sub(key)
-    JavascriptObject.new("#{ref}[#{JsshSocket.to_javascript(key)}]", firefox_socket, :debug_name => "#{debug_name}[#{key.is_a?(JavascriptObject) ? key.debug_name : JsshSocket.to_javascript(key)}]")
+    JavascriptObject.new("#{ref}[#{FirefoxSocket.to_javascript(key)}]", firefox_socket, :debug_name => "#{debug_name}[#{key.is_a?(JavascriptObject) ? key.debug_name : FirefoxSocket.to_javascript(key)}]")
   end
 
   # returns a JavascriptObject referring to a subscript of this object, or a value if it is simple (see #val_or_object)
@@ -328,7 +328,7 @@ class JavascriptObject
   #
   # the operator should be string of javascript; the operand will be converted to javascript. 
   def binary_operator(operator, operand)
-    JavascriptObject.new("(#{ref}#{operator}#{JsshSocket.to_javascript(operand)})", firefox_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JavascriptObject) ? operand.debug_name : JsshSocket.to_javascript(operand)})").val_or_object
+    JavascriptObject.new("(#{ref}#{operator}#{FirefoxSocket.to_javascript(operand)})", firefox_socket, :debug_name => "(#{debug_name}#{operator}#{operand.is_a?(JavascriptObject) ? operand.debug_name : FirefoxSocket.to_javascript(operand)})").val_or_object
   end
   # addition, using the + operator in javascript 
   def +(operand)

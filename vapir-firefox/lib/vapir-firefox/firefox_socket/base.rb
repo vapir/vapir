@@ -462,7 +462,7 @@ class FirefoxSocket
   #
   # Uses #value_json; see its documentation.
   def assign_json(js_left, rb_right)
-    js_right=JsshSocket.to_javascript(rb_right)
+    js_right=FirefoxSocket.to_javascript(rb_right)
     value_json("#{js_left}=#{js_right}")
   end
   
@@ -472,7 +472,7 @@ class FirefoxSocket
   # return value, converted from javascript to ruby via JSON. 
   # Uses #value_json; see its documentation.
   def call_json(js_function, *rb_args)
-    js_args=rb_args.map{|arg| JsshSocket.to_javascript(arg) }
+    js_args=rb_args.map{|arg| FirefoxSocket.to_javascript(arg) }
     value_json("#{js_function}(#{js_args.join(', ')})")
   end
 
@@ -559,7 +559,7 @@ class FirefoxSocket
     object(ref, other).store_rand_temp
   end
   
-  # represents the root of the space seen by the JsshSocket, and implements #method_missing to 
+  # represents the root of the space seen by the FirefoxSocket, and implements #method_missing to 
   # return objects at the root level in a similar manner to JavascriptObject's #method_missing. 
   #
   # for example, jssh_socket.root.Components will return the top-level Components object; 

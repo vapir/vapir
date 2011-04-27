@@ -112,16 +112,7 @@ class FirefoxSocket
       @socket.sync = true
       @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
       @expecting_extra_maybe=false
-      @prompt="\n> "
-      welcome="Welcome to the Mozilla JavaScript Shell!\n"
-      read=read_value
-      if !read
-        @expecting_extra_maybe=true
-        raise FirefoxSocketUnableToStart, "Something went wrong initializing - no response" 
-      elsif read != welcome
-        @expecting_extra_maybe=true
-        raise FirefoxSocketUnableToStart, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
-      end
+      eat_welcome_message
     rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
       err=FirefoxSocketUnableToStart.new("Could not connect to JSSH sever #{host}:#{port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
       err.set_backtrace($!.backtrace)

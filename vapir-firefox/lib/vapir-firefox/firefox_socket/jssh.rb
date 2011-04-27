@@ -6,5 +6,18 @@ class JsshSocket < FirefoxSocket
   config.update_hash({
     :port => 9997,
   })
+
+  def eat_welcome_message
+    @prompt="\n> "
+    welcome="Welcome to the Mozilla JavaScript Shell!\n"
+    read=read_value
+    if !read
+      @expecting_extra_maybe=true
+      raise FirefoxSocketUnableToStart, "Something went wrong initializing - no response" 
+    elsif read != welcome
+      @expecting_extra_maybe=true
+      raise FirefoxSocketUnableToStart, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
+    end
+  end
 end
 

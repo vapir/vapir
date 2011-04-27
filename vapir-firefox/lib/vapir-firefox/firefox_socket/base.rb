@@ -92,19 +92,15 @@ class FirefoxSocket
   attr_reader :ip
   # the port on which this socket is connected 
   attr_reader :port
-  # whether the prototye javascript library is loaded 
-  attr_reader :prototype
   
   # Connects a new socket to jssh
   #
   # Takes options:
   # * :jssh_ip => the ip to connect to, default 127.0.0.1
   # * :jssh_port => the port to connect to, default 9997
-  # * :send_prototype => true|false, whether to load and send the Prototype library (the functional programming part of it anyway, and JSON bits)
   def initialize(options={})
     @ip=options[:jssh_ip] || DEFAULT_IP
     @port=options[:jssh_port] || DEFAULT_PORT
-    @prototype=options.key?(:send_prototype) ? options[:send_prototype] : true
     begin
       @socket = TCPSocket::new(@ip, @port)
       @socket.sync = true
@@ -124,12 +120,10 @@ class FirefoxSocket
       err.set_backtrace($!.backtrace)
       raise err
     end
-    if @prototype
-      ret=send_and_read(File.read(PrototypeFile))
-      if ret != "done!"
-        @expecting_extra_maybe=true
-        raise FirefoxSocketError, "Something went wrong loading Prototype - message #{ret.inspect}"
-      end
+    ret=send_and_read(File.read(PrototypeFile))
+    if ret != "done!"
+      @expecting_extra_maybe=true
+      raise FirefoxSocketError, "Something went wrong loading Prototype - message #{ret.inspect}"
     end
     ret=send_and_read("(function()
     { nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
@@ -412,7 +406,6 @@ class FirefoxSocket
   def value_json(js, options={})
     options={:error_on_undefined => true}.merge(options)
     raise ArgumentError, "Expected a string containing a javascript expression! received #{js.inspect} (#{js.class})" unless js.is_a?(String)
-    ensure_prototype
     ref_error=options[:error_on_undefined] ? "typeof(result)=='undefined' ? {errored: true, value: {'name': 'ReferenceError', 'message': 'undefined expression in: '+result_f.toString()}} : " : ""
     wrapped_js=
       "try
@@ -469,7 +462,6 @@ class FirefoxSocket
   #
   # Uses #value_json; see its documentation.
   def assign_json(js_left, rb_right)
-    ensure_prototype
     js_right=JsshSocket.to_javascript(rb_right)
     value_json("#{js_left}=#{js_right}")
   end
@@ -480,7 +472,6 @@ class FirefoxSocket
   # return value, converted from javascript to ruby via JSON. 
   # Uses #value_json; see its documentation.
   def call_json(js_function, *rb_args)
-    ensure_prototype
     js_args=rb_args.map{|arg| JsshSocket.to_javascript(arg) }
     value_json("#{js_function}(#{js_args.join(', ')})")
   end
@@ -494,7 +485,6 @@ class FirefoxSocket
   # some other value, returns that value, converted to ruby via JSON, assuming given no 
   # arguments. Uses #value_json; see its documentation.
   def handle_json(js_expr, *args)
-    ensure_prototype
     if js_expr=~/=\z/ # doing assignment
       js_left=$`
       if args.size != 1
@@ -516,18 +506,10 @@ class FirefoxSocket
       end
     end
   end
-  
-  # raises error if the prototype library (needed for JSON stuff in javascript) has not been loaded
-  def ensure_prototype
-    unless prototype
-      raise FirefoxSocketError, "This functionality requires the prototype library; cannot be called on a Jssh session that has not loaded the Prototype library"
-    end
-  end
 
   # returns the type of the given expression using javascript typeof operator, with the exception that
   # if the expression is null, returns 'null' - whereas typeof(null) in javascript returns 'object'
   def typeof(expression)
-    ensure_prototype
     js="try
 { nativeJSON_encode_length({errored: false, value: (function(object){ return (object===null) ? 'null' : (typeof object); })(#{expression})});
 } catch(e)
@@ -722,11 +704,7 @@ class FirefoxSocket
   # raises an informative error if the socket is down for some reason 
   def assert_socket
     begin
-      actual, expected=if prototype
-        [value_json('["foo"]'), ["foo"]]
-      else
-        [value('"foo"'), "foo"]
-      end
+      actual, expected=[value_json('["foo"]'), ["foo"]]
     rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
       raise(FirefoxSocketConnectionError, "Encountered a socket error while checking the socket.\n#{$!.class}\n#{$!.message}", $!.backtrace)
     end
@@ -737,7 +715,7 @@ class FirefoxSocket
   
   # returns a string of basic information about this socket. 
   def inspect
-    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:ip, :port, :prototype].map{|attr| aa="@#{attr}";aa+'='+instance_variable_get(aa).inspect}.join(', ')}>"
+    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:ip, :port].map{|attr| aa="@#{attr}";aa+'='+instance_variable_get(aa).inspect}.join(', ')}>"
   end
 end
 

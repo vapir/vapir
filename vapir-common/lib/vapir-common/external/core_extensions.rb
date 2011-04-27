@@ -34,6 +34,16 @@ unless :to_proc.respond_to?(:to_proc)
   end
 end
 
+class Hash
+  # returns a hash whose keys are the intersection of the keys of this hash and the keys given 
+  # as arguments to this function. values are the same as in this hash. 
+  def select_keys(*keys)
+    keys.inject(self.class.new) do |hash,key|
+      self.key?(key) ? hash.merge(key => self[key]) : hash
+    end
+  end
+end
+
 module Kernel
   # this is the Y-combinator, which allows anonymous recursive functions. for a simple example, 
   # to define a recursive function to return the length of an array:

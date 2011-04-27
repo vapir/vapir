@@ -107,6 +107,8 @@ class FirefoxSocket
   # * :port => the port to connect to
   def initialize(options={})
     config.update_hash options
+    require 'thread'
+    @mutex = Mutex.new
     begin
       @socket = TCPSocket::new(host, port)
       @socket.sync = true
@@ -287,8 +289,10 @@ class FirefoxSocket
     @last_expression=js_expr
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
 #    logger.debug { "SEND_AND_READ sending #{js_expr.inspect}" }
-    @socket.send(js_expr, 0)
-    return read_value(options)
+    @mutex.synchronize do
+      @socket.send(js_expr, 0)
+      return read_value(options)
+    end
   end
   
   private

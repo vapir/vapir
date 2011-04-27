@@ -1,6 +1,7 @@
 require 'json'
 require 'socket'
 require 'timeout'
+require 'vapir-common/config'
 require 'vapir-firefox/javascript_object'
 #require 'logger'
 
@@ -76,33 +77,39 @@ class FirefoxSocket
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
   # :startdoc:
 
-  # default IP Address of the machine where the script is to be executed. Default to localhost.
-  DEFAULT_IP = "127.0.0.1"
-  # default port to connect to. 
-  DEFAULT_PORT = 9997
+  @base_configuration=Vapir::Configuration.new(nil) do |config|
+    config.create_update :host, 'localhost'
+    config.create :port, :validator => :positive_integer
+    config.create_update :default_timeout, 64, :validator => :numeric
+    config.create_update :short_timeout, (2**-2).to_f, :validator => :numeric
+    config.create_update :read_size, 4096, :validator => :positive_integer
+  end
+  @configuration_parent=@base_configuration
+  extend Vapir::Configurable
 
-  # maximum time JsshSocket waits for a value to be sent before giving up 
-  DEFAULT_SOCKET_TIMEOUT=64
-  # maximum time JsshSocket will wait for additional reads on a socket that is actively sending 
-  SHORT_SOCKET_TIMEOUT=(2**-2).to_f
-  # the number of bytes to read from the socket at a time 
-  READ_SIZE=4096
+  include Vapir::Configurable
+  def configuration_parent
+    self.class.config
+  end
 
-  # the IP to which this socket is connected 
-  attr_reader :ip
+  # the host to which this socket is connected 
+  def host
+    config.host
+  end
   # the port on which this socket is connected 
-  attr_reader :port
+  def port
+    config.port
+  end
   
   # Connects a new socket to jssh
   #
   # Takes options:
-  # * :jssh_ip => the ip to connect to, default 127.0.0.1
-  # * :jssh_port => the port to connect to, default 9997
+  # * :host => the ip to connect to, default localhost
+  # * :port => the port to connect to
   def initialize(options={})
-    @ip=options[:jssh_ip] || DEFAULT_IP
-    @port=options[:jssh_port] || DEFAULT_PORT
+    config.update_hash options
     begin
-      @socket = TCPSocket::new(@ip, @port)
+      @socket = TCPSocket::new(host, port)
       @socket.sync = true
       @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
       @expecting_extra_maybe=false
@@ -116,7 +123,7 @@ class FirefoxSocket
         raise FirefoxSocketUnableToStart, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
       end
     rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
-      err=FirefoxSocketUnableToStart.new("Could not connect to JSSH sever #{@ip}:#{@port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
+      err=FirefoxSocketUnableToStart.new("Could not connect to JSSH sever #{host}:#{port}. Ensure that Firefox is running and has JSSH configured, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
       err.set_backtrace($!.backtrace)
       raise err
     end
@@ -165,18 +172,18 @@ class FirefoxSocket
   #  => "3\n> 4\n> 5"
   #
   # by default, read_value reads until the socket is done being ready. "done being ready" is defined as Kernel.select 
-  # saying that the socket isn't ready after waiting for SHORT_SOCKET_TIMEOUT. usually this will be true after a 
-  # single read, as most things only take one #recv call to get the whole value. this waiting for SHORT_SOCKET_TIMEOUT
+  # saying that the socket isn't ready after waiting for config.short_timeout. usually this will be true after a 
+  # single read, as most things only take one #recv call to get the whole value. this waiting for config.short_timeout
   # can add up to being slow if you're doing a lot of socket activity.
   #
   # to solve this, performance can be improved significantly using the :length_before_value option. with this, you have
   # to write your javascript to return the length of the value to be sent,  followed by a newline, followed by the actual
   # value (which must be of the length it says it is, or this method will error). 
   #
-  # if this option is set, this doesn't do any SHORT_SOCKET_TIMEOUT waiting once it gets the full value, it returns 
+  # if this option is set, this doesn't do any config.short_timeout waiting once it gets the full value, it returns 
   # immediately. 
   def read_value(options={})
-    options={:timeout => DEFAULT_SOCKET_TIMEOUT, :length_before_value => false, :read_size => READ_SIZE}.merge(options)
+    options=options_from_config(options, {:timeout => :default_timeout, :read_size => :read_size}, [:length_before_value])
     received_data = []
     value_string = ""
     size_to_read=options[:read_size]
@@ -214,7 +221,7 @@ class FirefoxSocket
           size_to_read = expected_size - utf8_length_safe(value_string)
         end
         unless value_string.empty? # switch to short timeout - unless we got a prompt (leaving value_string blank). switching to short timeout when all we got was a prompt would probably accidentally leave the value on the socket. 
-          timeout=SHORT_SOCKET_TIMEOUT
+          timeout=config.short_timeout
         end
       end
       
@@ -226,7 +233,7 @@ class FirefoxSocket
     end
 #    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}; value_string=#{value_string.inspect}" }
     if @expecting_extra_maybe
-      if Kernel.select([@socket] , nil , nil, SHORT_SOCKET_TIMEOUT)
+      if Kernel.select([@socket] , nil , nil, config.short_timeout)
         cleared_error=clear_error
         if cleared_error==PROMPT
           # if all we got was the prompt, just stick it on the value here so that the code below will deal with setting @execting_prompt correctly 
@@ -278,12 +285,12 @@ class FirefoxSocket
     end
   end
   # this should be called when an error occurs and we want to clear the socket of any value remaining on it. 
-  # tries for SHORT_SOCKET_TIMEOUT to see if a value will appear on the socket; if one does, returns it. 
+  # tries for config.short_timeout to see if a value will appear on the socket; if one does, returns it. 
   def clear_error
     data=""
-    while Kernel.select([@socket], nil, nil, SHORT_SOCKET_TIMEOUT)
+    while Kernel.select([@socket], nil, nil, config.short_timeout)
       # clear any other crap left on the socket 
-      data << @socket.recv(READ_SIZE)
+      data << @socket.recv(config.read_size)
     end
     if data =~ /#{Regexp.escape(PROMPT)}\z/
       @expecting_prompt=false
@@ -404,7 +411,8 @@ class FirefoxSocket
   # be converted to JSON, will return the equivalent ruby data type to the javascript
   # value. Will raise an error if the javascript errors. 
   def value_json(js, options={})
-    options={:error_on_undefined => true}.merge(options)
+    send_and_read_passthrough_options=[:timeout]
+    options=handle_options(options, {:error_on_undefined => true}, send_and_read_passthrough_options)
     raise ArgumentError, "Expected a string containing a javascript expression! received #{js.inspect} (#{js.class})" unless js.is_a?(String)
     ref_error=options[:error_on_undefined] ? "typeof(result)=='undefined' ? {errored: true, value: {'name': 'ReferenceError', 'message': 'undefined expression in: '+result_f.toString()}} : " : ""
     wrapped_js=
@@ -415,7 +423,7 @@ class FirefoxSocket
        }catch(e)
        { nativeJSON_encode_length({errored: true, value: Object.extend({}, e)});
        }"
-    val=send_and_read(wrapped_js, options.merge(:length_before_value => true))
+    val=send_and_read(wrapped_js, options.select_keys(*send_and_read_passthrough_options).merge(:length_before_value => true))
     error_or_val_json(val, js)
   end
   private
@@ -715,7 +723,7 @@ class FirefoxSocket
   
   # returns a string of basic information about this socket. 
   def inspect
-    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:ip, :port].map{|attr| aa="@#{attr}";aa+'='+instance_variable_get(aa).inspect}.join(', ')}>"
+    "\#<#{self.class.name}:0x#{"%.8x"%(self.hash*2)} #{[:host, :port].map{|attr| attr.to_s+'='+send(attr).inspect}.join(', ')}>"
   end
 end
 

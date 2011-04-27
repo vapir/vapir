@@ -504,7 +504,7 @@ module Vapir
           else
             raise NotImplementedError, "don't know how to get pid for #{current_os}"
           end
-          getpid = ctypes.open(lib).declare(pidfunction, abi, ctypes.int32_t)
+          getpid = ctypes.open(lib).declare(pidfunction, abi, ctypes['int32_t'])
           getpid.call()
         end
       end

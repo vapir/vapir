@@ -595,7 +595,7 @@ class FirefoxSocket
   #    >> jssh_socket.root.getWindows!
   #    FirefoxSocketError::NS_ERROR_FAILURE: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIJSON.encode]
   def root
-    jssh_socket=self
+    firefox_socket=self
 #    @root ||= begin
       root = Object.new
       (class << root; self; end).send(:define_method, :method_missing) do |method, *args|
@@ -603,7 +603,7 @@ class FirefoxSocket
         if method =~ /\A([a-z_][a-z0-9_]*)([=?!])?\z/i
           method = $1
           suffix = $2
-          jssh_socket.object(method).assign_or_call_or_val_or_object_by_suffix(suffix, *args)
+          firefox_socket.object(method).assign_or_call_or_val_or_object_by_suffix(suffix, *args)
         else
           # don't deal with any special character crap 
           super

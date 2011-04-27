@@ -40,11 +40,11 @@ require 'vapir-firefox/javascript_object'
 
 # :startdoc:
 
-# base exception class for all exceptions raised from Jssh sockets and objects. 
+# base exception class for all exceptions raised from FirefoxSocket 
 class FirefoxSocketError < StandardError;end
 # this exception covers all connection errors either on startup or during usage. often it represents an Errno error such as Errno::ECONNRESET. 
 class FirefoxSocketConnectionError < FirefoxSocketError;end
-# This exception is thrown if we are unable to connect to JSSh.
+# This exception is thrown if th FirefoxSocket is unable to initially connect. 
 class FirefoxSocketUnableToStart < FirefoxSocketConnectionError;end
 # Represents an error encountered on the javascript side, caught in a try/catch block. 
 class FirefoxSocketJavascriptError < FirefoxSocketError
@@ -71,8 +71,6 @@ class FirefoxSocket
 #  def logger
 #    self.class.logger
 #  end
-  
-  PROMPT="\n> "
   
   PrototypeFile=File.join(File.dirname(__FILE__), "prototype.functional.js")
   # :startdoc:
@@ -113,6 +111,7 @@ class FirefoxSocket
       @socket.sync = true
       @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
       @expecting_extra_maybe=false
+      @prompt="\n> "
       welcome="Welcome to the Mozilla JavaScript Shell!\n"
       read=read_value
       if !read
@@ -195,16 +194,16 @@ class FirefoxSocket
       data = ensuring_extra_handled { @socket.recv(size_to_read) }
       received_data << data
       value_string << data
-      if @expecting_prompt && utf8_length_safe(value_string) > PROMPT.length
-        if value_string =~ /\A#{Regexp.escape(PROMPT)}/
-          value_string.sub!(/\A#{Regexp.escape(PROMPT)}/, '')
+      if @prompt && @expecting_prompt && utf8_length_safe(value_string) > @prompt.length
+        if value_string =~ /\A#{Regexp.escape(@prompt)}/
+          value_string.sub!(/\A#{Regexp.escape(@prompt)}/, '')
           @expecting_prompt=false
         else
           value_string << clear_error
           raise FirefoxSocketError, "Expected a prompt! received unexpected data #{value_string.inspect}. maybe left on the socket by last evaluated expression? last expression was:\n\n#{@last_expression}"
         end
       end
-      if !@expecting_prompt 
+      if !@prompt || !@expecting_prompt 
         if options[:length_before_value] && !already_read_length && value_string.length > 0
           if value_string =~ /\A(\d+)\n/
             expected_size=$1.to_i
@@ -235,7 +234,7 @@ class FirefoxSocket
     if @expecting_extra_maybe
       if Kernel.select([@socket] , nil , nil, config.short_timeout)
         cleared_error=clear_error
-        if cleared_error==PROMPT
+        if @prompt && cleared_error==@prompt
           # if all we got was the prompt, just stick it on the value here so that the code below will deal with setting @execting_prompt correctly 
           value_string << cleared_error
         else
@@ -249,20 +248,20 @@ class FirefoxSocket
       value_string_length=value_string.unpack("U*").length # JSSH returns a utf-8 string, so unpack each character to get the right length 
       
       if value_string_length == expected_size
-        @expecting_prompt=true
-      elsif value_string_length == expected_size + PROMPT.length &&  value_string =~ /#{Regexp.escape(PROMPT)}\z/
-        value_string.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
+        @expecting_prompt=true if @prompt
+      elsif @prompt && value_string_length == expected_size + @prompt.length &&  value_string =~ /#{Regexp.escape(@prompt)}\z/
+        value_string.sub!(/#{Regexp.escape(@prompt)}\z/, '')
         @expecting_prompt=false
       else
         @expecting_extra_maybe=true if value_string_length < expected_size
         raise FirefoxSocketError, "Expected a value of size #{expected_size}; received data of size #{value_string_length}: #{value_string.inspect}"
       end
     else
-       if value_string =~ /#{Regexp.escape(PROMPT)}\z/ # what if the value happens to end with the same string as the prompt? 
-        value_string.sub!(/#{Regexp.escape(PROMPT)}\z/, '')
+      if @prompt && value_string =~ /#{Regexp.escape(@prompt)}\z/ # what if the value happens to end with the same string as the prompt? 
+        value_string.sub!(/#{Regexp.escape(@prompt)}\z/, '')
         @expecting_prompt=false
       else
-        @expecting_prompt=true
+        @expecting_prompt=true if @prompt
       end
     end
     return value_string
@@ -292,7 +291,7 @@ class FirefoxSocket
       # clear any other crap left on the socket 
       data << @socket.recv(config.read_size)
     end
-    if data =~ /#{Regexp.escape(PROMPT)}\z/
+    if @prompt && data =~ /#{Regexp.escape(@prompt)}\z/
       @expecting_prompt=false
     end
     data

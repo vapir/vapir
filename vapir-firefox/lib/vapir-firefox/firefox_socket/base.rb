@@ -48,7 +48,7 @@ class FirefoxSocketConnectionError < FirefoxSocketError;end
 class FirefoxSocketUnableToStart < FirefoxSocketConnectionError;end
 # Represents an error encountered on the javascript side, caught in a try/catch block. 
 class FirefoxSocketJavascriptError < FirefoxSocketError
-  attr_accessor :source, :js_err, :lineNumber, :stack, :fileName
+  attr_accessor :source, :name, :js_err, :lineNumber, :stack, :fileName
 end
 # represents a syntax error in javascript. 
 class FirefoxSocketSyntaxError < FirefoxSocketJavascriptError;end
@@ -311,16 +311,9 @@ class FirefoxSocket
   
   private
   # creates a ruby exception from the given information and raises it. 
-  def js_error(errclassname, message, source, stuff={})
-    errclass=if errclassname
-      unless FirefoxSocketError.const_defined?(errclassname)
-        FirefoxSocketError.const_set(errclassname, Class.new(FirefoxSocketJavascriptError))
-      end
-      FirefoxSocketError.const_get(errclassname)
-    else
-      FirefoxSocketJavascriptError
-    end
-    err=errclass.new("#{message}\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
+  def js_error(name, message, source, stuff={})
+    err=FirefoxSocketJavascriptError.new("#{message}\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
+    err.name=name
     err.source=source
     err.js_err=stuff
     ["lineNumber", "stack", "fileName"].each do |attr|

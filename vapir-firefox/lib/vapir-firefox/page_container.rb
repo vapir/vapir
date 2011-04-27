@@ -36,7 +36,7 @@ module Vapir
     # their methods from the top-level context, you get an exception:
     #
     #  >> browser.element(:tag_name => 'embed').element_object.PercentLoaded()
-    #  FirefoxSocketError::Error: NPMethod called on non-NPObject wrapped JSObject!
+    #  FirefoxSocketJavascriptError: NPMethod called on non-NPObject wrapped JSObject!
     #
     # but, this method executes script in the context of the content window, so the following works:
     #

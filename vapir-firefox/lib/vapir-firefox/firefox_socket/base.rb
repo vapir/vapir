@@ -55,7 +55,8 @@ class FirefoxSocketSyntaxError < FirefoxSocketJavascriptError;end
 # raised when a javascript value is expected to be defined but is undefined
 class FirefoxSocketUndefinedValueError < FirefoxSocketJavascriptError;end
 
-# abstract base class for socket connections to firefox extensions 
+# Base class for connecting to a firefox extension over a TCP socket. 
+# does the work of interacting with the socket and translating ruby values to javascript and back. 
 class FirefoxSocket
   # :stopdoc:
 #  def self.logger
@@ -99,7 +100,7 @@ class FirefoxSocket
     config.port
   end
   
-  # Connects a new socket to jssh
+  # Connects a new socket to firefox
   #
   # Takes options:
   # * :host => the ip to connect to, default localhost
@@ -349,7 +350,7 @@ class FirefoxSocket
     end
   end
 
-  # returns the value of the given javascript expression, as reported by JSSH. 
+  # returns the value of the given javascript expression, as reported by the the firefox extension. 
   #
   # This will be a string, the given expression's toString. 
   def value(js)
@@ -359,7 +360,7 @@ class FirefoxSocket
   end
   
   # assigns to the javascript reference on the left the javascript expression on the right. 
-  # returns the value of the expression as reported by JSSH, which
+  # returns the value of the expression as reported by the firefox extension, which
   # will be a string, the expression's toString. Uses #value; see its documentation.
   def assign(js_left, js_right)
     value("#{js_left}= #{js_right}")

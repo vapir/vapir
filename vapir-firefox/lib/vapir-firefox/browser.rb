@@ -231,8 +231,6 @@ module Vapir
     end
     
     # Launches firebox browser
-    # options as .new
-
     def launch_browser(options = {})
       ff_options = []
       if(options[:profile])

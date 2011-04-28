@@ -4,6 +4,8 @@ require 'vapir-common/browser'
 require 'vapir-common/exceptions'
 require 'vapir-common/config'
 module Vapir
+  # requires the winwindow library, raising a more informative error message than the default
+  # on failure. 
   def self.require_winwindow
     begin
       require 'winwindow'

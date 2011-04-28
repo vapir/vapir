@@ -502,12 +502,7 @@ class FirefoxSocket
     js="try
 { nativeJSON_encode_length({errored: false, value: (function(object){ return (object===null) ? 'null' : (typeof object); })(#{expression})});
 } catch(e)
-{ if(e.name=='ReferenceError')
-  { nativeJSON_encode_length({errored: false, value: 'undefined'});
-  }
-  else
-  { nativeJSON_encode_length({errored: true, value: Object.extend({}, e)});
-  }
+{ nativeJSON_encode_length(e.name=='ReferenceError' ? {errored: false, value: 'undefined'} : {errored: true, value: Object.extend({}, e)});
 }"
     error_or_val_json(send_and_read(js, :length_before_value => true),js)
   end

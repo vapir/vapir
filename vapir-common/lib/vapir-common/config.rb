@@ -138,6 +138,10 @@ module Vapir
     def defined_key?(key)
       locally_defined_key?(key) || (parent && parent.defined_key?(key))
     end
+    # returns an array of keys defined on the current configuration 
+    def defined_keys
+      recognized_keys.select{|key| defined_key?(key) }
+    end
     # returns a hash of currently defined configuration keys and values 
     def defined_hash
       (@parent ? @parent.defined_hash : {}).merge(@config_hash).freeze

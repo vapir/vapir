@@ -138,6 +138,10 @@ module Vapir
     def defined_key?(key)
       locally_defined_key?(key) || (parent && parent.defined_key?(key))
     end
+    # returns a hash of currently defined configuration keys and values 
+    def defined_hash
+      (@parent ? @parent.defined_hash : {}).merge(@config_hash).freeze
+    end
     # raises an error if the given key is not in an acceptable format. the key should be a string
     # or symbol consisting of alphanumerics and underscorse, beginning with an alpha or underscore. 
     def validate_key_format!(key)

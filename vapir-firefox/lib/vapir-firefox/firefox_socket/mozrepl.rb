@@ -8,6 +8,12 @@ class MozreplSocket < FirefoxSocket
     :port => 4242,
   })
 
+  # returns an array of command line flags that should be used to invoke firefox for mozrepl 
+  def self.command_line_flags(options={})
+    options = config.defined_hash.merge(options)
+    ['-repl', options['port']]
+  end
+  
   def eat_welcome_message
     read=read_value
     if !read

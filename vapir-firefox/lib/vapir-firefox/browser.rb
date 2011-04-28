@@ -98,23 +98,23 @@ module Vapir
     include Firefox::ModalDialogContainer
 
     # initializes a FirefoxSocket and stores in a class variable. 
-    def self.initialize_firefox_socket # :nodoc:
+    def self.initialize_firefox_socket(socket_class, socket_options) # :nodoc:
       uninitialize_firefox_socket
-      @@firefox_socket=JsshSocket.new
+      @@firefox_socket=socket_class.new(socket_options)
       @@firefox_socket
     end
     # returns a connected FirefoxSocket. pass :reset_if_dead => true if you suspect an existing 
     # socket may be dead, and you want a new one. a warning will be printed if this occurs. 
     def self.firefox_socket(options={}) # :nodoc:
       if options[:reset] || !(class_variable_defined?('@@firefox_socket') && @@firefox_socket)
-        initialize_firefox_socket
+        initialize_firefox_socket(options[:socket_class], options[:socket_options])
       end
       if options[:reset_if_dead]
         begin
           @@firefox_socket.assert_socket
         rescue FirefoxSocketConnectionError
           Kernel.warn "WARNING: Firefox socket RESET: resetting connection to firefox. Any active javascript references will not exist on the new socket!"
-          initialize_firefox_socket
+          initialize_firefox_socket(options[:socket_class], options[:socket_options])
         end
       end
       @@firefox_socket
@@ -160,7 +160,7 @@ module Vapir
       # if its not open at all, regardless of the :suppress_launch_process option start it
       # error if running without jssh, we don't want to kill their current window (mac only)
       begin
-        firefox_socket(:reset_if_dead => true).assert_socket
+        firefox_socket(:reset_if_dead => true, :socket_class => firefox_socket_class, :socket_options => firefox_socket_class_options).assert_socket
       rescue FirefoxSocketConnectionError
         # here we're going to assume that since it's not connecting, we need to launch firefox. 
         if options[:attach]
@@ -178,7 +178,7 @@ module Vapir
         end
         ::Waiter.try_for(options[:timeout], :exception => Vapir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:timeout]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
           begin
-            firefox_socket(:reset_if_dead => true).assert_socket
+            firefox_socket(:reset_if_dead => true, :socket_class => firefox_socket_class, :socket_options => firefox_socket_class_options).assert_socket
             true
           rescue FirefoxSocketUnableToStart
             false
@@ -237,7 +237,8 @@ module Vapir
 
       bin = path_to_bin()
       @self_launched_browser = true
-      @t = Thread.new { system(bin, '-jssh', *ff_options) } # TODO: launch process in such a way that @pid can be noted 
+      ff_options += firefox_socket_class.command_line_flags(firefox_socket_class_options).map(&:to_s)
+      @t = Thread.new { system(bin, *ff_options) } # TODO: launch process in such a way that @pid can be noted 
     end
     private :launch_browser
 
@@ -451,7 +452,7 @@ module Vapir
       #
       # if there is no existing connection to firefox, this will attempt to create one. If that fails, FirefoxSocketUnableToStart will be raised. 
       def quit_browser(options={})
-        firefox_socket(:reset_if_dead => true).assert_socket
+        firefox_socket(:reset_if_dead => true, :socket_class => firefox_socket_class, :socket_options => firefox_socket_class_options).assert_socket
         options=handle_options(options, :force => false)
         
         pid = @pid || begin
@@ -576,6 +577,34 @@ module Vapir
           end
         end
       end
+
+      private
+      # returns the class inheriting from FirefoxSocket which will be used to connect to a firefox extension
+      def firefox_socket_class
+        if config.firefox_extension.is_a?(String) && config.firefox_extension.downcase=='mozrepl'
+          require 'vapir-firefox/firefox_socket/mozrepl'
+          MozreplSocket
+        elsif config.firefox_extension.is_a?(String) && config.firefox_extension.downcase=='jssh'
+          require 'vapir-firefox/firefox_socket/jssh'
+          JsshSocket
+        else
+          raise Vapir::Configuration::InvalidValueError, "Unrecognized firefox extension #{config.firefox_extension.inspect}. Vapir supports the JSSH and Mozrepl extensions."
+        end
+      end
+      # returns a hash of options in the current configuration, prefixed with the firefox extension 
+      # to be used, to pass along to to the firefox socket class as needed 
+      def firefox_socket_class_options
+        # pass any config options that look like firefox_jssh_something or firefox_mozrepl_something 
+        prefix = "firefox_#{config.firefox_extension}_"
+        config.defined_hash.inject({}) do |opts, (key, val)|
+          if key[0...prefix.length] == prefix
+            opts.merge(key[prefix.length..-1] => val)
+          else
+            opts
+          end
+        end
+      end
+      private :firefox_socket_class_options
     end
     include FirefoxClassAndInstanceMethods
     extend FirefoxClassAndInstanceMethods

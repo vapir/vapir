@@ -7,6 +7,12 @@ class JsshSocket < FirefoxSocket
     :port => 9997,
   })
 
+  # returns an array of command line flags that should be used to invoke firefox for jssh 
+  def self.command_line_flags(options={})
+    options = config.defined_hash.merge(options)
+    ['-jssh', '-jssh-port', options['port']]
+  end
+
   def eat_welcome_message
     @prompt="\n> "
     welcome="Welcome to the Mozilla JavaScript Shell!\n"

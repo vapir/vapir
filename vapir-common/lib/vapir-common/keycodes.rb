@@ -1,5 +1,6 @@
 require 'vapir-common/external/core_extensions'
 module Vapir
+  # Hash of all known key codes. hash keys are symbols representing the key. hash values are integers. 
   KeyCodes = (('0'..'9').to_a+('a'..'z').to_a).inject({}){|hash, char| hash.merge(char.to_sym => char.vapir_ord) }.merge(
   {
     :cancel        => 3,
@@ -83,6 +84,8 @@ module Vapir
     :quote         => 222,
     :meta          => 224,
   })
+  # Hash of key codes for characters that get printed when you hit the key (in a text field for example). 
+  # hash keys are single-character strings; values are integers. 
   PrintKeyCodes = (('0'..'9').to_a+('a'..'z').to_a).inject({}){|hash, char| hash.merge(char => char.to_sym) }.merge(
   {
     "\t" => :tab,
@@ -100,6 +103,9 @@ module Vapir
     ']'  => :close_bracket,
     "'"  => :quote,
   }).inject({}){|hash, (key, key_codes_key)| hash.merge(key => KeyCodes[key_codes_key]) }
+  # Hash of key codes for characters that get printed when you hit the key combined with the shift key
+  # (in a text field for example). 
+  # hash keys are single-character strings; values are integers. 
   ShiftPrintKeyCodes = ('A'..'Z').to_a.inject({}){|hash, char| hash.merge(char => char.downcase.to_sym) }.merge(
   {
     ')' => :'0',
@@ -123,6 +129,8 @@ module Vapir
     '}' => :close_bracket,
     '"' => :quote,
   }).inject({}){|hash, (key, key_codes_key)| hash.merge(key => KeyCodes[key_codes_key]) }
+  # Hash of key codes for characters on the number pad. 
+  # hash keys are single-character strings; values are integers. 
   NumpadKeyCodes = ('0'..'9').inject({}){|hash, char| hash.merge(char => "numpad#{char}".to_sym) }.merge(
   {
     '*' => :multiply,

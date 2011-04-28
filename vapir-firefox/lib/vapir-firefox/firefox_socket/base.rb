@@ -120,8 +120,9 @@ class FirefoxSocket
       err.set_backtrace($!.backtrace)
       raise err
     end
+    initialize_environment
     ret=send_and_read(File.read(PrototypeFile))
-    if ret != "done!"
+    if ret !~ /done!/
       @expecting_extra_maybe=true
       raise FirefoxSocketError, "Something went wrong loading Prototype - message #{ret.inspect}"
     end
@@ -288,6 +289,7 @@ class FirefoxSocket
 #    logger.add(-1) { "SEND_AND_READ is starting. options=#{options.inspect}" }
     @last_expression=js_expr
     js_expr=js_expr+"\n" unless js_expr =~ /\n\z/
+    js_expr+=@input_terminator if @input_terminator
 #    logger.debug { "SEND_AND_READ sending #{js_expr.inspect}" }
     @mutex.synchronize do
       @socket.send(js_expr, 0)

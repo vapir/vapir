@@ -19,6 +19,9 @@ class JsshSocket < FirefoxSocket
       raise FirefoxSocketUnableToStart, "Something went wrong initializing - message #{read.inspect} != #{welcome.inspect}" 
     end
   end
+  def initialize_environment
+    # nothing to do for jssh
+  end
   def initialize_length_json_writer
     ret=send_and_read(%Q((function()
     { nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);

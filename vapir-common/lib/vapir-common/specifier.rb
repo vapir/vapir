@@ -301,6 +301,9 @@ module Vapir
 
   # This is on the Vapir module itself because it's used in a number of other places, should be in a broad namespace. 
   module_function
+  # fuzzily matches the given attribute with the given 'what'. if 'what' is a regexp, matches it 
+  # against attr; if it's a string, downcases and strips before comparing; tries a couple other 
+  # things; falls back to normal equality-checking. read the source for more information. 
   def fuzzy_match(attr, what)
     # IF YOU CHANGE THIS, CHANGE THE JAVASCRIPT REIMPLEMENTATION IN match_candidates
     case what

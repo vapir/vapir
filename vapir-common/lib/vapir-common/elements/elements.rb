@@ -178,6 +178,7 @@ module Vapir
     # Raises ObjectDisabledException if the object is disabled
     # Raises ObjectReadOnlyException if the object is read only
     def append(value, options={})
+      raise ArgumentError, "Text field value must be a string! Got #{value.inspect}" unless value.is_a?(String)
       options={:blur => true, :change => true, :select => true, :focus => true}.merge(options)
       assert_enabled
       assert_not_readonly

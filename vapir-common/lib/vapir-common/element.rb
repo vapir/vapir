@@ -588,10 +588,13 @@ module Vapir
       assert_container
       @container.document_object
     end
+    # returns the content window object of the current page on the browser (this is the 'window'
+    # object in javascript). 
     def content_window_object
       assert_container
       @container.content_window_object
     end
+    # returns the underlying object representing the browser. 
     def browser_window_object
       assert_container
       @container.browser_window_object

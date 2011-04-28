@@ -3,6 +3,7 @@ require 'socket'
 require 'timeout'
 require 'vapir-common/config'
 require 'vapir-firefox/javascript_object'
+require 'vapir-common/external/core_extensions'
 #require 'logger'
 
 # :stopdoc:

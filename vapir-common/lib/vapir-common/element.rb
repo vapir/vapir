@@ -595,6 +595,7 @@ module Vapir
       @container.browser_window_object
     end
     
+    # used by inspect, to_s, and pretty_print to determine what to show 
     def attributes_for_stringifying
       attributes_to_inspect=self.class.attributes_to_inspect
       unless exists?
@@ -621,6 +622,9 @@ module Vapir
         " "+attr.first+'='+attr.last.inspect
       end.join('') + ">"
     end
+    # returns a string representation of this element with each attribute on its own line. this 
+    # returns the same information as #inspect, but formatted somewhat more readably. you might 
+    # also be interested in pretty-printing the element; see the pp library. 
     def to_s
       attrs=attributes_for_stringifying
       longest_label=attrs.inject(0) {|max, attr| [max, attr.first.size].max }

@@ -229,7 +229,7 @@ module Vapir
     end
     # see Configuration#with_config
     def with_config(hash, &block)
-      @configuration.with_config(hash, &block)
+      config.with_config(hash, &block)
     end
     private
     # takes a hash of given options, a map of config keys, and a list of other allowed keys. 

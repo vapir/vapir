@@ -599,7 +599,8 @@ class FirefoxSocket
     firefox_socket=self
     @root ||= begin
       root = Object.new
-      (class << root; self; end).send(:define_method, :method_missing) do |method, *args|
+      root_metaclass = (class << root; self; end)
+      root_metaclass.send(:define_method, :method_missing) do |method, *args|
         method=method.to_s
         if method =~ /\A([a-z_][a-z0-9_]*)([=?!])?\z/i
           method = $1
@@ -609,6 +610,12 @@ class FirefoxSocket
           # don't deal with any special character crap 
           super
         end
+      end
+      root_metaclass.send(:define_method, :[]) do |attribute|
+        firefox_socket.object(attribute).val_or_object(:error_on_undefined => false)
+      end
+      root_metaclass.send(:define_method, :[]=) do |attribute, value|
+        firefox_socket.object(attribute).assign(value).val_or_object(:error_on_undefined => false)
       end
       root
     end

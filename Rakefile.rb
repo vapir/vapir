@@ -88,6 +88,9 @@ desc "check files for things that appear wrong: not in a gemfile; contains a car
 task :checkfiles do
   should_be_gemfiles = Dir['vapir-*/lib/**/*']-Dir['vapir-ie/lib/vapir-ie/IEDialog/*'].select(&File.method(:file?))
   are_gemfiles = common_files + ff_files + ie_files
+  are_gemfiles.reject{|gf| File.exists?(gf) }.each do |missing|
+    STDOUT.puts "missing gemfile: #{missing.inspect}"
+  end
   ycomb do |recurse|
     proc do |dir|
       (Dir.entries(dir || '.')-['.', '..', '.git']).each do |entry|

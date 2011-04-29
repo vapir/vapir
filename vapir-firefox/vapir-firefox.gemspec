@@ -65,8 +65,11 @@ Vapir::Firefox::GemSpec = Gem::Specification.new do |s|
     'lib/vapir-firefox/elements/text_field.rb', # 
     'lib/vapir-firefox/elements.rb', # shortcut for requiring every element type 
     'lib/vapir-firefox/clear_tracks.rb', # code to clear cache, history, cookies, etc. 
-    'lib/vapir-firefox/jssh_socket.rb', # class for talking over a JSSH socket to Firefox. todo: move to externals
-    'lib/vapir-firefox/prototype.functional.js', # javascript extensions to make writing javascript more pleasant
+    'lib/vapir-firefox/firefox_socket/base.rb', # abstract class for talking over a socket to Firefox 
+    'lib/vapir-firefox/firefox_socket/jssh.rb', # class for talking over a JSSH socket to Firefox 
+    'lib/vapir-firefox/firefox_socket/mozrepl.rb', # class for talking over a MozRepl socket to Firefox 
+    'lib/vapir-firefox/firefox_socket/prototype.functional.js', # javascript extensions to make writing javascript more pleasant
+    'lib/vapir-firefox/javascript_object.rb', # class to represent a javascript object in ruby 
     #'lib/vapir-firefox/x11.rb', # todo: figure this out. make something useful of it? delete? 
   ]
 end

@@ -597,7 +597,7 @@ class FirefoxSocket
   #    FirefoxSocketError::NS_ERROR_FAILURE: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIJSON.encode]
   def root
     firefox_socket=self
-#    @root ||= begin
+    @root ||= begin
       root = Object.new
       (class << root; self; end).send(:define_method, :method_missing) do |method, *args|
         method=method.to_s
@@ -611,7 +611,7 @@ class FirefoxSocket
         end
       end
       root
-#    end
+    end
   end
   
   # Creates and returns a JavascriptObject representing a function. 

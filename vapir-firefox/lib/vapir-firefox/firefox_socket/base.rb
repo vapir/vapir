@@ -300,14 +300,18 @@ class FirefoxSocket
   
   private
   # creates a ruby exception from the given information and raises it. 
-  def js_error(name, message, source, stuff={})
-    err=FirefoxSocketJavascriptError.new("#{message}\nEvaluating:\n#{source}\n\nOther stuff:\n#{stuff.inspect}")
+  def js_error(name, message, source, js_error_object={})
+    require 'stringio'
+    require 'pp'
+    pretty_js_error_object=""
+    PP.pp(js_error_object, StringIO.new(pretty_js_error_object))
+    err=FirefoxSocketJavascriptError.new("#{message}\nEvaluating:\n#{source}\n\nJavascript error object:\n#{pretty_js_error_object}")
     err.name=name
     err.source=source
-    err.js_err=stuff
+    err.js_err=js_error_object
     ["lineNumber", "stack", "fileName"].each do |attr|
-      if stuff.key?(attr)
-        err.send("#{attr}=", stuff[attr])
+      if js_error_object.key?(attr)
+        err.send("#{attr}=", js_error_object[attr])
       end
     end
     raise err

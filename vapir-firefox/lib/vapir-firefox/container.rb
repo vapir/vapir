@@ -84,8 +84,7 @@ module Vapir
     # the Vapir::Common #visible_text_nodes implementation, but much much faster. 
     def visible_text_nodes
       text_nodes = firefox_socket.call_function(:element_object => containing_object, :document_object => document_object) do %Q(
-          var Ycomb = function(gen){ return function(f){ return f(f); }(function(f){ return gen(function(){ return f(f).apply(null, arguments); }); }); }; // TODO: move this somewhere better - firefox_socket? 
-          var recurse_text_nodes = Ycomb(function(recurse)
+          var recurse_text_nodes = Vapir.Ycomb(function(recurse)
           { return function(node, parent_visibility)
             { if(node.nodeType==1 || node.nodeType==9)
               { var style = node.nodeType==1 ? document_object.defaultView.getComputedStyle(node, null) : null;

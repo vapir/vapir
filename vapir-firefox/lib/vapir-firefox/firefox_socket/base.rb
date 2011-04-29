@@ -130,6 +130,16 @@ class FirefoxSocket
     initialize_length_json_writer
     root.VapirTemp={}
     @temp_object = root.VapirTemp
+    root.Vapir={}
+    # Y combinator in javascript. 
+    #
+    #  example - recursive length function.
+    #
+    #  >> length=firefox_socket.root.Vapir.Ycomb(firefox_socket.function(:len){ "return function(list){ return list.length==0 ? 0 : 1+len(list.slice(1)); }; " })
+    #  => #<JavascriptObject:0x01206880 type=function, debug_name=Vapir.Ycomb(function(len){ return function(list){ return list.length==0 ? 0 : 1+len(list.slice(1)); };  })>
+    #  >> length.call(['a', 'b', 'c'])
+    #  => 3
+    root.Vapir.Ycomb=function(:gen){ "return function(f){ return f(f); }(function(f){ return gen(function(){ return f(f).apply(null, arguments); }); });" }
   end
 
   private

@@ -57,13 +57,14 @@ def ff_files
 end
 def exclude
   @exclude ||= %w(
-    vapir-firefox/lib/vapir-firefox/jssh_socket.rb
+    vapir-firefox/lib/vapir-firefox/javascript_object.rb
+    vapir-firefox/lib/vapir-firefox/firefox_extension
     vapir-ie/lib/vapir-ie/win32ole/win32ole.c
   )
 end
 
 desc 'Build all rdoc'
-task :rdoc => [:vapir_rdoc, :vapir_ie_rdoc, :vapir_ff_rdoc, :jssh_rdoc]
+task :rdoc => [:vapir_rdoc, :vapir_ie_rdoc, :vapir_ff_rdoc, :socket_rdoc]
 desc 'Build Vapir rdoc'
 task :vapir_rdoc do
   require 'vapir-common/version'
@@ -79,9 +80,9 @@ task :vapir_ff_rdoc do
   require 'vapir-firefox/version'
   rdoc(:op => 'vapir_ff_rdoc', :title => "Vapir-Firefox #{Vapir::Firefox::VERSION}", :files => (common_files + ff_files).select{|file| file =~ /\.rb$/ } - exclude, :exclude => exclude)
 end
-desc 'Build JsshObject, JsshSocket rdoc'
-task :jssh_rdoc do
-  rdoc(:op => 'jssh_rdoc', :title => 'JsshObject JsshSocket', :main => 'JsshObject', :files => ['vapir-firefox/lib/vapir-firefox/jssh_socket.rb'])
+desc 'Build JavascriptObject, FirefoxSocket rdoc'
+task :socket_rdoc do
+  rdoc(:op => 'socket_rdoc', :title => 'JavascriptObject & FirefoxSocket', :main => 'JavascriptObject', :files => ['vapir-firefox/lib/vapir-firefox/javascript_object.rb', 'vapir-firefox/lib/vapir-firefox/firefox_socket/base.rb', 'vapir-firefox/lib/vapir-firefox/firefox_socket/mozrepl.rb', 'vapir-firefox/lib/vapir-firefox/firefox_socket/jssh.rb'])
 end
 
 desc "check files for things that appear wrong: not in a gemfile; contains a carriage return; or wrong mode"

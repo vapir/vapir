@@ -9,12 +9,12 @@ module Vapir
       #  ["cache", "cookies", "offlineApps", "history", "formdata", "downloads", "passwords", "sessions", "siteSettings"]
       def sanitizer # :nodoc:
         @@sanitizer ||= begin
-          sanitizer_class = firefox_socket.object('Sanitizer')
-          if sanitizer_class.type=='undefined'
+          sanitizer_class = firefox_socket.root['Sanitizer']
+          unless sanitizer_class
             loader = firefox_socket.Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(firefox_socket.Components.interfaces.mozIJSSubScriptLoader)
             loader.loadSubScript("chrome://browser/content/sanitize.js")
-            sanitizer_class = firefox_socket.object('Sanitizer')
-          end 
+            sanitizer_class = firefox_socket.root['Sanitizer']
+          end
           sanitizer_class.new
         end
       end

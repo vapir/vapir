@@ -209,7 +209,7 @@ class FirefoxSocket
             # rather unlikely, but maybe we just received part of the number so far - ignore
           else
             @expecting_extra_maybe=true
-            raise FirefoxSocketError, "Expected length! unexpected data with no preceding length received: #{value_string.inspect}"
+            raise FirefoxSocketError, "Expected length! unexpected data with no preceding length received: #{value_string.inspect}\n\nlast thing we sent was: #{@last_expression}"
           end
         end
         if expected_size

@@ -314,6 +314,16 @@ class FirefoxSocket
   end
   public
 
+  # returns a string of javascript representing the given object. if given an Array or Hash, 
+  # operates recursively. this is like converting to JSON, but this supports more data types 
+  # than can be represented in JSON. supported data types are:
+  # - Array, Set (converts to javascript Array)
+  # - Hash (converts to javascript Object)
+  # - JavascriptObject (just uses the reference the JavascriptObject represents) 
+  # - Regexp (converts to javascript RegExp)
+  # - String, Symbol (converts to a javascript string)
+  # - Integer, Float
+  # - true, false, nil
   def self.to_javascript(object)
     if ['Array', 'Set'].any?{|klass_name| Object.const_defined?(klass_name) && object.is_a?(Object.const_get(klass_name)) }
       "["+object.map{|element| to_javascript(element) }.join(", ")+"]"

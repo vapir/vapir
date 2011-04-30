@@ -202,7 +202,7 @@ class JavascriptObject
   end
   
   # returns a JavascriptObject referencing the given attribute of this object 
-  def attr(attribute, options={})
+  def attr(attribute)
     unless (attribute.is_a?(String) || attribute.is_a?(Symbol)) && attribute.to_s =~ /\A[a-z_][a-z0-9_]*\z/i
       raise FirefoxSocketSyntaxError, "#{attribute.inspect} (#{attribute.class.inspect}) is not a valid attribute!"
     end

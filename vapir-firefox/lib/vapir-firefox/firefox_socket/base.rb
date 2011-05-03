@@ -319,7 +319,7 @@ class FirefoxSocket
     js_expr+=@input_terminator if @input_terminator
 #    logger.debug { "SEND_AND_READ sending #{js_expr.inspect}" }
     @mutex.synchronize do
-      @socket.send(js_expr, 0)
+      @socket.sendall(js_expr)
       return read_value(options)
     end
   end

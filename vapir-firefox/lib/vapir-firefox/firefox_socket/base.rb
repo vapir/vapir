@@ -41,6 +41,22 @@ require 'vapir-common/external/core_extensions'
 
 # :startdoc:
 
+class IPSocket
+  # sends the whole message 
+  #
+  # returns the number of broken-up sends that occured. 
+  def sendall(message, flags=0)
+    bytes_sent = 0
+    packets = 0
+    while bytes_sent < message.length
+      send_result = send(message[bytes_sent..-1], flags)
+      bytes_sent+= send_result
+      packets+= 1
+    end
+    packets
+  end
+end
+
 # base exception class for all exceptions raised from FirefoxSocket 
 class FirefoxSocketError < StandardError;end
 # this exception covers all connection errors either on startup or during usage. often it represents an Errno error such as Errno::ECONNRESET. 

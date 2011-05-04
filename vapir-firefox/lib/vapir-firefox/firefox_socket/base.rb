@@ -240,7 +240,7 @@ class FirefoxSocket
   # immediately. 
   def read_value(options={})
     options=options_from_config(options, {:timeout => :default_timeout, :read_size => :read_size}, [:length_before_value])
-    received_data = []
+#    received_data = []
     value_string = ""
     size_to_read=options[:read_size]
     timeout=options[:timeout]
@@ -249,7 +249,13 @@ class FirefoxSocket
 #    logger.add(-1) { "RECV_SOCKET is starting. timeout=#{timeout}" }
     while size_to_read > 0 && ensuring_extra_handled { @socket.ready_to_recv?(timeout) }
       data = ensuring_extra_handled { @socket.recv(size_to_read) }
-      received_data << data
+
+      # if the peer has performed an orderly shutdown, recv returns a 0-length string. 
+      if data.size==0
+        raise FirefoxSocketConnectionError, "The connection to Firefox has been closed."
+      end
+
+#      received_data << data
       value_string << data
       if @prompt && @expecting_prompt && utf8_length_safe(value_string) > @prompt.length
         if value_string =~ /\A#{Regexp.escape(@prompt)}/
@@ -279,11 +285,6 @@ class FirefoxSocket
         unless value_string.empty? # switch to short timeout - unless we got a prompt (leaving value_string blank). switching to short timeout when all we got was a prompt would probably accidentally leave the value on the socket. 
           timeout=config.short_timeout
         end
-      end
-      
-      # Kernel.select seems to indicate that a dead socket is ready to read, and returns endless blank strings to recv. rather irritating. 
-      if received_data.length >= 3 && received_data[-3..-1].all?{|rd| rd==''}
-        raise FirefoxSocketConnectionError, "Socket seems to no longer be connected"
       end
 #      logger.add(-1) { "RECV_SOCKET is continuing. timeout=#{timeout}; data=#{data.inspect}" }
     end

@@ -215,7 +215,7 @@ class FirefoxSocket
     already_read_length=false
     expected_size=nil
 #    logger.add(-1) { "RECV_SOCKET is starting. timeout=#{timeout}" }
-    while size_to_read > 0 && ensuring_extra_handled { Kernel.select([@socket] , nil , nil, timeout) }
+    while size_to_read > 0 && ensuring_extra_handled { @socket.ready_to_recv?(timeout) }
       data = ensuring_extra_handled { @socket.recv(size_to_read) }
       received_data << data
       value_string << data
@@ -257,7 +257,7 @@ class FirefoxSocket
     end
 #    logger.debug { "RECV_SOCKET is done. received_data=#{received_data.inspect}; value_string=#{value_string.inspect}" }
     if @expecting_extra_maybe
-      if Kernel.select([@socket] , nil , nil, config.short_timeout)
+      if @socket.ready_to_recv?(config.short_timeout)
         cleared_error=clear_error
         if @prompt && cleared_error==@prompt
           # if all we got was the prompt, just stick it on the value here so that the code below will deal with setting @execting_prompt correctly 
@@ -312,7 +312,7 @@ class FirefoxSocket
   # tries for config.short_timeout to see if a value will appear on the socket; if one does, returns it. 
   def clear_error
     data=""
-    while Kernel.select([@socket], nil, nil, config.short_timeout)
+    while @socket.ready_to_recv?(config.short_timeout)
       # clear any other crap left on the socket 
       data << @socket.recv(config.read_size)
     end

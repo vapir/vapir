@@ -55,6 +55,19 @@ class IPSocket
     end
     packets
   end
+  # takes a timeout, and returns true if Kernel.select indicates that the socket
+  # is ready to read within that timeout. if Kernel.select indicates that the socket
+  # is in an error condition, this method will raise 
+  def ready_to_recv?(timeout)
+    select_result = Kernel.select([self], nil, [self], timeout)
+    read_result, write_result, err_result = *select_result
+    if select_result && err_result.include?(self)
+      # never actually seen this condition, so not sure what error class to put here
+      raise "the socket indicated an error condition when checking that it was ready for reading"
+    else
+      return select_result && read_result.include?(self)
+    end
+  end
 end
 
 # base exception class for all exceptions raised from FirefoxSocket 

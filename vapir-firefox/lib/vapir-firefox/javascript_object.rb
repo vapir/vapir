@@ -145,15 +145,44 @@ class JavascriptObject
     if function_result # calling functions multiple times is bad, so store in temp before figuring out what to do with it
       store_rand_object_key(firefox_socket.temp_object).val_or_object(options.merge(:error_on_undefined => false))
     else
-      case self.type
-      when 'undefined'
+      # if we don't know our type, stick everything into one call to avoid multiple socket calls 
+      types_to_convert = ['boolean', 'number', 'string', 'null']
+      if !@type
+        type_and_value = firefox_socket.value_json(%Q((function()
+        { var result={};
+          var object;
+          try
+          { result.type=(function(object){ return (object===null) ? 'null' : (typeof object); })(object=#{ref});
+          }
+          catch(e)
+          { if(e.name=='ReferenceError')
+            { result.type='undefined';
+            }
+            else
+            { throw(e);
+            };
+          }
+          if($A(#{FirefoxSocket.to_javascript(types_to_convert)}).include(result.type))
+          { result.value = object;
+          }
+          return result;
+        })()))
+        @type = type_and_value['type']
+      end
+      
+      if type=='undefined'
         if !options[:error_on_undefined]
           nil
         else
           raise FirefoxSocketUndefinedValueError, "undefined expression represented by #{self.inspect} (javascript reference is #{@ref})"
         end
-      when 'boolean','number','string','null'
-        val
+      elsif types_to_convert.include?(type)
+        if type_and_value
+          raise "internal error - type_and_value had no value key; was #{type_and_value.inspect}" unless type_and_value.key?('value') # this shouldn't happen 
+          type_and_value['value']
+        else
+          val
+        end
       else # 'function','object', or anything else 
         if options[:define_methods] && type=='object'
           define_methods!

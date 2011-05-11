@@ -155,15 +155,13 @@ module Vapir
         @binary_path=options[:binary_path]
       end
       
-      # check for jssh not running, firefox may be open but not with -jssh
-      # if its not open at all, regardless of the :suppress_launch_process option start it
-      # error if running without jssh, we don't want to kill their current window (mac only)
+      # check for extension not listening; firefox may be open but not listening (extension not set up) 
       begin
         firefox_socket(:reset_if_dead => true, :socket_class => firefox_socket_class, :socket_options => firefox_socket_class_options).assert_socket
       rescue FirefoxSocketConnectionError
         # here we're going to assume that since it's not connecting, we need to launch firefox. 
         if options[:attach]
-          raise Vapir::Exception::NoBrowserException, "cannot attach using #{options[:attach].inspect} - could not connect to Firefox with JSSH"
+          raise Vapir::Exception::NoBrowserException, "cannot attach using #{options[:attach].inspect} - could not connect to Firefox"
         else
           launch_browser(options)
           # if we just launched a the browser process, attach to the window
@@ -175,7 +173,7 @@ module Vapir
             options[:attach]=[:title, //]
           end
         end
-        ::Waiter.try_for(options[:timeout], :exception => Vapir::Exception::NoBrowserException.new("Could not connect to the JSSH socket on the browser after #{options[:timeout]} seconds. Either Firefox did not start or JSSH is not installed and listening.")) do
+        ::Waiter.try_for(options[:timeout], :exception => Vapir::Exception::NoBrowserException.new("Could not connect to the #{config.firefox_extension} socket on the browser after #{options[:timeout]} seconds. Either Firefox did not start or #{config.firefox_extension} is not installed and listening.")) do
           begin
             firefox_socket(:reset_if_dead => true, :socket_class => firefox_socket_class, :socket_options => firefox_socket_class_options).assert_socket
             true

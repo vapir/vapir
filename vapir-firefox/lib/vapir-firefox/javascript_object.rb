@@ -218,13 +218,20 @@ class JavascriptObject
     result
   end
   # assigns the given javascript expression (string) to the reference for this object 
-  def assign_expr(val)
-    firefox_socket.value_json("(function(val){#{ref}=val; return null;}(#{val}))")
-    @type=nil # uncache this 
-    # don't want to use FirefoxSocket#assign_json because converting the result of the assignment (that is, the expression assigned) to json is error-prone and we don't really care about the result. 
-    # don't want to use FirefoxSocket#assign because the result can be blank and cause send_and_read to wait for data that's not coming - also 
-    # using a json function is better because it catches errors much more elegantly. 
-    # so, wrap it in a function that returns nil. 
+  def assign_expr(javascript_expression)
+    # don't want to use FirefoxSocket#assign_json because converting the result of the assignment 
+    # (that is, the expression assigned) to json is error-prone and we don't really care about the 
+    # result. 
+    #
+    # don't want to use FirefoxSocket#assign because the result can be blank and cause send_and_read 
+    # to wait for data that's not coming - also using a json function is better because it catches 
+    # errors much more elegantly. 
+    #
+    # so, wrap it in its own function, whose return value is unrelated to the actual assignment. 
+    # for efficiency, it returns the type (it used to just return nil and uncache type for later 
+    # retrieval), as this is desirable information, and since there's no other information we 
+    # particularly desire from this call, that is a good thing to return. 
+    @type=firefox_socket.value_json("(function(val){#{ref}=val; return (val===null) ? 'null' : (typeof val);}(#{javascript_expression}))")
     self
   end
   

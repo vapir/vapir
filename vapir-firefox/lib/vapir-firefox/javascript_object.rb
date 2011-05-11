@@ -168,10 +168,8 @@ class JavascriptObject
     if suffix=='='
       assign(*args)
     else
-      obj = if type=='function'
+      obj = if !args.empty? || type=='function'
         pass(*args)
-      elsif !args.empty?
-        raise ArgumentError, "Cannot pass arguments to Javascript object #{inspect} (ref = #{ref})"
       else
         self
       end

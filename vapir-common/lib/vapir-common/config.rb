@@ -59,7 +59,7 @@ module Vapir
             raise InvalidValueError, "value should be a positive integer; got #{value.inspect}"
           end
         else
-          raise ArgumentError, "invalid validator given: #{@validotor.inspect}\nvalidator should be nil for unspecified, a Proc, or a symbol indicating a known validator type"
+          raise ArgumentError, "invalid validator given: #{@validator.inspect}\nvalidator should be nil for unspecified, a Proc, or a symbol indicating a known validator type"
         end
       end
     end

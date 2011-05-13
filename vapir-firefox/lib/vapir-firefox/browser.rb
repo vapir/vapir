@@ -123,6 +123,14 @@ module Vapir
             return real_visibility;
           }
         ),
+        :element_displayed => %Q(
+          function(node, document_object)
+          { var style = node.nodeType==1 ? document_object.defaultView.getComputedStyle(node, null) : null;
+            var display = style && style.display;
+            var displayed = display ? display.toLowerCase() != 'none' : true;
+            return displayed;
+          }
+        ),
         :visible_text_nodes => %Q(
           function(element_object, document_object)
           { var recurse_text_nodes = Vapir.Ycomb(function(recurse)
@@ -133,8 +141,7 @@ module Vapir
                   if(!(our_visibility && $A(['hidden', 'collapse', 'visible']).include(our_visibility.toLowerCase())))
                   { our_visibility = parent_visibility;
                   }
-                  var display = style && style.display;
-                  if(display && display.toLowerCase()=='none')
+                  if(!Vapir.element_displayed(node, document_object))
                   { return [];
                   }
                   else
@@ -158,14 +165,12 @@ module Vapir
             });
             var element_to_check = element_object;
             while(element_to_check)
-            { var style = element_to_check.nodeType==1 ? document_object.defaultView.getComputedStyle(element_object, null) : null;
-              if(style)
-              { // check for display property. this is not inherited, and a parent with display of 'none' overrides an immediate visibility='visible' 
-                var display= style && style.display;
-                if(display && (display=display.toLowerCase())=='none')
-                { // if display is none, then this element is not visible, and thus has no visible text nodes underneath. 
-                  return [];
-                }
+            { // check for display property. this is not inherited, so ascend the heirarchy looking. 
+              //
+              // any parent with display of 'none' overrides a more-immediate visibility='visible', so if any parent has 
+              // display=none, this is not visible and has no visible child text nodes.
+              if(!Vapir.element_displayed(element_to_check, document_object))
+              { return [];
               }
               element_to_check=element_to_check.parentNode;
             }

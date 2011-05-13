@@ -100,6 +100,71 @@ module Vapir
     def self.initialize_firefox_socket(socket_class, socket_options) # :nodoc:
       uninitialize_firefox_socket
       @@firefox_socket=socket_class.new(socket_options)
+      vapir_javascript_functions = {
+        :visible_text_nodes => %Q(
+          function(element_object, document_object)
+          { var recurse_text_nodes = Vapir.Ycomb(function(recurse)
+            { return function(node, parent_visibility)
+              { if(node.nodeType==1 || node.nodeType==9)
+                { var style = node.nodeType==1 ? document_object.defaultView.getComputedStyle(node, null) : null;
+                  var our_visibility = style && style.visibility;
+                  if(!(our_visibility && $A(['hidden', 'collapse', 'visible']).include(our_visibility.toLowerCase())))
+                  { our_visibility = parent_visibility;
+                  }
+                  var display = style && style.display;
+                  if(display && display.toLowerCase()=='none')
+                  { return [];
+                  }
+                  else
+                  { return $A(node.childNodes).inject([], function(result, child_node)
+                    { return result.concat(recurse(child_node, our_visibility));
+                    });
+                  }
+                }
+                else if(node.nodeType==3)
+                { if(parent_visibility && $A(['hidden', 'collapse']).include(parent_visibility.toLowerCase()))
+                  { return [];
+                  }
+                  else
+                  { return [node.data];
+                  }
+                }
+                else
+                { return [];
+                }
+              };
+            });
+            var element_to_check = element_object;
+            var real_visibility = null;
+            while(element_to_check)
+            { var style = element_to_check.nodeType==1 ? document_object.defaultView.getComputedStyle(element_object, null) : null;
+              if(style)
+              { // only pay attention to the innermost definition that really defines visibility - one of 'hidden', 'collapse' (only for table elements), 
+                // or 'visible'. ignore 'inherit'; keep looking upward. 
+                // this makes it so that if we encounter an explicit 'visible', we don't pay attention to any 'hidden' further up. 
+                // this style is inherited - may be pointless for firefox, but IE uses the 'inherited' value. not sure if/when ff does.
+                if(real_visibility==null && (visibility=style.visibility))
+                { var visibility=visibility.toLowerCase();
+                  if($A(['hidden', 'collapse', 'visible']).include(visibility))
+                  { real_visibility=visibility;
+                  }
+                }
+                // check for display property. this is not inherited, and a parent with display of 'none' overrides an immediate visibility='visible' 
+                var display=style.display;
+                if(display && (display=display.toLowerCase())=='none')
+                { // if display is none, then this element is not visible, and thus has no visible text nodes underneath. 
+                  return [];
+                }
+              }
+              element_to_check=element_to_check.parentNode;
+            }
+            return recurse_text_nodes(element_object, real_visibility);
+          }
+        )
+      }
+      vapir_javascript_functions.each do |name, function_string|
+        @@firefox_socket.root.Vapir[name]=@@firefox_socket.object(function_string)
+      end
       @@firefox_socket
     end
     # returns a connected FirefoxSocket. pass :reset_if_dead => true if you suspect an existing 

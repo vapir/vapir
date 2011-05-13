@@ -541,6 +541,10 @@ class JavascriptObject
   def to_dom
     JavascriptDOMNode.new(self.ref, self.firefox_socket, :debug_name => debug_name)
   end
+  # returns a JavascriptFunction representing this object 
+  def to_function
+    JavascriptFunction.new(self.ref, self.firefox_socket, :debug_name => debug_name)
+  end
 
   # returns a ruby Hash. each key/value pair of this object
   # is represented in the returned hash. 
@@ -708,3 +712,25 @@ class JavascriptHash < JavascriptObject
   include Enumerable
 end
 
+# represents a javascript function 
+class JavascriptFunction < JavascriptObject
+  def to_proc
+    @the_proc ||= begin
+      javascript_function = self
+      the_proc = proc do |*args|
+        javascript_function.call(*args)
+      end
+      # this makes it so you can recover the javascript_function from the proc 
+      # this method returns - js_func.to_proc.javascript_function returns js_func. 
+      # unfortunately it's not so useful because when you pass the proc as a block, 
+      # it's reinstantated without the metaclass or instance variable defined here. 
+      # still, may have some potential use, so leaving this here. 
+      the_proc_metaclass = (class << the_proc; self; end)
+      the_proc_metaclass.send(:define_method, :javascript_function) do
+        javascript_function
+      end
+      the_proc.instance_variable_set('@javascript_function', javascript_function)
+      the_proc
+    end
+  end
+end

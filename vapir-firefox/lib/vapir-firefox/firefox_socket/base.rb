@@ -705,7 +705,8 @@ class FirefoxSocket
       raise ArgumentError, "The block given to \#function must return a string representing the body of a javascript function! instead got #{function_body.inspect}"
     end
     nl = function_body.include?("\n") ? "\n" : ""
-    object("function(#{arg_names.join(", ")})#{nl}{ #{function_body} #{nl}}")
+    description = function_body.include?("\n") ? "..." : function_body
+    JavascriptFunction.new("function(#{arg_names.join(", ")})#{nl}{ #{function_body} #{nl}}", self, {:debug_name => "function(#{arg_names.join(", ")}){ #{description} }"})
   end
   
   # takes a hash of arguments with keys that are strings or symbols that will be variables in the 

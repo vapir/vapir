@@ -26,20 +26,20 @@ class JsshSocket < FirefoxSocket
     end
   end
   def initialize_environment
-    # nothing to do for jssh
-  end
-  def initialize_length_json_writer
+    # set up objects that are needed: nativeJSON_encode_length, VapirTemp, and Vapir
     ret=send_and_read(%Q((function()
-    { nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
+    { var nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
       nativeJSON_encode_length=function(object)
       { var encoded=nativeJSON.encode(object);
         return encoded.length.toString()+"\\n"+encoded;
       }
+      VapirTemp = {};
+      Vapir = {};
       return 'done!';
     })()))
     if ret != "done!"
       @expecting_extra_maybe=true
-      raise FirefoxSocketError, "Something went wrong initializing native JSON - message #{ret.inspect}"
+      raise FirefoxSocketError, "Something went wrong initializing environment - message #{ret.inspect}"
     end
   end
 

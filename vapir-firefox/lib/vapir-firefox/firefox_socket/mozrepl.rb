@@ -30,28 +30,30 @@ class MozreplSocket < FirefoxSocket
     @prompt="#{@replname}> "
     @expecting_prompt = read !~ /#{Regexp.escape(@prompt)}\z/
   end
-  def initialize_length_json_writer
-    ret=send_and_read(%Q((function()
-    { nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
-      nativeJSON_encode_length=function(object)
-      { var encoded=nativeJSON.encode(object);
-        #{@replname}.print(encoded.length.toString()+"\\n"+encoded, false);
-      }
-      return 'json with length done!';
-    })()))
-    if ret !~ /json with length done!/
-      @expecting_extra_maybe=true
-      raise FirefoxSocketError, "Something went wrong initializing native JSON - message #{ret.inspect}"
-    end
-  end
   def initialize_environment
+    # change the prompt mode to something less decorative 
     #send_and_read("#{@replname}.home()")
     send_and_read("#{@replname}.setenv('printPrompt', false)")
     @prompt="\n"
     @expecting_prompt=false
     send_and_read("#{@replname}.setenv('inputMode', 'multiline')")
     @input_terminator = "--end-remote-input\n"
-  end
 
+    # set up objects that are needed: nativeJSON_encode_length, VapirTemp, and Vapir
+    ret=send_and_read(%Q((function(the_repl, context)
+    { var nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
+      context.nativeJSON_encode_length=function(object)
+      { var encoded=nativeJSON.encode(object);
+        the_repl.print(encoded.length.toString()+"\\n"+encoded, false);
+      }
+      context.VapirTemp = {};
+      context.Vapir = {};
+      return 'done!';
+    })(#{@replname}, this)))
+    if ret !~ /done!/
+      @expecting_extra_maybe=true
+      raise FirefoxSocketError, "Something went wrong initializing environment - message #{ret.inspect}"
+    end
+  end
 end
 

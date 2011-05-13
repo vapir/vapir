@@ -151,15 +151,12 @@ class FirefoxSocket
       raise err
     end
     initialize_environment
+    @temp_object = object('VapirTemp')
     ret=send_and_read(File.read(PrototypeFile))
     if ret !~ /done!/
       @expecting_extra_maybe=true
       raise FirefoxSocketError, "Something went wrong loading Prototype - message #{ret.inspect}"
     end
-    initialize_length_json_writer
-    root.VapirTemp={}
-    @temp_object = root.VapirTemp
-    root.Vapir={}
     # Y combinator in javascript. 
     #
     #  example - recursive length function.

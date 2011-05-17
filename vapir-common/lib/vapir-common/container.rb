@@ -257,6 +257,14 @@ module Vapir
       end))
     end
     alias innermost_by_node base_innermost_by_node
+    # takes text or regexp, and returns an ElementCollection consisting of deepest (innermost) elements in the dom heirarchy whose visible text
+    # matches what's given (by substring for text; by regexp match for regexp) 
+    def base_innermost_matching_visible_text(text_or_regexp)
+      innermost_by_node(proc do |node|
+        visible_text_nodes_method.call(node, document_object).join('')[text_or_regexp] # String#[] works with either text or regexp - returns the matched substring or nil 
+      end)
+    end
+    alias innermost_matching_visible_text base_innermost_matching_visible_text
     
     private
     # returns a proc that takes a node and a document object, and returns 

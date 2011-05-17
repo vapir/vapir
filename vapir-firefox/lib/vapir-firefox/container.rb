@@ -123,6 +123,17 @@ module Vapir
       end
     end
     
+    # takes text or regexp, and returns an ElementCollection consisting of deepest (innermost) elements in the dom heirarchy whose visible text
+    # matches what's given (by substring for text; by regexp match for regexp) 
+    def innermost_matching_visible_text(text_or_regexp)
+      innermost_by_node(firefox_socket.call_function(:document_object => document_object, :text_or_regexp => text_or_regexp) do
+        %Q(
+          return function(node)
+          { return Vapir.visible_text_nodes(node, document_object).join('').match(text_or_regexp);
+          };
+        )
+      end.to_function)
+    end
     private
     # returns a javascript function that takes a node and a document object, and returns 
     # true if the element's display property will allow it to be displayed; false if not. 

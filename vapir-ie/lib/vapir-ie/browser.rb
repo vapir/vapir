@@ -117,7 +117,7 @@ module Vapir
           }
           how=hows.keys.detect{|h| h.to_s.downcase==orig_how.to_s.downcase}
           raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how
-          @browser_object = ::Waiter.try_for(options[:timeout], :exception => NoMatchingWindowFoundException.new("Unable to locate a window with #{how} of #{what}")) do
+          @browser_object = ::Waiter.try_for(options[:timeout], :exception => NoMatchingWindowFoundException.new("Unable to locate a window with #{how} of #{what.inspect}")) do
             self.class.browser_objects.detect do |browser_object|
               begin
                 Vapir::fuzzy_match(hows[how].call(browser_object), what)

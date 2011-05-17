@@ -191,8 +191,7 @@ module Vapir
               unless our_visibility && ['hidden', 'collapse', 'visible'].include?(our_visibility=our_visibility.strip.downcase)
                 our_visibility = parent_visibility
               end
-              display = style && style.invoke('display')
-              if display && display.strip.downcase=='none'
+              if !element_displayed_method.call(node, document_object)
                 []
               else
                 Vapir::Element.object_collection_to_enumerable(node.childNodes).inject([]) do |result, child_node|
@@ -212,31 +211,17 @@ module Vapir
           end
         end
   
-        # determine the current visibility and display. TODO: this is copied/adapted from #visible?; should DRY 
+        # determine the current visibility and display. 
         element_to_check=containing_object
-        real_visibility=nil
-        while element_to_check #&& !element_to_check.instanceof(nsIDOMDocument)
-          if (style=base_element_class.element_object_style(element_to_check, document_object))
-            # only pay attention to the innermost definition that really defines visibility - one of 'hidden', 'collapse' (only for table elements), 
-            # or 'visible'. ignore 'inherit'; keep looking upward. 
-            # this makes it so that if we encounter an explicit 'visible', we don't pay attention to any 'hidden' further up. 
-            # this style is inherited - may be pointless for firefox, but IE uses the 'inherited' value. not sure if/when ff does.
-            if real_visibility==nil && (visibility=style.invoke('visibility'))
-              visibility=visibility.strip.downcase
-              if ['hidden', 'collapse', 'visible'].include?(visibility)
-                real_visibility=visibility
-              end
-            end
+        while element_to_check
+          if !element_displayed_method.call(element_to_check, document_object)
             # check for display property. this is not inherited, and a parent with display of 'none' overrides an immediate visibility='visible' 
-            display=style.invoke('display')
-            if display && (display=display.strip.downcase)=='none'
-              # if display is none, then this element is not visible, and thus has no visible text nodes underneath. 
-              return []
-            end
+            # if display is none, then this element is not visible, and thus has no visible text nodes underneath. 
+            return []
           end
           element_to_check=element_to_check.parentNode
         end
-        recurse_text_nodes.call(containing_object, real_visibility)
+        recurse_text_nodes.call(containing_object, element_real_visibility_method.call(containing_object, document_object))
       end
     end
     # returns an visible text inside this element by concatenating text nodes below this element in the DOM heirarchy which are visible.
@@ -286,6 +271,45 @@ module Vapir
       element_class
     end
     
+    private
+    # returns a proc that takes a node and a document object, and returns 
+    # true if the element's display property will allow it to be displayed; false if not. 
+    def element_displayed_method
+      @element_displayed_method ||= proc do |node, document_object|
+        style= node.nodeType==1 ? base_element_class.element_object_style(node, document_object) : nil
+        display = style && style.invoke('display')
+        displayed = display ? display.strip.downcase!='none' : true
+        displayed
+      end
+    end
+    
+    # returns a proc that takes a node and a document object, and returns 
+    # the visibility of that node, obtained by ascending the dom until an explicit 
+    # definition for visibility is found. 
+    def element_real_visibility_method
+      @element_real_visibility_method ||= proc do |element_to_check, document_object|
+        real_visibility=nil
+        while element_to_check && real_visibility==nil
+          style = base_element_class.element_object_style(element_to_check, document_object)
+          if style
+            # only pay attention to the innermost definition that really defines visibility - one of 'hidden', 'collapse' (only for table elements), 
+            # or 'visible'. ignore 'inherit'; keep looking upward. 
+            # this makes it so that if we encounter an explicit 'visible', we don't pay attention to any 'hidden' further up. 
+            # this style is inherited - may be pointless for firefox, but IE uses the 'inherited' value. not sure if/when ff does.
+            if style.invoke('visibility')
+              visibility=style.invoke('visibility').strip.downcase
+              if ['hidden', 'collapse', 'visible'].include?(visibility)
+                real_visibility=visibility
+              end
+            end
+          end
+          element_to_check=element_to_check.parentNode
+        end
+        real_visibility
+      end
+    end
+
+    public
     # shows the available objects on the current container.
     # This is usually only used for debugging or writing new test scripts.
     # This is a nice feature to help find out what HTML objects are on a page
@@ -333,3 +357,4 @@ module Vapir
     end
   end
 end
+

@@ -80,10 +80,14 @@ module Vapir
       end
     end
 
-    # returns a JavascriptObject representing an array (in javascript) of the visible text nodes of this container. same as
-    # the Vapir::Common #visible_text_nodes implementation, but much much faster. 
+    # returns a JavascriptObject representing an array of text nodes below this element in the DOM 
+    # heirarchy which are visible - that is, their parent element is visible. 
+    #
+    # same as the Vapir::Common #visible_text_nodes implementation, but much much faster.
     def visible_text_nodes
-      firefox_socket.root.Vapir.visible_text_nodes(containing_object, document_object).to_array
+      assert_exists do
+        visible_text_nodes_method.call(containing_object, document_object).to_array
+      end
     end
 
     private

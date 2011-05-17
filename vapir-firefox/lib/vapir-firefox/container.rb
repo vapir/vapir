@@ -86,5 +86,25 @@ module Vapir
       firefox_socket.root.Vapir.visible_text_nodes(containing_object, document_object).to_array
     end
 
+    private
+    # returns a javascript function that takes a node and a document object, and returns 
+    # true if the element's display property will allow it to be displayed; false if not. 
+    def element_displayed_method
+      @element_displayed_method ||= firefox_socket.root.Vapir['element_displayed']
+    end
+    # returns a javascript function that takes a node and a document object, and returns 
+    # the visibility of that node, obtained by ascending the dom until an explicit 
+    # definition for visibility is found. 
+    def element_real_visibility_method
+      @element_real_visibility_method ||= firefox_socket.root.Vapir['element_real_visibility']
+    end
+    
+    # returns a proc that takes a node and a document object, and returns 
+    # an Array of strings, each of which is the data of a text node beneath the given node which 
+    # is visible. 
+    def visible_text_nodes_method
+      @visible_text_nodes_method ||= firefox_socket.root.Vapir['visible_text_nodes']
+    end
   end
 end # module 
+

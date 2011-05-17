@@ -90,6 +90,39 @@ module Vapir
       end
     end
 
+    # takes one argument, a proc or a JavascriptObject representing a function in javascript. 
+    # this will be yielded successive dom nodes, and should return true if the node matches whatever
+    # criteria you care to match; false otherwise. 
+    #
+    # returns an ElementCollection consisting of the deepest elements within the dom heirarchy
+    # which match the given match_proc_or_function. 
+    def innermost_by_node(match_proc_or_function)
+      if match_proc_or_function.is_a?(JavascriptObject)
+        ElementCollection.new(self, base_element_class, extra_for_contained.merge(:candidates => proc do |container|
+          firefox_socket.call_function(:match_function => match_proc_or_function, :containing_object => container.containing_object) do
+            %Q(
+              return Vapir.Ycomb(function(innermost_matching_nodes)
+              { return function(container_node)
+                { var child_nodes = $A(container_node.childNodes);
+                  var matched_child_elements = child_nodes.select(function(node){ return node.nodeType==1 && match_function(node); });
+                  if(matched_child_elements.length==0)
+                  { return [container_node];
+                  }
+                  else
+                  { return matched_child_elements.map(function(matched_child_element)
+                    { return innermost_matching_nodes(matched_child_element);
+                    }).inject([], function(a, b){ return a.concat(b); });
+                  }
+                }
+              })(containing_object);
+            )
+          end.to_array
+        end))
+      else
+        base_innermost_by_node(match_proc_or_function)
+      end
+    end
+    
     private
     # returns a javascript function that takes a node and a document object, and returns 
     # true if the element's display property will allow it to be displayed; false if not. 

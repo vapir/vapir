@@ -231,6 +231,33 @@ module Vapir
       element_class
     end
     
+    # takes one argument, a proc. 
+    # this will be yielded successive dom nodes, and should return true if the node matches whatever
+    # criteria you care to match; false otherwise. 
+    #
+    # returns an ElementCollection consisting of the deepest elements within the dom heirarchy
+    # which match the given match_proc_or_function. 
+    def base_innermost_by_node(match_proc)
+      ElementCollection.new(self, base_element_class, extra_for_contained.merge(:candidates => proc do |container|
+        ycomb do |innermost_matching_nodes|
+          proc do |container_node|
+            child_nodes = Vapir::Element.object_collection_to_enumerable(container_node.childNodes)
+            matched_child_elements=child_nodes.select do |node|
+              node.nodeType==1 && match_proc.call(node)
+            end
+            if matched_child_elements.empty?
+              [container_node]
+            else
+              matched_child_elements.map do |matched_child_element|
+                innermost_matching_nodes.call(matched_child_element)
+              end.inject([], &:+)
+            end
+          end
+        end.call(container.containing_object)
+      end))
+    end
+    alias innermost_by_node base_innermost_by_node
+    
     private
     # returns a proc that takes a node and a document object, and returns 
     # true if the element's display property will allow it to be displayed; false if not. 

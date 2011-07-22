@@ -652,6 +652,7 @@ class JavascriptDOMNode < JavascriptObject
   # call #dump(:recurse => n) to recurse down only n levels. default is to recurse all the way down the dom tree. 
   def dump(options={})
     options={:recurse => nil, :level => 0}.merge(options)
+    options[:document] ||= self.ownerDocument
     next_options=options.merge(:recurse => options[:recurse] && (options[:recurse]-1), :level => options[:level]+1)
     result=(" "*options[:level]*2)+self.inspect+"\n"
     if options[:recurse]==0
@@ -659,6 +660,13 @@ class JavascriptDOMNode < JavascriptObject
     else 
       self.childNodes.to_array.each do |child|
         result+=child.to_dom.dump(next_options)
+      end
+      anons = self.nodeType == 1 && options[:document].getAnonymousNodes(self)
+      if anons
+        result+=(" "*next_options[:level]*2)+"ANONYMOUS:\n"
+        anons.to_array.each do |child|
+          result+=child.to_dom.dump(next_options)
+        end
       end
     end
     result

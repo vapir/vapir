@@ -51,7 +51,7 @@ module Vapir
       # raise if no anonymous nodes are found (this is where the buttons are) 
       anonymous_dialog_nodes=@modal_window.document.getAnonymousNodes(@modal_window.document.documentElement) || raise("Could not find anonymous nodes on which to look for buttons")
       xul_buttons=[]
-      anonymous_dialog_nodes.to_array.each do |node|
+      anonymous_dialog_nodes.to_array.select{|node| node.nodeType == 1 }.each do |node|
         xul_buttons+=node.getElementsByTagName('xul:button').to_array.select do |button|
           Vapir::fuzzy_match(button.label, button_text)
         end

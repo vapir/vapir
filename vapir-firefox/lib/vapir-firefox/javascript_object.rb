@@ -99,7 +99,7 @@ class JavascriptObject
   # this may be rather slow. 
   def implemented_interfaces
     firefox_socket.Components.interfaces.to_hash.inject([]) do |list, (key, interface)|
-      list << interface if instanceof(interface)
+      list << interface if (instanceof(interface) rescue false)
       list
     end
   end

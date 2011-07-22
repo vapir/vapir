@@ -41,9 +41,8 @@ class MozreplSocket < FirefoxSocket
 
     # set up objects that are needed: nativeJSON_encode_length, VapirTemp, and Vapir
     ret=send_and_read(%Q((function(the_repl, context)
-    { var nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
-      context.nativeJSON_encode_length=function(object)
-      { var encoded=nativeJSON.encode(object);
+    { context.nativeJSON_encode_length=function(object)
+      { var encoded=JSON.stringify(object);
         the_repl.print(encoded.length.toString()+"\\n"+encoded, false);
       }
       context.VapirTemp = {};

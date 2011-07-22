@@ -28,9 +28,8 @@ class JsshSocket < FirefoxSocket
   def initialize_environment
     # set up objects that are needed: nativeJSON_encode_length, VapirTemp, and Vapir
     ret=send_and_read(%Q((function()
-    { var nativeJSON=Components.classes['@mozilla.org/dom/json;1'].createInstance(Components.interfaces.nsIJSON);
-      nativeJSON_encode_length=function(object)
-      { var encoded=nativeJSON.encode(object);
+    { nativeJSON_encode_length=function(object)
+      { var encoded=JSON.stringify(object);
         return encoded.length.toString()+"\\n"+encoded;
       }
       VapirTemp = {};

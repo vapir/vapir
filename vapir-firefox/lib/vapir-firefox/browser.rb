@@ -349,7 +349,7 @@ module Vapir
            throw Components.results.NS_NOINTERFACE;
       )
       end
-      listener_object[:onStateChange]= firefox_socket.function(:aWebProgress, :aRequest, :aStateFlag, :aStatus) do %Q(
+      listener_object[:onStateChange]= firefox_socket.function(:aWebProgress, :aRequest, :aStateFlags, :aStatus) do %Q(
            var requests_in_progress=#{@requests_in_progress.ref};
            if(aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
            { #{@updated_at_epoch_ms.ref}=new Date().getTime();

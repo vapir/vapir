@@ -109,7 +109,7 @@ module Vapir
     def []=(key, value)
       update(key, value)
     end
-    # returns an array of 
+    # returns an array of configuration keys which are recognized (either locally or inherited from a parent) 
     def recognized_keys
       ((@parent ? @parent.recognized_keys : [])+@recognized_options.keys).uniq
     end
@@ -173,7 +173,7 @@ module Vapir
       end
       @recognized_options[key]= Option.new(key, options)
     end
-    # reads the value for the given key. if on value is defined, raises NoValueError. 
+    # reads the value for the given key. if no value is defined, raises NoValueError. 
     def read(key)
       key = recognize_key! key
       if @config_hash.key?(key)
@@ -201,7 +201,7 @@ module Vapir
         update(k,v)
       end
     end
-    # deletes the given value from the hash. this does not affect any ancestor Configurations. 
+    # deletes the given key from the hash. this does not affect any ancestor Configurations. 
     def delete(key)
       key = check_key key
       @config_hash.delete(key)

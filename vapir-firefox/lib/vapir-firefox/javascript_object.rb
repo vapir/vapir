@@ -545,6 +545,9 @@ class JavascriptObject
   def to_function
     JavascriptFunction.new(self.ref, self.firefox_socket, :debug_name => debug_name)
   end
+  def to_simple_enumerator
+    JavascriptSimpleEnumerator.new(self.ref, self.firefox_socket, :debug_name => debug_name)
+  end
 
   # returns a ruby Hash. each key/value pair of this object
   # is represented in the returned hash. 
@@ -733,4 +736,14 @@ class JavascriptFunction < JavascriptObject
       the_proc
     end
   end
+end
+
+class JavascriptSimpleEnumerator < JavascriptObject
+  def each
+    stored = store_rand_temp
+    while stored.hasMoreElements
+      yield stored.getNext
+    end
+  end
+  include Enumerable
 end

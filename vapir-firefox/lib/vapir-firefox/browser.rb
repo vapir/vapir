@@ -928,9 +928,8 @@ module Vapir
             fileOutputStream.init(nsFile, writeFlag | createFlag | truncateFlag, 0664, null);
             fileOutputStream.write(bytes, numBytes);
             fileOutputStream.close();
-            document_element.removeChild(canvas);
           }
-          catch(e)
+          finally
           { document_element.removeChild(canvas);
           }
         )

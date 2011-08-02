@@ -45,8 +45,8 @@ class TC_Forms2 < Test::Unit::TestCase # Note: there is no TC_Forms1
   end
   tag_method :test_form_inner_html, :fails_on_ie
   def test_form_inner_html
-    expected = "\n<br><input value=\"Submit\" type=\"submit\">\n"
-    assert_equal(expected, browser.form!(:name, 'test2').outer_html)
+    expected = /\A\s*<br><input[^>]*>\s*\s*\z/i
+    assert_match(expected, browser.form!(:name, 'test2').inner_html)
   end
   def test_form_flash
     assert_nothing_raised{ browser.form!(:name, 'test2').flash }

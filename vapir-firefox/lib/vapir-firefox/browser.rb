@@ -236,6 +236,7 @@ module Vapir
         @binary_path=options[:binary_path]
       end
       
+      require 'vapir-firefox/firefox_socket/base'
       # check for extension not listening; firefox may be open but not listening (extension not set up) 
       begin
         firefox_socket(:reset_if_dead => true, :socket_class => firefox_socket_class, :socket_options => firefox_socket_class_options).assert_socket

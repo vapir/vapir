@@ -751,8 +751,11 @@ module Vapir
       raise ArgumentError, "how should be one of: #{hows.keys.inspect} (was #{orig_how.inspect})" unless how
       found_win=nil
       self.class.each_browser_window_object do |win|
-        found_win=win if Vapir::fuzzy_match(hows[how].call(win.getBrowser.contentDocument),what)
-        # we don't break here if found_win is set because we want the last match if there are multiple. 
+        contentDocument = win.getBrowser.contentDocument rescue nil # this can result in a Javascript TypeError: this.docShell is null if the window isn't ready yet 
+        if contentDocument && Vapir::fuzzy_match(hows[how].call(contentDocument),what)
+          found_win=win 
+          # we don't break here if found_win is set because we want the last match if there are multiple. 
+        end
       end
       return found_win
     end

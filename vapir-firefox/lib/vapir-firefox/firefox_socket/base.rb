@@ -741,7 +741,7 @@ class FirefoxSocket
   def assert_socket
     begin
       actual, expected=[value_json('["foo"]'), ["foo"]]
-    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
+    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE, SystemCallError
       raise(FirefoxSocketConnectionError, "Encountered a socket error while checking the socket.\n#{$!.class}\n#{$!.message}", $!.backtrace)
     end
     unless expected==actual

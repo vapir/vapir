@@ -696,7 +696,13 @@ module Vapir
       watcher=firefox_socket.Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(firefox_socket.Components.interfaces.nsIWindowWatcher)
       # nsIWindowWatcher is used to launch new top-level windows. see https://developer.mozilla.org/en/Working_with_windows_in_chrome_code
       
-      @browser_window_object=@browser_objects[:browser_window]=watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'resizable', nil)
+      # for openWindow's fourth argument, turn on all the features listed https://developer.mozilla.org/en/DOM/window.open 
+      # this doesn't enable anything that's not shown by default (for example, having personalbar won't turn on the bookmorks bar
+      # if it's set to not be shown), but lacking anything here does disable things which are on by default (if the bookmarks bar is
+      # set to show by default and personalbar is not set here, it will not show)
+      #
+      # see https://developer.mozilla.org/en/DOM/window.open
+      @browser_window_object=@browser_objects[:browser_window]=watcher.openWindow(nil, 'chrome://browser/content/browser.xul', @browser_window_name, 'chrome,resizable,toolbar,menubar,personalbar,location,status,scrollbars,titlebar', nil)
       return @browser_window_object
     end
     private :open_window

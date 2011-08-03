@@ -316,6 +316,8 @@ module Vapir
 
   @configurations.push(@base_configuration=Configuration.new(nil) do |config|
     config.create_update(:attach_timeout, 30, :validator => :numeric)
+    config.create_update(:close_timeout, 16, :validator => :numeric)
+    config.create_update(:quit_timeout, 8, :validator => :numeric)
     config.create(:default_browser, :validator => proc do |val|
       require 'vapir-common/browsers'
       unless (val.is_a?(String) || val.is_a?(Symbol)) && (real_key = Vapir::SupportedBrowsers.keys.detect{|key| key.to_s==val.to_s })
@@ -325,6 +327,7 @@ module Vapir
     end)
     config.create_update(:highlight_color, 'yellow')
     config.create_update(:wait, true, :validator => :boolean)
+    config.create_update(:wait_timeout, 120, :validator => :numeric)
     config.create_update(:type_keys, false, :validator => :boolean)
     config.create_update(:typing_interval, 0, :validator => :numeric)
     config.create_update(:warn_deprecated, true, :validator => :boolean)

@@ -496,12 +496,11 @@ module Vapir
       expect_exit = !self.class.window_objects.any?{|other_window| other_window != self.browser_window_object } && current_os != :macosx
       begin
         browser_window_object.close
-        # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
-        ::Waiter.try_for(32, :exception => Exception::WindowFailedToCloseException.new("The browser window did not close")) do
+        ::Waiter.try_for(config.close_timeout, :exception => Exception::WindowFailedToCloseException.new("The browser window did not close")) do
           !exists?
         end
         if expect_exit
-          ::Waiter.try_for(8, :exception => nil) do
+          ::Waiter.try_for(config.quit_timeout, :exception => nil) do
             firefox_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
             false
           end
@@ -545,7 +544,7 @@ module Vapir
         quitSeverity = options[:force] ? firefox_socket.Components.interfaces.nsIAppStartup.eForceQuit : firefox_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
         begin
           appStartup.quit(quitSeverity)
-          ::Waiter.try_for(8, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
+          ::Waiter.try_for(config.quit_timeout, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
             firefox_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
             false
           end
@@ -630,7 +629,7 @@ module Vapir
       # the pfirefox process has exited. 
       def wait_for_process_exit(pid)
         if pid
-          ::Waiter.try_for(16, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
+          ::Waiter.try_for(config.quit_timeout, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
             !process_running?(pid)
           end
         else
@@ -814,7 +813,7 @@ module Vapir
       unless options.is_a?(Hash)
         raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
       end
-      options={:sleep => false, :last_url => nil, :timeout => 120}.merge(options)
+      options={:sleep => false, :last_url => nil, :timeout => config.wait_timeout}.merge(options)
       started=Time.now
       ::Waiter.try_for(options[:timeout] - (Time.now - started), :exception => "Waiting for the document to finish loading timed out") do
         browser_object.webProgress.isLoadingDocument==false

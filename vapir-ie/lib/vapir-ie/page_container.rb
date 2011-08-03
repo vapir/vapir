@@ -93,7 +93,7 @@ module Vapir
       unless options.is_a?(Hash)
         raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
       end
-      options={:sleep => false, :interval => 0.1, :timeout => 120}.merge(options)
+      options={:sleep => false, :interval => 0.1, :timeout => config.wait_timeout}.merge(options)
       @xml_parser_doc = nil
       @down_load_time = nil
       start_load_time = Time.now

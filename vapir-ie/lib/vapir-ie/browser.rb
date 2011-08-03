@@ -313,8 +313,7 @@ module Vapir
       assert_exists
       @browser_object.stop
       @browser_object.quit
-      # TODO/fix timeout; this shouldn't be a hard-coded magic number. 
-      ::Waiter.try_for(32, :exception => WindowFailedToCloseException.new("The browser window did not close"), :interval => 1) do
+      ::Waiter.try_for(config.close_timeout, :exception => WindowFailedToCloseException.new("The browser window did not close"), :interval => 1) do
         begin
           if exists?
             @browser_object.quit

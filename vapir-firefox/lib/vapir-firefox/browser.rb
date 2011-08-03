@@ -575,7 +575,15 @@ module Vapir
           when :linux
             ["libc.so.6", 'getpid', ctypes.default_abi]
           when :windows
-            ['kernel32', 'GetCurrentProcessId', ctypes.stdcall_abi]
+            # winapi is correct - we do not want stdcall's mangling. ff4+ does the stdcall
+            # mangling correctly with ctypes.stdcall_abi, and since we don't want mangling, 
+            # that fails here. ff < 4 does not do stdcall mangling (and has no winapi abi 
+            # to skip mangling) so ends up working correctly. 
+            # so, we want winapi if it's defined to skip mangling, but if 
+            # it's not defined, use stdcall because it won't mangle anyway. 
+            #
+            # see https://bugzilla.mozilla.org/show_bug.cgi?id=585175
+            ['kernel32', 'GetCurrentProcessId', ctypes['winapi_abi'] || ctypes['stdcall_abi']]
           else
             raise NotImplementedError, "don't know how to get pid for #{current_os}"
           end

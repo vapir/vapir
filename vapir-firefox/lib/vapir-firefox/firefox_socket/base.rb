@@ -184,7 +184,7 @@ class FirefoxSocket
     options=handle_options(options, :handle => :raise, :exception => FirefoxSocketConnectionError.new("Encountered an error on the socket."))
     begin
       yield
-    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE, SystemCallError
+    rescue FirefoxSocketConnectionError, Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE, SystemCallError
       @expecting_extra_maybe = true
       error = options[:exception].class.new(options[:exception].message + "\n#{$!.class}\n#{$!.message}")
       error.set_backtrace($!.backtrace)

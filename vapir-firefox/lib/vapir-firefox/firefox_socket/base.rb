@@ -168,6 +168,45 @@ class FirefoxSocket
     root.Vapir.Ycomb=function(:gen){ "return function(f){ return f(f); }(function(f){ return gen(function(){ return f(f).apply(null, arguments); }); });" }
   end
 
+  # takes a block, calls the block, and returns the result of the block - unless the connection
+  # fails over the course of the block. if that happens, this handles the multitude of errors 
+  # that may be the cause of that, and deals with them in a customizable manner. by default, 
+  # raises a FirefoxSocketConnectionError with all of the information of the original error
+  # attached. 
+  #
+  # recognizes options:
+  # - :exception - an instance of an exception which will be raised, e.g. 
+  #   :exception => RuntimError.new('something went wrong!')
+  # - :handle may take the following values:
+  #   - :raise (default) - raises options[:exception], by default a FirefoxSocketConnectionError 
+  #   - :ignore - discards the exception and returns nil 
+  #   - :return - returns the exception; does not raise it 
+  #   - a Proc or Method - calls the proc, giving the raised exception as an argument. 
+  #     this is useful to return from a function when the connection fails, e.g.
+  #     connection.handling_connection_error(:handle => proc{ return false }) { [code which may cause the socket to close] }
+  def handling_connection_error(options={})
+    options=handle_options(options, :handle => :raise, :exception => FirefoxSocketConnectionError.new("Encountered an error on the socket."))
+    begin
+      yield
+    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE, SystemCallError
+      @expecting_extra_maybe = true
+      error = options[:exception].class.new(options[:exception].message + "\n#{$!.class}\n#{$!.message}")
+      error.set_backtrace($!.backtrace)
+      case options[:handle]
+      when :raise
+        raise error
+      when :ignore
+        nil
+      when :return
+        error
+      when Proc, Method
+        options[:handle].call(error)
+      else
+        raise ArgumentError, "Don't know what to do when told to handle by :handle => #{options[:handle].inspect}"
+      end
+    end
+  end
+  
   private
   # sets the error state if an exception is encountered while running the given block. the 
   # exception is not rescued. 

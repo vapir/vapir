@@ -304,7 +304,10 @@ module Vapir
     
     def exists?
       # firefox_socket may be nil if the window has closed 
-      firefox_socket && browser_window_object && self.class.browser_window_objects.include?(browser_window_object)
+      # if the socket disconnects, we'll assume that means the browser quit and therefore the window doesn't exist 
+      firefox_socket && firefox_socket.handling_connection_error(:handle => proc{ return false }) do
+        browser_window_object && self.class.browser_window_objects.include?(browser_window_object)
+      end
     end
     
     # Launches firebox browser

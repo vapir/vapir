@@ -139,16 +139,12 @@ class FirefoxSocket
     config.update_hash options
     require 'thread'
     @mutex = Mutex.new
-    begin
+    handling_connection_error(:exception => FirefoxSocketUnableToStart.new("Could not connect to Firefox on #{host}:#{port}. Ensure that Firefox is running and has the extension listening on that port, or try restarting firefox.")) do
       @socket = TCPSocket::new(host, port)
       @socket.sync = true
       @expecting_prompt=false # initially, the welcome message comes before the prompt, so this so this is false to start with 
       @expecting_extra_maybe=false
       eat_welcome_message
-    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE
-      err=FirefoxSocketUnableToStart.new("Could not connect to Firefox on #{host}:#{port}. Ensure that Firefox is running and has the extension listening on that port, or try restarting firefox.\nMessage from TCPSocket:\n#{$!.message}")
-      err.set_backtrace($!.backtrace)
-      raise err
     end
     initialize_environment
     @temp_object = object('VapirTemp')

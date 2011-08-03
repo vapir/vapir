@@ -774,10 +774,8 @@ class FirefoxSocket
   end
   # raises an informative error if the socket is down for some reason 
   def assert_socket
-    begin
-      actual, expected=[value_json('["foo"]'), ["foo"]]
-    rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ECONNABORTED, Errno::EPIPE, SystemCallError
-      raise(FirefoxSocketConnectionError, "Encountered a socket error while checking the socket.\n#{$!.class}\n#{$!.message}", $!.backtrace)
+    actual, expected=handling_connection_error(:exception => FirefoxSocketConnectionError.new("Encountered a socket error while checking the socket.")) do
+      [value_json('["foo"]'), ["foo"]]
     end
     unless expected==actual
       raise FirefoxSocketError, "The socket seems to have a problem: sent #{expected.inspect} but got back #{actual.inspect}"

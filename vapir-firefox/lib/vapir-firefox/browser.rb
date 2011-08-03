@@ -497,24 +497,26 @@ module Vapir
       assert_exists
       # we expect the browser may exit if there are no windows which aren't ourself. except on mac. 
       expect_exit = !self.class.window_objects.any?{|other_window| other_window != self.browser_window_object } && current_os != :macosx
-      begin
+
+      connection_error_handler = proc do
+        Vapir::Firefox.uninitialize_firefox_socket
+        wait_for_process_exit(@pid)
+      end
+      firefox_socket.handling_connection_error(:handle => connection_error_handler) do
         browser_window_object.close
         ::Waiter.try_for(config.close_timeout, :exception => Exception::WindowFailedToCloseException.new("The browser window did not close")) do
           !exists?
         end
         if expect_exit
           ::Waiter.try_for(config.quit_timeout, :exception => nil) do
-            firefox_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
+            firefox_socket.assert_socket # this should error, going up past the waiter to #handling_connection_error
             false
           end
         else
           firefox_socket.assert_socket
         end
-      rescue FirefoxSocketConnectionError # the socket may disconnect when we close the browser, causing the FirefoxSocket to complain 
-        Vapir::Firefox.uninitialize_firefox_socket
-        wait_for_process_exit(@pid)
       end
-        
+
       @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
       if @self_launched_browser && firefox_socket && !self.class.window_objects.any?{ true }
         quit_browser(:force => false)
@@ -545,14 +547,12 @@ module Vapir
         # from https://developer.mozilla.org/en/How_to_Quit_a_XUL_Application
         appStartup= firefox_socket.Components.classes['@mozilla.org/toolkit/app-startup;1'].getService(firefox_socket.Components.interfaces.nsIAppStartup)
         quitSeverity = options[:force] ? firefox_socket.Components.interfaces.nsIAppStartup.eForceQuit : firefox_socket.Components.interfaces.nsIAppStartup.eAttemptQuit
-        begin
+        firefox_socket.handling_connection_error(:handle => proc{ Vapir::Firefox.uninitialize_firefox_socket }) do
           appStartup.quit(quitSeverity)
           ::Waiter.try_for(config.quit_timeout, :exception => Exception::WindowFailedToCloseException.new("The browser did not quit")) do
-            firefox_socket.assert_socket # this should error, going up past the waiter to the rescue block above 
+            firefox_socket.assert_socket # this should error, going up past the waiter to #handling_connection_error
             false
           end
-        rescue FirefoxSocketConnectionError
-          Vapir::Firefox.uninitialize_firefox_socket
         end
         
         wait_for_process_exit(pid)

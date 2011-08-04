@@ -25,8 +25,8 @@ class TC_PopUps < Test::Unit::TestCase
     assert(browser.text_field!(:name , "confirmtext").verify_contains("Cancel"))
   end
   
-  def xtest_Prompt
-    browser.button!("Prompt").click
+  def test_Prompt
+    browser.button!("Prompt").click_no_wait
     browser.modal_dialog.click_button('OK')
   end
 end

@@ -5,7 +5,24 @@ module Vapir
   class IE::ModalDialog
     include Vapir::ModalDialog
     def locate
-      @modal_window=@browser.win_window.enabled_popup
+      @modal_window=@browser.win_window.enabled_popup || begin
+        # IE9 modal dialogs aren't modal to the actual browser window. instead it creates some
+        # other window with class_name="Alternate Modal Top Most" and makes the modal dialog modal 
+        # to that thing instead. this has the same text (title) as the browser window but that 
+        # is the only relationship I have found so far to the browser window. I'd like to use a
+        # stronger relationship than that, but, it'll have to do. 
+        matching_windows = WinWindow::All.select do |win|
+          win.parent && win.parent.class_name == "Alternate Modal Top Most" && win.parent.text == @browser.win_window.text
+        end
+        case matching_windows.size
+        when 0
+          nil
+        when 1
+          matching_windows.first
+        else
+          raise Vapir::Exception::WindowException, "found multiple windows that looked like popups: #{matching_windows.inspect}"
+        end
+      end
     end
     
     def exists?

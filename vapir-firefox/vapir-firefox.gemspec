@@ -8,8 +8,8 @@ Vapir::Firefox::GemSpec = Gem::Specification.new do |s|
   s.summary = 'Library for automating the Firefox browser in Ruby'
   s.description = <<-EOF
     Vapir-Firefox is a library to programatically drive the Firefox
-    browser over the JSSH Firefox extension, exposing a simple-to-use 
-    and powerful API to make automated testing a simple and joyous affair. 
+    browser, exposing a simple-to-use and powerful API to make automated 
+    testing a simple and joyous affair. 
     Forked from the Watir library. 
   EOF
   s.author = 'Ethan'
@@ -17,7 +17,7 @@ Vapir::Firefox::GemSpec = Gem::Specification.new do |s|
   s.homepage = 'http://www.vapir.org/'
 
   s.platform = Gem::Platform::RUBY
-  s.requirements = ['Firefox browser with JSSH extension installed']
+  s.requirements = ['Firefox browser with MozRepl or JSSH extension installed']
   s.require_path = 'lib'
 
   s.add_dependency 'vapir-common', '= ' + Vapir::Firefox::VERSION

@@ -109,6 +109,16 @@ module Vapir
                                   names.first.is_a?(String) && 
                                   container.containing_object.object_respond_to?(:getElementsByName) &&
                                   specifiers.all?{|specifier| specifier[:tagName].is_a?(String) && %w(BUTTON TEXTAREA APPLET SELECT FORM FRAME IFRAME IMG A INPUT OBJECT MAP PARAM META).include?(specifier[:tagName].upcase) }
+      # thing to determine if object_respond_to?(:getElementsByClassName) is lying. returns 
+      # true if the thing is full of lies. 
+      getElementsByClassName_lies = proc do
+        Object.const_defined?('WIN32OLERuntimeError') && begin
+          container.containing_object.getElementsByClassName('dummy')
+          false
+        rescue WIN32OLERuntimeError, NoMethodError
+          true
+        end
+      end
       if can_use_getElementById
         candidates= if by_id=container.containing_object.getElementById(ids.first)
           [by_id]
@@ -117,7 +127,7 @@ module Vapir
         end
       elsif can_use_getElementsByName
         candidates=container.containing_object.getElementsByName(names.first)#.to_array
-      elsif classNames.size==1 && classNames.first.is_a?(String) && container.containing_object.object_respond_to?(:getElementsByClassName)
+      elsif classNames.size==1 && classNames.first.is_a?(String) && container.containing_object.object_respond_to?(:getElementsByClassName) && !getElementsByClassName_lies.call
         candidates=container.containing_object.getElementsByClassName(classNames.first)
       elsif tags.size==1 && tags.first.is_a?(String)
         candidates=container.containing_object.getElementsByTagName(tags.first)

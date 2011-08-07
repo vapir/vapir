@@ -412,7 +412,6 @@ module Vapir
       @document_object=browser_object.contentDocument
       @content_window_object=browser_object.contentWindow
         # note that browser_window_object.content is the same thing, but simpler to refer to stuff on browser_object since that is updated by the nsIWebProgressListener below
-      @body_object=document_object.body
       @browser_objects[:requests_in_progress]=[]
       @requests_in_progress=@browser_objects[:requests_in_progress].to_array
       @browser_objects[:unmatched_stopped_requests_count]=0
@@ -480,7 +479,9 @@ module Vapir
     attr_reader :content_window_object
     attr_reader :browser_object
     attr_reader :document_object
-    attr_reader :body_object
+    def body_object
+      document_object.body
+    end
     
     def updated_at
       Time.at(@updated_at_epoch_ms.val/1000.0)+@updated_at_offset
@@ -516,7 +517,7 @@ module Vapir
         end
       end
 
-      @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
+      @browser_window_object=@browser_object=@document_object=@content_window_object=nil
       if @self_launched_browser && firefox_socket && !self.class.window_objects.any?{ true }
         quit_browser(:force => false)
       end
@@ -556,7 +557,7 @@ module Vapir
         
         wait_for_process_exit(pid)
         
-        @browser_window_object=@browser_object=@document_object=@content_window_object=@body_object=nil
+        @browser_window_object=@browser_object=@document_object=@content_window_object=nil
         nil
       end
       

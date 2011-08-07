@@ -282,7 +282,6 @@ module Vapir
             find_window(how, what)
           end
         end
-        set_browser_document
       else
         open_window
       end

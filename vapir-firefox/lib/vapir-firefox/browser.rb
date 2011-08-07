@@ -833,9 +833,9 @@ module Vapir
       # If the redirect is to a download attachment that does not reload this page, this
       # method will loop forever. Therefore, we need to ensure that if this method is called
       # twice with the same URL, we simply accept that we're done.
-      url= document_object.URL
+      url= document_object['URL']
 
-      if(url != options[:last_url])
+      if(url && url != options[:last_url])
         # check for meta redirects, except for redirects back to the same page (infinite
         # loop redirects). 
         metas=document_object.getElementsByTagName 'meta'

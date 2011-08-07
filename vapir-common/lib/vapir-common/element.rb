@@ -267,7 +267,10 @@ module Vapir
     def locate!
       locate || begin
         klass=self.is_a?(Frame) ? Vapir::Exception::UnknownFrameException : Vapir::Exception::UnknownObjectException
-        message="Unable to locate #{self.class}, using #{@how}"+(@what ? ": "+@what.inspect : '')+(@index ? ", index #{@index}" : "")
+        using = []
+        using << "#{@how}: #{@what.inspect}" if @how
+        using << "index: #{@index}" if @index
+        message="Unable to locate #{self.class}" + (using.any? ? ", using #{using.join(", ")}" : "")
         message+="\non container: #{@container.inspect}" if @container
         raise(klass, message)
       end

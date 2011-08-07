@@ -876,7 +876,11 @@ module Vapir
     # - :format => a valid format. if :dc is :window, the default is 'png' ('jpeg' is also supported); if :dc is anything else, 'bmp' is both the
     #   default and the only supported format. 
     def screen_capture(filename, options = {})
-      options = handle_options(options, :format => nil, :dc => :page)
+      if filename =~ /\.(\w+)\z/
+        extension = $1
+        file_format = %w(jpeg png).inject({'jpg' => 'jpeg'}){|h,f| h.merge(f => f) }[extension]
+      end
+      options = handle_options(options, :format => file_format, :dc => :page)
       
       if options[:dc] == :page
         options[:format] ||= 'png'

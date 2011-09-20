@@ -527,7 +527,7 @@ module Vapir
     #
     # takes options:
     # * :highlight => true/false (defaults to true)
-    # * :wait => true/false (defaults to false)
+    # * :wait => true/false (defaults to true)
     def set(state=true, options={})
       options=handle_options(options, :highlight => true, :wait => true)
       with_highlight(options) do

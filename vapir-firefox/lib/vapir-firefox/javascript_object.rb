@@ -472,7 +472,9 @@ class JavascriptObject
   # in irb, mostly. 
   def define_methods! # :nodoc:
     metaclass=(class << self; self; end)
-    keys=firefox_socket.object("function(obj) { var keys=[]; for(var key in obj) { keys.push(key); } return keys; }").pass(self).val
+    # the following needs the try/catch because sometimes it raises NS_ERROR_NOT_AVAILABLE: Component is not available
+    # bug: https://bugzilla.mozilla.org/show_bug.cgi?id=683978
+    keys=firefox_socket.object("function(obj) { var keys=[]; try { for(var key in obj) { keys.push(key); } } catch(e) {} return keys; }").pass(self).val
     
     keys.grep(/\A[a-z_][a-z0-9_]*\z/i).reject{|k| self.class.method_defined?(k)}.each do |key|
       metaclass.send(:define_method, key) do |*args|

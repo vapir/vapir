@@ -304,16 +304,14 @@ module Vapir
     dom_attr :text, :value, :selected
     
     # sets this Option's selected state to the given (true or false). 
-    # if this Option is aware of its select list (this will generally be the case if you
-    # got this Option from a SelectList container), will fire the onchange event on the 
-    # select list if our state changes. 
+    # will fire the onchange event on the select list if our state changes. 
     def set_selected(state, method_options={})
       method_options={:highlight => true, :wait => config.wait}.merge(method_options)
       with_highlight(method_options) do
         state_was=element_object.selected
         element_object.selected=state # TODO: if state is false and this isn't an option of a multiple select list, should this error? 
-        if @extra[:select_list] && state_was != state
-          @extra[:select_list].fire_event(:onchange, method_options)
+        if state_was != state
+          (@extra[:select_list] || parent_select_list).fire_event(:onchange, method_options)
         end
         wait if method_options[:wait]
       end

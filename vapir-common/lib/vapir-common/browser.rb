@@ -90,10 +90,10 @@ module Vapir
     
     # does the work of #screen_capture when the WinWindow library is being used for that. see #screen_capture documentation (browser-specific)
     def screen_capture_win_window(filename, options = {})
-      options = handle_options(options, :dc => :window, :format => nil)
-      if options[:format] && !(options[:format].is_a?(String) && options[:format].downcase == 'bmp')
-        raise ArgumentError, ":format was specified as #{options[:format].inspect} but only 'bmp' is supported when :dc is #{options[:dc].inspect}"
+      if filename =~ /\.(\w+)\z/
+        extension = $1
       end
+      options = handle_options(options, :dc => :window, :format => extension)
       if options[:dc] == :desktop
         win_window.really_set_foreground!
         screenshot_win=WinWindow.desktop_window
@@ -101,7 +101,18 @@ module Vapir
       else
         screenshot_win=win_window
       end
-      screenshot_win.capture_to_bmp_file(filename, :dc => options[:dc])
+      if !options[:format] || options[:format].downcase == 'bmp'
+        screenshot_win.capture_to_bmp_file(filename, :dc => options[:dc])
+      else
+        begin
+          require 'rmagick'
+        rescue LoadError
+          raise $!.class, "To use :format => #{format.inspect}, please install rmagick: http://rmagick.rubyforge.org/install-faq.html#win\n\n"+$!.message
+        end
+        bmp_blob = screenshot_win.capture_to_bmp_blob(:dc => options[:dc])
+        magick_img = Magick::Image.from_blob(bmp_blob)[0]
+        magick_img.write(filename) # magick handles converting based on extension 
+      end
     end
     private :screen_capture_win_window
   end

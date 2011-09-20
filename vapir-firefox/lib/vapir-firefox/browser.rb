@@ -187,7 +187,7 @@ module Vapir
     # socket may be dead, and you want a new one. a warning will be printed if this occurs. 
     def self.firefox_socket(options={}) # :nodoc:
       if options[:reset] || !(class_variable_defined?('@@firefox_socket') && @@firefox_socket)
-        initialize_firefox_socket(options[:socket_class], options[:socket_options])
+        initialize_firefox_socket(options[:socket_class] || firefox_socket_class, options[:socket_options] || firefox_socket_class_options)
       end
       if options[:reset_if_dead]
         begin

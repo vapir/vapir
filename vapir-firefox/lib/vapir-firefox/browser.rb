@@ -268,7 +268,7 @@ module Vapir
       
       @pid = begin
         self.pid
-      rescue NotImplementedError
+      rescue CannotHandlePid
         nil
       end
       
@@ -540,7 +540,7 @@ module Vapir
         
         pid = @pid || begin
           self.pid
-        rescue NotImplementedError
+        rescue CannotHandlePid
           nil
         end
         
@@ -561,16 +561,19 @@ module Vapir
         nil
       end
       
+      # class representing an inability to either retrieve or check the status of firefox's pid 
+      class CannotHandlePid < StandardError; end
+      
       # returns the pid of the currently-attached Firefox process. 
       #
       # This only works on Firefox >= 3.6, on platforms supported (see #current_os), and raises 
-      # NotImplementedError if it can't get the pid. 
+      # CannotHandlePid if it can't get the pid. 
       def pid
         begin
           begin
             ctypes = firefox_socket.Components.utils.import("resource://gre/modules/ctypes.jsm").ctypes
           rescue FirefoxSocketJavascriptError
-            raise NotImplementedError, "Firefox 3.6 or greater is required for this method.\n\nOriginal error from firefox: #{$!.class}: #{$!.message}", $!.backtrace
+            raise CannotHandlePid, "Firefox 3.6 or greater is required for this method.\n\nOriginal error from firefox: #{$!.class}: #{$!.message}", $!.backtrace
           end
           lib, pidfunction, abi = *case current_os
           when :macosx
@@ -588,7 +591,7 @@ module Vapir
             # see https://bugzilla.mozilla.org/show_bug.cgi?id=585175
             ['kernel32', 'GetCurrentProcessId', ctypes['winapi_abi'] || ctypes['stdcall_abi']]
           else
-            raise NotImplementedError, "don't know how to get pid for #{current_os}"
+            raise CannotHandlePid, "don't know how to get pid for #{current_os}"
           end
            lib = ctypes.open(lib)
           begin
@@ -601,7 +604,7 @@ module Vapir
       end
       
       # attempts to determine whether the given process is still running. will raise 
-      # NotImplementedError if it can't determine this. 
+      # CannotHandlePid if it can't determine this. 
       def process_running?(pid)
         case current_os
         when :windows
@@ -630,7 +633,7 @@ module Vapir
           `ps -p #{pid}`
           $? == 0
         else
-          raise NotImplementedError
+          raise CannotHandlePid
         end
       end
 

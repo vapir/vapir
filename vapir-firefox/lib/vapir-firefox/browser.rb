@@ -844,6 +844,7 @@ module Vapir
 
     # Waits for the page to get loaded.
     def wait(options={})
+      return unless config.wait
       return unless exists?
       unless options.is_a?(Hash)
         raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"

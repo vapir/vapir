@@ -201,7 +201,7 @@ module Vapir
 
     # Waits for the browser to finish loading, if it is loading. See Firefox#wait. 
     def wait(options={})
-      @container.wait(options)
+      @container.wait(options) if config.wait
     end
     
     # Checks this element and its parents for display: none or visibility: hidden, these are 

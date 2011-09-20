@@ -11,6 +11,7 @@ module Vapir
     # (clicking a link or whatever) tend to affect other frames too; waiting on just this frame doesn't 
     # make sense. 
     def wait(options={}) # :nodoc:
+      return unless config.wait
       if browser # prefer to wait on the browser
         browser.wait(options)
       elsif container # if we don't have the browser, wait on the container (presumably this exists) 

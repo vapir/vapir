@@ -90,6 +90,7 @@ module Vapir
     # Note: This code needs to be prepared for the ie object to be closed at 
     # any moment!
     def wait(options={})
+      return unless config.wait
       unless options.is_a?(Hash)
         raise ArgumentError, "given options should be a Hash, not #{options.inspect} (#{options.class})\nold conflicting arguments of no_sleep or last_url are gone"
       end

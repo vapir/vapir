@@ -319,7 +319,7 @@ module Vapir
     end
     
     def wait(options={})
-      @container.wait(options)
+      @container.wait(options) if config.wait
     end
 
     def self.element_object_style(element_object, document_object)

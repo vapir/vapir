@@ -134,6 +134,7 @@ module Vapir
     end
     
     def wait(options=nil)
+      return unless config.wait
       ::Waiter.try_for(Firefox::ARBITRARY_TIMEOUT) do
         !browser_object.webProgress.isLoadingDocument
       end

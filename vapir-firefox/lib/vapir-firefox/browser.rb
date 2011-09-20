@@ -570,6 +570,7 @@ module Vapir
       # CannotHandlePid if it can't get the pid. 
       def pid
         begin
+          raise CannotHandlePid unless firefox_socket.host == 'localhost'
           begin
             ctypes = firefox_socket.Components.utils.import("resource://gre/modules/ctypes.jsm").ctypes
           rescue FirefoxSocketJavascriptError
@@ -603,9 +604,16 @@ module Vapir
         end
       end
       
+      # returns the host which will be configured for a socket. same as firefox_socket.host, 
+      # if that exist, but this is correct even if firefox_socket isn't initialized. 
+      def firefox_socket_host
+        firefox_socket_class_options['host'] || firefox_socket_class.config.host
+      end
+      
       # attempts to determine whether the given process is still running. will raise 
       # CannotHandlePid if it can't determine this. 
       def process_running?(pid)
+        raise CannotHandlePid unless firefox_socket_host == 'localhost'
         case current_os
         when :windows
           kernel32 = Vapir::Firefox.instance_eval do # define this on the class for reuse 

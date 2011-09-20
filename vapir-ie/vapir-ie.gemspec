@@ -16,9 +16,7 @@ Vapir::IE::GemSpec = Gem::Specification.new do |s|
   s.email = 'vapir@googlegroups.com'
   s.homepage = 'http://www.vapir.org/'
 
-  s.platform = Gem::Platform::RUBY 
-    # should be windows specific? options are only RUBY or CURRENT, and CURRENT is 
-    # specific to the compiled ruby (mingw32 or mswin32), not the operating system. 
+  s.platform = Gem::Platform::RUBY
   s.requirements = ['Microsoft Windows', 'Internet Explorer']
   s.require_path = 'lib'
 

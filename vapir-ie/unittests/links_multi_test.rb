@@ -43,7 +43,7 @@ class TC_Links_Multi < Test::Unit::TestCase
     exception = assert_raise(UnknownObjectException) do
       browser.link!(:class => 'Missing', :index => 2).href
     end
-    assert_match(/^Unable to locate Vapir(::\w+)*::Link, using attributes: \{:class=>"Missing"\}, index 2$/, exception.message)
+    assert_match(/^Unable to locate Vapir(::\w+)*::Link, using attributes: \{:class=>"Missing"\}, index: 2$/, exception.message)
   end
   
 end

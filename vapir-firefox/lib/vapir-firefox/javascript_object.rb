@@ -192,7 +192,7 @@ class JavascriptObject
     end
   end
   # does the work of #method_missing to determine whether to call a function what to return based 
-  # on the defined behavior of the given suffix. see #method_missing for more. information. 
+  # on the defined behavior of the given suffix. see #method_missing for more information. 
   def assign_or_call_or_val_or_object_by_suffix(suffix, *args)
     if suffix=='='
       assign(*args)

@@ -76,6 +76,18 @@ module Vapir
       @config_hash = {}
       @recognized_options = {}
       yield(self) if block_given?
+      define_key_methods
+    end
+    # this is redundant with #method_missing, really, but it makes autocomplete possible in irb 
+    def define_key_methods
+      recognized_keys.each do |recognized_key|
+        (class << self; self; end).send(:define_method, recognized_key) do
+          read(recognized_key)
+        end
+        (class << self; self; end).send(:define_method, "#{recognized_key}=") do |value|
+          update recognized_key, value
+        end
+      end
     end
     # if the method invoked looks like assignment (ends with an =), calls to #update with 
     # the given method as the key and its argument as the value. otherwise calls #read with 

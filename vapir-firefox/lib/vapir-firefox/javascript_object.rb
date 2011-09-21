@@ -143,7 +143,7 @@ class JavascriptObject
   def val_or_object(options={})
     options={:error_on_undefined=>true, :define_methods => self.class.always_define_methods}.merge(options)
     if function_result # calling functions multiple times is bad, so store in temp before figuring out what to do with it
-      store_rand_object_key(firefox_socket.temp_object).val_or_object(options.merge(:error_on_undefined => false))
+      store_rand_temp.val_or_object(options.merge(:error_on_undefined => false))
     else
       # if we don't know our type, stick everything into one call to avoid multiple socket calls 
       types_to_convert = ['boolean', 'number', 'string', 'null']

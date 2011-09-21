@@ -60,7 +60,7 @@ module Vapir
     # TODO: Provide ability to specify event parameters like keycode for key events, and click screen
     #       coordinates for mouse events.
     def fire_event(event_type, options={})
-      options={:wait => true, :highlight => true}.merge(options)
+      options={:wait => config.wait, :highlight => true}.merge(options)
       with_highlight(options) do
         event=create_event_object(event_type, options)
         if !options[:wait]
@@ -159,10 +159,10 @@ module Vapir
     # Options:
     # - :wait => true or false. If true, waits for the javascript call to return, and calls the #wait method. 
     #   If false, does not wait for the javascript to return and does not call #wait.
-    #   Default is true.
+    #   Default is the current config.wait value (which is by default true).
     # - :highlight => true or false. Highlights the element while clicking if true. Default is true. 
     def click(options={})
-      options={:wait => true, :highlight => true}.merge(options)
+      options={:wait => config.wait, :highlight => true}.merge(options)
       result=nil
       with_highlight(options) do
         assert_enabled if respond_to?(:assert_enabled)
@@ -196,7 +196,7 @@ module Vapir
     # Takes options:
     # - :highlight => true or false. Highlights the element while clicking if true. Default is true. 
     def click_no_wait(options={})
-      click(options.merge(:wait => false))
+      with_config(:wait => false) { click(options) }
     end
 
     # Waits for the browser to finish loading, if it is loading. See Firefox#wait. 

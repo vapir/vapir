@@ -168,10 +168,10 @@ module Vapir
     # Options:
     # - :wait => true or false. If true, waits for the javascript call to return, and calls the #wait method. 
     #   If false, does not wait for the javascript to return and does not call #wait.
-    #   Default is true.
+    #   Default is the current config.wait value (which is by default true).
     # - :highlight => true or false. Highlights the element while clicking if true. Default is true. 
     def click(options={})
-      options={:wait => true, :highlight => true}.merge(options)
+      options={:wait => config.wait, :highlight => true}.merge(options)
       result=nil
       with_highlight(options) do
         assert_enabled if respond_to?(:assert_enabled)
@@ -226,7 +226,7 @@ module Vapir
     # Takes options:
     # - :highlight => true or false. Highlights the element while clicking if true. Default is true. 
     def click_no_wait(options={})
-      click(options.merge(:wait => false))
+      with_config(:wait => false) { click(options) }
     end
 
     # Executes a user defined "fireEvent" for objects with JavaScript events tied to them such as DHTML menus.
@@ -239,7 +239,7 @@ module Vapir
         event_type = "on"+event_type
       end
       
-      options={:highlight => true, :wait => true}.merge(options)
+      options={:highlight => true, :wait => config.wait}.merge(options)
       with_highlight(options) do
         assert_enabled if respond_to?(:assert_enabled)
         if options[:wait]
@@ -315,7 +315,7 @@ module Vapir
     #   raises: UnknownObjectException  if the object is not found
     #           ObjectDisabledException if the object is currently disabled
     def fire_event_no_wait(event, options={})
-      fire_event(event, options.merge(:wait => false))
+      with_config(:wait => false) { fire_event(event, options) }
     end
     
     def wait(options={})

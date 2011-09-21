@@ -308,7 +308,7 @@ module Vapir
     # got this Option from a SelectList container), will fire the onchange event on the 
     # select list if our state changes. 
     def set_selected(state, method_options={})
-      method_options={:highlight => true, :wait => true}.merge(method_options)
+      method_options={:highlight => true, :wait => config.wait}.merge(method_options)
       with_highlight(method_options) do
         state_was=element_object.selected
         element_object.selected=state # TODO: if state is false and this isn't an option of a multiple select list, should this error? 
@@ -433,10 +433,10 @@ module Vapir
     # any have changed. raises Vapir::Exception::NoValueFoundException if none matched. 
     # breaks after the first match found if this is not a multiple select list. 
     # takes options hash (note, these are flags for the function, not to be confused with the Options of the select list)
-    # - :wait => true/false  default true. controls whether #wait is called and whether fire_event or fire_event_no_wait is
-    #   used for the onchange event. 
+    # - :wait => true/false - default is the current config.wait value. controls whether #wait is called and whether 
+    #   fire_event or fire_event_no_wait is used for the onchange event. 
     def select_options_if(method_options={})
-      method_options={:wait => true, :highlight => true}.merge(method_options)
+      method_options={:wait => config.wait, :highlight => true}.merge(method_options)
       raise ArgumentError, "no block given!" unless block_given?
       assert_enabled
       any_matched=false
@@ -496,7 +496,7 @@ module Vapir
     # Fires the onchange event if value changes. 
     # Fires the onclick event the state is true. 
     def set(state=true, options={})
-      options=handle_options(options, :highlight => true, :wait => true)
+      options=handle_options(options, :highlight => true, :wait => config.wait)
       with_highlight(options) do
         assert_enabled
         if checked!=state
@@ -529,7 +529,7 @@ module Vapir
     # * :highlight => true/false (defaults to true)
     # * :wait => true/false (defaults to true)
     def set(state=true, options={})
-      options=handle_options(options, :highlight => true, :wait => true)
+      options=handle_options(options, :highlight => true, :wait => config.wait)
       with_highlight(options) do
         assert_enabled
         if checked!=state

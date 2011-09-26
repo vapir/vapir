@@ -305,6 +305,15 @@ module Vapir
   end
 
   # :stopdoc:
+
+  # reopen this module to add stuff that's sort of separate from the Configurable module itself 
+  module Configurable
+    # call the given block with :wait set to false 
+    def without_waiting(&block)
+      with_config(:wait => false, &block)
+    end
+  end
+
   @configurations = []
   def (@configurations).update_from_source # :nodoc:
     self.each do |c|

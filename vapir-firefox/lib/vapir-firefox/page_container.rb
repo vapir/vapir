@@ -11,10 +11,12 @@ module Vapir
     end
     
     # evaluates a given javascript string in the context of the browser's content window. anything 
-    # that is a top-level variable on the window will be seen as a top-level variable in the
-    # evaluated script.
+    # that is a top-level variable on the window (such as document or alert) will be seen as a 
+    # top-level variable in the evaluated script.
     #
-    # returns the last evaluated expression. 
+    # returns the last evaluated expression. WARNING! DO NOT RUN #execute_script AGAINST UNTRUSTED 
+    # PAGES! the resulting value has no security wrappers and could execute malicious code in a 
+    # privileged context. 
     #
     # raises an error if the given javascript errors. 
     #
@@ -43,8 +45,17 @@ module Vapir
     #  >> browser.execute_script('element.PercentLoaded()', :element => browser.element(:tag_name => 'embed').element_object)
     #  => 100
     def execute_script(javascript, other_variables={})
-      sandbox=firefox_socket.Components.utils.Sandbox(content_window_object)
-      sandbox.window=content_window_object.window
+      # TODO: add tests for cross-context expando properties 
+      xpcNativeWrapper = firefox_socket.root['XPCNativeWrapper']
+      unwrapped_window = if xpcNativeWrapper.respond_to?('unwrap')
+        xpcNativeWrapper.unwrap(content_window_object)
+      elsif content_window_object.respond_to?('wrappedJSObject')
+        content_window_object.wrappedJSObject
+      else
+        content_window_object.window
+      end
+      sandbox=firefox_socket.Components.utils.Sandbox(unwrapped_window, :wantXrays => false)
+      sandbox.window = unwrapped_window
       other_variables.each do |name, var|
         sandbox[name]=var
       end

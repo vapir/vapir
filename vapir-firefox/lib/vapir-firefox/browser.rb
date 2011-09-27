@@ -1023,10 +1023,19 @@ module Vapir
       raise NotImplementedError, "(need to know how to access windows registry on JRuby)" if RUBY_PLATFORM =~ /java/
       require 'win32/registry'
       lm = ::Win32::Registry::HKEY_LOCAL_MACHINE
-      lm.open('SOFTWARE\Mozilla\Mozilla Firefox') do |reg|
-        reg1 = lm.open("SOFTWARE\\Mozilla\\Mozilla Firefox\\#{reg.keys[0]}\\Main")
-        if entry = reg1.find { |key, type, data| key =~ /pathtoexe/i }
-          return entry.last
+      lm.open('SOFTWARE\Mozilla\Mozilla Firefox') do |firefox_reg|
+        firefox_reg.keys.map do |firefox_version_key|
+          firefox_reg.open(firefox_version_key) do |firefox_version_reg|
+            if firefox_version_reg.keys.include?('Main')
+              firefox_version_reg.open('Main') do |firefox_version_main_reg|
+                firefox_version_main_reg.map do |key, type, data|
+                  if key=='PathToExe'
+                    return data
+                  end
+                end
+              end
+            end
+          end
         end
       end
     end

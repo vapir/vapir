@@ -18,7 +18,7 @@ module Vapir
         begin
           candidates=::Waiter.try_for(2, :condition => proc{|ret| ret.size > 0}, :exception => nil) do
             WinWindow::All.select do |win|
-              [mozilla_window_class_name].include?(win.class_name) && win.text==browser_window_object.document.title
+              mozilla_window_class_names.include?(win.class_name) && win.text==browser_window_object.document.title
             end
           end
           unless candidates.size==1

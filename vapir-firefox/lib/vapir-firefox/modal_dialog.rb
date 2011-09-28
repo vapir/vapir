@@ -74,8 +74,8 @@ module Vapir
       assert_exists
       modal_window
     end
-    def mozilla_window_class_name
-      'MozillaDialogClass'
+    def mozilla_window_class_names
+      ['MozillaDialogClass']
     end
   end
 

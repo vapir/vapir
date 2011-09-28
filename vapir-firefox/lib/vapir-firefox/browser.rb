@@ -293,8 +293,8 @@ module Vapir
       wait if options[:wait]
     end
     
-    def mozilla_window_class_name
-      'MozillaUIWindowClass'
+    def mozilla_window_class_names
+      ['MozillaUIWindowClass', 'MozillaWindowClass']
     end
 
     def browser

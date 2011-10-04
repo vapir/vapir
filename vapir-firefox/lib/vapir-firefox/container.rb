@@ -52,17 +52,16 @@ module Vapir
     #   Refer: https://developer.mozilla.org/en/DOM/document.evaluate
     def element_objects_by_xpath(xpath)
       elements=[]
-      result=document_object.evaluate(xpath, containing_object, nil, firefox_socket.Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, nil)
-      while element=result.iterateNext
-        elements << element
+      result=document_object.evaluate(xpath, containing_object, nil, firefox_socket.Components.interfaces.nsIDOMXPathResult.attr('ORDERED_NODE_SNAPSHOT_TYPE'), nil)
+      return (0...result.snapshotLength).map do |i|
+        result.snapshotItem(i)
       end
-      elements
     end
 
     # Returns the first element object that matches the given XPath query.
     #   Refer: http://developer.mozilla.org/en/docs/DOM:document.evaluate
     def element_object_by_xpath(xpath)
-      document_object.evaluate(xpath, containing_object, nil, firefox_socket.Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, nil).singleNodeValue
+      document_object.evaluate(xpath, containing_object, nil, firefox_socket.Components.interfaces.nsIDOMXPathResult.attr('FIRST_ORDERED_NODE_TYPE'), nil).singleNodeValue
     end
 
     # Returns the first element that matches the given xpath expression or query.
